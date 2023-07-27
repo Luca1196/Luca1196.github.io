@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Próxima actividad sugerida</title>
+  <title>Próximas actividades sugeridas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
   <style>
     body {
       background-color: black;
@@ -12,14 +13,39 @@
       text-align: center;
       padding: 50px;
     }
+    .carousel-slide {
+      display: none;
+    }
     a {
       color: white;
     }
   </style>
 </head>
 <body>
-  <h1>Próxima actividad sugerida</h1>
-  <p>Campaña Sagitario Globe At Night</p>
-  <p><a href="https://globeatnight.org/" target="_blank">https://globeatnight.org/</a></p>
+  <h1>Próximas actividades sugeridas</h1>
+  <div class="carousel">
+    <div class="carousel-slide">
+      <p>Proyecto CREDO</p>
+      <p><a href="https://credouruguay.wixsite.com/credouy" target="_blank">https://credouruguay.wixsite.com/credouy</a></p>
+    </div>
+    <div class="carousel-slide">
+      <p>Campaña Sagitario Globe At Night</p>
+      <p><a href="https://globeatnight.org/" target="_blank">https://globeatnight.org/</a></p>
+    </div>
+    <!-- Agrega más actividades sugeridas aquí como nuevos 'div' con clase 'carousel-slide' -->
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('.carousel').slick({
+        dots: true,
+        autoplay: true,
+        autoplaySpeed: 4000,
+        arrows: false,
+      });
+    });
+  </script>
 </body>
 </html>
