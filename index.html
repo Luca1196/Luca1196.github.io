@@ -19,6 +19,24 @@
     a {
       color: white;
     }
+    .button-container {
+      margin-top: 20px;
+    }
+    .button {
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .content {
+      display: none;
+      margin-top: 20px;
+    }
+    .content.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -35,6 +53,26 @@
     <!-- Agrega más actividades sugeridas aquí como nuevos 'div' con clase 'carousel-slide' -->
   </div>
 
+  <div class="button-container">
+    <button class="button" onclick="showContent('luna')">Luna</button>
+    <button class="button" onclick="showContent('planetas')">Planetas</button>
+    <button class="button" onclick="showContent('lluvias')">Lluvias</button>
+    <button class="button" onclick="showContent('eclipses')">Eclipses</button>
+  </div>
+
+  <div class="content" id="content-luna">
+    <!-- Contenido relacionado con la Luna -->
+  </div>
+  <div class="content" id="content-planetas">
+    <!-- Contenido relacionado con los Planetas -->
+  </div>
+  <div class="content" id="content-lluvias">
+    <!-- Contenido relacionado con las Lluvias de meteoros -->
+  </div>
+  <div class="content" id="content-eclipses">
+    <!-- Contenido relacionado con los Eclipses -->
+  </div>
+
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script>
@@ -46,6 +84,16 @@
         arrows: false,
       });
     });
+
+    function showContent(contentType) {
+      // Ocultar todos los contenidos
+      const allContents = document.querySelectorAll('.content');
+      allContents.forEach(content => content.classList.remove('active'));
+
+      // Mostrar el contenido correspondiente al botón clicado
+      const selectedContent = document.getElementById(`content-${contentType}`);
+      selectedContent.classList.add('active');
+    }
   </script>
 </body>
 </html>
