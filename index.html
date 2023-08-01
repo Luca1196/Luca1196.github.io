@@ -3,32 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Próximas actividades sugeridas</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
-  <style>
-    /* Estilos como en la respuesta anterior */
-  </style>
+  <title>Tabla de datos</title>
 </head>
 <body>
-  <h1>Próximas actividades sugeridas</h1>
-  <div class="carousel"></div>
+  <h1>Tabla de datos</h1>
+  <table id="data-table">
+    <!-- Los datos se agregarán aquí -->
+  </table>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script>
-    // Función para mostrar el contenido correspondiente al botón seleccionado
-    function showContent(contentId) {
-      const contents = document.getElementsByClassName('content');
-      for (let i = 0; i < contents.length; i++) {
-        contents[i].classList.remove('active');
-      }
-      document.getElementById('content-' + contentId).classList.add('active');
-    }
-
     // Función para cargar la API de Google Sheets y obtener los datos
     function loadSheetsApi() {
       gapi.client.init({
-        clientId: '589607610495-keoo8iet6sepmkjahderl8mt9697hl32.apps.googleusercontent.com',
         discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
       }).then(function() {
         // Aquí se llama a la función que obtiene los datos del Google Sheets
@@ -40,41 +27,19 @@
     function getDataFromSheets() {
       gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: '1BRQRWYm37VUNe3tZlzw_xIjzX_idsDMEvzpKG-ZiZHg',
-        range: 'Sheet1!A2:D', // Rango donde están los datos (A partir de la celda A2 hasta la D, ajusta según tus datos)
+        range: 'Sheet1', // Obtener todos los datos de la hoja "Sheet1"
       }).then(function(response) {
         var data = response.result.values;
-        var carouselDiv = document.querySelector('.carousel');
+        var table = document.getElementById('data-table');
 
-        // Recorre los datos y crea el contenido del carrusel
+        // Recorre los datos y crea las filas de la tabla
         data.forEach(function(row) {
-          var activityTitle = row[0];
-          var activityLink = row[1];
-          var activityDate = row[2];
-          var activityDescription = row[3];
-
-          var activityElement = document.createElement('div');
-          activityElement.innerHTML = '<div>' +
-            '<p>' + activityTitle + '</p>' +
-            '<p><a href="' + activityLink + '" target="_blank">' + activityLink + '</a></p>' +
-            '<p>Fecha: ' + activityDate + '</p>' +
-            '<p>' + activityDescription + '</p>' +
-            '</div>';
-
-          carouselDiv.appendChild(activityElement);
+          var newRow = table.insertRow();
+          row.forEach(function(cellData) {
+            var newCell = newRow.insertCell();
+            newCell.textContent = cellData;
+          });
         });
-
-        // Inicializa el carrusel después de cargar los datos
-        initCarousel();
-      });
-    }
-
-    // Función para inicializar el carrusel una vez que los datos han sido cargados
-    function initCarousel() {
-      $('.carousel').slick({
-        dots: true,
-        autoplay: true,
-        autoplaySpeed: 3000,
-        arrows: false,
       });
     }
 
