@@ -61,13 +61,18 @@
           carouselDiv.appendChild(activityElement);
         });
 
-        // Inicializa el carrusel
-        $('.carousel').slick({
-          dots: true,
-          autoplay: true,
-          autoplaySpeed: 3000,
-          arrows: false,
-        });
+        // Inicializa el carrusel después de cargar los datos
+        initCarousel();
+      });
+    }
+
+    // Función para inicializar el carrusel una vez que los datos han sido cargados
+    function initCarousel() {
+      $('.carousel').slick({
+        dots: true,
+        autoplay: true,
+        autoplaySpeed: 3000,
+        arrows: false,
       });
     }
 
