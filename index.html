@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Próximas actividadess sugeridas</title>
+  <title>Próximas actividades sugeridas</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
   <style>
     /* Estilos como en la respuesta anterior */
@@ -53,10 +53,12 @@
           var activityDescription = row[3];
 
           var activityElement = document.createElement('div');
-          activityElement.innerHTML = '<p>' + activityTitle + '</p>' +
+          activityElement.innerHTML = '<div>' +
+            '<p>' + activityTitle + '</p>' +
             '<p><a href="' + activityLink + '" target="_blank">' + activityLink + '</a></p>' +
             '<p>Fecha: ' + activityDate + '</p>' +
-            '<p>' + activityDescription + '</p>';
+            '<p>' + activityDescription + '</p>' +
+            '</div>';
 
           carouselDiv.appendChild(activityElement);
         });
