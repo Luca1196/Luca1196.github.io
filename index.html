@@ -41,17 +41,7 @@
 </head>
 <body>
   <h1>Próximas actividades sugeridas</h1>
-  <div class="carousel">
-    <div class="carousel-slide">
-      <p>Proyecto CREDO</p>
-      <p><a href="https://credouruguay.wixsite.com/credouy" target="_blank">https://credouruguay.wixsite.com/credouy</a></p>
-    </div>
-    <div class="carousel-slide">
-      <p>Campaña Sagitario Globe At Night</p>
-      <p><a href="https://globeatnight.org/" target="_blank">https://globeatnight.org/</a></p>
-    </div>
-    <!-- Agrega más actividades sugeridas aquí como nuevos 'div' con clase 'carousel-slide' -->
-  </div>
+  <div class="carousel"></div>
 
   <div class="button-container">
     <button class="button" onclick="showContent('luna')">Luna</button>
@@ -59,17 +49,6 @@
     <button class="button" onclick="showContent('lluvias')">Lluvias</button>
     <button class="button" onclick="showContent('eclipses')">Eclipses</button>
   </div>
-
-  <div class="content" id="content-luna">
-    <h2>Fases lunares:</h2>
-    <p>Luna Llena: 07/01/2023</p>
-    <p>Cuarto Menguante: 14/01/2023</p>
-    <p>Luna Nueva: 22/01/2023</p>
-    <p>Cuarto Creciente: 29/01/2023</p>
-    <!-- Agrega más fases lunares y detalles aquí -->
-  </div>
-
-  <!-- Agrega contenido para otros botones (planetas, lluvias, eclipses) similar al ejemplo anterior -->
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
@@ -83,13 +62,49 @@
       document.getElementById('content-' + contentId).classList.add('active');
     }
 
-    // Inicializa el carrusel
-    $('.carousel').slick({
-      dots: true,
-      autoplay: true,
-      autoplaySpeed: 3000,
-      arrows: false,
-    });
+    // Función para obtener los datos desde la hoja de Google Sheets (ejemplo)
+    function getDataFromGoogleSheets() {
+      // Coloca aquí la lógica para obtener los datos de la hoja de Google Sheets usando la API de Google Sheets
+      // Por ejemplo, puedes utilizar fetch() para hacer una solicitud a tu servidor que acceda a la hoja de Google Sheets y retorne los datos en formato JSON
+
+      const activitiesData = [
+        { activity: 'Campaña Sagitario Globe At Night', link: 'https://globeatnight.org/', date: '2023-07-15', description: 'Campaña para observar estrellas y medir la contaminación.' },
+        { activity: 'Proyecto CREDO', link: 'https://credouruguay.wixsite.com/credouy', date: '2023-08-01', description: 'Proyecto de investigación sobre meteoritos.' },
+        // Agrega más actividades obtenidas desde Google Sheets aquí como objetos en el array
+      ];
+
+      return activitiesData;
+    }
+
+    // Función para mostrar el carrusel con los datos obtenidos desde Google Sheets
+    function showCarouselWithData() {
+      const activitiesData = getDataFromGoogleSheets();
+      const carouselDiv = document.querySelector('.carousel');
+
+      activitiesData.forEach(function(data) {
+        const activityElement = document.createElement('div');
+        activityElement.classList.add('carousel-slide');
+        activityElement.innerHTML = '<p>' + data.activity + '</p>' +
+          '<p><a href="' + data.link + '" target="_blank">' + data.link + '</a></p>' +
+          '<p>Fecha: ' + data.date + '</p>' +
+          '<p>' + data.description + '</p>';
+
+        carouselDiv.appendChild(activityElement);
+      });
+
+      // Inicializa el carrusel
+      $('.carousel').slick({
+        dots: true,
+        autoplay: true,
+        autoplaySpeed: 3000,
+        arrows: false,
+      });
+    }
+
+    // Llama a la función para mostrar el carrusel cuando la página se ha cargado
+    window.onload = function() {
+      showCarouselWithData();
+    };
   </script>
 </body>
 </html>
