@@ -6,49 +6,12 @@
   <title>Próximas actividades sugeridas</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
   <style>
-    body {
-      background-color: black;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-    }
-    .carousel-slide {
-      display: none;
-    }
-    a {
-      color: white;
-    }
-    .button-container {
-      margin-top: 20px;
-    }
-    .button {
-      background-color: #333;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin-right: 10px;
-      cursor: pointer;
-    }
-    .content {
-      display: none;
-      margin-top: 20px;
-    }
-    .content.active {
-      display: block;
-    }
+    /* Estilos como en la respuesta anterior */
   </style>
 </head>
 <body>
   <h1>Próximas actividades sugeridas</h1>
   <div class="carousel"></div>
-
-  <div class="button-container">
-    <button class="button" onclick="showContent('luna')">Luna</button>
-    <button class="button" onclick="showContent('planetas')">Planetas</button>
-    <button class="button" onclick="showContent('lluvias')">Lluvias</button>
-    <button class="button" onclick="showContent('eclipses')">Eclipses</button>
-  </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
@@ -62,49 +25,57 @@
       document.getElementById('content-' + contentId).classList.add('active');
     }
 
-    // Función para obtener los datos desde la hoja de Google Sheets (ejemplo)
-    function getDataFromGoogleSheets() {
-      // Coloca aquí la lógica para obtener los datos de la hoja de Google Sheets usando la API de Google Sheets
-      // Por ejemplo, puedes utilizar fetch() para hacer una solicitud a tu servidor que acceda a la hoja de Google Sheets y retorne los datos en formato JSON
-
-      const activitiesData = [
-        { activity: 'Campaña Sagitario Globe At Night', link: 'https://globeatnight.org/', date: '2023-07-15', description: 'Campaña para observar estrellas y medir la contaminación.' },
-        { activity: 'Proyecto CREDO', link: 'https://credouruguay.wixsite.com/credouy', date: '2023-08-01', description: 'Proyecto de investigación sobre meteoritos.' },
-        // Agrega más actividades obtenidas desde Google Sheets aquí como objetos en el array
-      ];
-
-      return activitiesData;
-    }
-
-    // Función para mostrar el carrusel con los datos obtenidos desde Google Sheets
-    function showCarouselWithData() {
-      const activitiesData = getDataFromGoogleSheets();
-      const carouselDiv = document.querySelector('.carousel');
-
-      activitiesData.forEach(function(data) {
-        const activityElement = document.createElement('div');
-        activityElement.classList.add('carousel-slide');
-        activityElement.innerHTML = '<p>' + data.activity + '</p>' +
-          '<p><a href="' + data.link + '" target="_blank">' + data.link + '</a></p>' +
-          '<p>Fecha: ' + data.date + '</p>' +
-          '<p>' + data.description + '</p>';
-
-        carouselDiv.appendChild(activityElement);
-      });
-
-      // Inicializa el carrusel
-      $('.carousel').slick({
-        dots: true,
-        autoplay: true,
-        autoplaySpeed: 3000,
-        arrows: false,
+    // Función para cargar la API de Google Sheets y obtener los datos
+    function loadSheetsApi() {
+      gapi.client.init({
+        clientId: '589607610495-keoo8iet6sepmkjahderl8mt9697hl32.apps.googleusercontent.com',
+        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+      }).then(function() {
+        // Aquí se llama a la función que obtiene los datos del Google Sheets
+        getDataFromSheets();
       });
     }
 
-    // Llama a la función para mostrar el carrusel cuando la página se ha cargado
+    // Función para obtener los datos desde el Google Sheets
+    function getDataFromSheets() {
+      gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: '1BRQRWYm37VUNe3tZlzw_xIjzX_idsDMEvzpKG-ZiZHg',
+        range: 'Sheet1!A2:D', // Rango donde están los datos (A partir de la celda A2 hasta la D, ajusta según tus datos)
+      }).then(function(response) {
+        var data = response.result.values;
+        var carouselDiv = document.querySelector('.carousel');
+
+        // Recorre los datos y crea el contenido del carrusel
+        data.forEach(function(row) {
+          var activityTitle = row[0];
+          var activityLink = row[1];
+          var activityDate = row[2];
+          var activityDescription = row[3];
+
+          var activityElement = document.createElement('div');
+          activityElement.innerHTML = '<p>' + activityTitle + '</p>' +
+            '<p><a href="' + activityLink + '" target="_blank">' + activityLink + '</a></p>' +
+            '<p>Fecha: ' + activityDate + '</p>' +
+            '<p>' + activityDescription + '</p>';
+
+          carouselDiv.appendChild(activityElement);
+        });
+
+        // Inicializa el carrusel
+        $('.carousel').slick({
+          dots: true,
+          autoplay: true,
+          autoplaySpeed: 3000,
+          arrows: false,
+        });
+      });
+    }
+
+    // Llama a la función para cargar la API de Google Sheets cuando la página se ha cargado
     window.onload = function() {
-      showCarouselWithData();
+      gapi.load('client', loadSheetsApi);
     };
   </script>
+  <script src="https://apis.google.com/js/api.js"></script>
 </body>
 </html>
