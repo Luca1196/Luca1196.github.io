@@ -60,115 +60,36 @@
     <button class="button" onclick="showContent('eclipses')">Eclipses</button>
   </div>
 
-<div class="content" id="content-luna">
-  <h2>Fases lunares enero 2023:</h2>
-  <p>Luna Llena: 07/01/2023</p>
-  <p>Cuarto Menguante: 14/01/2023</p>
-  <p>Luna Nueva: 22/01/2023</p>
-  <p>Cuarto Creciente: 29/01/2023</p>
-
-  <h2>Fases lunares febrero 2023:</h2>
-  <p>Luna Llena: 05/02/2023</p>
-  <p>Cuarto Menguante: 12/02/2023</p>
-  <p>Luna Nueva: 20/02/2023</p>
-  <p>Cuarto Creciente: 27/02/2023</p>
-
-  <h2>Fases lunares marzo 2023:</h2>
-  <p>Luna Llena: 07/03/2023</p>
-  <p>Cuarto Menguante: 14/03/2023</p>
-  <p>Luna Nueva: 22/03/2023</p>
-  <p>Cuarto Creciente: 29/03/2023</p>
-
-  <h2>Fases lunares abril 2023:</h2>
-  <p>Luna Llena: 05/04/2023</p>
-  <p>Cuarto Menguante: 12/04/2023</p>
-  <p>Luna Nueva: 20/04/2023</p>
-  <p>Cuarto Creciente: 27/04/2023</p>
-
-  <h2>Fases lunares mayo 2023:</h2>
-  <p>Luna Llena: 05/05/2023</p>
-  <p>Cuarto Menguante: 12/05/2023</p>
-  <p>Luna Nueva: 20/05/2023</p>
-  <p>Cuarto Creciente: 27/05/2023</p>
-
-  <h2>Fases lunares junio 2023:</h2>
-  <p>Luna Llena: 03/06/2023</p>
-  <p>Cuarto Menguante: 10/06/2023</p>
-  <p>Luna Nueva: 18/06/2023</p>
-  <p>Cuarto Creciente: 25/06/2023</p>
-
-  <h2>Fases lunares julio 2023:</h2>
-  <p>Luna Llena: 03/07/2023</p>
-  <p>Cuarto Menguante: 10/07/2023</p>
-  <p>Luna Nueva: 18/07/2023</p>
-  <p>Cuarto Creciente: 25/07/2023</p>
-
-  <h2>Fases lunares agosto 2023:</h2>
-  <p>Luna Llena: 01/08/2023</p>
-  <p>Cuarto Menguante: 08/08/2023</p>
-  <p>Luna Nueva: 16/08/2023</p>
-  <p>Cuarto Creciente: 23/08/2023</p>
-  <p>Luna Llena: 31/08/2023</p>
-
-  <h2>Fases lunares septiembre 2023:</h2>
-  <p>Cuarto Menguante: 07/09/2023</p>
-  <p>Luna Nueva: 15/09/2023</p>
-  <p>Cuarto Creciente: 22/09/2023</p>
-  <p>Luna Llena: 30/09/2023</p>
-
-  <h2>Fases lunares octubre 2023:</h2>
-  <p>Cuarto Menguante: 06/10/2023</p>
-  <p>Luna Nueva: 14/10/2023</p>
-  <p>Cuarto Creciente: 21/10/2023</p>
-  <p>Luna Llena: 29/10/2023</p>
-
-  <h2>Fases lunares noviembre 2023:</h2>
-  <p>Cuarto Menguante: 05/11/2023</p>
-  <p>Luna Nueva: 13/11/2023</p>
-  <p>Cuarto Creciente: 20/11/2023</p>
-  <p>Luna Llena: 28/11/2023</p>
-
-  <h2>Fases lunares diciembre 2023:</h2>
-  <p>Cuarto Menguante: 04/12/2023</p>
-  <p>Luna Nueva: 12/12/2023</p>
-  <p>Cuarto Creciente: 19/12/2023</p>
-  <p>Luna Llena: 27/12/2023</p>
-</div>
-
-  <div class="content" id="content-planetas">
-<body>
-  <img src="https://raw.githubusercontent.com/Luca1196/Luca1196.github.io/main/planetas.png" alt="Imagen de Planetas">
-</body>  </div>
-
-  <div class="content" id="content-lluvias">
-    <!-- Contenido relacionado con las Lluvias de meteoros -->
+  <div class="content" id="content-luna">
+    <h2>Fases lunares:</h2>
+    <p>Luna Llena: 07/01/2023</p>
+    <p>Cuarto Menguante: 14/01/2023</p>
+    <p>Luna Nueva: 22/01/2023</p>
+    <p>Cuarto Creciente: 29/01/2023</p>
+    <!-- Agrega más fases lunares y detalles aquí -->
   </div>
 
-  <div class="content" id="content-eclipses">
-    <!-- Contenido relacionado con los Eclipses -->
-  </div>
+  <!-- Agrega contenido para otros botones (planetas, lluvias, eclipses) similar al ejemplo anterior -->
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script>
-    $(document).ready(function() {
-      $('.carousel').slick({
-        dots: true,
-        autoplay: true,
-        autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
-        arrows: false,
-      });
-    });
-
-    function showContent(contentType) {
-      // Ocultar todos los contenidos
-      const allContents = document.querySelectorAll('.content');
-      allContents.forEach(content => content.classList.remove('active'));
-
-      // Mostrar el contenido correspondiente al botón clicado
-      const selectedContent = document.getElementById(`content-${contentType}`);
-      selectedContent.classList.add('active');
+    // Función para mostrar el contenido correspondiente al botón seleccionado
+    function showContent(contentId) {
+      const contents = document.getElementsByClassName('content');
+      for (let i = 0; i < contents.length; i++) {
+        contents[i].classList.remove('active');
+      }
+      document.getElementById('content-' + contentId).classList.add('active');
     }
+
+    // Inicializa el carrusel
+    $('.carousel').slick({
+      dots: true,
+      autoplay: true,
+      autoplaySpeed: 3000,
+      arrows: false,
+    });
   </script>
 </body>
 </html>
