@@ -8,46 +8,49 @@
 <body>
   <h1>Tabla de datos</h1>
   <table id="data-table">
-    <!-- Los datos se agregarán aquí -->
+    <tr>
+      <th>Evento</th>
+      <th>Fecha</th>
+      <th>Descripción</th>
+    </tr>
   </table>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    // Función para cargar la API de Google Sheets y obtener los datos
-    function loadSheetsApi() {
-      gapi.client.init({
-        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-      }).then(function() {
-        // Aquí se llama a la función que obtiene los datos del Google Sheets
-        getDataFromSheets();
-      });
-    }
+    const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
 
-    // Función para obtener los datos desde el Google Sheets
-    function getDataFromSheets() {
-      gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: '1BRQRWYm37VUNe3tZlzw_xIjzX_idsDMEvzpKG-ZiZHg',
-        range: 'Sheet1', // Obtener todos los datos de la hoja "Sheet1"
-      }).then(function(response) {
-        var data = response.result.values;
-        var table = document.getElementById('data-table');
-
-        // Recorre los datos y crea las filas de la tabla
-        data.forEach(function(row) {
-          var newRow = table.insertRow();
-          row.forEach(function(cellData) {
-            var newCell = newRow.insertCell();
-            newCell.textContent = cellData;
-          });
+    // Función para cargar los datos desde la API
+    function getDataFromApi() {
+      axios.get(apiURL)
+        .then(response => {
+          const data = response.data;
+          displayData(data);
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
         });
+    }
+
+    // Función para mostrar los datos en la tabla
+    function displayData(data) {
+      const table = document.getElementById('data-table');
+
+      data.forEach(row => {
+        const newRow = table.insertRow();
+        const eventCell = newRow.insertCell();
+        const dateCell = newRow.insertCell();
+        const descriptionCell = newRow.insertCell();
+
+        eventCell.textContent = row.Evento;
+        dateCell.textContent = row.Fecha;
+        descriptionCell.textContent = row.Descripción;
       });
     }
 
-    // Llama a la función para cargar la API de Google Sheets cuando la página se ha cargado
+    // Llama a la función para cargar los datos cuando la página se ha cargado
     window.onload = function() {
-      gapi.load('client', loadSheetsApi);
+      getDataFromApi();
     };
   </script>
-  <script src="https://apis.google.com/js/api.js"></script>
 </body>
 </html>
