@@ -3,19 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tabla de datos</title>
+  <title>Carrusel de Eventos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
+  <style>
+    /* Estilos del carrusel */
+    .slick-slide {
+      padding: 10px;
+    }
+    .slick-prev:before, .slick-next:before {
+      color: black;
+    }
+  </style>
 </head>
 <body>
-  <h1>Tabla de datos</h1>
-  <table id="data-table">
-    <tr>
-      <th>Evento</th>
-      <th>Fecha</th>
-      <th>Descripción</th>
-    </tr>
-  </table>
+  <h1>Próximas actividades sugeridas</h1>
+  <div class="carousel-container">
+    <!-- El carrusel se agregará aquí -->
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
 
@@ -24,26 +31,29 @@
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          displayData(data);
+          displayCarouselData(data);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
         });
     }
 
-    // Función para mostrar los datos en la tabla
-    function displayData(data) {
-      const table = document.getElementById('data-table');
+    // Función para mostrar los datos en el carrusel
+    function displayCarouselData(data) {
+      const carouselContainer = document.querySelector('.carousel-container');
 
       data.forEach(row => {
-        const newRow = table.insertRow();
-        const eventCell = newRow.insertCell();
-        const dateCell = newRow.insertCell();
-        const descriptionCell = newRow.insertCell();
+        const slide = document.createElement('div');
+        slide.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
+        carouselContainer.appendChild(slide);
+      });
 
-        eventCell.textContent = row.Evento;
-        dateCell.textContent = row.Fecha;
-        descriptionCell.textContent = row.Descripción;
+      // Inicializar el carrusel con Slick
+      $('.carousel-container').slick({
+        dots: true,
+        arrows: true,
+        slidesToShow: 1,
+        slidesToScroll: 1
       });
     }
 
