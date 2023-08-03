@@ -40,11 +40,10 @@
 
     // Función para mostrar los datos en el carrusel
     function displayCarouselData(data) {
-      // Ordenar los eventos por fecha en orden ascendente
-      data.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
+      const currentDate = new Date();
 
-      // Filtrar solo los 3 eventos próximos
-      const nextEvents = data.slice(0, 3);
+      // Filtrar solo los eventos próximos (con fechas mayores o iguales a la fecha actual)
+      const nextEvents = data.filter(row => new Date(row.Fecha) >= currentDate);
 
       const carouselContainer = document.querySelector('.carousel-container');
 
