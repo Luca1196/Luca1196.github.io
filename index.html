@@ -118,4 +118,14 @@
           });
         })
         .catch(error => {
-          console
+          console.error('Error al obtener datos:', error);
+        });
+    }
+
+    // Llama a la función para cargar los datos cuando la página se ha cargado
+    window.onload = function() {
+      getDataFromApi();
+    };
+  </script>
+</body>
+</html>
