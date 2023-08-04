@@ -13,12 +13,8 @@
     .slick-prev:before, .slick-next:before {
       color: black;
     }
-    /* Estilos para los botones y el contenedor de eventos filtrados */
-    .filter-buttons {
-      margin-bottom: 10px;
-    }
-    .filtered-events-container {
-      margin-top: 10px;
+    .event-list {
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -36,9 +32,9 @@
     <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
   </div>
 
-  <!-- Contenedor para eventos filtrados -->
-  <div class="filtered-events-container">
-    <!-- Los eventos filtrados se mostrarán aquí -->
+  <!-- Lista de eventos filtrados -->
+  <div class="event-list">
+    <!-- Los eventos filtrados se agregarán aquí -->
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -46,7 +42,45 @@
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
 
-    // ... (el resto del código sigue igual)
+    // Función para cargar los datos desde la API
+    function getDataFromApi() {
+      axios.get(apiURL)
+        .then(response => {
+          const data = response.data;
+          displayCarouselData(data);
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
+        });
+    }
+
+    // Función para mostrar los datos en el carrusel
+    function displayCarouselData(data) {
+      // Ordenar los eventos por fecha en orden ascendente
+      data.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
+
+      // Filtrar solo los 3 eventos próximos
+      const nextEvents = data.filter(row => new Date(row.Fecha) >= new Date());
+
+      const carouselContainer = document.querySelector('.carousel-container');
+      carouselContainer.innerHTML = ''; // Limpiar el carrusel antes de mostrar los eventos
+
+      nextEvents.forEach(row => {
+        const slide = document.createElement('div');
+        slide.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
+        carouselContainer.appendChild(slide);
+      });
+
+      // Inicializar el carrusel solo cuando se cargan los datos por primera vez
+      if (!carouselContainer.classList.contains('slick-initialized')) {
+        $('.carousel-container').slick({
+          dots: true,
+          arrows: true,
+          slidesToShow: 1,
+          slidesToScroll: 1
+        });
+      }
+    }
 
     // Función para filtrar eventos por tag
     function filterEventsByTag(tag) {
@@ -55,13 +89,13 @@
           const data = response.data;
           const filteredEvents = data.filter(row => row.tag === tag);
 
-          const filteredEventsContainer = document.querySelector('.filtered-events-container');
-          filteredEventsContainer.innerHTML = ''; // Limpiar el contenedor antes de mostrar los eventos filtrados
+          const eventList = document.querySelector('.event-list');
+          eventList.innerHTML = ''; // Limpiar la lista de eventos antes de mostrar los eventos filtrados
 
           filteredEvents.forEach(row => {
-            const eventDiv = document.createElement('div');
-            eventDiv.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
-            filteredEventsContainer.appendChild(eventDiv);
+            const eventItem = document.createElement('div');
+            eventItem.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
+            eventList.appendChild(eventItem);
           });
         })
         .catch(error => {
@@ -69,7 +103,10 @@
         });
     }
 
-    // ...
+    // Llama a la función para cargar los datos cuando la página se ha cargado
+    window.onload = function() {
+      getDataFromApi();
+    };
   </script>
 </body>
 </html>
