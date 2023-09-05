@@ -3,25 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrusel de Eventos</title>
+  <title>Próximas actividades sugeridas</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
   <style>
-    /* Estilos del carrusel */
-    .slick-slide {
-      padding: 10px;
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
     }
-    .slick-prev:before, .slick-next:before {
-      color: black;
+    .carousel-slide {
+      display: none;
+      padding: 20px;
+      border: 1px solid white;
     }
-    .event-list {
-      margin-top: 20px;
+    .carousel-slide a {
+      color: white;
     }
   </style>
 </head>
 <body>
   <h1>Próximas actividades sugeridas</h1>
-  <div class="carousel-container">
-    <!-- El carrusel se agregará aquí -->
+  <!-- Carrusel de próximos eventos -->
+  <div class="carousel">
+    <!-- Los eventos próximos se agregarán aquí -->
   </div>
 
   <!-- Botones de filtros -->
@@ -32,12 +38,8 @@
     <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
   </div>
 
-  <!-- Lista de eventos filtrados -->
-  <div class="event-list">
-    <!-- Los eventos filtrados se agregarán aquí -->
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
@@ -62,24 +64,28 @@
       // Filtrar solo los 3 eventos próximos
       const nextEvents = data.filter(row => new Date(row.Fecha) >= new Date());
 
-      const carouselContainer = document.querySelector('.carousel-container');
+      const carouselContainer = document.querySelector('.carousel');
       carouselContainer.innerHTML = ''; // Limpiar el carrusel antes de mostrar los eventos
 
       nextEvents.forEach(row => {
         const slide = document.createElement('div');
-        slide.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
+        slide.classList.add('carousel-slide');
+        slide.innerHTML = `
+          <p>${row.Evento}</p>
+          <p>${row.Fecha}</p>
+          <p>${row.Descripción}</p>
+          <p><a href="${row.Enlace}" target="_blank">${row.Enlace}</a></p>
+        `;
         carouselContainer.appendChild(slide);
       });
 
-      // Inicializar el carrusel solo cuando se cargan los datos por primera vez
-      if (!carouselContainer.classList.contains('slick-initialized')) {
-        $('.carousel-container').slick({
-          dots: true,
-          arrows: true,
-          slidesToShow: 1,
-          slidesToScroll: 1
-        });
-      }
+      // Inicializar el carrusel con Slick
+      $('.carousel').slick({
+        dots: true,
+        autoplay: true,
+        autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
+        arrows: false,
+      });
     }
 
     // Función para filtrar eventos por tag
@@ -89,13 +95,27 @@
           const data = response.data;
           const filteredEvents = data.filter(row => row.tag === tag);
 
-          const eventList = document.querySelector('.event-list');
-          eventList.innerHTML = ''; // Limpiar la lista de eventos antes de mostrar los eventos filtrados
+          const carouselContainer = document.querySelector('.carousel');
+          carouselContainer.innerHTML = ''; // Limpiar el carrusel antes de mostrar los eventos filtrados
 
           filteredEvents.forEach(row => {
-            const eventItem = document.createElement('div');
-            eventItem.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
-            eventList.appendChild(eventItem);
+            const slide = document.createElement('div');
+            slide.classList.add('carousel-slide');
+            slide.innerHTML = `
+              <p>${row.Evento}</p>
+              <p>${row.Fecha}</p>
+              <p>${row.Descripción}</p>
+              <p><a href="${row.Enlace}" target="_blank">${row.Enlace}</a></p>
+            `;
+            carouselContainer.appendChild(slide);
+          });
+
+          // Inicializar el carrusel con Slick después de mostrar los eventos filtrados
+          $('.carousel').slick({
+            dots: true,
+            autoplay: true,
+            autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
+            arrows: false,
           });
         })
         .catch(error => {
