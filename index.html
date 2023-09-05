@@ -16,26 +16,29 @@
     .carousel-slide {
       display: none;
       padding: 20px;
-      border: 1px solid white;
+      border: none; /* Eliminamos el borde */
     }
     .carousel-slide a {
       color: white;
+    }
+    .carousel-buttons {
+      display: none; /* Eliminamos los botones del carrusel */
     }
   </style>
 </head>
 <body>
   <h1>Próximas actividades sugeridas</h1>
-  <!-- Carrusel de próximos eventos -->
-  <div class="carousel">
-    <!-- Los eventos próximos se agregarán aquí -->
-  </div>
-
   <!-- Botones de filtros -->
   <div class="filter-buttons">
     <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
     <button onclick="filterEventsByTag('Luna')">Luna</button>
     <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
     <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
+  </div>
+  
+  <!-- Carrusel de próximos eventos -->
+  <div class="carousel">
+    <!-- Los eventos próximos se agregarán aquí -->
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -81,7 +84,7 @@
 
       // Inicializar el carrusel con Slick
       $('.carousel').slick({
-        dots: true,
+        dots: false, // Eliminamos los puntos indicadores
         autoplay: true,
         autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
         arrows: false,
@@ -112,7 +115,7 @@
 
           // Inicializar el carrusel con Slick después de mostrar los eventos filtrados
           $('.carousel').slick({
-            dots: true,
+            dots: false, // Eliminamos los puntos indicadores
             autoplay: true,
             autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
             arrows: false,
@@ -130,3 +133,4 @@
   </script>
 </body>
 </html>
+
