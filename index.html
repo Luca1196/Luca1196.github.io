@@ -16,10 +16,13 @@
     .carousel-slide {
       display: none;
       padding: 20px;
-      border: 1px solid white;
+      border: none; /* Eliminamos el borde */
     }
     .carousel-slide a {
       color: white;
+    }
+    .slick-dots { /* Eliminamos los puntos indicadores */
+      display: none;
     }
   </style>
 </head>
@@ -28,14 +31,6 @@
   <!-- Carrusel de próximos eventos -->
   <div class="carousel">
     <!-- Los eventos próximos se agregarán aquí -->
-  </div>
-
-  <!-- Botones de filtros -->
-  <div class="filter-buttons">
-    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
-    <button onclick="filterEventsByTag('Luna')">Luna</button>
-    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
-    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -81,46 +76,11 @@
 
       // Inicializar el carrusel con Slick
       $('.carousel').slick({
-        dots: true,
+        dots: false, // Eliminamos los puntos indicadores
         autoplay: true,
         autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
         arrows: false,
       });
-    }
-
-    // Función para filtrar eventos por tag
-    function filterEventsByTag(tag) {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          const filteredEvents = data.filter(row => row.tag === tag);
-
-          const carouselContainer = document.querySelector('.carousel');
-          carouselContainer.innerHTML = ''; // Limpiar el carrusel antes de mostrar los eventos filtrados
-
-          filteredEvents.forEach(row => {
-            const slide = document.createElement('div');
-            slide.classList.add('carousel-slide');
-            slide.innerHTML = `
-              <p>${row.Evento}</p>
-              <p>${row.Fecha}</p>
-              <p>${row.Descripción}</p>
-              <p><a href="${row.Enlace}" target="_blank">${row.Enlace}</a></p>
-            `;
-            carouselContainer.appendChild(slide);
-          });
-
-          // Inicializar el carrusel con Slick después de mostrar los eventos filtrados
-          $('.carousel').slick({
-            dots: true,
-            autoplay: true,
-            autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
-            arrows: false,
-          });
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
     }
 
     // Llama a la función para cargar los datos cuando la página se ha cargado
