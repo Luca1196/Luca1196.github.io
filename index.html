@@ -1,66 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrusel de Eventos</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
-  <style>
-    /* Estilos del carrusel */
-    .slick-slide {
-      padding: 10px;
-    }
-    .slick-prev:before, .slick-next:before {
-      color: black;
-    }
-  </style>
-</head>
-<body>
-  <h1>Próximas actividades sugeridas</h1>
-  <div class="carousel-container">
-    <!-- El carrusel se agregará aquí -->
-  </div>
+function filterEventsByTag(tag) {
+  axios.get(apiURL)
+    .then(response => {
+      const data = response.data;
+      const filteredEvents = data.filter(row => row.Tag === tag);
 
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-  <script>
-    const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
+      const carouselContainer = document.querySelector('.carousel');
+      carouselContainer.innerHTML = '';
 
-    // Función para cargar los datos desde la API
-    function getDataFromApi() {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          displayCarouselData(data);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
-    }
-
-    // Función para mostrar los datos en el carrusel
-    function displayCarouselData(data) {
-      const carouselContainer = document.querySelector('.carousel-container');
-
-      data.forEach(row => {
+      filteredEvents.forEach(row => {
         const slide = document.createElement('div');
-        slide.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
+        slide.classList.add('carousel-slide');
+        slide.innerHTML = `
+          <p>${row.Evento}</p>
+          <p>${row.Fecha}</p>
+          <p>${row.Descripción}</p>
+          <p><a href="${row.Enlace}" target="_blank">${row.Enlace}</a></p>
+        `;
         carouselContainer.appendChild(slide);
       });
 
-      // Inicializar el carrusel con Slick
-      $('.carousel-container').slick({
-        dots: true,
-        arrows: true,
-        slidesToShow: 1,
-        slidesToScroll: 1
+      $('.carousel').slick({
+        dots: false,
+        autoplay: true,
+        autoplaySpeed: 3000,
+        arrows: false,
       });
-    }
-
-    // Llama a la función para cargar los datos cuando la página se ha cargado
-    window.onload = function() {
-      getDataFromApi();
-    };
-  </script>
-</body>
-</html>
+    })
+    .catch(error => {
+      console.error('Error al obtener datos:', error);
+    });
+}
