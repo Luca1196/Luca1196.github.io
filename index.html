@@ -1,13 +1,70 @@
-function filterEventsByTag(tag) {
-  axios.get(apiURL)
-    .then(response => {
-      const data = response.data;
-      const filteredEvents = data.filter(row => row.Tag === tag);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Próximas actividades sugeridas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    .carousel-slide {
+      display: none;
+      padding: 20px;
+      border: none;
+    }
+    .carousel-slide a {
+      color: white;
+    }
+    .slick-dots {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Próximas actividades sugeridas</h1>
+  <!-- Carrusel de próximos eventos -->
+  <div class="carousel">
+    <!-- Los eventos próximos se agregarán aquí -->
+  </div>
 
+  <!-- Botones de filtros -->
+  <div class="filter-buttons">
+    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
+    <button onclick="filterEventsByTag('Luna')">Luna</button>
+    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
+    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+  <script>
+    const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
+
+    function getDataFromApi() {
+      axios.get(apiURL)
+        .then(response => {
+          const data = response.data;
+          displayCarouselData(data);
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
+        });
+    }
+
+    function displayCarouselData(data) {
+      data.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
+      const nextEvents = data.filter(row => new Date(row.Fecha) >= new Date());
       const carouselContainer = document.querySelector('.carousel');
       carouselContainer.innerHTML = '';
 
-      filteredEvents.forEach(row => {
+      nextEvents.forEach(row => {
         const slide = document.createElement('div');
         slide.classList.add('carousel-slide');
         slide.innerHTML = `
@@ -25,8 +82,44 @@ function filterEventsByTag(tag) {
         autoplaySpeed: 3000,
         arrows: false,
       });
-    })
-    .catch(error => {
-      console.error('Error al obtener datos:', error);
-    });
-}
+    }
+
+    function filterEventsByTag(tag) {
+      axios.get(apiURL)
+        .then(response => {
+          const data = response.data;
+          const filteredEvents = data.filter(row => row.Tag === tag);
+
+          const carouselContainer = document.querySelector('.carousel');
+          carouselContainer.innerHTML = '';
+
+          filteredEvents.forEach(row => {
+            const slide = document.createElement('div');
+            slide.classList.add('carousel-slide');
+            slide.innerHTML = `
+              <p>${row.Evento}</p>
+              <p>${row.Fecha}</p>
+              <p>${row.Descripción}</p>
+              <p><a href="${row.Enlace}" target="_blank">${row.Enlace}</a></p>
+            `;
+            carouselContainer.appendChild(slide);
+          });
+
+          $('.carousel').slick({
+            dots: false,
+            autoplay: true,
+            autoplaySpeed: 3000,
+            arrows: false,
+          });
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
+        });
+    }
+
+    window.onload = function() {
+      getDataFromApi();
+    };
+  </script>
+</body>
+</html>
