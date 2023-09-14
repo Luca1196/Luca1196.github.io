@@ -16,13 +16,13 @@
     .carousel-slide {
       display: none;
       padding: 20px;
-      border: none;
+      border: none; /* Eliminamos el borde */
     }
     .carousel-slide a {
       color: white;
     }
     .slick-dots {
-      display: none;
+      display: none; /* Eliminamos los puntos indicadores */
     }
   </style>
 </head>
@@ -47,6 +47,7 @@
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
 
+    // Función para cargar los datos desde la API
     function getDataFromApi() {
       axios.get(apiURL)
         .then(response => {
@@ -58,11 +59,16 @@
         });
     }
 
+    // Función para mostrar los datos en el carrusel
     function displayCarouselData(data) {
+      // Ordenar los eventos por fecha en orden ascendente
       data.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
+
+      // Filtrar solo los 3 eventos próximos
       const nextEvents = data.filter(row => new Date(row.Fecha) >= new Date());
+
       const carouselContainer = document.querySelector('.carousel');
-      carouselContainer.innerHTML = '';
+      carouselContainer.innerHTML = ''; // Limpiar el carrusel antes de mostrar los eventos
 
       nextEvents.forEach(row => {
         const slide = document.createElement('div');
@@ -76,22 +82,24 @@
         carouselContainer.appendChild(slide);
       });
 
+      // Inicializar el carrusel con Slick
       $('.carousel').slick({
-        dots: false,
+        dots: false, // Eliminamos los puntos indicadores
         autoplay: true,
-        autoplaySpeed: 3000,
+        autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
         arrows: false,
       });
     }
 
+    // Función para filtrar eventos por tag
     function filterEventsByTag(tag) {
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          const filteredEvents = data.filter(row => row.Tag === tag);
+          const filteredEvents = data.filter(row => row.tag === tag);
 
           const carouselContainer = document.querySelector('.carousel');
-          carouselContainer.innerHTML = '';
+          carouselContainer.innerHTML = ''; // Limpiar el carrusel antes de mostrar los eventos filtrados
 
           filteredEvents.forEach(row => {
             const slide = document.createElement('div');
@@ -105,10 +113,11 @@
             carouselContainer.appendChild(slide);
           });
 
+          // Inicializar el carrusel con Slick después de mostrar los eventos filtrados
           $('.carousel').slick({
-            dots: false,
+            dots: false, // Eliminamos los puntos indicadores
             autoplay: true,
-            autoplaySpeed: 3000,
+            autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
             arrows: false,
           });
         })
@@ -117,6 +126,7 @@
         });
     }
 
+    // Llama a la función para cargar los datos cuando la página se ha cargado
     window.onload = function() {
       getDataFromApi();
     };
