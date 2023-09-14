@@ -71,15 +71,13 @@
         carouselContainer.appendChild(slide);
       });
 
-      // Inicializar el carrusel solo cuando se cargan los datos por primera vez
-      if (!carouselContainer.classList.contains('slick-initialized')) {
-        $('.carousel-container').slick({
-          dots: true,
-          arrows: true,
-          slidesToShow: 1,
-          slidesToScroll: 1
-        });
-      }
+      // Inicializar el carrusel con Slick
+      $('.carousel-container').slick({
+        dots: true,
+        arrows: true,
+        slidesToShow: 1,
+        slidesToScroll: 1
+      });
     }
 
     // Función para filtrar eventos por tag
