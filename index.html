@@ -15,19 +15,16 @@
     }
     .carousel-slide {
       display: none;
-      padding: 20px;
-      border: 1px solid white;
     }
-    .carousel-slide a {
+    a {
       color: white;
     }
   </style>
 </head>
 <body>
   <h1>Próximas actividades sugeridas</h1>
-  <!-- Carrusel de próximos eventos -->
   <div class="carousel">
-    <!-- Los eventos próximos se agregarán aquí -->
+    <!-- Los eventos filtrados se agregarán aquí -->
   </div>
 
   <!-- Botones de filtros -->
@@ -79,13 +76,15 @@
         carouselContainer.appendChild(slide);
       });
 
-      // Inicializar el carrusel con Slick
-      $('.carousel').slick({
-        dots: true,
-        autoplay: true,
-        autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
-        arrows: false,
-      });
+      // Inicializar el carrusel con Slick solo cuando se cargan los datos por primera vez
+      if (!carouselContainer.classList.contains('slick-initialized')) {
+        $('.carousel').slick({
+          dots: true,
+          autoplay: true,
+          autoplaySpeed: 3000, // Cambiamos el valor a 3000 para 3 segundos.
+          arrows: false,
+        });
+      }
     }
 
     // Función para filtrar eventos por tag
