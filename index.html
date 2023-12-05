@@ -16,21 +16,19 @@
     }
     .event-list {
       margin-top: 20px;
-      display: none; /* Ocultar la lista cuando se muestra el carrusel */
+    }
+
+    /* Estilos adicionales para la lista de eventos */
+    .event-list div {
+      margin-bottom: 20px; /* Ajusta el espacio entre eventos */
+      line-height: 2; /* Añade un interlineado doble */
     }
   </style>
 </head>
 <body>
   <h1>Próximas actividades sugeridas</h1>
-
-  <!-- Carrusel de eventos -->
   <div class="carousel-container">
-    <!-- Los eventos se agregarán aquí automáticamente -->
-  </div>
-
-  <!-- Lista de eventos filtrados (oculta en el carrusel) -->
-  <div class="event-list">
-    <!-- Los eventos filtrados se agregarán aquí -->
+    <!-- El carrusel se agregará aquí -->
   </div>
 
   <!-- Botones de filtros -->
@@ -39,6 +37,11 @@
     <button onclick="filterEventsByTag('Luna')">Luna</button>
     <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
     <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
+  </div>
+
+  <!-- Lista de eventos filtrados -->
+  <div class="event-list">
+    <!-- Los eventos filtrados se agregarán aquí -->
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -84,10 +87,6 @@
         slidesToShow: 1,
         slidesToScroll: 1
       });
-
-      // Mostrar el carrusel y ocultar la lista de eventos
-      carouselContainer.style.display = 'block';
-      document.querySelector('.event-list').style.display = 'none';
     }
 
     // Función para filtrar eventos por tag
@@ -105,10 +104,6 @@
             eventItem.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
             eventList.appendChild(eventItem);
           });
-
-          // Ocultar el carrusel y mostrar la lista de eventos
-          document.querySelector('.carousel-container').style.display = 'none';
-          eventList.style.display = 'block';
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
