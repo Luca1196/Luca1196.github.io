@@ -23,6 +23,13 @@
       margin-bottom: 20px; /* Ajusta el espacio entre eventos */
       line-height: 2; /* Añade un interlineado doble */
     }
+
+    /* Estilos para las imágenes */
+    .event-image {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -76,7 +83,12 @@
       // Crear y agregar slides al carrusel
       nextEvents.forEach(row => {
         const slide = document.createElement('div');
-        slide.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
+        slide.innerHTML = `
+          <p>Evento: ${row.Evento}</p>
+          <p>Fecha: ${row.Fecha}</p>
+          <p>Descripción: ${row.Descripción}</p>
+          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
+        `;
         carouselContainer.appendChild(slide);
       });
 
@@ -101,7 +113,12 @@
 
           filteredEvents.forEach(row => {
             const eventItem = document.createElement('div');
-            eventItem.textContent = `Evento: ${row.Evento}, Fecha: ${row.Fecha}, Descripción: ${row.Descripción}`;
+            eventItem.innerHTML = `
+              <p>Evento: ${row.Evento}</p>
+              <p>Fecha: ${row.Fecha}</p>
+              <p>Descripción: ${row.Descripción}</p>
+              ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
+            `;
             eventList.appendChild(eventItem);
           });
         })
@@ -117,3 +134,4 @@
   </script>
 </body>
 </html>
+
