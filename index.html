@@ -57,6 +57,7 @@
     <button onclick="filterEventsByTag('Luna')">Luna</button>
     <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
     <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
+    <button onclick="filterEventsByTag('cultural')">Cultural</button> <!-- Nuevo botón -->
   </div>
 
   <!-- Lista de eventos filtrados -->
@@ -74,11 +75,7 @@
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          const nextEvents = data
-            .filter(row => new Date(row.Fecha) >= new Date() && row.tag !== 'Luna')
-            .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
-            .slice(0, 3);
-          displayCarouselData(nextEvents);
+          displayCarouselData(data);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
@@ -86,11 +83,19 @@
     }
 
     // Función para mostrar los datos en el carrusel
-    function displayCarouselData(events) {
+    function displayCarouselData(data) {
+      // Filtrar solo los 3 eventos próximos por fecha
+      const nextEvents = data
+        .filter(row => new Date(row.Fecha) >= new Date())
+        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
+        .slice(0, 3);
+
+      // Limpiar el carrusel antes de mostrar los eventos
       const carouselContainer = document.querySelector('.carousel-container');
       carouselContainer.innerHTML = '';
 
-      events.forEach(row => {
+      // Crear y agregar slides al carrusel
+      nextEvents.forEach(row => {
         const slide = document.createElement('div');
         slide.innerHTML = `
           <p class="event-name">${row.Evento}</p>
