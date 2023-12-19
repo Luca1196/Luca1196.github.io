@@ -74,7 +74,11 @@
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          displayCarouselData(data);
+          const nextEvents = data
+            .filter(row => new Date(row.Fecha) >= new Date() && row.tag !== 'Luna')
+            .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
+            .slice(0, 3);
+          displayCarouselData(nextEvents);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
@@ -82,19 +86,11 @@
     }
 
     // Función para mostrar los datos en el carrusel
-    function displayCarouselData(data) {
-      // Filtrar solo los 3 eventos próximos por fecha
-      const nextEvents = data
-        .filter(row => new Date(row.Fecha) >= new Date())
-        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
-        .slice(0, 3);
-
-      // Limpiar el carrusel antes de mostrar los eventos
+    function displayCarouselData(events) {
       const carouselContainer = document.querySelector('.carousel-container');
       carouselContainer.innerHTML = '';
 
-      // Crear y agregar slides al carrusel
-      nextEvents.forEach(row => {
+      events.forEach(row => {
         const slide = document.createElement('div');
         slide.innerHTML = `
           <p class="event-name">${row.Evento}</p>
@@ -120,24 +116,28 @@
         .then(response => {
           const data = response.data;
           const filteredEvents = data.filter(row => row.tag === tag);
-
-          const eventList = document.querySelector('.event-list');
-          eventList.innerHTML = ''; // Limpiar la lista de eventos antes de mostrar los eventos filtrados
-
-          filteredEvents.forEach(row => {
-            const eventItem = document.createElement('div');
-            eventItem.innerHTML = `
-              <p class="event-name">${row.Evento}</p>
-              <p>Fecha: ${row.Fecha}</p>
-              <p>Descripción: ${row.Descripción}</p>
-              ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-            `;
-            eventList.appendChild(eventItem);
-          });
+          displayFilteredEvents(filteredEvents);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
         });
+    }
+
+    // Función para mostrar eventos filtrados
+    function displayFilteredEvents(events) {
+      const eventList = document.querySelector('.event-list');
+      eventList.innerHTML = '';
+
+      events.forEach(row => {
+        const eventItem = document.createElement('div');
+        eventItem.innerHTML = `
+          <p class="event-name">${row.Evento}</p>
+          <p>Fecha: ${row.Fecha}</p>
+          <p>Descripción: ${row.Descripción}</p>
+          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
+        `;
+        eventList.appendChild(eventItem);
+      });
     }
 
     // Llama a la función para cargar los datos cuando la página se ha cargado
