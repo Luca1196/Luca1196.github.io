@@ -37,6 +37,12 @@
       height: auto;
       margin-top: 10px;
     }
+
+    /* Estilo para el nombre del evento */
+    .event-name {
+      text-align: center;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -91,7 +97,7 @@
       nextEvents.forEach(row => {
         const slide = document.createElement('div');
         slide.innerHTML = `
-          <p>Evento: ${row.Evento}</p>
+          <p class="event-name">${row.Evento}</p>
           <p>Fecha: ${row.Fecha}</p>
           <p>Descripción: ${row.Descripción}</p>
           ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
@@ -121,7 +127,7 @@
           filteredEvents.forEach(row => {
             const eventItem = document.createElement('div');
             eventItem.innerHTML = `
-              <p>Evento: ${row.Evento}</p>
+              <p class="event-name">${row.Evento}</p>
               <p>Fecha: ${row.Fecha}</p>
               <p>Descripción: ${row.Descripción}</p>
               ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
