@@ -43,6 +43,14 @@
       text-align: center;
       font-weight: bold;
     }
+
+    /* Estilos para los botones de filtrado */
+    .filter-buttons {
+      margin-top: 10px;
+    }
+    .filter-buttons button {
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
@@ -53,11 +61,7 @@
 
   <!-- Botones de filtros -->
   <div class="filter-buttons">
-    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
-    <button onclick="filterEventsByTag('Luna')">Luna</button>
-    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
-    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
-    <button onclick="filterEventsByTag('cultural')">Cultural</button> <!-- Nuevo botón -->
+    <!-- Los botones se agregarán aquí -->
   </div>
 
   <!-- Lista de eventos filtrados -->
@@ -76,6 +80,7 @@
         .then(response => {
           const data = response.data;
           displayCarouselData(data);
+          displayFilterButtons(data);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
@@ -113,6 +118,35 @@
         slidesToShow: 1,
         slidesToScroll: 1
       });
+    }
+
+    // Función para mostrar botones de filtrado
+    function displayFilterButtons(data) {
+      const tags = getUniqueTags(data);
+
+      const filterButtonsContainer = document.querySelector('.filter-buttons');
+      tags.forEach(tag => {
+        const button = document.createElement('button');
+        button.textContent = `${tag.name} (${tag.count})`;
+        button.onclick = () => filterEventsByTag(tag.name);
+        filterButtonsContainer.appendChild(button);
+      });
+    }
+
+    // Función para obtener etiquetas únicas y contar su ocurrencia
+    function getUniqueTags(data) {
+      const tagCounts = {};
+      data.forEach(row => {
+        if (row.tag) {
+          if (tagCounts[row.tag]) {
+            tagCounts[row.tag]++;
+          } else {
+            tagCounts[row.tag] = 1;
+          }
+        }
+      });
+
+      return Object.keys(tagCounts).map(tag => ({ name: tag, count: tagCounts[tag] }));
     }
 
     // Función para filtrar eventos por tag
