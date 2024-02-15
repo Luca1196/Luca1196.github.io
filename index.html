@@ -53,11 +53,7 @@
 
   <!-- Botones de filtros -->
   <div class="filter-buttons">
-    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
-    <button onclick="filterEventsByTag('Luna')">Luna</button>
-    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
-    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
-    <button onclick="filterEventsByTag('cultural')">Cultural</button> <!-- Nuevo botón -->
+    <!-- Los botones se agregarán automáticamente aquí -->
   </div>
 
   <!-- Lista de eventos filtrados -->
@@ -76,6 +72,7 @@
         .then(response => {
           const data = response.data;
           displayCarouselData(data);
+          createFilterButtons(data);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
@@ -112,6 +109,24 @@
         arrows: true,
         slidesToShow: 1,
         slidesToScroll: 1
+      });
+    }
+
+    // Función para crear botones de filtro basados en los valores únicos de la columna "tag"
+    function createFilterButtons(data) {
+      const tags = new Set(); // Utilizamos un Set para obtener valores únicos
+      data.forEach(row => tags.add(row.tag));
+
+      const filterButtonsContainer = document.querySelector('.filter-buttons');
+      filterButtonsContainer.innerHTML = ''; // Limpiamos los botones existentes
+
+      tags.forEach(tag => {
+        const button = document.createElement('button');
+        button.textContent = tag.charAt(0).toUpperCase() + tag.slice(1); // Capitalizamos la primera letra
+        button.onclick = function() {
+          filterEventsByTag(tag);
+        };
+        filterButtonsContainer.appendChild(button);
       });
     }
 
