@@ -115,7 +115,7 @@
     // Función para crear botones de filtro basados en los valores únicos de la columna "tag"
     function createFilterButtons(data) {
       const tags = new Set(); // Utilizamos un Set para obtener valores únicos
-      data.forEach(row => tags.add(row.tag));
+      data.forEach(row => tags.add(row.tag.toLowerCase())); // Convertimos la etiqueta a minúsculas
 
       const filterButtonsContainer = document.querySelector('.filter-buttons');
       filterButtonsContainer.innerHTML = ''; // Limpiamos los botones existentes
