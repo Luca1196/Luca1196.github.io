@@ -1,68 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eventos</title>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
-<style>
-  .carousel-container {
-    width: 80%;
-    margin: auto;
-  }
-  .carousel-container img {
-    max-width: 100%;
-    height: auto;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrusel de Eventos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
+  <style>
+    /* Establecer el fondo de la página */
+    body {
+      background: url('https://c0.wallpaperflare.com/preview/301/521/245/stars-at-night-time.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white; /* Cambiar el color del texto a blanco */
+    }
+
+    /* Estilos del carrusel */
+    .slick-slide {
+      padding: 10px;
+    }
+    .slick-prev:before,
+    .slick-next:before {
+      color: black;
+    }
+    .event-list {
+      margin-top: 20px;
+    }
+
+    /* Estilos adicionales para la lista de eventos */
+    .event-list div {
+      margin-bottom: 20px; /* Ajusta el espacio entre eventos */
+      line-height: 2; /* Añade un interlineado doble */
+    }
+
+    /* Estilos para las imágenes */
+    .event-image {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+    }
+
+    /* Estilo para el nombre del evento */
+    .event-name {
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
+  <h1>Eventos próximos</h1>
+  <div class="carousel-container">
+    <!-- El carrusel se agregará aquí -->
+  </div>
 
-<div class="carousel-container"></div>
+  <!-- Botones de filtros -->
+  <div class="filter-buttons">
+    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
+    <button onclick="filterEventsByTag('Luna')">Luna</button>
+    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
+    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
+    <button onclick="filterEventsByTag('cultural')">Cultural</button> <!-- Nuevo botón -->
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  axios.get('https://api.com/data')
-    .then(response => {
-      displayCarouselData(response.data);
-    })
-    .catch(error => {
-      console.error('Error al obtener datos:', error);
-    });
+  <!-- Lista de eventos filtrados -->
+  <div class="event-list">
+    <!-- Los eventos filtrados se agregarán aquí -->
+  </div>
 
-  function displayCarouselData(data) {
-    const nextEvents = data
-      .filter(row => new Date(row.Fecha) >= new Date())
-      .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
-      .slice(0, 3);
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+  <script>
+    const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
 
-    const carouselContainer = document.querySelector('.carousel-container');
-    carouselContainer.innerHTML = '';
+    // Función para cargar los datos desde la API
+    function getDataFromApi() {
+      axios.get(apiURL)
+        .then(response => {
+          const data = response.data;
+          displayCarouselData(data);
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
+        });
+    }
 
-    nextEvents.forEach(row => {
-      const slide = document.createElement('div');
-      slide.innerHTML = `
-        <p class="event-name">${row.Evento}</p>
-        <p>Fecha: ${row.Fecha}</p>
-        <p>Descripción: ${row.Descripción}</p>
-        ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-      `;
-      carouselContainer.appendChild(slide);
-    });
+    // Función para mostrar los datos en el carrusel
+    function displayCarouselData(data) {
+      // Filtrar solo los 3 eventos próximos por fecha
+      const nextEvents = data
+        .filter(row => new Date(row.Fecha) >= new Date())
+        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
+        .slice(0, 3);
 
-    if (carouselContainer.children.length > 0) {
-      new Slick(carouselContainer, {
+      // Limpiar el carrusel antes de mostrar los eventos
+      const carouselContainer = document.querySelector('.carousel-container');
+      carouselContainer.innerHTML = '';
+
+      // Crear y agregar slides al carrusel
+      nextEvents.forEach(row => {
+        const slide = document.createElement('div');
+        slide.innerHTML = `
+          <p class="event-name">${row.Evento}</p>
+          <p>Fecha: ${row.Fecha}</p>
+          <p>Descripción: ${row.Descripción}</p>
+          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
+        `;
+        carouselContainer.appendChild(slide);
+      });
+
+      // Inicializar el carrusel con Slick
+      const carousel = new Slick('.carousel-container', {
         dots: true,
         arrows: true,
         slidesToShow: 1,
         slidesToScroll: 1
       });
     }
-  }
-});
-</script>
 
+    // Función para filtrar eventos por tag
+    function filterEventsByTag(tag) {
+      axios.get(apiURL)
+        .then(response => {
+          const data = response.data;
+          const filteredEvents = data.filter(row => row.tag === tag);
+          displayFilteredEvents(filteredEvents);
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
+        });
+    }
+
+    // Función para mostrar eventos filtrados
+    function displayFilteredEvents(events) {
+      const eventList = document.querySelector('.event-list');
+      eventList.innerHTML = '';
+
+      events.forEach(row => {
+        const eventItem = document.createElement('div');
+        eventItem.innerHTML = `
+          <p class="event-name">${row.Evento}</p>
+          <p>Fecha: ${row.Fecha}</p>
+          <p>Descripción: ${row.Descripción}</p>
+          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
+        `;
+        eventList.appendChild(eventItem);
+      });
+    }
+
+    // Llama a la función para cargar los datos cuando la página se ha cargado
+    window.onload = function() {
+      getDataFromApi();
+    };
+  </script>
 </body>
 </html>
