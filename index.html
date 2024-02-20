@@ -65,8 +65,9 @@
     <!-- Los eventos filtrados se agregarán aquí -->
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
 
@@ -107,7 +108,7 @@
       });
 
       // Inicializar el carrusel con Slick
-      const carousel = new Slick(carouselContainer, {
+      $('.carousel-container').slick({
         dots: true,
         arrows: true,
         slidesToShow: 1,
