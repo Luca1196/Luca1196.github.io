@@ -39,12 +39,38 @@
       text-align: center;
       font-weight: bold;
     }
+
+    /* Estilos para los botones de filtro */
+    .filter-buttons {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .filter-buttons button {
+      margin: 5px;
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .filter-buttons button:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
   <h1>Eventos próximos</h1>
   <div class="carousel-container">
     <!-- El carrusel se agregará aquí -->
+  </div>
+
+  <!-- Botones de filtros -->
+  <div class="filter-buttons">
+    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
+    <button onclick="filterEventsByTag('Luna')">Luna</button>
+    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
+    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
+    <button onclick="filterEventsByTag('cultural')">Cultural</button> <!-- Nuevo botón -->
   </div>
 
   <!-- Lista de eventos filtrados -->
