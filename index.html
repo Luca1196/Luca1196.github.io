@@ -17,10 +17,6 @@
     .slick-slide {
       padding: 10px;
     }
-    .slick-prev:before,
-    .slick-next:before {
-      color: black;
-    }
     .event-list {
       margin-top: 20px;
     }
@@ -49,15 +45,6 @@
   <h1>Eventos próximos</h1>
   <div class="carousel-container">
     <!-- El carrusel se agregará aquí -->
-  </div>
-
-  <!-- Botones de filtros -->
-  <div class="filter-buttons">
-    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
-    <button onclick="filterEventsByTag('Luna')">Luna</button>
-    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
-    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
-    <button onclick="filterEventsByTag('cultural')">Cultural</button> <!-- Nuevo botón -->
   </div>
 
   <!-- Lista de eventos filtrados -->
@@ -109,8 +96,10 @@
 
       // Inicializar el carrusel con Slick
       $('.carousel-container').slick({
-        dots: true,
-        arrows: true,
+        autoplay: true,
+        autoplaySpeed: 1000, // Cambiar cada segundo
+        arrows: false,
+        dots: false,
         slidesToShow: 1,
         slidesToScroll: 1
       });
