@@ -70,6 +70,7 @@
     function getDataFromApi() {
       axios.get(apiURL)
         .then(response => {
+          console.log('Datos obtenidos:', response.data);
           const data = response.data;
           displayCarouselData(data);
           createFilterButtons(data);
@@ -81,6 +82,7 @@
 
     // Función para mostrar los datos en el carrusel
     function displayCarouselData(data) {
+      console.log('Datos para el carrusel:', data);
       // Filtrar solo los 3 eventos próximos por fecha
       const nextEvents = data
         .filter(row => new Date(row.Fecha) >= new Date())
@@ -114,6 +116,7 @@
 
     // Función para crear botones de filtro basados en los valores únicos de la columna "tag"
     function createFilterButtons(data) {
+      console.log('Datos para los botones de filtro:', data);
       const tags = new Set(); // Utilizamos un Set para obtener valores únicos
       data.forEach(row => tags.add(row.tag.toLowerCase())); // Convertimos la etiqueta a minúsculas
 
