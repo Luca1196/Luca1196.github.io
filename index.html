@@ -66,11 +66,7 @@
 
   <!-- Botones de filtros -->
   <div class="filter-buttons">
-    <button onclick="filterEventsByTag('eclipses')">Eclipses</button>
-    <button onclick="filterEventsByTag('Luna')">Luna</button>
-    <button onclick="filterEventsByTag('conjunciones')">Conjunciones</button>
-    <button onclick="filterEventsByTag('lluvia de meteoros')">Lluvia de Meteoros</button>
-    <button onclick="filterEventsByTag('cultural')">Cultural</button> <!-- Nuevo botón -->
+    <!-- Los botones de filtro se agregarán aquí -->
   </div>
 
   <!-- Lista de eventos filtrados -->
@@ -90,6 +86,7 @@
         .then(response => {
           const data = response.data;
           displayCarouselData(data);
+          generateFilterButtons(data);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
@@ -128,6 +125,22 @@
         dots: false,
         slidesToShow: 1,
         slidesToScroll: 1
+      });
+    }
+
+    // Función para generar botones de filtro dinámicamente
+    function generateFilterButtons(data) {
+      const uniqueTags = [...new Set(data.map(item => item.tag))];
+      const filterButtonsContainer = document.querySelector('.filter-buttons');
+      filterButtonsContainer.innerHTML = '';
+
+      uniqueTags.forEach(tag => {
+        const button = document.createElement('button');
+        button.textContent = tag;
+        button.onclick = function() {
+          filterEventsByTag(tag);
+        };
+        filterButtonsContainer.appendChild(button);
       });
     }
 
