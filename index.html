@@ -53,7 +53,7 @@
 
   <!-- Botones de filtros -->
   <div class="filter-buttons">
-    <!-- Los botones se agregarán automáticamente aquí -->
+    <!-- Los botones se generarán automáticamente -->
   </div>
 
   <!-- Lista de eventos filtrados -->
@@ -63,14 +63,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script>
-    const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
+    const apiURL = 'https://api.myjson.com/bins/1a79ga';
 
     // Función para cargar los datos desde la API
     function getDataFromApi() {
       axios.get(apiURL)
         .then(response => {
-          console.log('Datos obtenidos:', response.data);
           const data = response.data;
           displayCarouselData(data);
           createFilterButtons(data);
@@ -82,7 +82,6 @@
 
     // Función para mostrar los datos en el carrusel
     function displayCarouselData(data) {
-      console.log('Datos para el carrusel:', data);
       // Filtrar solo los 3 eventos próximos por fecha
       const nextEvents = data
         .filter(row => new Date(row.Fecha) >= new Date())
@@ -114,21 +113,19 @@
       });
     }
 
-    // Función para crear botones de filtro basados en los valores únicos de la columna "tag"
+    // Función para crear los botones de filtro
     function createFilterButtons(data) {
-      console.log('Datos para los botones de filtro:', data);
-      const tags = new Set(); // Utilizamos un Set para obtener valores únicos
-      data.forEach(row => tags.add(row.tag.toLowerCase())); // Convertimos la etiqueta a minúsculas
-
+      const tags = [...new Set(data.map(item => item.tag))]; // Obtener todas las etiquetas únicas
       const filterButtonsContainer = document.querySelector('.filter-buttons');
-      filterButtonsContainer.innerHTML = ''; // Limpiamos los botones existentes
 
+      // Limpiar los botones antes de crearlos de nuevo
+      filterButtonsContainer.innerHTML = '';
+
+      // Crear un botón para cada etiqueta
       tags.forEach(tag => {
         const button = document.createElement('button');
-        button.textContent = tag.charAt(0).toUpperCase() + tag.slice(1); // Capitalizamos la primera letra
-        button.onclick = function() {
-          filterEventsByTag(tag);
-        };
+        button.textContent = tag.charAt(0).toUpperCase() + tag.slice(1); // Capitalizar la primera letra
+        button.onclick = () => filterEventsByTag(tag);
         filterButtonsContainer.appendChild(button);
       });
     }
@@ -163,10 +160,8 @@
       });
     }
 
-    // Llama a la función para cargar los datos cuando la página se ha cargado
-    window.onload = function() {
-      getDataFromApi();
-    };
+    // Cargar los datos cuando la página se cargue
+    document.addEventListener('DOMContentLoaded', getDataFromApi);
   </script>
 </body>
 </html>
