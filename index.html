@@ -8,6 +8,7 @@
   <style>
     /* Establecer el fondo de la página */
     body {
+      background: url('') no-repeat center center fixed;
       background-size: cover;
       color: white; /* Cambiar el color del texto a blanco */
     }
@@ -58,53 +59,50 @@
   </style>
 </head>
 <body>
-  <div id="main-container">
-    <!-- Todo el contenido se agregará aquí -->
+  <h1 id="title">Eventos próximos</h1>
+  <div class="carousel-container">
+    <!-- El carrusel se agregará aquí -->
+  </div>
+
+  <!-- Botones de filtros -->
+  <div class="filter-buttons">
+    <!-- Los botones de filtro se agregarán aquí -->
+  </div>
+
+  <!-- Lista de eventos filtrados -->
+  <div class="event-list">
+    <!-- Los eventos filtrados se agregarán aquí -->
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    // URL de la hoja de cálculo de Google Sheets
     const sheetURL = 'https://docs.google.com/spreadsheets/d/TU_ID_DE_HOJA_DE_CALCULO/gviz/tq?tqx=out:json';
 
-    // Función para obtener los datos de la hoja de cálculo
-    async function getDataFromSheet() {
-      try {
-        const response = await axios.get(sheetURL);
-        const data = response.data;
-
-        // Buscar la columna "Página" en los datos
-        const pageColumnIndex = data.table.cols.findIndex(col => col.label === 'Página');
-
-        // Obtener el enlace del fondo y el título de la primera fila de la columna "Página"
-        const backgroundImage = data.table.rows[0].c[pageColumnIndex].v;
-        const title = data.table.rows[1].c[pageColumnIndex].v;
-
-        // Establecer el título de la página
-        document.title = title;
-
-        // Establecer la imagen de fondo de la página
-        document.body.style.backgroundImage = `url(${backgroundImage})`;
-
-        // Llamar a la función para cargar el resto de los datos
-        getDataFromApi();
-      } catch (error) {
-        console.error('Error al obtener datos de la hoja de cálculo:', error);
-      }
+    // Función para cargar los datos desde la hoja de cálculo de Google Sheets
+    function getDataFromGoogleSheets() {
+      axios.get(sheetURL)
+        .then(response => {
+          const data = response.data;
+          const title = data.table.rows[0].c[0].v;
+          const backgroundImage = data.table.rows[0].c[1].v;
+          document.getElementById('title').innerText = title;
+          document.body.style.backgroundImage = `url('${backgroundImage}')`;
+          getDataFromApi();
+        })
+        .catch(error => {
+          console.error('Error al obtener datos de la hoja de cálculo:', error);
+        });
     }
 
     // Función para cargar los datos desde la API
     function getDataFromApi() {
-      // El resto de tu código para cargar los datos desde la API y mostrarlos en la página
-      // ...
+      // Aquí va la lógica para obtener los datos de la API
+      // Reemplazar el código con la lógica que tienes para obtener los datos de la API
     }
 
-    // Llama a la función para obtener los datos de la hoja de cálculo cuando la página se ha cargado
-    window.onload = function() {
-      getDataFromSheet();
-    };
+    // Resto del código...
   </script>
 </body>
 </html>
