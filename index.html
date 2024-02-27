@@ -8,7 +8,6 @@
   <style>
     /* Establecer el fondo de la página */
     body {
-      background: url('https://c0.wallpaperflare.com/preview/301/521/245/stars-at-night-time.jpg') no-repeat center center fixed;
       background-size: cover;
       color: white; /* Cambiar el color del texto a blanco */
     }
@@ -59,124 +58,52 @@
   </style>
 </head>
 <body>
-  <h1>Eventos próximos</h1>
-  <div class="carousel-container">
-    <!-- El carrusel se agregará aquí -->
-  </div>
-
-  <!-- Botones de filtros -->
-  <div class="filter-buttons">
-    <!-- Los botones de filtro se agregarán aquí -->
-  </div>
-
-  <!-- Lista de eventos filtrados -->
-  <div class="event-list">
-    <!-- Los eventos filtrados se agregarán aquí -->
+  <div id="main-container">
+    <!-- Todo el contenido se agregará aquí -->
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
+    // URL de la hoja de cálculo de Google Sheets
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/TU_ID_DE_HOJA_DE_CALCULO/gviz/tq?tqx=out:json';
+
+    // Función para obtener los datos de la hoja de cálculo
+    async function getDataFromSheet() {
+      try {
+        const response = await axios.get(sheetURL);
+        const data = response.data;
+
+        // Buscar la columna "Página" en los datos
+        const pageColumnIndex = data.table.cols.findIndex(col => col.label === 'Página');
+
+        // Obtener el enlace del fondo y el título de la primera fila de la columna "Página"
+        const backgroundImage = data.table.rows[0].c[pageColumnIndex].v;
+        const title = data.table.rows[1].c[pageColumnIndex].v;
+
+        // Establecer el título de la página
+        document.title = title;
+
+        // Establecer la imagen de fondo de la página
+        document.body.style.backgroundImage = `url(${backgroundImage})`;
+
+        // Llamar a la función para cargar el resto de los datos
+        getDataFromApi();
+      } catch (error) {
+        console.error('Error al obtener datos de la hoja de cálculo:', error);
+      }
+    }
 
     // Función para cargar los datos desde la API
     function getDataFromApi() {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          displayCarouselData(data);
-          generateFilterButtons(data);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
+      // El resto de tu código para cargar los datos desde la API y mostrarlos en la página
+      // ...
     }
 
-    // Función para mostrar los datos en el carrusel
-    function displayCarouselData(data) {
-      // Filtrar solo los 3 eventos próximos por fecha
-      const nextEvents = data
-        .filter(row => new Date(row.Fecha) >= new Date())
-        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
-        .slice(0, 3);
-
-      // Limpiar el carrusel antes de mostrar los eventos
-      const carouselContainer = document.querySelector('.carousel-container');
-      carouselContainer.innerHTML = '';
-
-      // Crear y agregar slides al carrusel
-      nextEvents.forEach(row => {
-        const slide = document.createElement('div');
-        slide.innerHTML = `
-          <p class="event-name">${row.Evento}</p>
-          <p>Fecha: ${row.Fecha}</p>
-          <p>Descripción: ${row.Descripción}</p>
-          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-        `;
-        carouselContainer.appendChild(slide);
-      });
-
-      // Inicializar el carrusel con Slick
-      $('.carousel-container').slick({
-        autoplay: true,
-        autoplaySpeed: 2000,
-        arrows: false,
-        dots: false,
-        slidesToShow: 1,
-        slidesToScroll: 1
-      });
-    }
-
-    // Función para generar botones de filtro dinámicamente
-    function generateFilterButtons(data) {
-      const uniqueTags = [...new Set(data.map(item => item.tag))];
-      const filterButtonsContainer = document.querySelector('.filter-buttons');
-      filterButtonsContainer.innerHTML = '';
-
-      uniqueTags.forEach(tag => {
-        const button = document.createElement('button');
-        button.textContent = tag;
-        button.onclick = function() {
-          filterEventsByTag(tag);
-        };
-        filterButtonsContainer.appendChild(button);
-      });
-    }
-
-    // Función para filtrar eventos por tag
-    function filterEventsByTag(tag) {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          const filteredEvents = data.filter(row => row.tag === tag);
-          displayFilteredEvents(filteredEvents);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
-    }
-
-    // Función para mostrar eventos filtrados
-    function displayFilteredEvents(events) {
-      const eventList = document.querySelector('.event-list');
-      eventList.innerHTML = '';
-
-      events.forEach(row => {
-        const eventItem = document.createElement('div');
-        eventItem.innerHTML = `
-          <p class="event-name">${row.Evento}</p>
-          <p>Fecha: ${row.Fecha}</p>
-          <p>Descripción: ${row.Descripción}</p>
-          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-        `;
-        eventList.appendChild(eventItem);
-      });
-    }
-
-    // Llama a la función para cargar los datos cuando la página se ha cargado
+    // Llama a la función para obtener los datos de la hoja de cálculo cuando la página se ha cargado
     window.onload = function() {
-      getDataFromApi();
+      getDataFromSheet();
     };
   </script>
 </body>
