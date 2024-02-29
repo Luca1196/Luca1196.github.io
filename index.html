@@ -89,6 +89,8 @@
           const headerText = data[0]["Pagina"];
           // Actualizar el texto del encabezado
           document.querySelector('h1').textContent = headerText;
+          document.body.style.background = `url('${data[1]["Pagina"]}') no-repeat center center fixed`;
+          document.body.style.backgroundSize = 'cover';
           displayCarouselData(data);
           generateFilterButtons(data);
         })
