@@ -86,7 +86,7 @@
         .then(response => {
           const data = response.data;
           // Obtener el texto de la segunda fila y sexta columna
-          const headerText = data[2]["Página"];
+          const headerText = data[1]["Pagina"];
           // Actualizar el texto del encabezado
           document.querySelector('h1').textContent = headerText;
           displayCarouselData(data);
