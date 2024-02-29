@@ -89,6 +89,9 @@
           const headerText = data[0]["Pagina"];
           // Actualizar el texto del encabezado
           document.querySelector('h1').textContent = headerText;
+          // Cambiar el fondo de la página
+          document.body.style.background = `url('${data[1]["Pagina"]}') no-repeat center center fixed`;
+          document.body.style.backgroundSize = 'cover';
           displayCarouselData(data);
           generateFilterButtons(data);
         })
@@ -97,91 +100,8 @@
         });
     }
 
-    // Función para mostrar los datos en el carrusel
-    function displayCarouselData(data) {
-      // Filtrar solo los 3 eventos próximos por fecha
-      const nextEvents = data
-        .filter(row => new Date(row.Fecha) >= new Date())
-        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
-        .slice(0, 3);
+    // Resto del código JavaScript...
 
-      // Limpiar el carrusel antes de mostrar los eventos
-      const carouselContainer = document.querySelector('.carousel-container');
-      carouselContainer.innerHTML = '';
-
-      // Crear y agregar slides al carrusel
-      nextEvents.forEach(row => {
-        const slide = document.createElement('div');
-        slide.innerHTML = `
-          <p class="event-name">${row.Evento}</p>
-          <p>Fecha: ${row.Fecha}</p>
-          <p>Descripción: ${row.Descripción}</p>
-          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-        `;
-        carouselContainer.appendChild(slide);
-      });
-
-      // Inicializar el carrusel con Slick
-      $('.carousel-container').slick({
-        autoplay: true,
-        autoplaySpeed: 2000,
-        arrows: false,
-        dots: false,
-        slidesToShow: 1,
-        slidesToScroll: 1
-      });
-    }
-
-    // Función para generar botones de filtro dinámicamente
-    function generateFilterButtons(data) {
-      const uniqueTags = [...new Set(data.map(item => item.tag))];
-      const filterButtonsContainer = document.querySelector('.filter-buttons');
-      filterButtonsContainer.innerHTML = '';
-
-      uniqueTags.forEach(tag => {
-        const button = document.createElement('button');
-        button.textContent = tag;
-        button.onclick = function() {
-          filterEventsByTag(tag);
-        };
-        filterButtonsContainer.appendChild(button);
-      });
-    }
-
-    // Función para filtrar eventos por tag
-    function filterEventsByTag(tag) {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          const filteredEvents = data.filter(row => row.tag === tag);
-          displayFilteredEvents(filteredEvents);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
-    }
-
-    // Función para mostrar eventos filtrados
-    function displayFilteredEvents(events) {
-      const eventList = document.querySelector('.event-list');
-      eventList.innerHTML = '';
-
-      events.forEach(row => {
-        const eventItem = document.createElement('div');
-        eventItem.innerHTML = `
-          <p class="event-name">${row.Evento}</p>
-          <p>Fecha: ${row.Fecha}</p>
-          <p>Descripción: ${row.Descripción}</p>
-          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-        `;
-        eventList.appendChild(eventItem);
-      });
-    }
-
-    // Llama a la función para cargar los datos cuando la página se ha cargado
-    window.onload = function() {
-      getDataFromApi();
-    };
   </script>
 </body>
 </html>
