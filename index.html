@@ -1,189 +1,1286 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrusel de Eventos</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
-  <style>
-    /* Establecer el fondo de la página */
-    body {
-      background: url('https://c0.wallpaperflare.com/preview/301/521/245/stars-at-night-time.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: white; /* Cambiar el color del texto a blanco */
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astrofísica — Repetición espaciada</title>
+<style>
+* { box-sizing: border-box; }
 
-    /* Estilos del carrusel */
-    .slick-slide {
-      padding: 10px;
-    }
-    .event-list {
-      margin-top: 20px;
-    }
+body {
+  font-family: Arial, sans-serif;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  background: #101426;
+  color: #f5f5f5;
+}
 
-    /* Estilos adicionales para la lista de eventos */
-    .event-list div {
-      margin-bottom: 20px; /* Ajusta el espacio entre eventos */
-      line-height: 2; /* Añade un interlineado doble */
-    }
+h1 { text-align: center; color: #8ec5ff; margin-bottom: 5px; }
+.subtitulo { text-align: center; color: #9da8c7; margin-bottom: 25px; }
 
-    /* Estilos para las imágenes */
-    .event-image {
-      max-width: 100%;
-      height: auto;
-      margin-top: 10px;
-    }
+/* ================================
+   TEMA (selector)
+================================= */
+.tema-selector {
+  margin-bottom: 20px;
+}
+.tema-selector select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: #171d33;
+  color: #f5f5f5;
+  border: 2px solid #303650;
+  font-size: 1rem;
+}
 
-    /* Estilo para el nombre del evento */
-    .event-name {
-      text-align: center;
-      font-weight: bold;
-    }
+/* ================================
+   DOMINIO
+================================= */
+.dominio-card {
+  background: #171d33;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.dominio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.dominio-numero { font-size: 1.5rem; font-weight: bold; color: #ffd166; }
+.barra { width: 100%; height: 14px; background: #303650; border-radius: 10px; overflow: hidden; }
+.barra-progreso { height: 100%; width: 0%; background: #42d392; transition: width 0.5s ease; }
 
-    /* Estilos para los botones de filtro */
-    .filter-buttons {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .filter-buttons button {
-      margin: 5px;
-      padding: 8px 16px;
-      background-color: #4CAF50;
-      border: none;
-      color: white;
-      cursor: pointer;
-    }
-    .filter-buttons button:hover {
-      background-color: #45a049;
-    }
-  </style>
+.racha-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  color: #ffb347;
+  min-height: 24px;
+}
+.racha-fuego { font-size: 1.3rem; }
+
+/* ================================
+   PREGUNTA
+================================= */
+.question {
+  background: #171d33;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+.dato { color: #ffd166; font-weight: bold; }
+
+/* ================================
+   OPCIONES
+================================= */
+.option {
+  background: #1c2340;
+  border: 2px solid #30395f;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 12px 0;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+.option:hover { background: #252e50; border-color: #8ec5ff; }
+.option.correct { border-color: #42d392; background: #173b32; }
+.option.incorrect { border-color: #ff6874; background: #3e2028; animation: shake 0.4s; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.option.correct { animation: pop 0.35s; }
+
+/* ================================
+   FEEDBACK
+================================= */
+#feedback {
+  text-align: center;
+  min-height: 30px;
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* ================================
+   EXPLICACIÓN
+================================= */
+.explicacion {
+  background: #1c2340;
+  border-left: 4px solid #8ec5ff;
+  padding: 18px;
+  margin-top: 20px;
+  border-radius: 5px;
+  display: none;
+  line-height: 1.7;
+}
+.explicacion.error { border-left-color: #ff6874; }
+.explicacion.correcta { border-left-color: #42d392; }
+.paso { background: #12182c; padding: 10px 14px; margin: 10px 0; border-radius: 6px; font-family: monospace; }
+
+/* ================================
+   BOTON
+================================= */
+button {
+  display: block;
+  margin: 25px auto 0;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: #5c8dff;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+button:hover { background: #719cff; }
+
+.info { text-align: center; color: #9da8c7; font-size: 0.9rem; margin-top: 20px; }
+
+/* ================================
+   CONFETI
+================================= */
+.confeti-contenedor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 999;
+}
+.confeti-pieza {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  opacity: 0.9;
+  animation: caer linear forwards;
+}
+@keyframes caer {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0.3;
+  }
+}
+</style>
 </head>
 <body>
-  <h1>Eventos próximos</h1>
-  <div class="carousel-container">
-    <!-- El carrusel se agregará aquí -->
+
+<h1>🌌 Astrofísica</h1>
+<div class="subtitulo">Repetición espaciada</div>
+
+<div class="tema-selector">
+  <select id="temaSelector" onchange="cambiarFiltroTema()">
+    <option value="todos">Todos los temas</option>
+  </select>
+</div>
+
+<div class="dominio-card">
+  <div class="dominio-header">
+    <span id="dominioEtiqueta">Dominio del tema</span>
+    <span class="dominio-numero" id="dominioNumero">50/100</span>
   </div>
-
-  <!-- Botones de filtros -->
-  <div class="filter-buttons">
-    <!-- Los botones de filtro se agregarán aquí -->
+  <div class="barra">
+    <div class="barra-progreso" id="barraProgreso"></div>
   </div>
+</div>
 
-  <!-- Lista de eventos filtrados -->
-  <div class="event-list">
-    <!-- Los eventos filtrados se agregarán aquí -->
-  </div>
+<div class="racha-card" id="rachaCard"></div>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script>
-    const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
+<div class="question" id="question"></div>
+<div id="options"></div>
+<div id="feedback"></div>
+<div class="explicacion" id="explicacion"></div>
 
-    // Función para cargar los datos desde la API
-    function getDataFromApi() {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          // Obtener el texto de la segunda fila y sexta columna
-          const headerText = data[0]["Pagina"];
-          // Actualizar el texto del encabezado
-          document.querySelector('h1').textContent = headerText;
-          document.body.style.background = `url('${data[1]["Pagina"]}') no-repeat center center fixed`;
-          document.body.style.backgroundSize = 'cover';
-          displayCarouselData(data);
-          generateFilterButtons(data);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
+<button onclick="nuevaPregunta()">Nueva pregunta</button>
+
+<div class="info">
+  Los números cambian en cada pregunta,
+  pero el dominio se calcula sobre el procedimiento.
+</div>
+
+<script>
+/****************************************************************
+ *
+ *                    CONFIGURACIÓN
+ *
+ *   ============================================================
+ *
+ *   ESTE ES EL PRIMER BLOQUE QUE VAS A EDITAR
+ *   CUANDO AGREGUES NUEVOS TEMAS.
+ *
+ ****************************************************************/
+
+const CONFIG_PREGUNTAS = {
+
+  magnitud_absoluta_paralaje: {
+    nombre: "Magnitud absoluta a partir del paralaje",
+    dominioInicial: 50,
+    generador: generarMagnitudAbsoluta
+  },
+
+  luminosidad: {
+    nombre: "Luminosidad (Stefan-Boltzmann)",
+    dominioInicial: 50,
+    generador: generarLuminosidad
+  },
+
+  flujo_luminosidad: {
+    nombre: "Flujo a partir de la luminosidad",
+    dominioInicial: 50,
+    generador: generarFlujoLuminosidad
+  },
+
+  flujo_temperatura: {
+    nombre: "Flujo a partir de la temperatura",
+    dominioInicial: 50,
+    generador: generarFlujoTemperatura
+  },
+
+  pogson_diferencia: {
+    nombre: "Pogson: diferencia de magnitudes",
+    dominioInicial: 50,
+    generador: generarPogsonDiferencia
+  },
+
+  pogson_cociente: {
+    nombre: "Pogson: cociente de flujos",
+    dominioInicial: 50,
+    generador: generarPogsonCociente
+  },
+
+  ley_wien: {
+    nombre: "Ley de Wien",
+    dominioInicial: 50,
+    generador: generarLeyWien
+  }
+
+  /*
+   * ------------------------------------------------------------
+   *
+   * PARA AGREGAR OTRA PREGUNTA:
+   *
+   * id_del_tema: {
+   *
+   *   nombre: "Nombre visible",
+   *
+   *   dominioInicial: 50,
+   *
+   *   generador: nombreDeLaFuncion
+   *
+   * }
+   *
+   * ------------------------------------------------------------
+   */
+
+};
+
+/* Constantes físicas usadas en varios generadores */
+const SIGMA = 5.67e-8;      // constante de Stefan-Boltzmann, W/(m²K⁴)
+const B_WIEN = 2.898e-3;    // constante de Wien, m·K
+
+/****************************************************************
+ *
+ *                    UTILIDADES
+ *
+ ****************************************************************/
+
+function redondear(numero, decimales = 2) {
+  return Number(numero.toFixed(decimales));
+}
+
+function formato(numero, decimales = 2) {
+  return numero.toFixed(decimales);
+}
+
+function mezclar(array) {
+  const copia = [...array];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+/*
+ * Formatea un entero usando el punto como separador de miles
+ * (ej. 5778 -> "5.778"), que es la convención habitual en
+ * nuestros apuntes. Ojo: leído "a la inglesa" esto se confunde
+ * con un número decimal (5,778) — ese es justamente el error
+ * que queremos poder inducir como distractor.
+ */
+function formatoMiles(numero) {
+  const entero = Math.round(numero).toString();
+  let resultado = "";
+  let contador = 0;
+  for (let i = entero.length - 1; i >= 0; i--) {
+    resultado = entero[i] + resultado;
+    contador++;
+    if (contador % 3 === 0 && i !== 0) {
+      resultado = "." + resultado;
     }
+  }
+  return resultado;
+}
 
-    // Función para mostrar los datos en el carrusel
-    function displayCarouselData(data) {
-      // Filtrar solo los 3 eventos próximos por fecha
-      const nextEvents = data
-        .filter(row => new Date(row.Fecha) >= new Date())
-        .sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha))
-        .slice(0, 3);
+/*
+ * El valor "mal leído" de un número formateado con formatoMiles:
+ * simplemente lo volvemos a parsear como si el punto fuera
+ * separador decimal. Ej. 5778 -> "5.778" -> 5.778
+ */
+function valorMalLeido(numero) {
+  return parseFloat(formatoMiles(numero));
+}
 
-      // Limpiar el carrusel antes de mostrar los eventos
-      const carouselContainer = document.querySelector('.carousel-container');
-      carouselContainer.innerHTML = '';
+/*
+ * Genera un valor en notación científica: mantisa entre
+ * [mantisaMin, mantisaMax) y exponente entero entre
+ * [expMin, expMax].
+ */
+function generarValorCientifico(mantisaMin, mantisaMax, expMin, expMax) {
+  const mantisa = redondear(mantisaMin + Math.random() * (mantisaMax - mantisaMin), 3);
+  const exponente = Math.floor(expMin + Math.random() * (expMax - expMin + 1));
+  const valor = mantisa * Math.pow(10, exponente);
+  return { mantisa, exponente, valor };
+}
 
-      // Crear y agregar slides al carrusel
-      nextEvents.forEach(row => {
-        const slide = document.createElement('div');
-        slide.innerHTML = `
-          <p class="event-name">${row.Evento}</p>
-          <p>Fecha: ${row.Fecha}</p>
-          <p>Descripción: ${row.Descripción}</p>
-          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-        `;
-        carouselContainer.appendChild(slide);
-      });
+/* Texto HTML "m.mmm × 10^e" para mostrar en el enunciado */
+function textoCientifico(mantisa, exponente, decimales = 3) {
+  return formato(mantisa, decimales) + " × 10<sup>" + exponente + "</sup>";
+}
 
-      // Inicializar el carrusel con Slick
-      $('.carousel-container').slick({
-        autoplay: true,
-        autoplaySpeed: 2000,
-        arrows: false,
-        dots: false,
-        slidesToShow: 1,
-        slidesToScroll: 1
-      });
+
+/****************************************************************
+ *
+ *                    GENERADORES
+ *
+ *   ============================================================
+ *
+ *   CADA TIPO DE PREGUNTA TIENE SU PROPIO GENERADOR.
+ *
+ *   El generador:
+ *
+ *   1. crea los datos aleatorios
+ *   2. calcula la respuesta correcta
+ *   3. calcula los distractores
+ *   4. explica cada respuesta
+ *
+ *   El motor del juego NO necesita saber cómo se calcula.
+ *
+ ****************************************************************/
+
+
+/* ==============================================================
+   1. MAGNITUD ABSOLUTA A PARTIR DEL PARALAJE
+   ============================================================== */
+
+function generarMagnitudAbsoluta() {
+
+  const m = redondear(4 + Math.random() * 8, 1);
+  const p = redondear(0.02 + Math.random() * 0.18, 2);
+
+  const d = 1 / p;
+  const M = m + 5 - 5 * Math.log10(d);
+
+  const M_error_paralaje = m + 5 - 5 * Math.log10(p);
+  const M_error_terminos = m + 5 - 5 * (Math.log10(d) - 5);
+
+  const opciones = [
+    {
+      tipo: "correcta",
+      valor: M,
+      explicacion: `
+        <strong>✅ ¡Correcto!</strong>
+        <p>Primero hay que obtener la distancia a partir del paralaje.</p>
+        <div class="paso">d = 1 / p″</div>
+        <div class="paso">d = 1 / ${formato(p, 2)} = ${formato(d, 2)} pc</div>
+        <p>Luego se aplica la fórmula de magnitud absoluta:</p>
+        <div class="paso">M = m + 5 − 5 log₁₀(d)</div>
+        <div class="paso">M = ${formato(m, 1)} + 5 − 5 log₁₀(${formato(d, 2)})</div>
+        <div class="paso">M = ${formato(M, 2)}</div>
+      `
+    },
+    {
+      tipo: "paralaje",
+      valor: M_error_paralaje,
+      explicacion: `
+        <strong>❌ Error: utilizaste el paralaje directamente.</strong>
+        <p>La fórmula necesita la <strong>distancia d</strong> dentro del logaritmo.</p>
+        <p>El paralaje dado es:</p>
+        <div class="paso">p″ = ${formato(p, 2)}″</div>
+        <p>Primero debes calcular:</p>
+        <div class="paso">d = 1 / p″</div>
+        <div class="paso">d = 1 / ${formato(p, 2)} = ${formato(d, 2)} pc</div>
+        <p>Por lo tanto, dentro del logaritmo debe aparecer la distancia, no el paralaje.</p>
+      `
+    },
+    {
+      tipo: "terminos",
+      valor: M_error_terminos,
+      explicacion: `
+        <strong>❌ Error: separación incorrecta de los términos.</strong>
+        <p>En este caso calculaste correctamente la distancia:</p>
+        <div class="paso">d = ${formato(d, 2)} pc</div>
+        <p>El error aparece al interpretar algebraicamente la fórmula.</p>
+        <p>La expresión correcta es:</p>
+        <div class="paso">M = m + 5 − 5 log₁₀(d)</div>
+        <p>El −5 multiplica solamente al logaritmo.</p>
+      `
     }
+  ];
 
-    // Función para generar botones de filtro dinámicamente
-    function generateFilterButtons(data) {
-      const uniqueTags = [...new Set(data.map(item => item.tag))];
-      const filterButtonsContainer = document.querySelector('.filter-buttons');
-      filterButtonsContainer.innerHTML = '';
+  return {
+    datos: { m, p },
+    enunciado: `
+      <strong>Una estrella tiene:</strong><br><br>
+      Magnitud aparente: <span class="dato">m = ${formato(m, 1)}</span><br>
+      Paralaje: <span class="dato">p″ = ${formato(p, 2)}″</span><br><br>
+      ¿Cuál es su <strong>magnitud absoluta M</strong>?
+    `,
+    unidad: "mag",
+    opciones: mezclar(opciones)
+  };
+}
 
-      uniqueTags.forEach(tag => {
-        const button = document.createElement('button');
-        button.textContent = tag;
-        button.onclick = function() {
-          filterEventsByTag(tag);
-        };
-        filterButtonsContainer.appendChild(button);
-      });
+
+/* ==============================================================
+   2. LUMINOSIDAD (STEFAN-BOLTZMANN)
+   ============================================================== */
+
+function generarLuminosidad() {
+
+  const R = generarValorCientifico(1, 9.99, 7, 9);       // radio en metros
+  const T = Math.round(3000 + Math.random() * 37000);     // temperatura en K
+
+  const L = 4 * Math.PI * Math.pow(R.valor, 2) * SIGMA * Math.pow(T, 4);
+
+  const T_mal = valorMalLeido(T);
+  const L_error_notacion = 4 * Math.PI * Math.pow(R.valor, 2) * SIGMA * Math.pow(T_mal, 4);
+
+  const L_error_radio = 4 * Math.PI * R.valor * SIGMA * Math.pow(T, 4);
+
+  const opciones = [
+    {
+      tipo: "correcta",
+      valor: L,
+      explicacion: `
+        <strong>✅ ¡Correcto!</strong>
+        <p>La luminosidad sale directo de Stefan-Boltzmann:</p>
+        <div class="paso">L = 4π R² σ T⁴</div>
+        <div class="paso">L = 4π (${textoCientifico(R.mantisa, R.exponente)})² · σ · (${formatoMiles(T)})⁴</div>
+        <div class="paso">L = ${textoCientifico(...desglosarCientifico(L))} W</div>
+        <p>Ojo con leer bien la temperatura: "${formatoMiles(T)} K" son <strong>${T} K</strong>, no ${formato(T_mal, 3)} K — el punto es separador de miles, no coma decimal.</p>
+      `
+    },
+    {
+      tipo: "notacion",
+      valor: L_error_notacion,
+      explicacion: `
+        <strong>❌ Error: confundiste el punto de miles con una coma decimal.</strong>
+        <p>La temperatura se escribió como "${formatoMiles(T)} K", que significa <strong>${T} K</strong> (el punto separa miles).</p>
+        <p>Si en cambio la leés como ${formato(T_mal, 3)} K, el resultado da órdenes de magnitud más chico.</p>
+        <p>Fórmula correcta:</p>
+        <div class="paso">L = 4π R² σ T⁴, con T = ${T} K</div>
+      `
+    },
+    {
+      tipo: "radio",
+      valor: L_error_radio,
+      explicacion: `
+        <strong>❌ Error: te olvidaste de elevar R al cuadrado.</strong>
+        <p>La fórmula es:</p>
+        <div class="paso">L = 4π R² σ T⁴</div>
+        <p>Si usás R sin elevar al cuadrado, el área de la superficie queda mal calculada.</p>
+      `
     }
+  ];
 
-    // Función para filtrar eventos por tag
-    function filterEventsByTag(tag) {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          const filteredEvents = data.filter(row => row.tag === tag);
-          displayFilteredEvents(filteredEvents);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
+  return {
+    datos: { R, T },
+    enunciado: `
+      <strong>Una estrella tiene:</strong><br><br>
+      Radio: <span class="dato">R = ${textoCientifico(R.mantisa, R.exponente)} m</span><br>
+      Temperatura: <span class="dato">T = ${formatoMiles(T)} K</span><br><br>
+      ¿Cuál es su <strong>luminosidad L</strong>?
+    `,
+    unidad: "W",
+    opciones: mezclar(opciones)
+  };
+}
+
+
+/* ==============================================================
+   3. FLUJO A PARTIR DE LA LUMINOSIDAD
+   ============================================================== */
+
+function generarFlujoLuminosidad() {
+
+  const L = generarValorCientifico(1, 9.99, 24, 28);  // luminosidad en W
+  const d = generarValorCientifico(1, 9.99, 15, 18);  // distancia en m
+
+  const F = L.valor / (4 * Math.PI * Math.pow(d.valor, 2));
+
+  const F_error_parentesis = (L.valor / 4) * Math.PI * Math.pow(d.valor, 2);
+  const F_error_cuadrado_de_mas = L.valor / Math.pow(4 * Math.PI * d.valor, 2);
+  const F_error_sin_cuadrado = L.valor / (4 * Math.PI * d.valor);
+
+  const opciones = [
+    {
+      tipo: "correcta",
+      valor: F,
+      explicacion: `
+        <strong>✅ ¡Correcto!</strong>
+        <p>La ley del inverso del cuadrado:</p>
+        <div class="paso">F = L / (4π d²)</div>
+        <div class="paso">F = ${textoCientifico(L.mantisa, L.exponente)} / (4π · (${textoCientifico(d.mantisa, d.exponente)})²)</div>
+        <p>En la calculadora, todo el denominador tiene que ir entre paréntesis: <span class="paso" style="display:inline">L / (4*π*d^2)</span></p>
+      `
+    },
+    {
+      tipo: "parentesis_denominador",
+      valor: F_error_parentesis,
+      explicacion: `
+        <strong>❌ Error de paréntesis: solo el 4 quedó dividiendo.</strong>
+        <p>Si tipeás <span class="paso" style="display:inline">L / 4 * π * d^2</span> sin agrupar, la calculadora hace:</p>
+        <div class="paso">F = (L / 4) · π · d²</div>
+        <p>en vez de dividir por todo <strong>4π d²</strong>. Hay que poner paréntesis en todo el denominador.</p>
+      `
+    },
+    {
+      tipo: "cuadrado_de_mas",
+      valor: F_error_cuadrado_de_mas,
+      explicacion: `
+        <strong>❌ Error de paréntesis: elevaste de más al cuadrado.</strong>
+        <p>Si agrupás <span class="paso" style="display:inline">(4*π*d)^2</span> en vez de solo d², obtenés:</p>
+        <div class="paso">F = L / (4π d)²</div>
+        <p>que divide por 16π²d² en vez de 4π d² — un resultado mucho más chico que el real.</p>
+      `
+    },
+    {
+      tipo: "sin_cuadrado",
+      valor: F_error_sin_cuadrado,
+      explicacion: `
+        <strong>❌ Error: te olvidaste del cuadrado en d.</strong>
+        <p>La ley del inverso del cuadrado necesita d², no d:</p>
+        <div class="paso">F = L / (4π d²)</div>
+        <p>Sin el cuadrado, la dilución de la luz con la distancia queda subestimada.</p>
+      `
     }
+  ];
 
-    // Función para mostrar eventos filtrados
-    function displayFilteredEvents(events) {
-      const eventList = document.querySelector('.event-list');
-      eventList.innerHTML = '';
+  return {
+    datos: { L, d },
+    enunciado: `
+      <strong>Una estrella tiene:</strong><br><br>
+      Luminosidad: <span class="dato">L = ${textoCientifico(L.mantisa, L.exponente)} W</span><br>
+      Distancia: <span class="dato">d = ${textoCientifico(d.mantisa, d.exponente)} m</span><br><br>
+      ¿Cuál es el <strong>flujo F</strong> que recibimos?
+    `,
+    unidad: "W/m²",
+    opciones: mezclar(opciones)
+  };
+}
 
-      events.forEach(row => {
-        const eventItem = document.createElement('div');
-        eventItem.innerHTML = `
-          <p class="event-name">${row.Evento}</p>
-          <p>Fecha: ${row.Fecha}</p>
-          <p>Descripción: ${row.Descripción}</p>
-          ${row.Fotos ? `<img class="event-image" src="${row.Fotos}" alt="${row.Evento}">` : ''}
-        `;
-        eventList.appendChild(eventItem);
-      });
+
+/* ==============================================================
+   4. FLUJO A PARTIR DE LA TEMPERATURA (cadena completa)
+   ============================================================== */
+
+function generarFlujoTemperatura() {
+
+  const R = generarValorCientifico(1, 9.99, 7, 9);     // radio en m
+  const T = Math.round(3000 + Math.random() * 37000);   // temperatura en K
+  const d = generarValorCientifico(1, 9.99, 15, 18);   // distancia en m
+
+  const numerador = 4 * Math.PI * Math.pow(R.valor, 2) * SIGMA * Math.pow(T, 4);
+  const denominador = 4 * Math.PI * Math.pow(d.valor, 2);
+  const F = numerador / denominador;
+
+  const F_error_parentesis = (numerador / 4) * Math.PI * Math.pow(d.valor, 2);
+  const F_error_exponente = (4 * Math.PI * Math.pow(R.valor, 2) * Math.pow(SIGMA * T, 4)) / denominador;
+
+  const T_mal = valorMalLeido(T);
+  const F_error_notacion = (4 * Math.PI * Math.pow(R.valor, 2) * SIGMA * Math.pow(T_mal, 4)) / denominador;
+
+  const opciones = [
+    {
+      tipo: "correcta",
+      valor: F,
+      explicacion: `
+        <strong>✅ ¡Correcto!</strong>
+        <p>Hay que encadenar tres pasos:</p>
+        <div class="paso">1) Flujo superficial: F_sup = σ T⁴</div>
+        <div class="paso">2) Luminosidad: L = 4π R² σ T⁴</div>
+        <div class="paso">3) Flujo observado: F = L / (4π d²)</div>
+        <p>Con los datos: T = ${T} K (¡ojo con el punto de miles!), R y d en notación científica.</p>
+      `
+    },
+    {
+      tipo: "parentesis",
+      valor: F_error_parentesis,
+      explicacion: `
+        <strong>❌ Error de paréntesis: solo el 4 del denominador dividió.</strong>
+        <p>Con una fórmula tan larga es fácil que la calculadora solo divida por el 4 y multiplique de más por π d².</p>
+        <p>Hay que agrupar TODO el denominador 4π d² entre paréntesis.</p>
+      `
+    },
+    {
+      tipo: "exponente_agrupado",
+      valor: F_error_exponente,
+      explicacion: `
+        <strong>❌ Error: agrupaste mal el exponente.</strong>
+        <p>Escribiste algo como <span class="paso" style="display:inline">(σ*T)^4</span> en vez de <span class="paso" style="display:inline">σ*T^4</span>.</p>
+        <p>El exponente 4 es solo de T, no del producto σT — eso cambia el resultado en varios órdenes de magnitud.</p>
+      `
+    },
+    {
+      tipo: "notacion",
+      valor: F_error_notacion,
+      explicacion: `
+        <strong>❌ Error: confundiste el punto de miles con una coma decimal en T.</strong>
+        <p>"${formatoMiles(T)} K" es <strong>${T} K</strong>, no ${formato(T_mal, 3)} K.</p>
+      `
     }
+  ];
 
-    // Llama a la función para cargar los datos cuando la página se ha cargado
-    window.onload = function() {
-      getDataFromApi();
+  return {
+    datos: { R, T, d },
+    enunciado: `
+      <strong>Una estrella tiene:</strong><br><br>
+      Radio: <span class="dato">R = ${textoCientifico(R.mantisa, R.exponente)} m</span><br>
+      Temperatura: <span class="dato">T = ${formatoMiles(T)} K</span><br>
+      Distancia a la Tierra: <span class="dato">d = ${textoCientifico(d.mantisa, d.exponente)} m</span><br><br>
+      ¿Cuál es el <strong>flujo F</strong> que se recibe en la Tierra?
+    `,
+    unidad: "W/m²",
+    opciones: mezclar(opciones)
+  };
+}
+
+
+/* ==============================================================
+   5a. POGSON: DIFERENCIA DE MAGNITUDES A PARTIR DEL COCIENTE DE FLUJOS
+   ============================================================== */
+
+function generarPogsonDiferencia() {
+
+  const cociente = redondear(Math.pow(10, Math.random() * 4 - 2), 3); // 0.01 a 100
+
+  const dif = -2.5 * Math.log10(cociente);
+
+  const dif_error_signo = 2.5 * Math.log10(cociente);
+  const dif_error_sin_log = -2.5 * cociente;
+  const dif_error_log_como_mult = -2.5 * (10 * cociente);
+
+  const opciones = [
+    {
+      tipo: "correcta",
+      valor: dif,
+      explicacion: `
+        <strong>✅ ¡Correcto!</strong>
+        <div class="paso">m₁ − m₂ = −2.5 log₁₀(F₁/F₂)</div>
+        <div class="paso">m₁ − m₂ = −2.5 log₁₀(${formato(cociente, 3)})</div>
+        <div class="paso">m₁ − m₂ = ${formato(dif, 2)}</div>
+      `
+    },
+    {
+      tipo: "signo",
+      valor: dif_error_signo,
+      explicacion: `
+        <strong>❌ Error de signo en el 2.5.</strong>
+        <p>El −2.5 lleva signo negativo; pasarlo como si fuera positivo invierte la relación entre brillo y magnitud.</p>
+      `
+    },
+    {
+      tipo: "sin_log",
+      valor: dif_error_sin_log,
+      explicacion: `
+        <strong>❌ Error: usaste el cociente directo, sin aplicar el logaritmo.</strong>
+        <p>La fórmula necesita log₁₀(F₁/F₂), no F₁/F₂ directamente.</p>
+      `
+    },
+    {
+      tipo: "log_como_mult",
+      valor: dif_error_log_como_mult,
+      explicacion: `
+        <strong>❌ Error: tratar el logaritmo como "multiplicar por 10".</strong>
+        <p>log₁₀(x) no es lo mismo que 10·x — hay que aplicar el logaritmo en base 10, no multiplicar por 10.</p>
+      `
+    }
+  ];
+
+  return {
+    datos: { cociente },
+    enunciado: `
+      Dos estrellas tienen un cociente de flujos
+      <span class="dato">F₁/F₂ = ${formato(cociente, 3)}</span>.<br><br>
+      ¿Cuál es la <strong>diferencia de magnitudes m₁ − m₂</strong>?
+    `,
+    unidad: "mag",
+    opciones: mezclar(opciones)
+  };
+}
+
+
+/* ==============================================================
+   5b. POGSON: COCIENTE DE FLUJOS A PARTIR DE LA DIFERENCIA DE MAGNITUDES
+   ============================================================== */
+
+function generarPogsonCociente() {
+
+  const m2 = redondear(2 + Math.random() * 10, 2);
+  const dif = redondear(-5 + Math.random() * 10, 2); // -5 a 5
+  const m1 = redondear(m2 + dif, 2);
+
+  const F = Math.pow(10, -dif / 2.5);
+
+  const F_error_signo = Math.pow(10, dif / 2.5);
+  const F_error_sin_potencia = -dif / 2.5;
+  const F_error_log_como_mult = -10 * (dif / 2.5);
+
+  const opciones = [
+    {
+      tipo: "correcta",
+      valor: F,
+      explicacion: `
+        <strong>✅ ¡Correcto!</strong>
+        <div class="paso">F₁/F₂ = 10^(−(m₁−m₂)/2.5)</div>
+        <div class="paso">F₁/F₂ = 10^(−(${formato(dif, 2)})/2.5)</div>
+        <div class="paso">F₁/F₂ = ${formato(F, 3)}</div>
+      `
+    },
+    {
+      tipo: "signo",
+      valor: F_error_signo,
+      explicacion: `
+        <strong>❌ Error de signo en el 2.5.</strong>
+        <p>Al dividir por 2.5 hay que conservar el signo negativo del exponente.</p>
+      `
+    },
+    {
+      tipo: "sin_potencia",
+      valor: F_error_sin_potencia,
+      explicacion: `
+        <strong>❌ Error: te quedaste en el logaritmo, sin aplicar la potencia de 10.</strong>
+        <p>Despejar el log implica exponenciar en base 10 (10^x), no dejar el resultado del log como si ya fuera el cociente.</p>
+      `
+    },
+    {
+      tipo: "log_como_mult",
+      valor: F_error_log_como_mult,
+      explicacion: `
+        <strong>❌ Error: tratar el logaritmo como "multiplicar por 10".</strong>
+        <p>Para despejar un log₁₀ hay que usar 10^x, no multiplicar por 10.</p>
+      `
+    }
+  ];
+
+  return {
+    datos: { m1, m2, dif },
+    enunciado: `
+      Dos estrellas tienen magnitudes
+      <span class="dato">m₁ = ${formato(m1, 2)}</span> y
+      <span class="dato">m₂ = ${formato(m2, 2)}</span>.<br><br>
+      ¿Cuál es el <strong>cociente de flujos F₁/F₂</strong>?
+    `,
+    unidad: "",
+    opciones: mezclar(opciones)
+  };
+}
+
+
+/* ==============================================================
+   6. LEY DE WIEN
+   ============================================================== */
+
+function generarLeyWien() {
+
+  const T = generarValorCientifico(1, 9.99, 3, 4); // temperatura en K
+
+  const lambda = B_WIEN / T.valor;
+
+  const lambda_error_notacion = B_WIEN / T.mantisa;
+  const lambda_error_parentesis = (B_WIEN / T.mantisa) * Math.pow(10, T.exponente);
+  const lambda_error_b = (B_WIEN * 1000) / T.valor; // se olvida el ×10⁻³ de b
+
+  const opciones = [
+    {
+      tipo: "correcta",
+      valor: lambda,
+      explicacion: `
+        <strong>✅ ¡Correcto!</strong>
+        <div class="paso">λ_max = b / T</div>
+        <div class="paso">λ_max = ${textoCientifico(2.898, -3)} / ${textoCientifico(T.mantisa, T.exponente)}</div>
+        <div class="paso">λ_max = ${textoCientifico(...desglosarCientifico(lambda))} m</div>
+      `
+    },
+    {
+      tipo: "notacion",
+      valor: lambda_error_notacion,
+      explicacion: `
+        <strong>❌ Error: usaste solo la mantisa de T, sin el ×10<sup>${T.exponente}</sup>.</strong>
+        <p>T = ${textoCientifico(T.mantisa, T.exponente)} K, no ${formato(T.mantisa, 3)} K.</p>
+      `
+    },
+    {
+      tipo: "parentesis",
+      valor: lambda_error_parentesis,
+      explicacion: `
+        <strong>❌ Error de paréntesis al dividir dos notaciones científicas.</strong>
+        <p>Si tipeás <span class="paso" style="display:inline">2.898*10^-3 / ${formato(T.mantisa, 3)}*10^${T.exponente}</span> sin agrupar, el exponente de T termina multiplicando en vez de dividiendo.</p>
+      `
+    },
+    {
+      tipo: "constante_b",
+      valor: lambda_error_b,
+      explicacion: `
+        <strong>❌ Error: te olvidaste del ×10⁻³ en la constante b.</strong>
+        <p>b = 2.898 × 10⁻³ m·K, no 2898 m·K.</p>
+      `
+    }
+  ];
+
+  return {
+    datos: { T },
+    enunciado: `
+      Una estrella tiene temperatura
+      <span class="dato">T = ${textoCientifico(T.mantisa, T.exponente)} K</span>.<br><br>
+      Dato: <span class="dato">b = 2.898 × 10⁻³ m·K</span><br><br>
+      ¿A qué <strong>longitud de onda λ_max</strong> emite su máximo de radiación?
+    `,
+    unidad: "m",
+    opciones: mezclar(opciones)
+  };
+}
+
+/* Descompone un número cualquiera en {mantisa, exponente} para mostrarlo prolijo */
+function desglosarCientifico(valor) {
+  if (valor === 0) return [0, 0];
+  const exponente = Math.floor(Math.log10(Math.abs(valor)));
+  const mantisa = redondear(valor / Math.pow(10, exponente), 3);
+  return [mantisa, exponente];
+}
+
+/****************************************************************
+ *
+ *                    ESTADO DEL JUEGO
+ *
+ ****************************************************************/
+
+const STORAGE_KEY = "astrofisica_progreso_v4";
+
+let progreso = cargarProgreso();
+let preguntaActual = null;
+let temaFiltro = "todos";
+let racha = 0;
+
+
+/****************************************************************
+ *
+ *                    PERSISTENCIA
+ *
+ ****************************************************************/
+
+function crearProgresoInicial() {
+  const nuevo = {};
+  for (const id in CONFIG_PREGUNTAS) {
+    nuevo[id] = {
+      dominio: CONFIG_PREGUNTAS[id].dominioInicial,
+      aciertos: 0,
+      errores: 0,
+      racha: 0,
+      ultimoResultado: null,
+      ultimaPregunta: null,
+      erroresPorTipo: {}
     };
-  </script>
+  }
+  return nuevo;
+}
+
+function cargarProgreso() {
+  const guardado = localStorage.getItem(STORAGE_KEY);
+
+  if (guardado) {
+    try {
+      const datos = JSON.parse(guardado);
+      /* Si se agregaron temas nuevos al código, los completamos */
+      for (const id in CONFIG_PREGUNTAS) {
+        if (!datos[id]) {
+          datos[id] = {
+            dominio: CONFIG_PREGUNTAS[id].dominioInicial,
+            aciertos: 0,
+            errores: 0,
+            racha: 0,
+            ultimoResultado: null,
+            ultimaPregunta: null,
+            erroresPorTipo: {}
+          };
+        }
+      }
+      return datos;
+    } catch (error) {
+      console.warn("Error leyendo progreso.");
+    }
+  }
+
+  const nuevo = crearProgresoInicial();
+  guardarProgreso(nuevo);
+  return nuevo;
+}
+
+function guardarProgreso(datos) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(datos));
+}
+
+
+/****************************************************************
+ *
+ *                    SISTEMA DE PRIORIDAD
+ *
+ ****************************************************************/
+
+function calcularPrioridad(id) {
+  const datos = progreso[id];
+
+  let prioridad = 100 - datos.dominio;
+
+  if (datos.ultimoResultado === "error") {
+    prioridad += 15;
+  }
+
+  prioridad -= Math.min(datos.racha * 3, 15);
+
+  return Math.max(0, Math.min(100, prioridad));
+}
+
+function seleccionarTipoPregunta() {
+  const idsDisponibles = temaFiltro === "todos"
+    ? Object.keys(CONFIG_PREGUNTAS)
+    : [temaFiltro];
+
+  const candidatos = idsDisponibles.map(id => ({
+    id,
+    prioridad: calcularPrioridad(id)
+  }));
+
+  const pesos = candidatos.map(c => (c.prioridad + 10) ** 2);
+  const suma = pesos.reduce((a, b) => a + b, 0);
+
+  let aleatorio = Math.random() * suma;
+
+  for (let i = 0; i < candidatos.length; i++) {
+    aleatorio -= pesos[i];
+    if (aleatorio <= 0) {
+      return candidatos[i].id;
+    }
+  }
+
+  return candidatos[0].id;
+}
+
+
+/****************************************************************
+ *
+ *                    ACTUALIZAR DOMINIO
+ *
+ ****************************************************************/
+
+function actualizarDominio(tipo, respuesta) {
+  const datos = progreso[tipo];
+
+  if (respuesta.tipo === "correcta") {
+    datos.aciertos++;
+    datos.racha++;
+    racha++;
+
+    const espacio = 100 - datos.dominio;
+    const incremento = Math.max(1, Math.round(espacio * 0.15));
+
+    datos.dominio += incremento;
+    datos.dominio = Math.min(100, datos.dominio);
+    datos.ultimoResultado = "correcta";
+  } else {
+    datos.errores++;
+    datos.racha = 0;
+    racha = 0;
+
+    const perdida = Math.max(5, Math.round(datos.dominio * 0.25));
+    datos.dominio -= perdida;
+    datos.dominio = Math.max(0, datos.dominio);
+    datos.ultimoResultado = "error";
+
+    if (!datos.erroresPorTipo[respuesta.tipo]) {
+      datos.erroresPorTipo[respuesta.tipo] = 0;
+    }
+    datos.erroresPorTipo[respuesta.tipo]++;
+  }
+
+  datos.ultimaPregunta = Date.now();
+  guardarProgreso(progreso);
+}
+
+
+/****************************************************************
+ *
+ *                    SONIDO (Web Audio, sin archivos externos)
+ *
+ ****************************************************************/
+
+let contextoAudio = null;
+
+function obtenerContextoAudio() {
+  if (!contextoAudio) {
+    contextoAudio = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return contextoAudio;
+}
+
+function sonarTono(frecuencia, duracion, tipo = "sine", volumenInicial = 0.15, retardo = 0) {
+  try {
+    const ctx = obtenerContextoAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = tipo;
+    osc.frequency.value = frecuencia;
+
+    const inicio = ctx.currentTime + retardo;
+
+    gain.gain.setValueAtTime(volumenInicial, inicio);
+    gain.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(inicio);
+    osc.stop(inicio + duracion);
+  } catch (error) {
+    /* Si el navegador bloquea audio sin interacción previa, seguimos sin sonido */
+  }
+}
+
+function sonidoCorrecto() {
+  sonarTono(523.25, 0.12, "sine", 0.15, 0);      // Do
+  sonarTono(659.25, 0.12, "sine", 0.15, 0.1);    // Mi
+  sonarTono(783.99, 0.18, "sine", 0.15, 0.2);    // Sol
+}
+
+function sonidoIncorrecto() {
+  sonarTono(196.0, 0.25, "sawtooth", 0.1, 0);
+  sonarTono(146.83, 0.3, "sawtooth", 0.1, 0.08);
+}
+
+function sonidoRachaEspecial() {
+  [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+    sonarTono(freq, 0.15, "triangle", 0.12, i * 0.09);
+  });
+}
+
+
+/****************************************************************
+ *
+ *                    CONFETI
+ *
+ ****************************************************************/
+
+function lanzarConfeti() {
+  const colores = ["#42d392", "#8ec5ff", "#ffd166", "#ff6874", "#c792ea"];
+  const contenedor = document.createElement("div");
+  contenedor.className = "confeti-contenedor";
+  document.body.appendChild(contenedor);
+
+  const cantidad = 40;
+
+  for (let i = 0; i < cantidad; i++) {
+    const pieza = document.createElement("div");
+    pieza.className = "confeti-pieza";
+    pieza.style.left = Math.random() * 100 + "vw";
+    pieza.style.background = colores[Math.floor(Math.random() * colores.length)];
+    pieza.style.animationDuration = (1.2 + Math.random() * 1.2) + "s";
+    pieza.style.animationDelay = (Math.random() * 0.3) + "s";
+    contenedor.appendChild(pieza);
+  }
+
+  setTimeout(() => contenedor.remove(), 2800);
+}
+
+
+/****************************************************************
+ *
+ *                    INTERFAZ
+ *
+ ****************************************************************/
+
+function poblarSelectorTemas() {
+  const selector = document.getElementById("temaSelector");
+
+  for (const id in CONFIG_PREGUNTAS) {
+    const opcion = document.createElement("option");
+    opcion.value = id;
+    opcion.textContent = CONFIG_PREGUNTAS[id].nombre;
+    selector.appendChild(opcion);
+  }
+}
+
+function cambiarFiltroTema() {
+  temaFiltro = document.getElementById("temaSelector").value;
+  nuevaPregunta();
+}
+
+function mostrarDominio(tipo) {
+  const dominio = Math.round(progreso[tipo].dominio);
+
+  document.getElementById("dominioEtiqueta").textContent =
+    "Dominio: " + CONFIG_PREGUNTAS[tipo].nombre;
+
+  document.getElementById("dominioNumero").textContent = dominio + "/100";
+  document.getElementById("barraProgreso").style.width = dominio + "%";
+}
+
+function mostrarRacha() {
+  const contenedor = document.getElementById("rachaCard");
+
+  if (racha >= 2) {
+    contenedor.innerHTML = `<span class="racha-fuego">🔥</span> Racha de ${racha} ${racha === 1 ? "acierto" : "aciertos"} seguidos`;
+  } else {
+    contenedor.innerHTML = "";
+  }
+}
+
+function nuevaPregunta() {
+  const tipo = seleccionarTipoPregunta();
+  const configuracion = CONFIG_PREGUNTAS[tipo];
+  const generada = configuracion.generador();
+
+  preguntaActual = {
+    tipo,
+    datos: generada.datos,
+    enunciado: generada.enunciado,
+    unidad: generada.unidad || "",
+    opciones: generada.opciones
+  };
+
+  mostrarPregunta();
+}
+
+function mostrarPregunta() {
+  document.getElementById("question").innerHTML = preguntaActual.enunciado;
+
+  const contenedor = document.getElementById("options");
+  contenedor.innerHTML = "";
+
+  preguntaActual.opciones.forEach((opcion, indice) => {
+    const div = document.createElement("div");
+    div.className = "option";
+    const unidadTexto = preguntaActual.unidad ? " " + preguntaActual.unidad : "";
+    div.textContent = "= " + formatoResultado(opcion.valor) + unidadTexto;
+    div.onclick = () => seleccionarRespuesta(indice, div);
+    contenedor.appendChild(div);
+  });
+
+  document.getElementById("feedback").innerHTML = "";
+  document.getElementById("explicacion").style.display = "none";
+
+  mostrarDominio(preguntaActual.tipo);
+  mostrarRacha();
+}
+
+/* Formatea el resultado de una opción con la precisión adecuada
+   según su orden de magnitud, para que las opciones sean legibles */
+function formatoResultado(valor) {
+  const abs = Math.abs(valor);
+
+  if (abs !== 0 && (abs >= 100000 || abs < 0.001)) {
+    const [mantisa, exponente] = desglosarCientifico(valor);
+    return formato(mantisa, 3) + " × 10" + superindice(exponente);
+  }
+
+  return formato(valor, 3);
+}
+
+function superindice(numero) {
+  const mapa = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  return numero.toString().split("").map(c => mapa[c] ?? c).join("");
+}
+
+function seleccionarRespuesta(indice, elemento) {
+  const elementos = document.querySelectorAll(".option");
+
+  elementos.forEach(opcion => {
+    opcion.style.pointerEvents = "none";
+  });
+
+  const seleccion = preguntaActual.opciones[indice];
+
+  actualizarDominio(preguntaActual.tipo, seleccion);
+
+  if (seleccion.tipo === "correcta") {
+    elemento.classList.add("correct");
+    document.getElementById("feedback").innerHTML = "✅ ¡Correcto!";
+
+    sonidoCorrecto();
+    lanzarConfeti();
+
+    if (racha > 0 && racha % 5 === 0) {
+      setTimeout(sonidoRachaEspecial, 300);
+    }
+  } else {
+    elemento.classList.add("incorrect");
+    document.getElementById("feedback").innerHTML = "❌ Incorrecto.";
+    sonidoIncorrecto();
+  }
+
+  preguntaActual.opciones.forEach((opcion, i) => {
+    if (opcion.tipo === "correcta") {
+      elementos[i].classList.add("correct");
+    }
+  });
+
+  mostrarExplicacion(seleccion);
+  mostrarDominio(preguntaActual.tipo);
+  mostrarRacha();
+}
+
+function mostrarExplicacion(opcion) {
+  const caja = document.getElementById("explicacion");
+
+  caja.innerHTML = opcion.explicacion;
+  caja.className = "explicacion " + (opcion.tipo === "correcta" ? "correcta" : "error");
+  caja.style.display = "block";
+}
+
+
+/****************************************************************
+ *
+ *                    INICIO
+ *
+ ****************************************************************/
+
+poblarSelectorTemas();
+nuevaPregunta();
+</script>
 </body>
 </html>
