@@ -20,6 +20,29 @@ h1 { text-align: center; color: #8ec5ff; margin-bottom: 5px; }
 .subtitulo { text-align: center; color: #9da8c7; margin-bottom: 25px; }
 
 /* ================================
+   SELECTOR DE MODO
+================================= */
+.modo-switch {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+.modo-switch button {
+  display: inline-block;
+  margin: 0;
+  background: #1c2340;
+  border: 2px solid #303650;
+  color: #9da8c7;
+}
+.modo-switch button:hover { background: #252e50; }
+.modo-switch button.activo {
+  background: #5c8dff;
+  border-color: #5c8dff;
+  color: white;
+}
+
+/* ================================
    TEMA (selector)
 ================================= */
 .tema-selector {
@@ -159,6 +182,82 @@ button:hover { background: #719cff; }
 .info { text-align: center; color: #9da8c7; font-size: 0.9rem; margin-top: 20px; }
 
 /* ================================
+   FLASHCARDS (modo memorizar)
+================================= */
+.fc-stats {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+}
+.fc-nuevas { color: #8ec5ff; }
+.fc-aprender { color: #ff6874; }
+.fc-repasar { color: #42d392; }
+.fc-stats .activa { text-decoration: underline; }
+
+.fc-card {
+  background: #171d33;
+  border-radius: 12px;
+  padding: 30px 24px;
+  min-height: 220px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+.fc-categoria { color: #9da8c7; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+.fc-frente { font-size: 1.6rem; font-weight: bold; color: #ffd166; line-height: 1.4; }
+.fc-separador { border: none; border-top: 2px solid #303650; width: 100%; margin: 6px 0; }
+.fc-formula { font-family: monospace; font-size: 1.5rem; background: #12182c; padding: 14px; border-radius: 8px; color: #f5f5f5; }
+.fc-nota { color: #9da8c7; font-size: 0.95rem; line-height: 1.6; text-align: left; }
+
+.fc-botones { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.fc-botones button {
+  flex: 1;
+  min-width: 120px;
+  margin: 0;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.fc-botones button small { font-weight: normal; opacity: 0.85; font-size: 0.8rem; }
+.fc-b-otra { background: #c9485b; }
+.fc-b-otra:hover { background: #e0586c; }
+.fc-b-dificil { background: #c98a2f; }
+.fc-b-dificil:hover { background: #e0a040; }
+.fc-b-bien { background: #2f9d6f; }
+.fc-b-bien:hover { background: #3dbb85; }
+.fc-b-facil { background: #3b7be0; }
+.fc-b-facil:hover { background: #5590f0; }
+
+.fc-vacio { text-align: center; padding: 40px 20px; background: #171d33; border-radius: 12px; line-height: 1.8; }
+.fc-ocultar { display: none !important; }
+.fc-selector-wrap { margin-bottom: 20px; }
+.fc-selector-wrap select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: #171d33;
+  color: #f5f5f5;
+  border: 2px solid #303650;
+  font-size: 1rem;
+}
+.fc-reset {
+  background: transparent;
+  border: 1px solid #303650;
+  color: #9da8c7;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  margin-top: 25px;
+}
+.fc-reset:hover { background: #1c2340; }
+
+/* ================================
    CONFETI
 ================================= */
 .confeti-contenedor {
@@ -192,34 +291,66 @@ button:hover { background: #719cff; }
 <h1>🌌 Astrofísica</h1>
 <div class="subtitulo">Repetición espaciada</div>
 
-<div class="tema-selector">
-  <select id="temaSelector" onchange="cambiarFiltroTema()">
-    <option value="todos">Todos los temas</option>
-  </select>
+<div class="modo-switch">
+  <button id="btnModoPractica" class="activo" onclick="cambiarModo('practica')">🎯 Practicar</button>
+  <button id="btnModoMemorizar" onclick="cambiarModo('memorizar')">🧠 Memorizar</button>
 </div>
 
-<div class="dominio-card">
-  <div class="dominio-header">
-    <span id="dominioEtiqueta">Dominio del tema</span>
-    <span class="dominio-numero" id="dominioNumero">50/100</span>
+<!-- ============ MODO PRÁCTICA ============ -->
+<div id="modoPractica">
+
+  <div class="tema-selector">
+    <select id="temaSelector" onchange="cambiarFiltroTema()">
+      <option value="todos">Todos los temas</option>
+    </select>
   </div>
-  <div class="barra">
-    <div class="barra-progreso" id="barraProgreso"></div>
+
+  <div class="dominio-card">
+    <div class="dominio-header">
+      <span id="dominioEtiqueta">Dominio del tema</span>
+      <span class="dominio-numero" id="dominioNumero">50/100</span>
+    </div>
+    <div class="barra">
+      <div class="barra-progreso" id="barraProgreso"></div>
+    </div>
   </div>
+
+  <div class="racha-card" id="rachaCard"></div>
+
+  <div class="question" id="question"></div>
+  <div id="options"></div>
+  <div id="feedback"></div>
+  <div class="explicacion" id="explicacion"></div>
+
+  <button onclick="nuevaPregunta()">Nueva pregunta</button>
+
+  <div class="info">
+    Los números cambian en cada pregunta,
+    pero el dominio se calcula sobre el procedimiento.
+  </div>
+
 </div>
 
-<div class="racha-card" id="rachaCard"></div>
+<!-- ============ MODO MEMORIZAR ============ -->
+<div id="modoMemorizar" class="fc-ocultar">
 
-<div class="question" id="question"></div>
-<div id="options"></div>
-<div id="feedback"></div>
-<div class="explicacion" id="explicacion"></div>
+  <div class="fc-selector-wrap">
+    <select id="fcCategoria" onchange="cambiarCategoriaFlash()">
+      <option value="todas">Todas las categorías</option>
+    </select>
+  </div>
 
-<button onclick="nuevaPregunta()">Nueva pregunta</button>
+  <div class="fc-stats" id="fcStats"></div>
 
-<div class="info">
-  Los números cambian en cada pregunta,
-  pero el dominio se calcula sobre el procedimiento.
+  <div id="fcZona"></div>
+
+  <div class="info">
+    Espacio = mostrar reverso · 1 Otra vez · 2 Difícil · 3 Bien · 4 Fácil
+  </div>
+  <div style="text-align:center">
+    <button class="fc-reset" id="btnResetFlash" onclick="reiniciarFlashcards()">Reiniciar progreso de flashcards</button>
+  </div>
+
 </div>
 
 <script>
@@ -301,6 +432,121 @@ const CONFIG_PREGUNTAS = {
 /* Constantes físicas usadas en varios generadores */
 const SIGMA = 5.67e-8;      // constante de Stefan-Boltzmann, W/(m²K⁴)
 const B_WIEN = 2.898e-3;    // constante de Wien, m·K
+
+/****************************************************************
+ *
+ *                    CONFIGURACIÓN DE FLASHCARDS
+ *
+ *   ============================================================
+ *
+ *   SEGUNDO BLOQUE QUE VAS A EDITAR: las tarjetas del modo
+ *   "memorizar". Cada una tiene:
+ *
+ *   id         → identificador único (no lo cambies después,
+ *                porque el progreso se guarda con él)
+ *   categoria  → agrupa las tarjetas en el selector
+ *   frente     → lo que se muestra de anverso (HTML)
+ *   formula    → el reverso principal (HTML)
+ *   nota       → (opcional) significado de las variables / unidades
+ *
+ ****************************************************************/
+
+const CONFIG_FLASHCARDS = [
+
+  /* ---------- Magnitudes y distancia ---------- */
+  {
+    id: "fc_distancia_paralaje",
+    categoria: "Distancia",
+    frente: "Distancia por paralaje",
+    formula: "d = 1 / p″",
+    nota: "d en parsec (pc), p″ = paralaje en segundos de arco."
+  },
+  {
+    id: "fc_magnitud_absoluta",
+    categoria: "Magnitudes",
+    frente: "Magnitud absoluta (M)",
+    formula: "M = m + 5 − 5 log₁₀(d)",
+    nota: "m = magnitud aparente, d = distancia en pc. El −5 multiplica solo al logaritmo."
+  },
+  /* ---------- Luminosidad y flujo ---------- */
+  {
+    id: "fc_luminosidad",
+    categoria: "Luminosidad y flujo",
+    frente: "Luminosidad (Stefan-Boltzmann)",
+    formula: "L = 4π R² σ T⁴",
+    nota: "R en m, T en K, L en W. El exponente 4 es solo de T."
+  },
+  {
+    id: "fc_flujo_luminosidad",
+    categoria: "Luminosidad y flujo",
+    frente: "Flujo a partir de la luminosidad",
+    formula: "F = L / (4π d²)",
+    nota: "L en W, d en m, F en W/m². Ley del inverso del cuadrado. Todo el denominador va entre paréntesis."
+  },
+  {
+    id: "fc_flujo_temperatura",
+    categoria: "Luminosidad y flujo",
+    frente: "Flujo a partir de la temperatura (R, T, d)",
+    formula: "F = σ T⁴ · R² / d²",
+    nota: "Sale de reemplazar L = 4π R² σ T⁴ en F = L / (4π d²): el 4π se cancela."
+  },
+
+  /* ---------- Wien ---------- */
+  {
+    id: "fc_wien_lambda",
+    categoria: "Ley de Wien",
+    frente: "Longitud de onda del máximo de emisión (λ<sub>max</sub>)",
+    formula: "λ<sub>max</sub> = b / T",
+    nota: "b = constante de Wien, T en K, λ<sub>max</sub> en m."
+  },
+  {
+    id: "fc_wien_temperatura",
+    categoria: "Ley de Wien",
+    frente: "Temperatura a partir de λ<sub>max</sub> (Wien)",
+    formula: "T = b / λ<sub>max</sub>",
+    nota: "b = 2,898 × 10⁻³ m·K, λ<sub>max</sub> en m, T en K."
+  },
+
+  /* ---------- Pogson ---------- */
+  {
+    id: "fc_pogson_diferencia",
+    categoria: "Pogson",
+    frente: "Pogson: diferencia de magnitudes",
+    formula: "m₁ − m₂ = −2,5 log₁₀(F₁ / F₂)",
+    nota: "El signo negativo: más brillo ⇒ menor magnitud."
+  },
+  {
+    id: "fc_pogson_cociente",
+    categoria: "Pogson",
+    frente: "Pogson: cociente de flujos",
+    formula: "F₁ / F₂ = 10<sup>−(m₁ − m₂) / 2,5</sup>",
+    nota: "Se despeja el log₁₀ aplicando potencia de 10 (no multiplicando por 10)."
+  },
+
+  /* ---------- Constantes ---------- */
+  {
+    id: "fc_const_wien",
+    categoria: "Constantes",
+    frente: "Constante de Wien (b)",
+    formula: "b = 2,898 × 10⁻³ m·K",
+    nota: "Se usa en λ<sub>max</sub> = b / T."
+  },
+  {
+    id: "fc_const_stefan",
+    categoria: "Constantes",
+    frente: "Constante de Stefan-Boltzmann (σ)",
+    formula: "σ = 5,67 × 10⁻⁸ W / (m² K⁴)",
+    nota: "Se usa en F = σ T⁴ y L = 4π R² σ T⁴."
+  },
+  {
+    id: "fc_const_stefan_inversa",
+    categoria: "Constantes",
+    frente: "¿Qué ley usa σ = 5,67 × 10⁻⁸ W/(m² K⁴)?",
+    formula: "Ley de Stefan-Boltzmann: F = σ T⁴",
+    nota: "Relaciona el flujo emitido con la temperatura del cuerpo negro."
+  }
+
+];
 
 /****************************************************************
  *
@@ -891,11 +1137,13 @@ function desglosarCientifico(valor) {
  ****************************************************************/
 
 const STORAGE_KEY = "astrofisica_progreso_v4";
+const STORAGE_KEY_FLASH = "astrofisica_flashcards_v2";
 
 let progreso = cargarProgreso();
 let preguntaActual = null;
 let temaFiltro = "todos";
 let racha = 0;
+let modoActual = "practica";
 
 
 /****************************************************************
@@ -1130,7 +1378,7 @@ function lanzarConfeti() {
 
 /****************************************************************
  *
- *                    INTERFAZ
+ *                    INTERFAZ (MODO PRÁCTICA)
  *
  ****************************************************************/
 
@@ -1275,11 +1523,247 @@ function mostrarExplicacion(opcion) {
 
 /****************************************************************
  *
+ *                    MODO MEMORIZAR (FLASHCARDS TIPO ANKI)
+ *
+ *   ============================================================
+ *
+ *   Cada tarjeta guarda: estado (nueva / aprendiendo / repaso),
+ *   intervalo en días, facilidad (ease) y fecha de próximo repaso.
+ *
+ *   Botones:
+ *     Otra vez → vuelve en 1 minuto, baja la facilidad
+ *     Difícil  → intervalo x1.2, baja un poco la facilidad
+ *     Bien     → intervalo x facilidad
+ *     Fácil    → intervalo x facilidad x 1.3, sube la facilidad
+ *
+ ****************************************************************/
+
+/* Posiciones en la cola según la calificación:
+   n = cantidad de tarjetas que pasan antes de que vuelva a aparecer.
+   Infinity = al final de la cola. Editá estos números a gusto. */
+const POSICIONES_COLA = { otra: 1, dificil: 2, bien: 5, facil: Infinity };
+
+let flashProgreso = cargarFlashcards();   // { cola: [ids en orden] }
+let flashCategoria = "todas";
+let flashActual = null;
+let flashReversoVisible = false;
+let flashRepasadas = 0;
+let resetPendiente = null;
+
+function cargarFlashcards() {
+  let cola = [];
+  try {
+    const guardado = localStorage.getItem(STORAGE_KEY_FLASH);
+    if (guardado) cola = JSON.parse(guardado).cola || [];
+  } catch (error) {
+    console.warn("Error leyendo flashcards.");
+  }
+
+  const ids = CONFIG_FLASHCARDS.map(c => c.id);
+  cola = cola.filter(id => ids.includes(id));
+  const faltan = mezclar(ids.filter(id => !cola.includes(id)));
+  return { cola: cola.concat(faltan) };
+}
+
+function guardarFlashcards() {
+  try {
+    localStorage.setItem(STORAGE_KEY_FLASH, JSON.stringify(flashProgreso));
+  } catch (error) {
+    console.warn("No se pudo guardar.");
+  }
+}
+
+/* Dos toques para confirmar (confirm() puede estar bloqueado en iframes) */
+function reiniciarFlashcards() {
+  const boton = document.getElementById("btnResetFlash");
+  const textoOriginal = "Reiniciar progreso de flashcards";
+
+  if (!resetPendiente) {
+    boton.textContent = "¿Seguro? Tocá de nuevo para reiniciar";
+    resetPendiente = setTimeout(() => {
+      resetPendiente = null;
+      boton.textContent = textoOriginal;
+    }, 3000);
+    return;
+  }
+
+  clearTimeout(resetPendiente);
+  resetPendiente = null;
+  boton.textContent = textoOriginal;
+
+  flashProgreso = { cola: mezclar(CONFIG_FLASHCARDS.map(c => c.id)) };
+  flashRepasadas = 0;
+  guardarFlashcards();
+  mostrarSiguienteFlash();
+}
+
+function poblarSelectorCategorias() {
+  const selector = document.getElementById("fcCategoria");
+  const categorias = [...new Set(CONFIG_FLASHCARDS.map(c => c.categoria))];
+
+  categorias.forEach(cat => {
+    const opcion = document.createElement("option");
+    opcion.value = cat;
+    opcion.textContent = cat;
+    selector.appendChild(opcion);
+  });
+}
+
+function cambiarCategoriaFlash() {
+  flashCategoria = document.getElementById("fcCategoria").value;
+  mostrarSiguienteFlash();
+}
+
+function cartaPorId(id) {
+  return CONFIG_FLASHCARDS.find(c => c.id === id);
+}
+
+function enCategoria(id) {
+  return flashCategoria === "todas" || cartaPorId(id).categoria === flashCategoria;
+}
+
+function textoPosicion(n) {
+  if (n === Infinity) return "al final";
+  return "en " + n + (n === 1 ? " lugar" : " lugares");
+}
+
+function mostrarSiguienteFlash() {
+  const id = flashProgreso.cola.find(enCategoria);
+  flashActual = id ? cartaPorId(id) : null;
+  flashReversoVisible = false;
+  dibujarFlash();
+}
+
+function dibujarFlash() {
+  const zona = document.getElementById("fcZona");
+  const enCola = flashProgreso.cola.filter(enCategoria).length;
+
+  document.getElementById("fcStats").innerHTML = `
+    <span class="fc-nuevas">En cola: ${enCola}</span>
+    <span class="fc-repasar">Repasadas: ${flashRepasadas}</span>
+  `;
+
+  if (!flashActual) {
+    zona.innerHTML = "";
+    return;
+  }
+
+  const carta = flashActual;
+
+  let html = `
+    <div class="fc-card" onclick="darVueltaFlash()" style="cursor:pointer">
+      <div class="fc-categoria">${carta.categoria}</div>
+      <div class="fc-frente">${carta.frente}</div>
+  `;
+
+  if (flashReversoVisible) {
+    html += `
+      <hr class="fc-separador">
+      <div class="fc-formula">${carta.formula}</div>
+      ${carta.nota ? `<div class="fc-nota">${carta.nota}</div>` : ""}
+    `;
+  } else {
+    html += `<div class="fc-nota" style="text-align:center">Tocá para ver el reverso</div>`;
+  }
+
+  html += `</div>`;
+
+  if (!flashReversoVisible) {
+    html += `<button onclick="darVueltaFlash()">Mostrar reverso</button>`;
+  } else {
+    const opciones = [
+      ["otra", "Otra vez", "fc-b-otra"],
+      ["dificil", "Difícil", "fc-b-dificil"],
+      ["bien", "Bien", "fc-b-bien"],
+      ["facil", "Fácil", "fc-b-facil"]
+    ];
+
+    html += `<div class="fc-botones">`;
+    opciones.forEach(([clave, nombre, clase]) => {
+      html += `
+        <button class="${clase}" onclick="calificarFlash('${clave}')">
+          ${nombre}
+          <small>${textoPosicion(POSICIONES_COLA[clave])}</small>
+        </button>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  zona.innerHTML = html;
+}
+
+function darVueltaFlash() {
+  if (!flashActual || flashReversoVisible) return;
+  flashReversoVisible = true;
+  dibujarFlash();
+}
+
+function calificarFlash(calificacion) {
+  if (!flashActual) return;
+
+  const id = flashActual.id;
+  const cola = flashProgreso.cola;
+
+  cola.splice(cola.indexOf(id), 1);
+
+  /* posiciones contadas solo entre las tarjetas de la categoría activa */
+  const indices = [];
+  cola.forEach((cid, i) => { if (enCategoria(cid)) indices.push(i); });
+
+  const n = POSICIONES_COLA[calificacion];
+  const destino = n >= indices.length ? cola.length : indices[n];
+  cola.splice(destino, 0, id);
+
+  flashRepasadas++;
+  guardarFlashcards();
+  mostrarSiguienteFlash();
+}
+
+/* Atajos de teclado */
+document.addEventListener("keydown", evento => {
+  if (modoActual !== "memorizar") return;
+  if (evento.target.tagName === "SELECT") return;
+
+  if (evento.code === "Space") {
+    evento.preventDefault();
+    darVueltaFlash();
+  } else if (flashReversoVisible) {
+    const mapa = { "1": "otra", "2": "dificil", "3": "bien", "4": "facil" };
+    if (mapa[evento.key]) calificarFlash(mapa[evento.key]);
+  }
+});
+
+
+/****************************************************************
+ *
+ *                    CAMBIO DE MODO
+ *
+ ****************************************************************/
+
+function cambiarModo(modo) {
+  modoActual = modo;
+
+  document.getElementById("modoPractica").classList.toggle("fc-ocultar", modo !== "practica");
+  document.getElementById("modoMemorizar").classList.toggle("fc-ocultar", modo !== "memorizar");
+
+  document.getElementById("btnModoPractica").classList.toggle("activo", modo === "practica");
+  document.getElementById("btnModoMemorizar").classList.toggle("activo", modo === "memorizar");
+
+  if (modo === "memorizar") {
+    mostrarSiguienteFlash();
+  }
+}
+
+
+/****************************************************************
+ *
  *                    INICIO
  *
  ****************************************************************/
 
 poblarSelectorTemas();
+poblarSelectorCategorias();
 nuevaPregunta();
 </script>
 </body>
