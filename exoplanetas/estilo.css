@@ -207,7 +207,7 @@ button:focus-visible { outline: 3px solid var(--oro-2); outline-offset: 2px; }
 .guia-globo p { margin: 0 0 10px; font-size: 15.5px; line-height: 1.4; } .guia-globo b { color: var(--oro-2); }
 .guia-n { float: right; margin-left: 8px; font-size: 11px; color: var(--texto-2); }
 .guia-btns { display: flex; gap: 8px; justify-content: flex-end; }
-.chance { position: absolute; top: -9px; right: -6px; z-index: 3; min-width: 34px; padding: 2px 5px; border-radius: 999px; font-family: var(--f-display);
+.chance { position: absolute; top: -9px; right: -6px; z-index: 3; pointer-events: none; min-width: 34px; padding: 2px 5px; border-radius: 999px; font-family: var(--f-display);
   font-size: 13px; text-align: center; color: var(--tinta); border: 2px solid #fff; box-shadow: 0 2px 0 rgba(0,0,0,.4); }
 .chance.alta { background: #5cf0a0; } .chance.media { background: var(--oro); } .chance.baja { background: #ff9aa3; }
 .chance.no { background: #6b7090; color: #dfe2ff; }
@@ -220,6 +220,12 @@ button:focus-visible { outline: 3px solid var(--oro-2); outline-offset: 2px; }
 .fila-bono > b { flex: none; min-width: 30px; text-align: right; font-family: var(--f-display); font-weight: 400; font-size: 20px; color: var(--texto-2); }
 .fila-bono.pos > b { color: var(--ok); } .fila-bono.neg > b { color: #ff8b95; } .fila-bono.no { opacity: .6; }
 .fila-bono span { display: grid; gap: 2px; } .fila-bono .que { color: var(--texto); } .fila-bono small { color: var(--texto-2); font-size: 12.5px; line-height: 1.35; }
+.tele-mano { min-height: 0; justify-content: flex-start; flex-wrap: wrap; gap: 8px; overflow: visible; padding: 4px 0 8px; }
+.tele-mano .carta { margin: 0; --rot: 0deg; }
+.reparto { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; font-size: 14px; }
+.stepper { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; background: rgba(0,0,0,.25); }
+.stepper.azul { border: 2px solid var(--tec); } .stepper.violeta { border: 2px solid var(--mar); }
+.stepper button { width: 30px; height: 30px; border-radius: 9px; background: var(--panel-2); border: 2px solid var(--borde); font-size: 18px; font-weight: 900; }
 .credito { margin: 14px 0 2px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12); text-align: center;
   font-size: 13px; line-height: 1.4; color: var(--texto-2); }
 .credito b { color: var(--oro-2); }

@@ -180,7 +180,8 @@ class Humano {
     await nuevaEspera("accion");
     await mostrarHitos();
     ui.fase = "post"; ui.sel = null; render();
-    await juego.reponer(jg);
+    if (K.ROBO) await juego.reponer(jg);
+    else await nuevaEspera("fin");          // sin robo: publicas si quieres y terminas el turno
     ui.fase = "espera"; render();
   }
   async elegirMazo(juego, jg, k) { await mostrarHitos(); ui.fase = k === 0 ? "post" : "robar"; render(); return nuevaEspera("mazo"); }
@@ -265,15 +266,32 @@ async function hacerTelescopio() {
   const jg = J();
   const cartas = [...jg.tec.map(id => ({ tipo: "tec", id })), ...jg.mar.map(id => ({ tipo: "mar", id }))];
   const marc = new Set();
+  let nTec = null;
   const v = await ventana({ titulo: "Tiempo de telescopio", color: "var(--est)", cuerpo: `
-    <p>Toca las cartas que quieras descartar y roba 1 del mazo que elijas. Gasta tu acción del turno.</p>
-    <div class="mano" style="min-height:0;justify-content:flex-start;flex-wrap:wrap;gap:10px">${cartas.map((c, k) => cartaHTML(c.tipo, c.id, `data-k="${k}" style="margin:0"`)).join("")}</div>`,
-    botones: [{ txt: "Cancelar", valor: null, clase: "gris" }, { txt: `Robar Técnica`, valor: "tec", clase: "azul" }, { txt: `Robar Marcador`, valor: "mar", clase: "violeta" }],
-    alAbrir: capa => capa.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
-      const k = +b.dataset.k; marc.has(k) ? marc.delete(k) : marc.add(k); b.classList.toggle("descartar", marc.has(k));
-    }) });
+    <p>Gastas tu turno en conseguir cartas. <b>Toca las que quieras cambiar</b> y completas tu mano hasta ${K.MANO_MAX}.</p>
+    <div class="mano tele-mano">${cartas.map((c, k) => cartaHTML(c.tipo, c.id, `data-k="${k}"`)).join("")}</div>
+    <div class="reparto"><span>Recibes <b class="r-total"></b>:</span>
+      <div class="stepper azul"><button type="button" data-d="-1" aria-label="Menos técnicas">−</button><span><b class="r-tec"></b> Técnicas</span><button type="button" data-d="1" aria-label="Más técnicas">+</button></div>
+      <div class="stepper violeta"><span><b class="r-mar"></b> Marcadores</span></div></div>`,
+    botones: [{ txt: "Cancelar", valor: null, clase: "gris" }, { txt: "Pedir telescopio", valor: "ok" }],
+    alAbrir: capa => {
+      const pintar = () => {
+        const total = Math.max(1, K.MANO_MAX - cartas.length + marc.size);
+        if (nTec === null) nTec = Math.ceil(total / 2);
+        nTec = Math.max(0, Math.min(total, nTec));
+        capa.querySelector(".r-total").textContent = `${total} carta${total === 1 ? "" : "s"}`;
+        capa.querySelector(".r-tec").textContent = nTec; capa.querySelector(".r-mar").textContent = total - nTec;
+        capa.dataset.total = total;
+      };
+      capa.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
+        const k = +b.dataset.k; marc.has(k) ? marc.delete(k) : marc.add(k); b.classList.toggle("descartar", marc.has(k)); nTec = null; pintar();
+      });
+      capa.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { nTec += +b.dataset.d; pintar(); });
+      pintar();
+    } });
   if (!v) return;
-  await accionHumana(async () => { await g.telescopio(jg, [...marc].map(k => cartas[k]), v); });
+  const total = Math.max(1, K.MANO_MAX - cartas.length + marc.size);
+  await accionHumana(async () => { await g.telescopio(jg, [...marc].map(k => cartas[k]), { tec: nTec, mar: total - nTec }); });
 }
 
 // ---------------------------------------------------------- publicar y refutar
@@ -514,7 +532,8 @@ function renderAcciones() {
       btns = `<button type="button" class="btn-juego gris" id="b-ver">Ver carta</button>`;
     } else msg = "<b>Tu turno:</b> toca una carta y luego un objetivo";
     btns += `<button type="button" class="btn-juego" id="b-tel">${ICO.tele.replace("<svg", '<svg width="18" height="18" style="vertical-align:-3px"')} Telescopio</button>`;
-  } else if (ui.fase === "post") { msg = `Publica si quieres. Después <b>roba ${K.ROBO === 1 ? "1 carta" : K.ROBO}</b>`; btns = robar; }
+  } else if (ui.fase === "post" && !K.ROBO) { msg = "Publica si quieres, o termina tu turno"; btns = `<button type="button" class="btn-juego" id="b-fin">Terminar turno</button>`; }
+  else if (ui.fase === "post") { msg = `Publica si quieres. Después <b>roba ${K.ROBO === 1 ? "1 carta" : K.ROBO}</b>`; btns = robar; }
   else if (ui.fase === "robar") { msg = "Roba <b>1 más</b>"; btns = robar; }
   else if (ui.fase === "descartar") msg = `Tienes ${jg.tec.length + jg.mar.length} cartas: <b>toca una para descartar</b>`;
   else msg = `Juega <b>${esc(nombreJ(g.turnoDe))}</b>…`;
@@ -523,6 +542,7 @@ function renderAcciones() {
   $("#msg").classList.toggle("mio", !g.terminado && !ui.ocupado && ["accion", "post", "robar", "descartar"].includes(ui.fase));
   $("#acciones").innerHTML = btns;
   const t = $("#b-tel"); if (t) t.onclick = hacerTelescopio;
+  const fin = $("#b-fin"); if (fin) fin.onclick = () => { if (!ui.ocupado) resolver("fin"); };
   const v = $("#b-ver"); if (v) v.onclick = () => ui.sel && detalleCarta(ui.sel);
   const f = $("#b-final"); if (f) f.onclick = mostrarFinal;
   document.querySelectorAll("[data-robar]").forEach(b => b.onclick = () => { if (ui.esperando.mazo && !ui.ocupado) resolver("mazo", b.dataset.robar); });
@@ -647,8 +667,8 @@ function mostrarReglas() {
     <h3>Tu turno: una acción</h3>
     <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Tiras un dado de 20: el juego te dice qué número necesitas, según la carta y los bonos de la estrella.</p>
     <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto.</p>
-    <p><b>Telescopio:</b> descarta cartas y roba 1.</p>
-    <p>Antes o después, <b>publica</b>. Al final robas ${K.ROBO === 1 ? "1 carta" : K.ROBO} (máximo ${K.MANO_MAX} en mano).</p>
+    <p><b>Telescopio:</b> gastas tu turno, cambias las cartas que quieras y completas tu mano hasta ${K.MANO_MAX}.</p>
+    <p>Antes o después, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
     <h3>Puntos</h3>
     <table class="tabla"><tr><td>Planeta</td><td>+${K.CAND} (+${K.CONF - K.CAND} al confirmarlo)</td></tr>
     ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")} exitoso tuyo ahí</td></tr>`).join("")}
@@ -719,7 +739,7 @@ const GUIA = [
   { sel: "#tablero", txt: "Las estrellas que <b>brillan</b> son donde puedes usarla. El <b>%</b> es tu chance de acertar: elige la más alta.",
     hasta: () => ui.tiradas > 0 },
   { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques." },
-  { sel: ".zona-mano", txt: "Para terminar tu turno, <b>roba cartas</b> con los botones de Técnica o Marcador. Si pasas de 7, descarta una.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
+  { sel: ".zona-mano", txt: "Después de jugar puedes publicar o tocar <b>Terminar turno</b>. Cuando te falten cartas, usa <b>Telescopio</b>: cambias las que no te sirven y completas tu mano.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
   { sel: "#b-pub", txt: "Con <b>Publicar</b> cuentas lo que descubriste y ganas puntos. Si mientes, un rival puede refutarte." },
   { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
   { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos. ¡Suerte!", fin: true },

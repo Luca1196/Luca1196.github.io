@@ -447,12 +447,24 @@ class Juego {
     return { ok: true, lee, tirada: t };
   }
 
-  async telescopio(jg, descartes, mazo) {
+  // Tiempo de telescopio (gasta la acción): descartas las que quieras y completas la mano hasta MANO_MAX.
+  // «elegir» dice de qué mazo sale cada carta: una función (k) => "tec"|"mar", o un reparto { tec, mar }.
+  async telescopio(jg, descartes, elegir) {
     for (const c of descartes) {
       if (c.tipo === "tec") { jg.tec.splice(jg.tec.indexOf(c.id), 1); this.mt.desc.push(c.id); }
       else { jg.mar.splice(jg.mar.indexOf(c.id), 1); this.mm.desc.push(c.id); }
     }
-    if (!this.robar(jg, mazo)) this.robar(jg, mazo === "tec" ? "mar" : "tec");
+    const faltan = Math.max(1, K.MANO_MAX - jg.tec.length - jg.mar.length);
+    const plan = typeof elegir === "function" ? null : [...Array(elegir.tec || 0).fill("tec"), ...Array(elegir.mar || 0).fill("mar")];
+    for (let k = 0; k < faltan; k++) {
+      const cual = plan ? (plan[k] || "tec") : elegir(k);
+      if (!this.robar(jg, cual)) this.robar(jg, cual === "tec" ? "mar" : "tec");
+    }
+    while (jg.tec.length + jg.mar.length > K.MANO_MAX) {       // mano llena: recibes 1 y descartas 1
+      const c = await jg.ctrl.descartar(this, jg);
+      if (c.tipo === "tec") { jg.tec.splice(jg.tec.indexOf(c.id), 1); this.mt.desc.push(c.id); }
+      else { jg.mar.splice(jg.mar.indexOf(c.id), 1); this.mm.desc.push(c.id); }
+    }
     this.log(`${jg.nombre} pide tiempo de telescopio${descartes.length ? ` (descarta ${descartes.length})` : ""}.`, { jg: jg.idx });
   }
 

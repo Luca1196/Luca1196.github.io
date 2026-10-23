@@ -30,7 +30,7 @@ class Bot {
     await this.pausa("accion", op);
     if (!op) {
       const desc = this.descartesTelescopio(g, jg);
-      await g.telescopio(jg, desc, this.elegirMazoSync(g, jg));
+      await g.telescopio(jg, desc, () => this.elegirMazoSync(g, jg));
     } else if (op.tipo === "desc") await g.descubrir(jg, op.tid, op.est);
     else if (op.tipo === "medir") await g.medir(jg, op.tid, op.pl);
     else await g.investigar(jg, op.mid, op.pl);
@@ -169,7 +169,13 @@ class Bot {
     if (!ops.length) return null;
     // un poco de variedad entre opciones casi iguales
     ops.forEach(o => o.v *= 1 + 0.08 * (g.rnd() - 0.5));
-    return ops.reduce((a, b) => (b.v > a.v ? b : a));
+    const mejor = ops.reduce((a, b) => (b.v > a.v ? b : a));
+    if (!_G.K.ROBO) {   // sin robo: el telescopio compite con jugar (mano corta, o planetas propios sin Marcadores)
+      const mano = jg.tec.length + jg.mar.length;
+      const propios = g.planetas.some(p => p.vivo && p.desc === jg.idx && p.pubPlaneta === null);
+      if ((mano <= 2 && mejor.v < 2.5) || (propios && !jg.mar.length && mejor.v < 1.5)) return null;
+    }
+    return mejor;
   }
 
   // ---------------------------------------------------------- mano
