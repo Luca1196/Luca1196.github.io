@@ -16,7 +16,10 @@
   <main class="tablero" id="tablero" aria-label="El cielo"></main>
   <section class="zona-mano">
     <p class="msg" id="msg"></p>
-    <div class="mano" id="mano" aria-label="Tu mano"></div>
+    <div class="fila-mano">
+      <div class="mano" id="mano" aria-label="Tu mano"></div>
+      <button type="button" class="mazo-tele" id="b-tel" aria-label="Tiempo de telescopio: cambia cartas y completa tu mano"><span class="mt-pila"><span class="mt-ico"></span></span><span class="mt-txt">Telescopio</span></button>
+    </div>
     <div class="acciones-turno" id="acciones"></div>
   </section>
   <section class="heroe" id="heroe"></section>

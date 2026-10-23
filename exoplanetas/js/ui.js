@@ -558,15 +558,20 @@ const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
 // Resumen corto de qué hace una carta, para leerlo antes de jugarla (dos líneas: entra en teléfonos)
 function resumenCarta(c, paso) {
   const corta = t => esc(textoPlano(t)).replace(/\.$/, "");
+  const nombre = (c.tipo === "tec" ? TEC : MAR)[c.id].nombre;
+  let txt, lee;
   if (c.tipo === "tec") {
     const t = TEC[c.id];
-    return `<span class="res"><b class="res-tit">${esc(t.nombre)} <small>Técnica</small>${paso}</b>
-      <span>Da ${corta(t.aporta).replace(/^./, x => x.toLowerCase()).replace(" del planeta", "")} · <span class="res-bien">mejor en ${esc(t.favor.split(":")[0])}</span></span></span>`;
+    txt = `Te da: ${corta(t.aporta).replace(/^./, x => x.toLowerCase())}`;
+    lee = `Mejor en ${esc(t.favor.split(":")[0])}`;
+  } else {
+    const m = MAR[c.id], r = RESUMEN_MAR[c.id];
+    txt = r ? `Lees ${esc(r[0])} · publicas ${esc(r[1])}` : `Lees ${corta(m.revela)}`;
+    lee = r ? esc(r[2]).replace(/^./, x => x.toUpperCase()) : (m.publica ? `Publicas ${corta(m.publica)}` : "");
   }
-  const m = MAR[c.id], r = RESUMEN_MAR[c.id];
-  const linea = r ? `Lees ${esc(r[0])} · <span class="res-bien">publicas ${esc(r[1])}</span> · ${esc(r[2])}`
-    : `Lees ${corta(m.revela)}${m.publica ? ` · <span class="res-bien">publicas ${corta(m.publica)}</span>` : ""}`;
-  return `<span class="res"><b class="res-tit">${esc(m.nombre)} <small>Marcador</small>${paso}</b><span>${linea}</span></span>`;
+  return `<span class="carta-grande ${c.tipo}" id="carta-grande" role="button" tabindex="0" title="Ver la carta completa">
+    <span class="cg-tipo">${c.tipo === "tec" ? "Técnica" : "Marcador"}</span><span class="cg-nom">${esc(nombre)}</span>
+    <span class="cg-txt">${txt}</span>${lee ? `<span class="cg-lee">${lee}</span>` : ""}</span>${paso}`;
 }
 function renderAcciones() {
   const jg = J();
@@ -578,22 +583,23 @@ function renderAcciones() {
   else if (ui.fase === "accion") {
     if (ui.sel) {
       const n = g.estrellas.reduce((s, e) => s + opcionesEstrella(e).length, 0);
-      msg = resumenCarta(ui.sel, `<span class="res-paso">${n ? "→ toca un objetivo" : "sin objetivos ahora"}</span>`);
-      btns = `<button type="button" class="btn-juego gris" id="b-ver">Ver carta</button>`;
-    } else msg = "<b>Tu turno:</b> toca una carta y luego un objetivo";
-    btns += `<button type="button" class="btn-juego" id="b-tel">${ICO.tele.replace("<svg", '<svg width="18" height="18" style="vertical-align:-3px"')} Telescopio</button>`;
+      msg = resumenCarta(ui.sel, `<span class="paso">Ahora toca una estrella o un planeta</span>`);
+    } else msg = "<b>Tu turno:</b> toca una carta, o pide Telescopio";
   } else if (ui.fase === "post" && !K.ROBO) { msg = "Publica si quieres, o termina tu turno"; btns = `<button type="button" class="btn-juego" id="b-fin">Terminar turno</button>`; }
   else if (ui.fase === "post") { msg = `Publica si quieres. Después <b>roba ${K.ROBO === 1 ? "1 carta" : K.ROBO}</b>`; btns = robar; }
   else if (ui.fase === "robar") { msg = "Roba <b>1 más</b>"; btns = robar; }
   else if (ui.fase === "descartar") msg = `Tienes ${jg.tec.length + jg.mar.length} cartas: <b>toca una para descartar</b>`;
   else msg = `Juega <b>${esc(nombreJ(g.turnoDe))}</b>…`;
   $("#msg").innerHTML = msg;
+  $("#msg").classList.toggle("con-carta", !!$("#carta-grande"));
+  const cg = $("#carta-grande"); if (cg) cg.onclick = () => ui.sel && detalleCarta(ui.sel);
+  const bt = $("#b-tel"); bt.disabled = !(ui.fase === "accion" && !ui.ocupado && !g.terminado);
+  if (!bt.querySelector("svg")) bt.querySelector(".mt-ico").innerHTML = ICO.tele;
   $("#app").classList.toggle("eligiendo", ui.fase === "accion" && !!ui.sel && !ui.ocupado);
   $("#msg").classList.toggle("mio", !g.terminado && !ui.ocupado && ["accion", "post", "robar", "descartar"].includes(ui.fase));
   $("#acciones").innerHTML = btns;
-  const t = $("#b-tel"); if (t) t.onclick = hacerTelescopio;
+  $("#b-tel").onclick = hacerTelescopio;
   const fin = $("#b-fin"); if (fin) fin.onclick = () => { if (!ui.ocupado) resolver("fin"); };
-  const v = $("#b-ver"); if (v) v.onclick = () => ui.sel && detalleCarta(ui.sel);
   const f = $("#b-final"); if (f) f.onclick = mostrarFinal;
   document.querySelectorAll("[data-robar]").forEach(b => b.onclick = () => { if (ui.esperando.mazo && !ui.ocupado) resolver("mazo", b.dataset.robar); });
 }
