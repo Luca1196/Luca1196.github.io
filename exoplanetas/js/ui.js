@@ -127,8 +127,19 @@ document.addEventListener("keydown", e => {
 });
 
 // ---------------------------------------------------------- tirada
+function detalleBonos(partes) {
+  const fila = (v, txt, sub = "") => `<li class="${v > 0 ? "pos" : v < 0 ? "neg" : ""}"><b>${v ? sgn(v) : "±0"}</b><span>${txt}${sub}</span></li>`;
+  const filas = partes.map(([l, v, por]) => {
+    if (Array.isArray(por)) {   // bono de estrella: se desglosa por qué
+      const det = por.length > 1 || por[0][0] !== v ? `<ul class="por">${por.map(([pv, t]) => fila(pv, esc(t))).join("")}</ul>` : `<small>${esc(por[0][1])}</small>`;
+      return fila(v, `<b class="que">${esc(l)}</b>`, det);
+    }
+    return v ? fila(v, `<b class="que">${esc(l)}</b>`, por ? `<small>${esc(por)}</small>` : "") : "";
+  }).join("");
+  return filas ? `<ul class="bonos-tirada">${filas}</ul>` : `<p class="tenue">Sin bonos: solo cuenta el dado.</p>`;
+}
 async function mostrarTirada(d, modal) {
-  const partes = d.partes.filter(([, v]) => v).map(([l, v]) => `${sgn(v)} ${esc(l)}`).join(" · ") || "sin bonos";
+  const partes = detalleBonos(d.partes);
   const total = d.d + d.mod;
   const veredicto = d.d === 20 ? "¡20 natural!" : d.d === 1 ? "1 natural" : d.ok ? "¡Éxito!" : "Falla";
   if (!modal) {
@@ -138,7 +149,7 @@ async function mostrarTirada(d, modal) {
   }
   let caja;
   const p = ventana({ titulo: esc(d.que), centro: true, cuerpo: `<div class="dado-caja"><div class="dado rodando">?</div>
-    <div class="veredicto">Tirando…</div><p class="partes">d20 ${sgn(d.mod)} · CD ${d.cd}<br>${partes}</p></div>`,
+    <div class="veredicto">Tirando…</div><p class="partes">d20 ${sgn(d.mod)} · necesitas ${d.cd} o más</p></div>${partes}`,
     botones: [{ txt: "Continuar", valor: true }], alAbrir: c => { caja = c; } });
   const dado = caja.querySelector(".dado"), ver = caja.querySelector(".veredicto");
   const t0 = Date.now();

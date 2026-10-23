@@ -9,6 +9,40 @@ const CIEN = Object.fromEntries(D.cientificos.map(c => [c.id, c]));
 const HITO = Object.fromEntries(D.hitos.map(h => [h.id, h]));
 const CATS = ["atmosfera", "habitable", "biofirma"];
 const CAT_NOMBRE = { atmosfera: "Atmósfera", habitable: "Habitable", biofirma: "Biofirma" };
+// Por qué cada estrella ayuda o perjudica a cada técnica (mismas reglas que bonos_estrella en generar_mazo.py)
+function explicarEstrella(tid, est) {
+  const m = est.m, lej = est.dist === "lejana", cer = est.dist === "cercana", act = est.act === "activa";
+  const r = [];
+  if (tid === "transito") {
+    if (est.fTr) { r.push([1, "estrella F grande: solo se ven Gigantes, pero su sombra es profunda"]); if (lej) r.push([-1, "lejana: llega poca luz y hay más ruido"]); }
+    else {
+      if (m < 0.6) r.push([2, "estrella muy pequeña: el planeta tapa más parte de su disco"]);
+      else if (m < 0.9) r.push([1, "estrella pequeña: el planeta tapa más parte de su disco"]);
+      else if (m > 1.1) r.push([-1, "estrella grande: el planeta tapa poco de su disco"]);
+      if (lej) r.push([-1, "lejana: llega poca luz y hay más ruido"]);
+      if (act) r.push([-1, "activa: manchas y fulguraciones esconden los tránsitos"]);
+    }
+  } else if (tid === "rv") {
+    if (m < 0.6) r.push([2, "estrella liviana: el planeta la hace bambolear más"]);
+    else if (m < 0.9) r.push([1, "estrella liviana: el planeta la hace bambolear más"]);
+    else if (m > 1.15) r.push([-2, "estrella masiva y caliente: se mueve poco, tiene pocas líneas y gira rápido"]);
+    if (act) r.push([-1, "activa: su superficie agitada mete ruido en la medida"]);
+  } else if (tid === "astro") {
+    if (cer) r.push([2, "cercana: su vaivén se nota en el cielo"]);
+    if (m < 0.6) r.push([1, "liviana: el planeta la mueve más"]);
+    if (m > 1.2) r.push([-1, "masiva: el planeta casi no la mueve"]);
+  } else if (tid === "imagen") {
+    if (cer) r.push([2, "cercana: planeta y estrella se ven bien separados"]);
+    if (lej) r.push([-3, "lejana: el planeta queda pegado al brillo de la estrella"]);
+  } else if (tid === "micro") {
+    if (lej) r.push([2, "lejana: hay más estrellas de fondo con las que alinearse"]);
+    if (m < 0.6) r.push([1, "enana: las estrellas-lente típicas son pequeñas"]);
+  }
+  const b = est.bono[tid], s = r.reduce((x, [v]) => x + v, 0);
+  if (b !== null && b !== undefined && s !== b) r.push([b - s, "tope: ningún bono pasa de ±3"]);
+  if (!r.length) r.push([0, "estrella promedio para esta técnica: sin ventaja ni desventaja"]);
+  return r;
+}
 const DATO_TEC = { transito: "R", rv: "M", astro: "M", imagen: "M", micro: "M" };
 const CAMPOS_MAR = { densidad: ["dens"], esp_transito: ["atm", "gases"], esp_emision: ["atm"],
                      esp_imagen: ["atm", "gases"], contexto: ["ctx"] };
@@ -154,35 +188,35 @@ class Juego {
   // Bonos de una observación (descubrir) con desglose para la interfaz
   modDescubrir(jg, tid, est) {
     const partes = [];
-    const b = est.bono[tid]; partes.push([`estrella ${est.cl}`, b]);
-    const s = this.satur(est); if (s) partes.push(["ya hallados ahí", -s]);
-    const c = this.bonoCient(jg, ["tec:" + tid]); if (c) partes.push([CIEN[jg.cient].nombre, c]);
+    const b = est.bono[tid]; partes.push([`estrella ${est.cl}`, b, explicarEstrella(tid, est)]);
+    const s = this.satur(est); if (s) partes.push(["ya hallados ahí", -s, "lo fácil de encontrar en esa estrella ya se encontró"]);
+    const c = this.bonoCient(jg, ["tec:" + tid]); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
     return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: TEC[tid].cd };
   }
   modMedir(jg, tid, pl) {
-    const partes = [[`estrella ${pl.est.cl}`, pl.est.bono[tid]]];
-    const c = this.bonoCient(jg, ["tec:" + tid, "confirmar", ...this.clPl(pl)]); if (c) partes.push([CIEN[jg.cient].nombre, c]);
+    const partes = [[`estrella ${pl.est.cl}`, pl.est.bono[tid], explicarEstrella(tid, pl.est)]];
+    const c = this.bonoCient(jg, ["tec:" + tid, "confirmar", ...this.clPl(pl)]); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
     return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: TEC[tid].cd };
   }
   modMarcador(jg, mid, pl, refutando = false) {
     const partes = [];
-    for (const [lab, v] of MAR[mid].mods) {
+    for (const [lab, v, por] of MAR[mid].mods) {
       let aplica = false;
       if (pl.rasgos.includes(lab)) aplica = true;
       else if (lab === "Estrella enana M") aplica = pl.est.cl[0] === "M";
       else if (lab === "Estrella activa") aplica = pl.est.act === "activa";
       else if (lab === "Estrella cercana") aplica = pl.est.dist === "cercana";
       else if (lab === "Aún sin leer Gases") aplica = !this.conoce(jg, pl, "gases");
-      if (aplica) partes.push([lab, v]);
+      if (aplica) partes.push([lab, v, por]);
     }
     if (!refutando) {
       let n = this.senal[`${jg.idx}|${pl.id}|${mid}`] || 0;
       if (jg.cient === "seager" && mid.startsWith("esp"))
         n = Object.entries(this.senal).filter(([k]) => k.endsWith(`|${pl.id}|${mid}`)).reduce((s, [, v]) => s + v, 0);
-      if (n) partes.push(["señal acumulada", K.SENAL * n]);
+      if (n) partes.push(["señal acumulada", K.SENAL * n, "las observaciones anteriores se suman a esta"]);
     }
     const claves = [...this.clavesMar(mid), ...this.clPl(pl), ...(refutando ? ["refutar"] : [])];
-    const c = this.bonoCient(jg, claves); if (c) partes.push([CIEN[jg.cient].nombre, c]);
+    const c = this.bonoCient(jg, claves); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
     return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: MAR[mid].cd };
   }
   requisito(mid, pl) {
