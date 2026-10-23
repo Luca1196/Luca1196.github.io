@@ -368,9 +368,12 @@ function renderRivales() {
     return `<div class="rival ${g.turnoDe === jg.idx && !g.terminado ? "turno" : ""}">
       <div class="avatar" style="background:${COLOR[jg.idx]}">${esc(inicial(jg))}</div>
       <div class="info"><div class="nom">${esc(jg.nombre)}</div><div class="sub">${jg.tec.length + jg.mar.length} cartas · ${priv} privado${priv === 1 ? "" : "s"}</div></div>
-      <div class="pts num" id="pts-${jg.idx}">${g.total(jg)}</div></div>`;
+      <div class="pts-riv"><span class="pts num" id="pts-${jg.idx}">${g.total(jg)}</span><small>pts</small></div></div>`;
   }).join("");
-  $("#rivales").innerHTML = rivs + `<div class="top-dcha"><div class="chip-ronda num">${g.terminado ? "Fin" : `${Math.max(1, g.ronda)}/${g.maxRondas}`}</div>
+  const r = Math.min(Math.max(1, g.ronda), g.maxRondas), ultima = !g.terminado && r === g.maxRondas;
+  const ronda = g.terminado ? `<span class="r-lbl">Partida</span><b>Terminada</b>`
+    : `<span class="r-lbl">${ultima ? "¡Última ronda!" : "Ronda"}</span><b>${r} <small>de ${g.maxRondas}</small></b><span class="r-barra"><i style="width:${(100 * r / g.maxRondas).toFixed(0)}%"></i></span>`;
+  $("#rivales").innerHTML = rivs + `<div class="top-dcha"><div class="chip-ronda num ${ultima ? "ultima" : ""}" title="Ronda ${r} de ${g.maxRondas}: todos juegan una vez por ronda">${ronda}</div>
     <div class="fila-iconos"><button type="button" class="icono-btn" id="b-registro" aria-label="Registro público" title="Registro público">${ICO.lista}</button>
     <button type="button" class="icono-btn" id="b-menu" aria-label="Menú" title="Menú">${ICO.menu}</button></div></div>`;
   $("#b-registro").onclick = verRegistro;
@@ -414,6 +417,10 @@ function tocarPlaneta(pl) {
   if (op) return ejecutar(op, pl.est);
   abrirPlaneta(pl);
 }
+function puesto(jg) {
+  const t = g.total(jg), mejores = g.j.filter(x => g.total(x) > t).length, empate = g.j.some(x => x !== jg && g.total(x) === t);
+  return `${mejores + 1}.º de ${g.j.length}${empate ? " (empate)" : ""}`;
+}
 function renderHeroe() {
   const jg = J();
   const n = publicables().length;
@@ -422,7 +429,7 @@ function renderHeroe() {
   $("#heroe").innerHTML = `<div class="avatar" style="background:${COLOR[YO]}">${esc(inicial(jg))}</div>
     <div class="info"><div class="nom">${esc(jg.nombre)} <small>${esc(CIEN[jg.cient].nombre)}</small></div>
       <div class="habs">${habilidades(jg.cient).map(h => `<span class="hab">${esc(h)}</span>`).join("")}</div></div>
-    <div class="pts num" id="pts-${YO}">${g.total(jg)}</div>
+    <div class="mis-pts"><span class="m-lbl">Tus puntos</span><span class="pts num" id="pts-${YO}">${g.total(jg)}</span><span class="m-pos">${puesto(jg)}</span></div>
     <button type="button" class="icono-btn" id="b-cuaderno" aria-label="Tu cuaderno" title="Tu cuaderno">${ICO.libro}</button>
     <button type="button" class="btn-pub" id="b-pub" ${n ? "" : "disabled"}>Publicar${n && puede ? `<span class="insignia">${n}</span>` : ""}</button>`;
   $("#b-cuaderno").onclick = verCuaderno;
@@ -462,7 +469,7 @@ function renderAcciones() {
       btns = `<button type="button" class="btn-juego gris" id="b-ver">Ver carta</button>`;
     } else msg = "<b>Tu turno:</b> toca una carta y luego un objetivo";
     btns += `<button type="button" class="btn-juego" id="b-tel">${ICO.tele.replace("<svg", '<svg width="18" height="18" style="vertical-align:-3px"')} Telescopio</button>`;
-  } else if (ui.fase === "post") { msg = "Publica si quieres. Después <b>roba 2</b>"; btns = robar; }
+  } else if (ui.fase === "post") { msg = `Publica si quieres. Después <b>roba ${K.ROBO === 1 ? "1 carta" : K.ROBO}</b>`; btns = robar; }
   else if (ui.fase === "robar") { msg = "Roba <b>1 más</b>"; btns = robar; }
   else if (ui.fase === "descartar") msg = `Tienes ${jg.tec.length + jg.mar.length} cartas: <b>toca una para descartar</b>`;
   else msg = `Juega <b>${esc(nombreJ(g.turnoDe))}</b>…`;
@@ -593,7 +600,7 @@ function mostrarReglas() {
     <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Tira d20 + bonos ≥ CD (la gema de la carta).</p>
     <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto.</p>
     <p><b>Telescopio:</b> descarta cartas y roba 1.</p>
-    <p>Antes o después, <b>publica</b>. Al final robas 2 (máximo ${K.MANO_MAX} en mano).</p>
+    <p>Antes o después, <b>publica</b>. Al final robas ${K.ROBO === 1 ? "1 carta" : K.ROBO} (máximo ${K.MANO_MAX} en mano).</p>
     <h3>Puntos</h3>
     <table class="tabla"><tr><td>Planeta</td><td>+${K.CAND} (+${K.CONF - K.CAND} al confirmarlo)</td></tr>
     ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")} exitoso tuyo ahí</td></tr>`).join("")}
@@ -669,7 +676,7 @@ const TUTORIAL = [
   ["Refutar: cuidado con mentir", `<p>Cuando publicas, un rival puede <b>refutarte</b> con un Marcador. Si lo que ve contradice tu afirmación, <b>se lleva tus puntos</b>.</p>
     <p>Un <b>artículo</b> (varias cosas del mismo planeta a la vez) da +${K.BONO_ART} por cada extra, pero se refuta entero.</p>`],
   ["Sin jugada: telescopio", `<p>Si no te sirve ninguna carta, pide <b>Telescopio</b>: descartas las que quieras y robas 1.</p>
-    <p>Al final de cada turno <b>robas 2</b>, eligiendo Técnica o Marcador.</p>`],
+    <p>Al final de cada turno <b>robas ${K.ROBO === 1 ? "1 carta" : K.ROBO}</b>: eliges si es Técnica o Marcador.</p>`],
   ["Tu científico", `<p>Tu científico te da ventajas: las ves siempre en tu barra, abajo.</p>
     <p>Elige un plan según tu científico, el cielo y tu mano. Buscar vida no es la única forma de ganar.</p>
     <p class="tenue">Puedes volver a ver esto en <b>Menú → Tutorial</b>.</p>`],
