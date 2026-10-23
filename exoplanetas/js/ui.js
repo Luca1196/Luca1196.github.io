@@ -25,8 +25,9 @@ let g = null;
 const ui = { fase: "espera", sel: null, esperando: {}, ocupado: false, velocidad: 650, ayudas: true, log: [], hitosPend: [] };
 const YO = 0;
 const J = () => g.j[YO];
-let preferencias = { nombre: "", cient: "seager", rivales: 2, velocidad: 650, ayudas: true };
+let preferencias = { nombre: "", cient: "seager", rivales: 2, velocidad: 650, ayudas: false, v: 2 };
 try { Object.assign(preferencias, JSON.parse(localStorage.getItem("exo-pref") || "{}")); } catch (e) {}
+if (preferencias.v !== 2) Object.assign(preferencias, { ayudas: false, v: 2 });   // ahora se elige por los datos, no por el %
 
 // ---------------------------------------------------------- textos
 const pct = p => `${Math.round(p * 100)}%`;
@@ -216,14 +217,70 @@ async function ejecutar(o, e) {
   if (o.tipo === "medir") return hacerMedir(s.id, o.pl);
   return hacerInvestigar(s.id, o.pl);
 }
+// Lo que se ve de cada estrella en el cielo: sus condiciones físicas (no los bonos), para elegir razonando
+function tamEstrella(m) { return m < 0.6 ? "muy chica" : m < 0.9 ? "chica" : m <= 1.1 ? "como el Sol" : "grande"; }
+function propsEstrella(e) {
+  return [["dist", { cercana: "cercana", media: "dist. media", lejana: "lejana" }[e.dist]],
+    ["edad " + e.edad, e.edad], ...(e.act === "activa" ? [["activa", "activa"]] : [["tranq", "tranquila"]]), ...(e.metal ? [["metal", "metálica"]] : [])];
+}
+// ---------------------------------------------------------- jugada: carta + estrella, con sus datos
+const TIPO_ESTRELLA = { F: "Estrella F: más grande y caliente que el Sol", G: "Estrella G: como el Sol",
+  K: "Estrella K: naranja, algo más chica que el Sol", M: "Enana roja (M): pequeña y fría" };
+function datosEstrellaHTML(e) {
+  const num = x => String(x).replace(".", ",");
+  return `<div class="ficha-est"><div class="fe-cab"><span class="sol" style="background:${LUZ[e.cl[0]]};color:${LUZ[e.cl[0]]}"></span>
+      <b class="fe-cl">${esc(e.cl)}</b><span>${esc(TIPO_ESTRELLA[e.cl[0]] || "")}</span></div>
+    <div class="fe-datos"><span>Masa <b>${num(e.m)} Soles</b></span><span>Temperatura <b>${e.T.toLocaleString("es")} K</b></span>
+      <span>Distancia <b>${esc(K.DIST[e.dist])}</b></span><span>Edad <b>${esc(K.EDAD[e.edad])}</b></span>
+      <span>Actividad <b>${esc(K.ACT[e.act])}</b></span>${e.metal ? "<span><b>Rica en metales</b></span>" : ""}</div></div>`;
+}
+function datosCartaHTML(c) {
+  if (c.tipo === "tec") {
+    const t = TEC[c.id];
+    return `<div class="ficha-carta tec"><span class="fc-tipo">Técnica</span><b class="fc-nom">${esc(t.nombre)}</b>
+      <p>Te da: ${esc(textoPlano(t.aporta))}</p><p class="bien">Mejor en: ${esc(t.favor)}</p><p class="mal">Peor en: ${esc(t.perj)}</p></div>`;
+  }
+  const m = MAR[c.id], r = RESUMEN_MAR[c.id];
+  return `<div class="ficha-carta mar"><span class="fc-tipo">Marcador</span><b class="fc-nom">${esc(m.nombre)}</b>
+    <p>Lees: ${esc(r ? r[0] : textoPlano(m.revela))}</p>${m.publica ? `<p class="bien">Sirve para publicar: ${esc(textoPlano(m.publica))}</p>` : ""}${m.req ? `<p class="mal">${esc(textoPlano(m.req))}</p>` : ""}</div>`;
+}
+function modOpcion(o, s, e) {
+  const jg = J();
+  return o.tipo === "desc" ? g.modDescubrir(jg, s.id, e) : o.tipo === "medir" ? g.modMedir(jg, s.id, o.pl) : g.modMarcador(jg, s.id, o.pl);
+}
+async function abrirJugada(e, plFoco = null) {
+  const s = ui.sel;
+  let ops = opcionesEstrella(e);
+  if (plFoco) ops = [...ops.filter(o => o.pl === plFoco), ...ops.filter(o => o.pl !== plFoco)];
+  const filas = ops.map((o, k) => {
+    const m = modOpcion(o, s, e), d = { cd: m.cd, mod: m.mod }, obj = objetivoDado(d);
+    return `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>Necesitas sacar ${obj >= 20 ? "un 20" : obj <= 2 ? "cualquiera menos 1" : `${obj} o más`}</small></span>
+      <span class="oj-pct ${o.p >= .7 ? "alta" : o.p >= .45 ? "media" : "baja"}">${ui.ayudas ? pct(o.p) : o.p >= .7 ? "Buena" : o.p >= .45 ? "Regular" : "Difícil"}</span>
+      <button type="button" class="btn-juego" data-k="${k}">🎲 Tirar</button></div>
+      <details><summary>¿Por qué ${obj}?</summary>${detalleBonos(m.partes)}</details></div>`;
+  }).join("");
+  let porque = "";
+  if (!ops.length) {
+    if (s.tipo === "tec") porque = e.bono[s.id] === null ? `<b>${esc(TEC[s.id].nombre)}</b> no funciona aquí: ${esc(textoPlano(TEC[s.id].limite))}` : "Aquí no hay nada que esta técnica pueda buscar o medir ahora.";
+    else porque = "Esta estrella no tiene planetas que este Marcador pueda investigar ahora.";
+  }
+  const bonoTec = s.tipo === "tec" && e.bono[s.id] !== null
+    ? `<div class="lista">${(([b]) => `<div class="fila-bono ${b > 0 ? "pos" : b < 0 ? "neg" : ""}"><b>${b ? sgn(b) : "±0"}</b><span><b class="que">${esc(TEC[s.id].nombre)} en esta estrella</b><small>${explicarEstrella(s.id, e).map(([, x]) => esc(x)).join(" · ")}</small></span></div>`)([e.bono[s.id]])}</div>` : "";
+  const v = await ventana({ titulo: "Tu jugada", color: "var(--est)", botones: [{ txt: "Elegir otra", valor: null, clase: "gris" }], cuerpo: `
+    <div class="par-jugada">${datosCartaHTML(s)}<div class="mas">+</div>${datosEstrellaHTML(e)}</div>
+    ${bonoTec}
+    ${ops.length ? `<div class="lista">${filas}</div>` : `<p class="sin-op">${porque}</p>`}`,
+    alAbrir: (capa, cerrar) => capa.querySelectorAll("[data-k]").forEach(b => b.onclick = () => cerrar(ops[+b.dataset.k])) });
+  if (v && ui.sel === s && ui.fase === "accion" && !ui.ocupado) ejecutar(v, e);
+}
 async function tocarEstrella(i) {
   const e = g.estrellas[i];
-  const ops = ui.fase === "accion" && !ui.ocupado ? opcionesEstrella(e) : [];
-  if (!ops.length) return detalleEstrella(e);
-  if (ops.length === 1) return ejecutar(ops[0], e);
-  const v = await ventana({ titulo: `Estrella ${esc(e.cl)}`, color: "var(--est)", botones: [], cuerpo: `<div class="lista">${ops.map((o, k) => `<button type="button" class="opcion" data-k="${k}"><span>${esc(o.txt)}</span><b>${pct(o.p)}</b></button>`).join("")}</div>`,
-    alAbrir: (capa, cerrar) => capa.querySelectorAll(".opcion").forEach(b => b.onclick = () => cerrar(ops[+b.dataset.k])) });
-  if (v) ejecutar(v, e);
+  if (ui.fase === "accion" && !ui.ocupado && ui.sel) return abrirJugada(e);
+  return detalleEstrella(e);
+}
+function tocarPlaneta(pl) {
+  if (ui.fase === "accion" && !ui.ocupado && ui.sel) return abrirJugada(pl.est, pl);
+  abrirPlaneta(pl);
 }
 
 async function hacerDescubrir(tid, est) {
@@ -415,21 +472,19 @@ function renderTablero() {
     const ops = activo ? opcionesEstrella(e) : [];
     const mejor = ops.length ? Math.max(...ops.map(o => o.p)) : null;
     const tags = [DIST_CORTA[e.dist], e.edad === "joven" ? '<span class="tag joven">Joven</span>' : "", e.act === "activa" ? '<span class="tag activa">Activa</span>' : "", e.metal ? '<span class="tag metal">Metálica</span>' : ""];
-    const tsel = ui.sel && ui.sel.tipo === "tec" ? ui.sel.id : null, bs = tsel ? e.bono[tsel] : undefined;
-    const grande = tsel ? `<div class="bono-grande ${bs === null ? "no" : bs > 0 ? "pos" : bs < 0 ? "neg" : ""}">${bs === null ? "✕ imposible" : bs === 0 ? "sin bono" : `<b>${sgn(bs)}</b> al dado`}</div>` : "";
-    const bonos = ORDEN_TEC.map(t => { const b = e.bono[t]; return `<div class="bono ${b === null ? "no" : b > 0 ? "pos" : b < 0 ? "neg" : ""} ${ui.sel && ui.sel.tipo === "tec" && ui.sel.id === t ? "sel" : ""}" title="${esc(TEC[t].nombre)}"><span class="l">${ETIQ[t]}</span><span class="c">${ETIQ[t][0]}</span><b>${b === null ? "✕" : sgn(b).replace("+0", "0")}</b></div>`; }).join("");
+    const props = propsEstrella(e).map(([cls, t]) => `<span class="prop ${cls}">${t}</span>`).join("");
     const dots = pls.map(pl => {
       const dueño = pl.pubPlaneta !== null ? pl.pubPlaneta : pl.desc;
       const op = activo ? ops.find(o => o.pl === pl) : null;
       return `<span class="pl-dot ${pl.vivo ? "" : "muerto"} ${pl.pubPlaneta === null && pl.desc !== YO ? "priv-rival" : ""} ${op ? "objetivo" : ""}" data-pl="${pl.id}" role="button" tabindex="0">
-        <span class="bola" style="background:${COLOR[dueño]}">${pl.pubPlaneta === null ? "?" : pl.confirmado ? "✓" : ""}</span>${esc(pl.nombre)}${op ? `<span class="pct">${pct(op.p)}</span>` : ""}</span>`;
+        <span class="bola" style="background:${COLOR[dueño]}">${pl.pubPlaneta === null ? "?" : pl.confirmado ? "✓" : ""}</span><span class="pl-nom">${esc(pl.nombre)}</span>${op && ui.ayudas ? `<span class="pct">${pct(op.p)}</span>` : ""}</span>`;
     }).join("");
-    return `<div class="est ${ops.length ? "objetivo" : activo ? "apagada" : ""}" data-est="${i}" role="button" tabindex="0" aria-label="Estrella ${esc(e.cl)}">
+    return `<div class="est ${activo ? (ui.ayudas ? (ops.length ? "objetivo" : "apagada") : "elegible") : ""}" data-est="${i}" role="button" tabindex="0" aria-label="Estrella ${esc(e.cl)}">
       <div class="est-cab"><span class="sol" style="background:${LUZ[e.cl[0]]};color:${LUZ[e.cl[0]]}"></span><span class="est-cl">${esc(e.cl)}</span>
-        <span class="est-tags"><span class="tag">${tags[0]}</span>${tags.slice(1).join("")}</span></div>
-      ${grande || `<div class="bonos num">${bonos}</div>`}
+        <span class="prop tam">${tamEstrella(e.m)}</span></div>
+      <div class="props">${props}</div>
       <div class="planetas">${dots}</div>
-      ${mejor !== null && ops.some(o => !o.pl) ? `<span class="pct">${pct(ops.find(o => !o.pl).p)}</span>` : ""}
+      ${ui.ayudas && mejor !== null && ops.some(o => !o.pl) ? `<span class="pct">${pct(ops.find(o => !o.pl).p)}</span>` : ""}
     </div>`;
   }).join("");
   $("#tablero").querySelectorAll(".est").forEach(b => b.onclick = ev => {
@@ -442,11 +497,6 @@ function renderTablero() {
     ev.preventDefault(); ev.stopPropagation();
     if (b.classList.contains("pl-dot")) tocarPlaneta(g.planetas.find(p => p.id === +b.dataset.pl)); else tocarEstrella(+b.dataset.est);
   });
-}
-function tocarPlaneta(pl) {
-  const op = ui.fase === "accion" && !ui.ocupado ? opcionPlaneta(pl) : null;
-  if (op) return ejecutar(op, pl.est);
-  abrirPlaneta(pl);
 }
 function puesto(jg) {
   const t = g.total(jg), mejores = g.j.filter(x => g.total(x) > t).length, empate = g.j.some(x => x !== jg && g.total(x) === t);
@@ -468,7 +518,7 @@ function renderHeroe() {
 }
 // Para qué sirve cada carta, en 2-3 palabras (va en la cara de la carta)
 const CORTO = {
-  transito: "mejor: estrellas chicas", rv: "mejor: estrellas livianas", astro: "solo: estrellas cercanas",
+  transito: "mejor: estrellas chicas", rv: "mejor: chicas y tranquilas", astro: "solo: estrellas cercanas",
   imagen: "solo: estrellas jóvenes", micro: "solo: estrellas lejanas",
   densidad: "¿roca o gas?", esp_transito: "lee gases", esp_emision: "¿tiene aire?", esp_imagen: "lee gases", contexto: "¿señal falsa?",
 };
@@ -570,8 +620,8 @@ function detalleCarta(c) {
 }
 function detalleEstrella(e) {
   const pls = g.planetas.filter(p => p.est === e);
-  ventana({ titulo: `Estrella ${esc(e.cl)} · ${esc(e.id)}`, color: "var(--est)", botones: [], cuerpo: `
-    <p>${esc(K.DIST[e.dist])} · ${esc(K.EDAD[e.edad])} · ${esc(K.ACT[e.act])}${e.micro ? " · microlente ya usada" : ""}</p>
+  ventana({ titulo: `Estrella ${esc(e.cl)}`, color: "var(--est)", botones: [], cuerpo: `
+    ${datosEstrellaHTML(e)}${e.micro ? '<p class="tenue">Microlente ya usada aquí.</p>' : ""}
     <p>${e.texto}</p>
     <h3>Qué técnica funciona aquí</h3>
     <p class="tenue">El bono se suma a tu dado: con <b>+2</b> te alcanza un número 2 más bajo.</p>
@@ -733,10 +783,10 @@ async function empezar(pref) {
 // Cada paso señala una parte de la pantalla. «hasta» = el paso avanza solo cuando el jugador lo hace;
 // «turno» = el paso espera a que sea tu turno de jugar.
 const GUIA = [
-  { sel: "#tablero", txt: "Este es el <b>cielo</b>. Debajo de cada estrella ves cuánto ayuda a cada técnica: <b>+</b> ayuda, <b>−</b> complica, <b>✕</b> imposible. Toca una estrella para ver por qué." },
+  { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano", turno: true, txt: "Esta es tu <b>mano</b>. Toca una carta de <b>TÉCNICA</b>.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
-  { sel: "#msg", txt: "Aquí ves <b>para qué sirve</b> la carta que elegiste." },
-  { sel: "#tablero", txt: "Las estrellas que <b>brillan</b> son donde puedes usarla. El <b>%</b> es tu chance de acertar: elige la más alta.",
+  { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> funciona mejor tu carta. Busca en el cielo una estrella así." },
+  { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta. Si la combinación no es buena, puedes elegir otra antes de tirar el dado.",
     hasta: () => ui.tiradas > 0 },
   { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques." },
   { sel: ".zona-mano", txt: "Después de jugar puedes publicar o tocar <b>Terminar turno</b>. Cuando te falten cartas, usa <b>Telescopio</b>: cambias las que no te sirven y completas tu mano.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
@@ -790,7 +840,7 @@ function abrirPreparacion() {
       <label class="campo" for="p-nombre">Nombre de tu equipo<input id="p-nombre" maxlength="18" value="${esc(preferencias.nombre)}" placeholder="Tu equipo"></label>
       <label class="campo" for="p-rivales">Rivales<select id="p-rivales">${[1, 2, 3].map(n => `<option value="${n}" ${+preferencias.rivales === n ? "selected" : ""}>${n} (${K.RONDAS[n + 1]} rondas)</option>`).join("")}</select></label>
       <label class="campo" for="p-vel">Velocidad rivales<select id="p-vel">${[["1100", "Lenta"], ["650", "Normal"], ["250", "Rápida"]].map(([v, t]) => `<option value="${v}" ${String(preferencias.velocidad) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
-      <label class="campo" for="p-ayuda">Ayudas<select id="p-ayuda"><option value="1" ${preferencias.ayudas ? "selected" : ""}>Con probabilidades</option><option value="0" ${preferencias.ayudas ? "" : "selected"}>Sin ayudas</option></select></label>
+      <label class="campo" for="p-ayuda">Probabilidades<select id="p-ayuda"><option value="0" ${preferencias.ayudas ? "" : "selected"}>Ocultas (recomendado)</option><option value="1" ${preferencias.ayudas ? "selected" : ""}>Visibles</option></select></label>
     </div>${CREDITO}`,
     botones: [{ txt: "Reglas", valor: "reglas", clase: "gris" }, { txt: "¡Jugar!", valor: "ok" }],
     alAbrir: capa => {
