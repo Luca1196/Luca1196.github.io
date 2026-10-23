@@ -154,6 +154,17 @@ button:focus-visible { outline: 3px solid var(--oro-2); outline-offset: 2px; }
 .tut-puntos { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
 .tut-puntos span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.2); }
 .tut-puntos span.on { background: var(--oro); }
+.hito-cartel { text-align: center; }
+.hito-pts { font-family: var(--f-display); font-size: 56px; line-height: 1; color: var(--oro); text-shadow: 0 0 18px rgba(255,200,61,.6);
+  animation: hitoPop .5s cubic-bezier(.2,1.6,.4,1); }
+@keyframes hitoPop { from { transform: scale(.3); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hito-pts { animation: none; } }
+.hito-cartel h3 { font-size: 22px; margin: 6px 0 4px; }
+.hito-quien { margin: 4px 0 6px; }
+.hito-real { text-align: left; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: rgba(255,200,61,.10);
+  border: 1px solid rgba(255,200,61,.35); }
+.hito-real b { color: var(--oro-2); }
+.hito-real p { margin: 6px 0 0; line-height: 1.45; }
 .credito { margin: 14px 0 2px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12); text-align: center;
   font-size: 13px; line-height: 1.4; color: var(--texto-2); }
 .credito b { color: var(--oro-2); }

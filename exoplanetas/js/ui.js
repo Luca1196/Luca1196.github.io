@@ -22,7 +22,7 @@ const ICO = {
 };
 
 let g = null;
-const ui = { fase: "espera", sel: null, esperando: {}, ocupado: false, velocidad: 650, ayudas: true, log: [] };
+const ui = { fase: "espera", sel: null, esperando: {}, ocupado: false, velocidad: 650, ayudas: true, log: [], hitosPend: [] };
 const YO = 0;
 const J = () => g.j[YO];
 let preferencias = { nombre: "", cient: "seager", rivales: 2, velocidad: 650, ayudas: true };
@@ -157,11 +157,12 @@ class Humano {
     ui.fase = "accion"; ui.sel = null; render();
     banner("Tu turno");
     await nuevaEspera("accion");
+    await mostrarHitos();
     ui.fase = "post"; ui.sel = null; render();
     await juego.reponer(jg);
     ui.fase = "espera"; render();
   }
-  elegirMazo(juego, jg, k) { ui.fase = k === 0 ? "post" : "robar"; render(); return nuevaEspera("mazo"); }
+  async elegirMazo(juego, jg, k) { await mostrarHitos(); ui.fase = k === 0 ? "post" : "robar"; render(); return nuevaEspera("mazo"); }
   descartar(juego, jg) { ui.fase = "descartar"; render(); return nuevaEspera("descarte"); }
   decidirRefutar(juego, x, pl, cat, ops) { return preguntarRefutar(pl, cat, ops.map(mid => ({ cat, mid }))).then(r => r && r.mid); }
   decidirRefutarArticulo(juego, x, pl, cats, pares, pozo) { return preguntarRefutar(pl, cats, pares, pozo); }
@@ -291,7 +292,24 @@ async function publicarHumano(pl, cat, cats) {
       const r = await g.publicar(J(), pl, cat);
       if (r && !r.refutado) banner(`+${K.PUNTOS[cat]} ${CAT_NOMBRE[cat]}`, "nadie lo refutó");
     }
+    await mostrarHitos();
   } finally { ui.ocupado = false; render(); }
+}
+
+// Cartel de hito: puntos, quién lo logró y el caso real que lo inspira
+async function mostrarHitos() {
+  while (ui.hitosPend && ui.hitosPend.length) {
+    const d = ui.hitosPend.shift(), h = HITO[d.id], mio = d.jg === YO;
+    await ventana({ titulo: "¡Hito de la astronomía!", color: "var(--hito)", centro: true, cerrable: false,
+      botones: [{ txt: mio ? "¡Genial!" : "Continuar", valor: true }], cuerpo: `
+      <div class="hito-cartel">
+        <div class="hito-pts">+${h.pts}</div>
+        <h3>${esc(h.nombre)}</h3>
+        <p class="hito-quien">${ficha(d.jg)} ${mio ? "<b>¡Lo lograste!</b>" : `<b>${esc(nombreJ(d.jg))}</b> lo logró primero`}</p>
+        <p class="tenue">${esc(h.cond)}</p>
+        <div class="hito-real"><b>Caso real · ${esc(h.hist)}</b><p>${esc(h.historia || "")}</p></div>
+      </div>` });
+  }
 }
 async function preguntarRefutar(pl, cats, pares, pozo) {
   const lista = Array.isArray(cats) ? cats : [cats];
@@ -591,17 +609,18 @@ function crearJuego(pref) {
     jugadores.push({ nombre: `Equipo ${CIEN[cid].nombre.split(" y ")[0].split(" ").pop()}`, estilo: est, cient: cid, ctrl: new Bot(est, car) });
   }
   const juego = new Juego({ jugadores });
-  for (const jg of juego.j) if (jg.ctrl instanceof Bot) jg.ctrl.pausa = async () => { if (juego !== g) throw CANCELADO; render(); await sleep(ui.velocidad); };
+  ui.hitosPend = [];
+  for (const jg of juego.j) if (jg.ctrl instanceof Bot) jg.ctrl.pausa = async () => { if (juego !== g) throw CANCELADO; render(); await mostrarHitos(); await sleep(ui.velocidad); };
   juego.vista = async (tipo, d) => {
     if (juego !== g) throw CANCELADO;
-    try { await vista(tipo, d); } catch (e) { console.error(e); }
+    try { await vista(tipo, d); await mostrarHitos(); } catch (e) { console.error(e); }
     if (juego !== g) throw CANCELADO;
   };
   juego.on((tipo, d) => {
     if (juego !== g) return;
     if (tipo === "log") ui.log.push(d);
     if (tipo === "puntos") { setTimeout(() => flotante(d.jg, d.v), 30); }
-    if (tipo === "hito") banner(`¡Hito! +${HITO[d.id].pts}`, `${esc(nombreJ(d.jg))}: ${esc(HITO[d.id].nombre)}`);
+    if (tipo === "hito") ui.hitosPend.push(d);
     if (tipo === "hallazgo" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> encuentra un hallazgo: ${esc(d.h.nombre)}`, "hito");
     if (tipo === "descubre" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> descubre un candidato en ${esc(d.pl.est.cl)}: ${esc(tamTemp(d.pl))}`);
     if (tipo === "turno" || tipo === "cambio" || tipo === "ronda" || tipo === "puntos") render();
