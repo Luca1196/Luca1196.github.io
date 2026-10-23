@@ -376,11 +376,11 @@ a.opcion { color: inherit; text-decoration: none; box-sizing: border-box; }
 }
 /* Teléfonos: la barra del jugador en dos filas (nombre y puntos arriba, ventajas del científico abajo) */
 @media (max-width: 759px), (max-height: 520px) {
-  .heroe { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; grid-template-areas: "av nom pts cua pub" "habs habs habs habs habs";
+  .heroe { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "av nom pts cua" "habs habs habs habs";
     column-gap: 6px; row-gap: 5px; align-items: center; }
   .heroe .info { display: contents; }
   .heroe .avatar { grid-area: av; } .heroe .nom { grid-area: nom; min-width: 0; flex-wrap: wrap; row-gap: 0; }
-  .heroe .mis-pts { grid-area: pts; } .heroe #b-cuaderno { grid-area: cua; } .heroe #b-pub { grid-area: pub; }
+  .heroe .mis-pts { grid-area: pts; } .heroe #b-cuaderno { grid-area: cua; }
   .heroe .habs { grid-area: habs; }
   .heroe .nom { flex-wrap: nowrap; overflow: hidden; }
   .heroe .nom small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

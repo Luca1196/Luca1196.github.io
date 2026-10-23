@@ -22,7 +22,7 @@ const ICO = {
 };
 
 let g = null;
-const ui = { fase: "espera", sel: null, esperando: {}, ocupado: false, velocidad: 650, ayudas: true, log: [], hitosPend: [] };
+const ui = { fase: "espera", sel: null, esperando: {}, ocupado: false, velocidad: 650, ayudas: false, log: [], hitosPend: [] };
 const YO = 0;
 const J = () => g.j[YO];
 let preferencias = { nombre: "", cient: "seager", rivales: 2, velocidad: 650, ayudas: false, v: 2 };
@@ -366,9 +366,9 @@ function publicables() {
 }
 async function abrirPublicar() {
   const ops = publicables();
-  const puede = !ui.ocupado && ["accion", "post"].includes(ui.fase);
+  const puede = !ui.ocupado && ui.fase === "post";
   const v = await ventana({ titulo: "Publicar", color: "var(--pla)", botones: [], cuerpo: `
-    ${puede ? "" : '<p class="tenue">Solo puedes publicar en tu turno, antes de robar.</p>'}
+    ${puede ? "" : '<p class="tenue">Se publica al final de tu turno, después de jugar.</p>'}
     ${ops.length ? `<div class="lista">${ops.map((o, k) => `<button type="button" class="pub-btn" data-k="${k}" ${puede ? "" : "disabled"}>
       <span>${esc(o.txt)}${o.art ? `<br><small class="tenue">todo junto: +${K.BONO_ART} por cada extra, pero si lo refutan, el rival se lleva todo</small>` : ""}${o.p !== undefined && ui.ayudas ? `<br><small class="tenue">cierto con probabilidad ${pct(o.p)}</small>` : ""}</span><b>+${o.pts}</b></button>`).join("")}</div>`
       : '<p>Todavía no tienes nada para publicar. Descubre un planeta, o investígalo con un Marcador que sirva para eso.</p>'}
@@ -377,7 +377,7 @@ async function abrirPublicar() {
   if (v) publicarHumano(v.pl, v.cat, v.cats);
 }
 async function publicarHumano(pl, cat, cats) {
-  if (ui.ocupado || !["accion", "post"].includes(ui.fase)) return;
+  if (ui.ocupado || ui.fase !== "post") return;
   ui.ocupado = true; render();
   try {
     if (cat === "planeta") g.publicarPlaneta(J(), pl);
@@ -415,13 +415,13 @@ async function preguntarRefutar(pl, cats, pares, pozo) {
   const bot = pares.map(({ cat, mid }) => {
     const m = g.modMarcador(J(), mid, pl, true);
     const pv = cands.filter(a => !verdad(a, cat) && veFalsedad(mid, a, cat)).length / cands.length;
-    return { cat, mid, p: pTirada(m.mod, m.cd), pv };
+    return { cat, mid, p: pTirada(m.mod, m.cd), pv, obj: objetivoDado(m) };
   });
   return ventana({ titulo: lista.length > 1 ? "¿Refutas el artículo?" : "¿Refutas?", color: "var(--mar)", cerrable: false, centro: true, botones: [{ txt: "No refutar", valor: null, clase: "gris" }], cuerpo: `
     <p>${ficha(aut)} <b>${esc(nombreJ(aut))}</b> publica <b>${lista.map(c => CAT_NOMBRE[c]).join(" + ")}</b> en ${esc(pl.nombre)}.</p>
     <h3>En juego: ${pozo} puntos</h3>
     <p class="tenue">Si tu tirada sale y lo que ve tu Marcador contradice ${lista.length > 1 ? "cualquiera de las afirmaciones, te llevas todo el artículo" : "lo publicado, los puntos son tuyos"}. Si no, son del autor. El Marcador se gasta igual.</p>
-    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${lista.length > 1 ? `${CAT_NOMBRE[b.cat]} · ` : ""}${esc(MAR[b.mid].nombre)}${ui.ayudas ? `<br><small class="tenue">su lectura lo contradiría: ${pct(b.pv)}</small>` : ""}</span><b>${pct(b.p)}</b></button>`).join("")}</div>`,
+    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${lista.length > 1 ? `${CAT_NOMBRE[b.cat]} · ` : ""}${esc(MAR[b.mid].nombre)}</span><b class="nec">${b.obj >= 20 ? "solo 20" : `${b.obj}+`}</b></button>`).join("")}</div>`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll(".opcion").forEach(b => b.onclick = () => cerrar(bot[+b.dataset.k])) });
 }
 
@@ -504,17 +504,13 @@ function puesto(jg) {
 }
 function renderHeroe() {
   const jg = J();
-  const n = publicables().length;
-  const puede = !ui.ocupado && ["accion", "post"].includes(ui.fase);
   $("#heroe").className = "heroe" + (g.turnoDe === YO && !g.terminado ? " turno" : "");
   $("#heroe").innerHTML = `<div class="avatar" style="background:${COLOR[YO]}">${esc(inicial(jg))}</div>
     <div class="info"><div class="nom">${esc(jg.nombre)} <small>${esc(CIEN[jg.cient].nombre)}</small></div>
       <div class="habs">${habilidades(jg.cient).map(h => `<span class="hab">${esc(h)}</span>`).join("")}</div></div>
     <div class="mis-pts"><span class="m-lbl">Tus puntos</span><span class="pts num" id="pts-${YO}">${g.total(jg)}</span><span class="m-pos">${puesto(jg)}</span></div>
-    <button type="button" class="icono-btn" id="b-cuaderno" aria-label="Tu cuaderno" title="Tu cuaderno">${ICO.libro}</button>
-    <button type="button" class="btn-pub" id="b-pub" ${n ? "" : "disabled"}>Publicar${n && puede ? `<span class="insignia">${n}</span>` : ""}</button>`;
+    <button type="button" class="icono-btn" id="b-cuaderno" aria-label="Tu cuaderno" title="Tu cuaderno">${ICO.libro}</button>`;
   $("#b-cuaderno").onclick = verCuaderno;
-  $("#b-pub").onclick = abrirPublicar;
 }
 // Para qué sirve cada carta, en 2-3 palabras (va en la cara de la carta)
 const CORTO = {
@@ -585,7 +581,12 @@ function renderAcciones() {
       const n = g.estrellas.reduce((s, e) => s + opcionesEstrella(e).length, 0);
       msg = resumenCarta(ui.sel, `<span class="paso">Ahora toca una estrella o un planeta</span>`);
     } else msg = "<b>Tu turno:</b> toca una carta, o pide Telescopio";
-  } else if (ui.fase === "post" && !K.ROBO) { msg = "Publica si quieres, o termina tu turno"; btns = `<button type="button" class="btn-juego" id="b-fin">Terminar turno</button>`; }
+  } else if (ui.fase === "post" && !K.ROBO) {
+    const n = publicables().length;
+    msg = n ? "Final del turno: <b>publica</b> lo que descubriste, o termina" : "Final del turno: no tienes nada para publicar";
+    btns = `<button type="button" class="btn-pub" id="b-pub" ${n ? "" : "disabled"}>Publicar${n ? `<span class="insignia">${n}</span>` : ""}</button>
+      <button type="button" class="btn-juego ${n ? "gris" : ""}" id="b-fin">Terminar turno</button>`;
+  }
   else if (ui.fase === "post") { msg = `Publica si quieres. Después <b>roba ${K.ROBO === 1 ? "1 carta" : K.ROBO}</b>`; btns = robar; }
   else if (ui.fase === "robar") { msg = "Roba <b>1 más</b>"; btns = robar; }
   else if (ui.fase === "descartar") msg = `Tienes ${jg.tec.length + jg.mar.length} cartas: <b>toca una para descartar</b>`;
@@ -600,6 +601,7 @@ function renderAcciones() {
   $("#acciones").innerHTML = btns;
   $("#b-tel").onclick = hacerTelescopio;
   const fin = $("#b-fin"); if (fin) fin.onclick = () => { if (!ui.ocupado) resolver("fin"); };
+  const pb = $("#b-pub"); if (pb) pb.onclick = abrirPublicar;
   const f = $("#b-final"); if (f) f.onclick = mostrarFinal;
   document.querySelectorAll("[data-robar]").forEach(b => b.onclick = () => { if (ui.esperando.mazo && !ui.ocupado) resolver("mazo", b.dataset.robar); });
 }
@@ -680,7 +682,7 @@ async function abrirPlaneta(pl) {
   const pub = Object.entries(pl.publico);
   const sabe = Object.entries(g.sabe(jg, pl)).filter(([c]) => !(c in pl.publico));
   const metodos = [...pl.tecnicas.map(t => (t === "densidad" ? "Densidad" : TEC[t].nombre)), ...pl.marcadores.map(m => `${MAR[m.mid].nombre} (${nombreJ(m.jg)}${m.ok ? "" : ", no concl."})`)];
-  const puede = !ui.ocupado && ["accion", "post"].includes(ui.fase);
+  const puede = !ui.ocupado && ui.fase === "post";
   const ops = publicables().filter(o => o.pl === pl);
   let ayuda = "";
   if (ui.ayudas && !rivalPriv && pl.vivo) {
@@ -724,7 +726,7 @@ function mostrarReglas() {
     <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Tiras un dado de 20: el juego te dice qué número necesitas, según la carta y los bonos de la estrella.</p>
     <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto.</p>
     <p><b>Telescopio:</b> gastas tu turno, cambias las cartas que quieras y completas tu mano hasta ${K.MANO_MAX}.</p>
-    <p>Antes o después, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
+    <p>Al final de tu turno, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
     <h3>Puntos</h3>
     <table class="tabla"><tr><td>Planeta</td><td>+${K.CAND} (+${K.CONF - K.CAND} al confirmarlo)</td></tr>
     ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")} exitoso tuyo ahí</td></tr>`).join("")}
@@ -773,7 +775,7 @@ function crearJuego(pref) {
 async function empezar(pref) {
   for (const k of Object.keys(ui.esperando)) delete ui.esperando[k];
   document.querySelectorAll("#capa .velo").forEach(v => v.remove());
-  Object.assign(ui, { fase: "espera", sel: null, ocupado: false, log: [], velocidad: +pref.velocidad, ayudas: !!pref.ayudas });
+  Object.assign(ui, { fase: "espera", sel: null, ocupado: false, log: [], velocidad: +pref.velocidad, ayudas: false });   // nunca se muestran porcentajes: se elige por los datos
   g = crearJuego(pref);
   guia.paso = -1; render();
   if (!preferencias.tutorialVisto) iniciarGuia();
@@ -795,8 +797,8 @@ const GUIA = [
   { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta. Si la combinación no es buena, puedes elegir otra antes de tirar el dado.",
     hasta: () => ui.tiradas > 0 },
   { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques." },
-  { sel: ".zona-mano", txt: "Después de jugar puedes publicar o tocar <b>Terminar turno</b>. Cuando te falten cartas, usa <b>Telescopio</b>: cambias las que no te sirven y completas tu mano.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
-  { sel: "#b-pub", txt: "Con <b>Publicar</b> cuentas lo que descubriste y ganas puntos. Si mientes, un rival puede refutarte." },
+  { sel: "#acciones", turnoFin: true, txt: "Final del turno: <b>Publicar</b> cuenta lo que descubriste y te da puntos (si mientes, un rival puede refutarte). Si no, <b>Terminar turno</b>.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
+  { sel: "#b-tel", txt: "Cuando te falten cartas, usa el <b>Telescopio</b>: gastas tu turno, cambias las que no te sirven y completas tu mano." },
   { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
   { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos. ¡Suerte!", fin: true },
 ];
@@ -812,7 +814,7 @@ function actualizarGuia() {
   const p = GUIA[guia.paso];
   if (p && p.hasta && p.hasta()) { guia.paso++; return actualizarGuia(); }
   const el = p && document.querySelector(p.sel);
-  const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado));
+  const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado));
   if (!p || !el || tapado || !el.getClientRects().length) { if (capa) capa.hidden = true; if (!p && capa) capa.remove(); return; }
   if (!capa) {
     capa = document.createElement("div"); capa.id = "guia";
@@ -846,7 +848,6 @@ function abrirPreparacion() {
       <label class="campo" for="p-nombre">Nombre de tu equipo<input id="p-nombre" maxlength="18" value="${esc(preferencias.nombre)}" placeholder="Tu equipo"></label>
       <label class="campo" for="p-rivales">Rivales<select id="p-rivales">${[1, 2, 3].map(n => `<option value="${n}" ${+preferencias.rivales === n ? "selected" : ""}>${n} (${K.RONDAS[n + 1]} rondas)</option>`).join("")}</select></label>
       <label class="campo" for="p-vel">Velocidad rivales<select id="p-vel">${[["1100", "Lenta"], ["650", "Normal"], ["250", "Rápida"]].map(([v, t]) => `<option value="${v}" ${String(preferencias.velocidad) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
-      <label class="campo" for="p-ayuda">Probabilidades<select id="p-ayuda"><option value="0" ${preferencias.ayudas ? "" : "selected"}>Ocultas (recomendado)</option><option value="1" ${preferencias.ayudas ? "selected" : ""}>Visibles</option></select></label>
     </div>${CREDITO}`,
     botones: [{ txt: "Reglas", valor: "reglas", clase: "gris" }, { txt: "¡Jugar!", valor: "ok" }],
     alAbrir: capa => {
@@ -855,7 +856,6 @@ function abrirPreparacion() {
         preferencias.nombre = capa.querySelector("#p-nombre").value.trim();
         preferencias.rivales = +capa.querySelector("#p-rivales").value;
         preferencias.velocidad = +capa.querySelector("#p-vel").value;
-        preferencias.ayudas = capa.querySelector("#p-ayuda").value === "1";
       }, { capture: true }));
     } });
   p.then(v => {

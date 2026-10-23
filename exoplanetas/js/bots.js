@@ -25,7 +25,6 @@ class Bot {
   get umbralRef() { return this.c.umbralRef * this.e.refMult; }
 
   async turno(g, jg) {
-    await this.fasePublicar(g, jg);
     const op = this.mejorAccion(g, jg);
     await this.pausa("accion", op);
     if (!op) {
