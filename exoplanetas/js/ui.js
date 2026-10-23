@@ -455,6 +455,26 @@ function renderMano() {
     detalleCarta(c);
   });
 }
+const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
+  densidad: ["si es roca, agua o gas", "Habitable", "necesita su Radio o su Masa"],
+  esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "solo con Tránsito debajo"],
+  esp_emision: ["si tiene atmósfera", "Atmósfera, Habitable", "con Tránsito o en Gigante Caliente"],
+  esp_imagen: ["atmósfera y gases", "Atmósfera, Biofirma", "con Imagen o en Gigante Frío cercano"],
+  contexto: ["si la señal puede ser falsa", "Biofirma", "después de leer sus gases"],
+};
+// Resumen corto de qué hace una carta, para leerlo antes de jugarla (dos líneas: entra en teléfonos)
+function resumenCarta(c, paso) {
+  const corta = t => esc(textoPlano(t)).replace(/\.$/, "");
+  if (c.tipo === "tec") {
+    const t = TEC[c.id];
+    return `<span class="res"><b class="res-tit">${esc(t.nombre)} <small>Técnica · ${t.cd}+</small>${paso}</b>
+      <span>Da ${corta(t.aporta).replace(/^./, x => x.toLowerCase()).replace(" del planeta", "")} · <span class="res-bien">mejor en ${esc(t.favor.split(":")[0])}</span></span></span>`;
+  }
+  const m = MAR[c.id], r = RESUMEN_MAR[c.id];
+  const linea = r ? `Lees ${esc(r[0])} · <span class="res-bien">publicas ${esc(r[1])}</span> · ${esc(r[2])}`
+    : `Lees ${corta(m.revela)}${m.publica ? ` · <span class="res-bien">publicas ${corta(m.publica)}</span>` : ""}`;
+  return `<span class="res"><b class="res-tit">${esc(m.nombre)} <small>Marcador · ${m.cd}+</small>${paso}</b><span>${linea}</span></span>`;
+}
 function renderAcciones() {
   const jg = J();
   let msg = "", btns = "";
@@ -465,7 +485,7 @@ function renderAcciones() {
   else if (ui.fase === "accion") {
     if (ui.sel) {
       const n = g.estrellas.reduce((s, e) => s + opcionesEstrella(e).length, 0);
-      msg = n ? `Toca un objetivo que brilla en el cielo` : `Esta carta no tiene objetivos ahora`;
+      msg = resumenCarta(ui.sel, `<span class="res-paso">${n ? "→ toca un objetivo" : "sin objetivos ahora"}</span>`);
       btns = `<button type="button" class="btn-juego gris" id="b-ver">Ver carta</button>`;
     } else msg = "<b>Tu turno:</b> toca una carta y luego un objetivo";
     btns += `<button type="button" class="btn-juego" id="b-tel">${ICO.tele.replace("<svg", '<svg width="18" height="18" style="vertical-align:-3px"')} Telescopio</button>`;
@@ -474,6 +494,7 @@ function renderAcciones() {
   else if (ui.fase === "descartar") msg = `Tienes ${jg.tec.length + jg.mar.length} cartas: <b>toca una para descartar</b>`;
   else msg = `Juega <b>${esc(nombreJ(g.turnoDe))}</b>…`;
   $("#msg").innerHTML = msg;
+  $("#app").classList.toggle("eligiendo", ui.fase === "accion" && !!ui.sel && !ui.ocupado);
   $("#msg").classList.toggle("mio", !g.terminado && !ui.ocupado && ["accion", "post", "robar", "descartar"].includes(ui.fase));
   $("#acciones").innerHTML = btns;
   const t = $("#b-tel"); if (t) t.onclick = hacerTelescopio;
