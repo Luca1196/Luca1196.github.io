@@ -12,34 +12,34 @@ const CAT_NOMBRE = { atmosfera: "Atmósfera", habitable: "Habitable", biofirma: 
 // Por qué cada estrella ayuda o perjudica a cada técnica (mismas reglas que bonos_estrella en generar_mazo.py)
 function explicarEstrella(tid, est) {
   const m = est.m, lej = est.dist === "lejana", cer = est.dist === "cercana", act = est.act === "activa";
-  const r = [];
+  const r = [], E = K.ESCALA || 1, add = (v, t) => r.push([v * E, t]);
   if (tid === "transito") {
-    if (est.fTr) { r.push([1, "estrella F grande: solo se ven Gigantes, pero su sombra es profunda"]); if (lej) r.push([-1, "lejana: llega poca luz y hay más ruido"]); }
+    if (est.fTr) { add(1, "estrella F grande: solo se ven Gigantes, pero su sombra es profunda"); if (lej) add(-1, "lejana: llega poca luz y hay más ruido"); }
     else {
-      if (m < 0.6) r.push([2, "estrella muy pequeña: el planeta tapa más parte de su disco"]);
-      else if (m < 0.9) r.push([1, "estrella pequeña: el planeta tapa más parte de su disco"]);
-      else if (m > 1.1) r.push([-1, "estrella grande: el planeta tapa poco de su disco"]);
-      if (lej) r.push([-1, "lejana: llega poca luz y hay más ruido"]);
-      if (act) r.push([-1, "activa: manchas y fulguraciones esconden los tránsitos"]);
+      if (m < 0.6) add(2, "estrella muy pequeña: el planeta tapa más parte de su disco");
+      else if (m < 0.9) add(1, "estrella pequeña: el planeta tapa más parte de su disco");
+      else if (m > 1.1) add(-1, "estrella grande: el planeta tapa poco de su disco");
+      if (lej) add(-1, "lejana: llega poca luz y hay más ruido");
+      if (act) add(-1, "activa: manchas y fulguraciones esconden los tránsitos");
     }
   } else if (tid === "rv") {
-    if (m < 0.6) r.push([2, "estrella liviana: el planeta la hace bambolear más"]);
-    else if (m < 0.9) r.push([1, "estrella liviana: el planeta la hace bambolear más"]);
-    else if (m > 1.15) r.push([-2, "estrella masiva y caliente: se mueve poco, tiene pocas líneas y gira rápido"]);
-    if (act) r.push([-1, "activa: su superficie agitada mete ruido en la medida"]);
+    if (m < 0.6) add(2, "estrella liviana: el planeta la hace bambolear más");
+    else if (m < 0.9) add(1, "estrella liviana: el planeta la hace bambolear más");
+    else if (m > 1.15) add(-2, "estrella masiva y caliente: se mueve poco, tiene pocas líneas y gira rápido");
+    if (act) add(-1, "activa: su superficie agitada mete ruido en la medida");
   } else if (tid === "astro") {
-    if (cer) r.push([2, "cercana: su vaivén se nota en el cielo"]);
-    if (m < 0.6) r.push([1, "liviana: el planeta la mueve más"]);
-    if (m > 1.2) r.push([-1, "masiva: el planeta casi no la mueve"]);
+    if (cer) add(2, "cercana: su vaivén se nota en el cielo");
+    if (m < 0.6) add(1, "liviana: el planeta la mueve más");
+    if (m > 1.2) add(-1, "masiva: el planeta casi no la mueve");
   } else if (tid === "imagen") {
-    if (cer) r.push([2, "cercana: planeta y estrella se ven bien separados"]);
-    if (lej) r.push([-3, "lejana: el planeta queda pegado al brillo de la estrella"]);
+    if (cer) add(2, "cercana: planeta y estrella se ven bien separados");
+    if (lej) add(-3, "lejana: el planeta queda pegado al brillo de la estrella");
   } else if (tid === "micro") {
-    if (lej) r.push([2, "lejana: hay más estrellas de fondo con las que alinearse"]);
-    if (m < 0.6) r.push([1, "enana: las estrellas-lente típicas son pequeñas"]);
+    if (lej) add(2, "lejana: hay más estrellas de fondo con las que alinearse");
+    if (m < 0.6) add(1, "enana: las estrellas-lente típicas son pequeñas");
   }
   const b = est.bono[tid], s = r.reduce((x, [v]) => x + v, 0);
-  if (b !== null && b !== undefined && s !== b) r.push([b - s, "tope: ningún bono pasa de ±3"]);
+  if (b !== null && b !== undefined && s !== b) r.push([b - s, `tope: ningún bono pasa de ±${3 * E}`]);
   if (!r.length) r.push([0, "estrella promedio para esta técnica: sin ventaja ni desventaja"]);
   return r;
 }
