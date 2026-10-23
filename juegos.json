@@ -1,0 +1,16 @@
+[
+  {
+    "carpeta": "exoplanetas",
+    "titulo": "Sistemas Exoplanetas",
+    "descripcion": "Descubre exoplanetas, investiga sus atmósferas y busca señales de vida compitiendo contra la computadora.",
+    "tipo": "Juego de estrategia",
+    "icono": "🪐"
+  },
+  {
+    "carpeta": "astrofisica",
+    "titulo": "Astrofísica: repaso",
+    "descripcion": "Preguntas y tarjetas con repetición espaciada para repasar los temas del curso.",
+    "tipo": "Repaso",
+    "icono": "🔭"
+  }
+]

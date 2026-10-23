@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astrofísica — Repetición espaciada</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<a href="../" style="display:inline-block;margin-bottom:12px;color:#8ec5ff;text-decoration:none;font-size:15px">← Juegos</a>
+
+<h1>🌌 Astrofísica</h1>
+<div class="subtitulo">Repetición espaciada</div>
+
+<div class="modo-switch">
+  <button id="btnModoPractica" class="activo" onclick="cambiarModo('practica')">🎯 Practicar</button>
+  <button id="btnModoMemorizar" onclick="cambiarModo('memorizar')">🧠 Memorizar</button>
+</div>
+
+<!-- ============ MODO PRÁCTICA ============ -->
+<div id="modoPractica">
+
+  <div class="tema-selector">
+    <select id="temaSelector" onchange="cambiarFiltroTema()">
+      <option value="todos">Todos los temas</option>
+    </select>
+  </div>
+
+  <div class="dominio-card">
+    <div class="dominio-header">
+      <span id="dominioEtiqueta">Dominio del tema</span>
+      <span class="dominio-numero" id="dominioNumero">50/100</span>
+    </div>
+    <div class="barra">
+      <div class="barra-progreso" id="barraProgreso"></div>
+    </div>
+  </div>
+
+  <div class="racha-card" id="rachaCard"></div>
+
+  <div class="question" id="question"></div>
+  <div id="options"></div>
+  <div id="feedback"></div>
+  <div class="explicacion" id="explicacion"></div>
+
+  <button onclick="nuevaPregunta()">Nueva pregunta</button>
+
+  <div class="info">
+    Los números cambian en cada pregunta,
+    pero el dominio se calcula sobre el procedimiento.
+  </div>
+
+</div>
+
+<!-- ============ MODO MEMORIZAR ============ -->
+<div id="modoMemorizar" class="fc-ocultar">
+
+  <div class="fc-selector-wrap">
+    <select id="fcCategoria" onchange="cambiarCategoriaFlash()">
+      <option value="todas">Todas las categorías</option>
+    </select>
+  </div>
+
+  <div class="fc-stats" id="fcStats"></div>
+
+  <div id="fcZona"></div>
+
+  <div class="info">
+    Espacio = mostrar reverso · 1 Otra vez · 2 Difícil · 3 Bien · 4 Fácil
+  </div>
+  <div style="text-align:center">
+    <button class="fc-reset" id="btnResetFlash" onclick="reiniciarFlashcards()">Reiniciar progreso de flashcards</button>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
