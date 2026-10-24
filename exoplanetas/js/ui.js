@@ -775,7 +775,7 @@ function mostrarReglas() {
     <p>Diriges un equipo de astrónomos. Gana quien junte más <b>reputación</b> en ${K.RONDAS[3]} rondas (con 3 jugadores). La computadora hace de Director: guarda los planetas y su Verdad.</p>
     <h3>Tu turno: una acción</h3>
     <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Tiras un dado de 20: el juego te dice qué número necesitas, según la carta y los bonos de la estrella.</p>
-    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto. ${K.MAR_SIN_DADO ? `No se tira dado: funciona salvo que las condiciones del planeta sumen ${K.UMBRAL_MAR} o menos.` : ""}</p>
+    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto. ${K.MAR_SIN_DADO ? `No se tira dado: funciona salvo que las condiciones de la estrella sumen ${K.UMBRAL_MAR} o menos.` : ""}</p>
     <p><b>Telescopio:</b> gastas tu turno, cambias las cartas que quieras y completas tu mano hasta ${K.MANO_MAX}.</p>
     <p>Al final de tu turno, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
     <h3>Puntos</h3>

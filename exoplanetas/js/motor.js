@@ -213,11 +213,13 @@ class Juego {
     const partes = [];
     for (const [lab, v, por] of MAR[mid].mods) {
       let aplica = false;
-      if (pl.rasgos.includes(lab)) aplica = true;
-      else if (lab === "Estrella enana M") aplica = pl.est.cl[0] === "M";
+      // solo condiciones de la estrella o lecturas previas: un fallo no revela nada oculto del planeta
+      if (lab === "Estrella enana M") aplica = pl.est.cl[0] === "M";
       else if (lab === "Estrella activa") aplica = pl.est.act === "activa";
       else if (lab === "Estrella cercana") aplica = pl.est.dist === "cercana";
-      else if (lab === "Aún sin leer Gases") aplica = !this.conoce(jg, pl, "gases");
+      else if (lab === "Estrella lejana") aplica = pl.est.dist === "lejana";
+      else if (lab === "Estrella joven") aplica = pl.est.edad === "joven";
+      else if (lab === "Densidad ya leída") aplica = pl.marcadores.some(x => x.mid === "densidad" && x.ok);
       if (aplica) partes.push([lab, v, por]);
     }
     if (!refutando) {
@@ -230,18 +232,20 @@ class Juego {
     const c = this.bonoCient(jg, claves); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
     return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: MAR[mid].cd };
   }
-  requisito(mid, pl) {
+  // Contexto: necesita un espectro con gases ya leído en el planeta (tuyo; para refutar, de cualquiera)
+  requisito(mid, pl, jg = null) {
     if (mid === "densidad") return !pl.micro;
+    if (mid === "contexto") return pl.marcadores.some(x => x.ok && (x.mid === "esp_transito" || x.mid === "esp_imagen") && (jg === null || x.jg === jg.idx));
     if (mid === "esp_emision" && pl.rasgos.includes("Gigante") && pl.rasgos.includes("Caliente")) return true;
     if (mid === "esp_transito" || mid === "esp_emision") return pl.tecnicas.includes("transito");
     if (mid === "esp_imagen") return pl.tecnicas.includes("imagen") || (pl.rasgos.includes("Gigante") && pl.rasgos.includes("Frío") && pl.est.dist === "cercana");
     return true;
   }
   // requisito con lo que el jugador puede saber (los rasgos públicos)
-  requisitoVisible(mid, pl) {
+  requisitoVisible(mid, pl, jg = null) {
     if (mid === "esp_emision") return pl.tecnicas.includes("transito") || (pl.rasgosPub.includes("Gigante") && pl.rasgosPub.includes("Caliente"));
     if (mid === "esp_imagen") return pl.tecnicas.includes("imagen") || (pl.rasgosPub.includes("Gigante") && pl.rasgosPub.includes("Frío") && pl.est.dist === "cercana");
-    return this.requisito(mid, pl);
+    return this.requisito(mid, pl, jg);
   }
 
   // ---------------------------------------------------------- opciones legales
@@ -252,7 +256,7 @@ class Juego {
       && (tid !== "imagen" || (pl.rasgosPub.includes("Gigante") && pl.est.edad === "joven"));
   }
   puedeInvestigar(jg, mid, pl) {
-    if (!this.puedeActuar(jg, pl) || !this.requisitoVisible(mid, pl)) return false;
+    if (!this.puedeActuar(jg, pl) || !this.requisitoVisible(mid, pl, jg)) return false;
     return !CAMPOS_MAR[mid].every(c => this.conoce(jg, pl, c));
   }
   sirveParaPublicar(jg, pl, cat) {
@@ -436,7 +440,7 @@ class Juego {
     const t = K.MAR_SIN_DADO ? { ok: this.marcadorFunciona(m), mod: m.mod, cd: m.cd, d: null, sinDado: true } : this.tirar(m.mod, m.cd);
     this.emit("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, mid, ...t, partes: m.partes });
     await this.mostrar("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, mid, ...t, partes: m.partes });
-    if (!t.ok || !this.requisito(mid, pl)) {
+    if (!t.ok || !this.requisito(mid, pl, jg)) {
       const k = `${jg.idx}|${pl.id}|${mid}`; this.senal[k] = (this.senal[k] || 0) + 1;
       pl.marcadores.push({ mid, jg: jg.idx, ok: false });
       this.log(`${jg.nombre} investiga ${pl.nombre} con ${MAR[mid].nombre}: no concluyente (queda bajo el planeta).`, { jg: jg.idx });
