@@ -219,13 +219,13 @@ class Humano {
     ui.fase = "accion"; ui.sel = null; render();
     banner("Tu turno");
     await nuevaEspera("accion");
-    await mostrarHitos();
+    await mostrarHitos(true);
     ui.fase = "post"; ui.sel = null; render();
     if (K.ROBO) await juego.reponer(jg);
     else await nuevaEspera("fin");          // sin robo: publicas si quieres y terminas el turno
     ui.fase = "espera"; render();
   }
-  async elegirMazo(juego, jg, k) { await mostrarHitos(); ui.fase = k === 0 ? "post" : "robar"; render(); return nuevaEspera("mazo"); }
+  async elegirMazo(juego, jg, k) { await mostrarHitos(true); ui.fase = k === 0 ? "post" : "robar"; render(); return nuevaEspera("mazo"); }
   descartar(juego, jg) { ui.fase = "descartar"; render(); return nuevaEspera("descarte"); }
   decidirRefutar(juego, x, pl, cat, ops) { return preguntarRefutar(pl, cat, ops.map(mid => ({ cat, mid }))).then(r => r && r.mid); }
   decidirRefutarArticulo(juego, x, pl, cats, pares, pozo) { return preguntarRefutar(pl, cats, pares, pozo); }
@@ -439,10 +439,13 @@ async function publicarHumano(pl, cat, cats) {
   } finally { ui.ocupado = false; render(); }
 }
 
-// Cartel de hito: puntos, quién lo logró y el caso real que lo inspira
-async function mostrarHitos() {
+// Cartel de hito: puntos, quién lo logró y el caso real que lo inspira.
+// soloMios: los de un rival esperan a que termine su turno (si no, el cartel aparece antes de ver qué hizo).
+async function mostrarHitos(soloMios = false) {
   while (ui.hitosPend && ui.hitosPend.length) {
-    const d = ui.hitosPend.shift(), h = HITO[d.id], mio = d.jg === YO;
+    const k = soloMios ? ui.hitosPend.findIndex(x => x.jg === YO) : 0;
+    if (k < 0) break;
+    const d = ui.hitosPend.splice(k, 1)[0], h = HITO[d.id], mio = d.jg === YO;
     await ventana({ titulo: "¡Hito de la astronomía!", color: "var(--hito)", centro: true, cerrable: false,
       botones: [{ txt: mio ? "¡Genial!" : "Continuar", valor: true }], cuerpo: `
       <div class="hito-cartel">
@@ -805,10 +808,15 @@ function crearJuego(pref) {
   }
   const juego = new Juego({ jugadores });
   ui.hitosPend = [];
-  for (const jg of juego.j) if (jg.ctrl instanceof Bot) jg.ctrl.pausa = async () => { if (juego !== g) throw CANCELADO; render(); await mostrarHitos(); await sleep(ui.velocidad); };
+  for (const jg of juego.j) if (jg.ctrl instanceof Bot) {
+    jg.ctrl.pausa = async () => { if (juego !== g) throw CANCELADO; render(); await mostrarHitos(true); await sleep(ui.velocidad); };
+    const turnoBot = jg.ctrl.turno.bind(jg.ctrl);       // los hitos del rival, al terminar su turno y con una pausa
+    jg.ctrl.turno = async (jj, jgb) => { await turnoBot(jj, jgb); if (juego !== g) throw CANCELADO; render();
+      if (ui.hitosPend.some(x => x.jg !== YO)) { await sleep(ui.velocidad * 1.5); await mostrarHitos(); } };
+  }
   juego.vista = async (tipo, d) => {
     if (juego !== g) throw CANCELADO;
-    try { await vista(tipo, d); await mostrarHitos(); } catch (e) { console.error(e); }
+    try { await vista(tipo, d); await mostrarHitos(true); } catch (e) { console.error(e); }
     if (juego !== g) throw CANCELADO;
   };
   juego.on((tipo, d) => {
