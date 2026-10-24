@@ -6,6 +6,7 @@ Sitio: https://luca1196.github.io
 - Cada juego vive en su propia carpeta, con su `index.html`:
   - `exoplanetas/`: Sistemas Exoplanetas (contra bots). `estilo.css` y `js/` (datos, motor, bots, interfaz).
   - `astrofisica/`: repaso de astrofísica con repetición espaciada.
+  - `estudiar/`: herramienta de estudio personal (Prog4 y Lógica). No está en `juegos.json`, por eso no aparece en el menú; se entra con `/estudiar`. Lleva `noindex`.
 
 ## Agregar un juego
 1. Crea una carpeta nueva con su `index.html`.

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta name="robots" content="noindex,nofollow">
+<!--
+INSTRUCTIVO PARA SEGUIR TRABAJANDO (leer esto en vez de analizar todo el codigo)
+QUE ES: app de un solo archivo para que Luca (Logica) practique deduccion natural, copiando la dinamica de la app de Prog4.
+Pestanas: Reglas, Quiz (dominio "lvn"), Practicar, Mis errores ("ern": conteo por "tipo · regla").
+PREFERENCIAS: todo en espanol; gastar pocos tokens; nada de vistas previas ni redisenos; piezas minimas.
+PRACTICAR TIENE DOS FASES por ejercicio:
+ 1) BORRADOR (como se resuelve de verdad): estado = metas abiertas, cada una con su contexto de hipotesis. Luca elige movimientos en cualquier orden:
+    hacia atras sobre la meta (I∧ I→ I¬ I∨ I↔ I∀ I∃ RAA E⊥ E¬b E→b) y hacia adelante sobre una hipotesis (E∧ E→f E¬f E∨ E∀ E∃; E∨ y E∃ parten la meta).
+    mv() valida que la regla sea LEGAL (forma, premisas presentes, condiciones laterales con fv/ff/sb); NO compara con una solucion: acepta cualquier derivacion correcta.
+    En proposicional avisa "camino sin salida" (entails: tabla de verdad) cuando una submeta ya no se sigue del contexto. Boton Pista = receta (hint). Deshacer = pila de structuredClone.
+    Una meta se cierra sola si ya esta en el contexto (cl0/sol/up). build() arma el nodo de cada meta cuando todas sus submetas estan hechas.
+ 2) EN LIMPIO: del borrador se arma el arbol (cl, fx, idx) y se rehace nodo por nodo: regla, premisa, que cancela, etiqueta, condicion (cor/vf/cmp/dt). Aca si se compara con ese arbol.
+CODIGO: pf parsea formulas (cuantificador = prefijo como ¬; ∧ > ∨ > → > ↔), pr imprime, fv/sb/ff = variables libres, sustitucion, "libre para". RT reglas, TT teoria por tipo de error, Q quiz (correcta PRIMERA; agregar solo al final).
+EJERCICIOS: E = {t,en,P:[premisas],g:"meta"} (formulas como texto). Agregar al final de E. Sin E↔ (no se usa).
+-->
+<meta charset="utf-8"><title>Lógica · Deducción natural</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#fff;--fg:#1c1c1e;--mut:#6b6b70;--card:#f3f3f5;--ac:#2f5fd0;--ok:#1a7f45;--bad:#c0392b;--bd:#d9d9de;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--fg:#ececf0;--mut:#9a9aa3;--card:#232328;--ac:#7aa2ff;--ok:#4cc380;--bad:#ff7b6b;--bd:#35353c}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 12px}
+nav{display:flex;gap:8px;margin-bottom:16px}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:8px;padding:8px 12px}
+button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+nav button{flex:1;padding:8px 4px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.card h3{margin:0 0 6px;font-size:16px}
+code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+code{background:var(--bg);padding:1px 5px;border-radius:4px}
+pre{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;overflow-x:auto;margin:8px 0;white-space:pre-wrap}
+.opt{display:block;width:100%;text-align:left;margin:6px 0}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 20%,transparent)}
+.opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 20%,transparent)}
+.mut{color:var(--mut);font-size:14px}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.good{color:var(--ok);font-weight:600}
+.df{color:var(--bad);font-weight:700;text-decoration:underline}.cmp pre{margin:4px 0}
+details.err summary{cursor:pointer;margin:3px 0}details.err>div{border-left:3px solid var(--bad);padding:2px 12px;margin:6px 0 10px;background:var(--bg);border-radius:0 8px 8px 0}details.err p{margin:6px 0}
+.chs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}.ch{padding:6px 10px;font-size:13px;border-radius:12px;border-bottom-width:3px}.ch.sel{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tr{overflow-x:auto;padding:10px 4px}
+.nd{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:bottom}
+.ks{display:flex;gap:26px;align-items:flex-end;justify-content:center}
+.bar{display:flex;align-items:center;gap:4px;margin:2px 0}.bar i{flex:1;border-top:1.5px solid var(--fg)}.bar b{font:600 11px ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+.cn{text-align:center;white-space:nowrap;padding:1px 4px;font:13px ui-monospace,Menlo,Consolas,monospace}
+.pd{border:1.5px dashed var(--mut);border-radius:6px;color:var(--mut);align-self:center}.cu{border-color:var(--ac);color:var(--ac);font-weight:700}
+</style></head><body><main>
+<h1>Deducción natural · Lógica</h1>
+<nav><button id="t0">Reglas</button><button id="t1">Quiz</button><button id="t2">Practicar</button><button id="t3">Mis errores</button></nav>
+<div id="v"></div>
+</main>
+<script>
+const $=i=>document.getElementById(i),v=$("v");
+const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const sv=(k,x)=>{try{localStorage.setItem(k,JSON.stringify(x))}catch(e){}};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const sh=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+const RT=[
+["I∧","Introducción de ∧",`<pre> φ    ψ
+─────── I∧
+  φ∧ψ</pre><p>Probás cada parte por separado.</p>`],
+["E∧","Eliminación de ∧",`<pre> φ∧ψ         φ∧ψ
+───── E∧    ───── E∧
+  φ            ψ</pre><p>De una conjunción sacás cualquiera de sus partes. La premisa es la conjunción completa.</p>`],
+["I→","Introducción de →",`<pre> [φ]ⁿ
+  ⋮
+  ψ
+────── I→ⁿ
+ φ→ψ</pre><p>Suponés el antecedente φ, llegás al consecuente ψ y cancelás φ (etiqueta n). La cancelación puede ser vacía (no cancelar nada).</p>`],
+["E→","Eliminación de →",`<pre> φ→ψ    φ
+─────────── E→
+     ψ</pre><p>Para obtener ψ necesitás φ→ψ y φ. La decisión clave es qué antecedente φ usar: mirá qué tenés a la vista.</p>`],
+["I¬","Introducción de ¬",`<pre> [φ]ⁿ
+  ⋮
+  ⊥
+────── I¬ⁿ
+  ¬φ</pre><p>Para probar ¬φ suponés φ, llegás a ⊥ y cancelás φ.</p>`],
+["E¬","Eliminación de ¬",`<pre> ¬φ    φ
+───────── E¬
+    ⊥</pre><p>Para llegar a ⊥ necesitás una fórmula y su negación. En la resolución del examen: primero ¬φ, después φ.</p>`],
+["E⊥","Eliminación de ⊥ (ex falso)",`<pre>  ⊥
+───── E⊥
+  φ</pre><p>De ⊥ se concluye cualquier fórmula φ, sin cancelar nada.</p>`],
+["RAA","Reducción al absurdo",`<pre>[¬φ]ⁿ
+  ⋮
+  ⊥
+────── RAAⁿ
+  φ</pre><p>Para probar φ suponés ¬φ, llegás a ⊥ y cancelás ¬φ. Es el recurso cuando ninguna regla directa sale. Ojo: I¬ cancela φ y concluye ¬φ; RAA cancela ¬φ y concluye φ.</p>`],
+["I∨","Introducción de ∨",`<pre>  φ          ψ
+───── I∨   ───── I∨
+ φ∨ψ        φ∨ψ</pre><p>Alcanza con probar uno de los dos disyuntos.</p>`],
+["E∨","Eliminación de ∨",`<pre>      [φ]ⁿ   [ψ]ᵐ
+       ⋮      ⋮
+ φ∨ψ   σ      σ
+───────────────── E∨ⁿ,ᵐ
+        σ</pre><p>Probás la misma σ en dos ramas: una suponiendo φ y otra suponiendo ψ. Se cancelan las dos hipótesis, con etiquetas distintas.</p>`],
+["I↔","Introducción de ↔",`<pre> φ→ψ    ψ→φ
+─────────── I↔
+    φ↔ψ</pre><p>Se derivan las dos implicaciones por separado.</p>`],
+["E↔","Eliminación de ↔",`<pre> φ↔ψ    φ        φ↔ψ    ψ
+───────── E↔    ───────── E↔
+    ψ               φ</pre><p>Revisá en tus apuntes la versión exacta que usa el curso (esta es la de van Dalen).</p>`],
+["I∀","Introducción de ∀",`<pre>  φ(x)
+──────── I∀
+(∀x)φ(x)</pre><p><b>Condición (∗):</b> x ∉ FV de las hipótesis abiertas (no canceladas): x tiene que ser arbitraria.</p>`],
+["E∀","Eliminación de ∀",`<pre>(∀x)φ(x)
+──────── E∀
+  φ(t)</pre><p><b>Condición (∗):</b> t libre para x en φ (al sustituir no se captura ninguna variable de t).</p>`],
+["I∃","Introducción de ∃",`<pre>  φ(t)
+──────── I∃
+(∃x)φ(x)</pre><p><b>Condición (∗):</b> t libre para x en φ.</p>`],
+["E∃","Eliminación de ∃",`<pre>          [φ(x)]ⁿ
+             ⋮
+(∃x)φ(x)     ψ
+───────────────── E∃ⁿ
+        ψ</pre><p>Suponés φ(x) para una x nueva, llegás a ψ y cancelás φ(x). <b>Condición (∗):</b> x ∉ FV(ψ) ni de las hipótesis abiertas (salvo φ(x)).</p>`],
+["hip","Hipótesis y etiquetas",`<p>Una hipótesis cancelada se escribe <code>[φ]ⁿ</code> y n es la etiqueta de la regla que la cancela, que debe estar más abajo en el árbol y cancelar exactamente esa fórmula. Una fórmula que es premisa del juicio (Γ) queda sin corchetes ni etiqueta. Cada etiqueta se usa una sola vez por regla.</p>`]];
+const R=[["Cómo encarar una derivación",`<p>Se trabaja en las dos direcciones: hacia atrás desde la conclusión y hacia adelante desde las premisas, y recién al final se pasa en limpio. Receta: 1) Si la meta ya está entre tus hipótesis, cerrala. 2) Mirá el conector de la meta: ∧ → ¬ ↔ ∀ se desarman sin perder nada con su introducción. 3) Desarmá lo que tenés: E∧, E∃, E∀ con términos del problema, E→ si tenés el antecedente, E∨ en casos. 4) Si seguís trabado: RAA. 5) ⊥ se logra con E¬ (φ y ¬φ). 6) Pasá en limpio y revisá cancelaciones y condiciones (∗). <span class="mut">I∨ e I∃ son elecciones: solo si ya sabés qué lado o testigo vale.</span></p><p class="mut">Versión corta: 1) Mirá el conector principal de la conclusión: si podés construirla, usá su <b>introducción</b>. 2) Si sale de una premisa o hipótesis, usá <b>eliminaciones</b>. 3) Si te trabás: <b>RAA</b> (suponé ¬conclusión y buscá ⊥). 4) ⊥ se logra con <b>E¬</b> (φ y ¬φ). 5) Al final revisá que toda hipótesis abierta esté en Γ y que escribiste las condiciones (∗). <span class="mut">En el examen no se aceptan justificaciones semánticas.</span></p>`]].concat(RT.map(r=>[r[1],r[2]]));
+const TT={
+"regla":"<p>Mirá la fórmula objetivo. Si su conector principal se puede construir, usá la introducción de ese conector. Si sale de una premisa o hipótesis, usá eliminaciones. Si estás trabado, RAA. Si la fórmula ya es una hipótesis o premisa, se cierra como Hipótesis.</p>",
+"premisa":"<p>Las eliminaciones y I∃/I∨ piden la premisa exacta: E∧ la conjunción completa, E→ el antecedente, E¬ la fórmula φ (quedan ¬φ y φ), E∨ la disyunción, E∀/E∃/I∃ la fórmula cuantificada o instanciada, I∨ el disyunto que probás. Fijate qué hipótesis tenés a la vista.</p>",
+"cancelación":"<p>Cancelan: I→ (el antecedente, o nada), I¬ (φ), RAA (¬φ), E∨ (los dos disyuntos), E∃ (φ(x)). Se cancela la hipótesis que se usó arriba con esa etiqueta.</p>",
+"etiqueta":"<p>Cada hipótesis cancelada lleva la etiqueta de la regla que la cancela, y esa regla tiene que estar más abajo (ser ancestro) y cancelar exactamente esa fórmula. Si la fórmula es una premisa del juicio (Γ), no lleva etiqueta.</p>",
+"camino sin salida":"<p>Cada movimiento tiene que dejar submetas que todavía se sigan de tus hipótesis. Si una submeta ya no se sigue, ese camino no termina (ej.: I∨ eligiendo el disyunto que no podés probar). Deshacé y probá el otro lado, otra regla o RAA.</p>","condición":"<p>E∀ e I∃: t libre para x en φ. I∀: x ∉ FV de las hipótesis abiertas. E∃: x ∉ FV de ψ ni de las hipótesis abiertas (salvo φ(x)). En el examen hay que escribir cada (∗) explícitamente.</p>"};
+const thR=r=>(RT.find(x=>x[0]==r)||[0,0,""])[2];
+const Q=[
+["Querés probar φ→ψ. ¿Qué regla usás y qué se cancela?",["I→: suponés φ, llegás a ψ y cancelás φ","I→: suponés ψ, llegás a φ y cancelás ψ","E→: tomás φ y ψ como premisas","RAA: suponés ¬ψ y cancelás ¬ψ"],"I→ cancela el antecedente: de la hipótesis φ deducís ψ y queda φ→ψ."],
+["Querés probar ¬φ. ¿Qué regla usás?",["I¬: suponés φ, llegás a ⊥ y cancelás φ","RAA: suponés ¬φ, llegás a ⊥ y cancelás ¬φ","E¬ aplicada a φ","E⊥ desde φ"],"I¬ concluye ¬φ cancelando φ. RAA concluye φ cancelando ¬φ: no las confundas."],
+["¿Qué premisas necesita E¬ y qué concluye?",["¬φ y φ; concluye ⊥","φ y ψ; concluye φ∧ψ","⊥; concluye cualquier φ","φ→⊥; concluye ¬φ"],"E¬ junta una fórmula y su negación para llegar a ⊥. En el examen: primero ¬φ y después φ."],
+["¿Qué hace E⊥?",["De ⊥ concluye cualquier fórmula","De φ y ¬φ concluye ⊥","Cancela ¬φ y concluye φ","De ⊥ concluye ¬φ cancelando φ"],"Ex falso: de una contradicción sale cualquier cosa. Ej. 2c: de ⊥ se concluye (∀x)Q(x)."],
+["Ninguna introducción ni eliminación directa te lleva a la conclusión φ. ¿Qué intentás?",["RAA: suponer ¬φ y buscar ⊥","I¬ suponiendo φ","I→ suponiendo ⊥","E⊥ sin tener ⊥"],"RAA es el recurso general: suponés ¬φ, llegás a ⊥ y cancelás ¬φ."],
+["En E∨ (de φ∨ψ a σ), ¿qué se cancela?",["φ en una rama y ψ en la otra; ambas ramas llegan a σ","Solo φ∨ψ","Solo ¬σ","Nada"],"Hay dos derivaciones de σ, una bajo φ y otra bajo ψ; las dos hipótesis se cancelan con etiquetas distintas."],
+["Para I∨ con conclusión φ∨ψ, ¿qué necesitás?",["Probar φ o probar ψ (alcanza uno)","Probar φ y ψ","Probar ¬φ","Probar φ→ψ"],"I∨ solo pide un disyunto. En 3a hay que elegir el que se puede probar."],
+["¿Qué premisas tiene E→ para concluir ψ?",["φ→ψ y φ","φ→ψ y ψ","φ y ψ","¬ψ→¬φ"],"Modus ponens. La decisión clave es el antecedente φ."],
+["¿Condición lateral de E∀ (de (∀x)φ(x) a φ(t))?",["t libre para x en φ","x ∉ FV de las hipótesis abiertas","x ∉ FV(ψ) ni de las hipótesis abiertas","Ninguna"],"Al sustituir x por t no se debe capturar ninguna variable de t. Ej. 2c: f(x) libre para x en ¬P(x)."],
+["¿Condición lateral de I∃ (de φ(t) a (∃x)φ(x))?",["t libre para x en φ","x ∉ FV de las hipótesis abiertas","x ∉ FV(ψ) ni de las hipótesis abiertas","Ninguna"],"Igual que E∀: t libre para x en φ. Ej. 3b: x libre para x en P(x,x)."],
+["¿Condición lateral de I∀ (de φ(x) a (∀x)φ(x))?",["x ∉ FV de las hipótesis abiertas (no canceladas)","t libre para x en φ","x ∉ FV(ψ) únicamente","Ninguna"],"Si x es libre en una hipótesis abierta no es arbitraria y no se puede generalizar."],
+["¿Condición lateral de E∃ (de (∃x)φ(x) y ψ bajo [φ(x)])?",["x ∉ FV(ψ) ni de las hipótesis abiertas distintas de φ(x)","t libre para x en φ","x ∉ FV(φ)","Ninguna"],"Ej. 3b: x ∉ FV((∃x)P(x,x), (∀x)(∀y)(∀z)(...))."],
+["¿Cuándo una hipótesis no lleva corchetes ni etiqueta?",["Cuando es premisa del juicio (Γ) y no se cancela","Cuando se cancela con RAA","Cuando se usa dos veces","Cuando es ⊥"],"Las canceladas van como [φ]ⁿ; las premisas de Γ quedan abiertas."],
+["¿Puede aplicarse I→ sin cancelar ninguna hipótesis?",["Sí, la cancelación puede ser vacía","No, siempre debe cancelar φ","Solo si ψ es ⊥","Solo dentro de RAA"],"En 3a, β→γ se obtiene de γ por I→ sin cancelar β."],
+["¿Qué necesita I↔ para concluir φ↔ψ?",["φ→ψ y ψ→φ","φ y ψ","φ∧ψ","¬φ y ¬ψ"],"I↔ junta las dos implicaciones; en 3a se derivan por separado."]];
+const SD="α∨(β∧¬γ)",H="¬α→¬(β→γ)",P3="(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))";
+const E=[
+{t:"2c",en:"Derivar {ψ, (∀x)¬P(x)} ⊢ (∀x)Q(x), con ψ := (∀x)P(f(x)) ∧ (∃z)¬P(z).",P:["(∀x)P(f(x)) ∧ (∃z)¬P(z)","(∀x)¬P(x)"],g:"(∀x)Q(x)"},
+{t:"3b",en:"Derivar (∃x)R(x,x), "+P3+" ⊢ (∃x)P(x,x).",P:["(∃x)R(x,x)",P3],g:"(∃x)P(x,x)"},
+{t:"3a ←",en:"Parte de 3a: ⊢ ("+SD+") → ("+H+").",P:[],g:`(${SD})→(${H})`},
+{t:"3a →",en:"Parte de 3a: ⊢ ("+H+") → ("+SD+").",P:[],g:`(${H})→(${SD})`},
+{t:"3a completo",en:"⊢ ("+H+") ↔ ("+SD+").",P:[],g:`(${H})↔(${SD})`}];
+function pf(s){const T=s.match(/[A-Za-z0-9_α-ωΑ-Ω]+|\S/g);let i=0;const nt=()=>T[i++],pk=()=>T[i];
+const trm=()=>{const n=nt();if(pk()=="("){i++;const a=[trm()];while(pk()==","){i++;a.push(trm())}i++;return{k:"fn",n,a}}return{k:"v",n}};
+const at=()=>{const n=nt(),a=[];if(pk()=="("){i++;a.push(trm());while(pk()==","){i++;a.push(trm())}i++}return{k:"at",n,a}};
+const un=()=>{const t=pk();if(t=="¬"){i++;return{k:"not",a:un()}}if(t=="⊥"){i++;return{k:"bot"}}
+if(t=="("){if(T[i+1]=="∀"||T[i+1]=="∃"){const q=T[i+1]=="∀"?"all":"ex",v=T[i+2];i+=4;return{k:q,v,a:un()}}i++;const f=iff();i++;return f}return at()};
+const bin=(g,op,k)=>()=>{let l=g();while(pk()==op){i++;l={k,l,r:g()}}return l};
+const and=bin(un,"∧","and"),or=bin(and,"∨","or"),imp=()=>{const l=or();if(pk()=="→"){i++;return{k:"imp",l,r:imp()}}return l},iff=bin(imp,"↔","iff");return iff()}
+const PR={iff:1,imp:2,or:3,and:4},pt=t=>t.k=="v"?t.n:t.n+"("+t.a.map(pt).join(",")+")",u=g=>PR[g.k]?"("+pr(g)+")":pr(g);
+function pr(f){switch(f.k){case"bot":return"⊥";case"at":return f.n+(f.a.length?"("+f.a.map(pt).join(",")+")":"");case"not":return"¬"+u(f.a);case"all":return"(∀"+f.v+")"+u(f.a);case"ex":return"(∃"+f.v+")"+u(f.a);
+default:{const c=g=>PR[g.k]&&!(g.k=="and"&&(f.k=="imp"||f.k=="iff"))?"("+pr(g)+")":pr(g);return c(f.l)+({iff:"↔",imp:"→",or:"∨",and:"∧"})[f.k]+c(f.r)}}}
+const tv=(t,s)=>t.k=="v"?s.add(t.n):t.a.forEach(x=>tv(x,s));
+function fv(f,b=[],s=new Set()){switch(f.k){case"at":{const q=new Set();f.a.forEach(t=>tv(t,q));q.forEach(x=>b.includes(x)||s.add(x));break}case"not":fv(f.a,b,s);break;case"all":case"ex":fv(f.a,b.concat(f.v),s);break;case"bot":break;default:fv(f.l,b,s);fv(f.r,b,s)}return s}
+const stt=(m,x,t)=>m.k=="v"?(m.n==x?t:m):{k:"fn",n:m.n,a:m.a.map(y=>stt(y,x,t))};
+function sb(f,x,t){switch(f.k){case"at":return{...f,a:f.a.map(m=>stt(m,x,t))};case"not":return{k:"not",a:sb(f.a,x,t)};case"all":case"ex":return f.v==x?f:{...f,a:sb(f.a,x,t)};case"bot":return f;default:return{...f,l:sb(f.l,x,t),r:sb(f.r,x,t)}}}
+function ff(f,x,t){const V=new Set();tv(t,V);const w=(g,b)=>{switch(g.k){case"at":{const q=new Set();g.a.forEach(m=>tv(m,q));return!(q.has(x)&&!b.includes(x)&&b.some(y=>V.has(y)))}case"not":return w(g.a,b);case"all":case"ex":return w(g.a,b.concat(g.v));case"bot":return true;default:return w(g.l,b)&&w(g.r,b)}};return w(f,[])}
+const prop=f=>f.k=="at"?!f.a.length:f.k=="bot"||(f.k=="not"?prop(f.a):f.k=="all"||f.k=="ex"?false:prop(f.l)&&prop(f.r));
+const atoms=(f,s=new Set())=>{if(f.k=="at")s.add(f.n);else if(f.k=="not")atoms(f.a,s);else if(f.l){atoms(f.l,s);atoms(f.r,s)}return s};
+const ev=(f,v)=>f.k=="bot"?0:f.k=="at"?v[f.n]:f.k=="not"?1-ev(f.a,v):({and:()=>ev(f.l,v)&ev(f.r,v),or:()=>ev(f.l,v)|ev(f.r,v),imp:()=>(1-ev(f.l,v))|ev(f.r,v),iff:()=>+(ev(f.l,v)==ev(f.r,v))})[f.k]();
+function entails(fs,g){const all=[g,...fs];if(!all.every(prop))return true;const A=[...new Set(all.flatMap(x=>[...atoms(x)]))];if(A.length>8)return true;
+for(let m=0;m<1<<A.length;m++){const w={};A.forEach((a,i)=>w[a]=m>>i&1);if(fs.every(x=>ev(x,w))&&!ev(g,w))return false}return true}
+const sf=(f,m)=>{m[pr(f)]=f;if(f.k=="not"||f.k=="all"||f.k=="ex")sf(f.a,m);else if(f.l){sf(f.l,m);sf(f.r,m)}};
+function tp(e){const m={},c=t=>{m[pt(t)]=t;if(t.k=="fn")t.a.forEach(c)},w=f=>{if(f.k=="at")f.a.forEach(c);else if(f.k=="not")w(f.a);else if(f.k=="all"||f.k=="ex"){m[f.v]={k:"v",n:f.v};w(f.a)}else if(f.l){w(f.l);w(f.r)}};[e.GA,...e.PA].forEach(w);return m}
+E.forEach(e=>{e.PA=e.P.map(pf);e.GA=pf(e.g);e.q=/[∀∃]/.test(e.P.join("")+e.g)});
+const BR=["I∧","E∧","I→","E→","I¬","E¬","E⊥","RAA","I∨","E∨","I↔","hip"],QR=["I∀","E∀","I∃","E∃"],CAN=["I→","I¬","RAA","E∨","E∃"];
+const KD={"I∀":"fv","E∀":"libre","I∃":"libre","E∃":"fvE"};
+const KT={libre:"t libre para la variable en la fórmula",fv:"variable no libre en las hipótesis abiertas",fvE:"variable no libre en la conclusión ni en las hipótesis abiertas (salvo la que se cancela)",none:"ninguna condición"};
+const KS={libre:"t libre para x en φ",fv:"x ∉ FV(hip. abiertas)",fvE:"x ∉ FV(concl. y otras hip.)",none:"ninguna"};
+const SN={"E∧":"Conjunción","E→":"Antecedente","E¬":"Fórmula φ (quedan ¬φ y φ)","E∨":"Disyunción","E∀":"Premisa ∀","I∃":"Premisa φ(t)","E∃":"Premisa ∃","I∨":"Disyunto que probás"};
+const CT={"I→":"el antecedente de la conclusión (o nada)","I¬":"la φ de ¬φ","RAA":"la negación de la conclusión","E∨":"cada disyunto, en su rama","E∃":"la φ(x) de la premisa ∃"};
+const rn=r=>r=="hip"?"Hipótesis":r,rr=r=>r.replace(/[bf]$/,"");
+const nd=(f,r,c,l,s)=>({f:pr(f),r,l:l||"",s:s||"",c:c||[]});
+const has=(c,g)=>c.find(x=>pr(x.f)==pr(g));
+function mk(S,par,g,ctx){const o={id:S.G.length,g,ctx,par,s:"o",d:null,how:null,subs:[]};S.G.push(o);return o}
+function sol(S,o,d){o.s="d";o.d=d;const p=o.par!=null?S.G[o.par]:null;if(p&&p.s=="o"&&p.subs.every(i=>S.G[i].s=="d"))sol(S,p,bld(p,S))}
+const cl0=(S,o)=>{const q=has(o.ctx,o.g);if(q&&o.s=="o")sol(S,o,q.d)};
+function bld(p,S){const h=p.how,k=h.k,ds=p.subs.map(i=>S.G[i].d),g=p.g;
+switch(k){case"I→":case"I¬":case"RAA":return nd(g,k,ds,h.l);case"I∀":case"I∃":return nd(g,k,ds,"",h.s);case"E¬b":return nd(g,"E¬",ds);case"E→b":return nd(g,"E→",ds);case"E∨":return nd(g,"E∨",[h.fd,...ds],h.l);case"E∃":return nd(g,"E∃",[h.fd,...ds],h.l,h.s);default:return nd(g,k,ds)}}
+const FW=["E∧","E→f","E¬f","E∨","E∀","E∃"],TPC={};
+const TPm=()=>TPC[ex]||(TPC[ex]=tp(E[ex])),FPm=o=>{const m={};[...o.ctx.map(x=>x.f),o.g].forEach(f=>sf(f,m));return m};
+function mv(S,o,r,a){const g=o.g,c=o.ctx,F=(t,m)=>({blocked:1,t,m}),R=rr(r);
+const hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)}),ops=()=>c.filter(x=>x.d.r=="hip"),lb=()=>++S.lab,subs=[],ns=(g2,h)=>{const q=mk(S,o.id,g2,c.concat(h||[]));o.subs.push(q.id);subs.push(q)};
+const SH={"I∧":["and","una conjunción (φ∧ψ)"],"I→":["imp","una implicación (φ→ψ)"],"I¬":["not","una negación (¬φ)"],"I∨":["or","una disyunción (φ∨ψ)"],"I↔":["iff","una bicondicional (φ↔ψ)"],"I∀":["all","un (∀x)φ"],"I∃":["ex","un (∃x)φ"]};
+if(FW.includes(r)&&r!="E∨"&&r!="E∃"){const x=c[a[0]];if(!x)return F("premisa","No hay ninguna hipótesis para usar con este movimiento.");const f=x.f,add=(nf,d)=>{if(!has(c,nf))c.push({f:nf,d})},bad=m=>F("premisa",m);
+if(r=="E∧"){if(f.k!="and")return bad("E∧ necesita una conjunción como premisa.");add(f.l,nd(f.l,"E∧",[x.d]));add(f.r,nd(f.r,"E∧",[x.d]))}
+if(r=="E→f"){if(f.k!="imp")return bad("E→ necesita una implicación como premisa.");const q=has(c,f.l);if(!q)return bad(`Para E→ hace falta tener el antecedente «${pr(f.l)}» entre tus hipótesis. Construilo con una meta nueva (E→ hacia atrás) o elegí otro movimiento.`);add(f.r,nd(f.r,"E→",[x.d,q.d]))}
+if(r=="E¬f"){if(f.k!="not")return bad("E¬ hacia adelante necesita una negación ¬φ como premisa.");const q=has(c,f.a);if(!q)return bad(`Para E¬ hace falta tener también «${pr(f.a)}» entre tus hipótesis.`);add({k:"bot"},nd({k:"bot"},"E¬",[x.d,q.d]))}
+if(r=="E∀"){if(f.k!="all")return bad("E∀ necesita una premisa (∀x)φ.");const t=TPm()[a[1]];if(!ff(f.a,f.v,t))return F("condición",`E∀ exige que ${pt(t)} sea libre para ${f.v} en «${pr(f.a)}»: al sustituir se captura una variable.`);const nf=sb(f.a,f.v,t);add(nf,nd(nf,"E∀",[x.d],"",`${pt(t)} libre para ${f.v} en ${pr(f.a)}`))}
+S.log.push(`${R} sobre «${pr(f)}»`);cl0(S,o);return null}
+let how={k:r};
+if(r=="E∨"||r=="E∃"){const x=c[a[0]],f=x.f;
+if(r=="E∨"){if(f.k!="or")return F("premisa","E∨ necesita una disyunción como premisa.");const n1=lb(),n2=lb();ns(g,[hy(f.l,n1)]);ns(g,[hy(f.r,n2)]);how.l=n1+","+n2;how.fd=x.d}
+else{if(f.k!="ex")return F("premisa","E∃ necesita una premisa (∃x)φ.");const v=f.v,bd=ops().find(y=>y!==x&&fv(y.f).has(v));if(fv(g).has(v)||bd)return F("condición",`E∃ exige x ∉ FV de la conclusión y de las hipótesis abiertas, pero ${v} aparece libre en «${pr(fv(g).has(v)?g:bd.f)}».`);const n=lb();how.l=""+n;how.fd=x.d;how.s=`${v} ∉ FV(${pr(g)}, hipótesis abiertas)`;ns(g,[hy(f.a,n)])}
+S.log.push(`${R} sobre «${pr(f)}»`)}
+else{if(SH[r]&&g.k!=SH[r][0])return F("regla",`${r} solo sirve cuando la meta es ${SH[r][1]}; acá la meta es «${pr(g)}».`);
+switch(r){
+case"I∧":ns(g.l);ns(g.r);break;
+case"I↔":ns({k:"imp",l:g.l,r:g.r});ns({k:"imp",l:g.r,r:g.l});break;
+case"I→":{const n=lb();how.l=""+n;ns(g.r,[hy(g.l,n)])}break;
+case"I¬":{const n=lb();how.l=""+n;ns({k:"bot"},[hy(g.a,n)])}break;
+case"RAA":{const n=lb();how.l=""+n;ns({k:"bot"},[hy({k:"not",a:g},n)])}break;
+case"I∨":ns(a[0]==0?g.l:g.r);break;
+case"I∀":{const x=g.v,bd=ops().find(y=>fv(y.f).has(x));if(bd)return F("condición",`I∀ exige x ∉ FV de las hipótesis abiertas, pero ${x} es libre en «${pr(bd.f)}».`);how.s=`${x} ∉ FV(hipótesis abiertas)`;ns(g.a)}break;
+case"I∃":{const t=TPm()[a[0]];if(!ff(g.a,g.v,t))return F("condición",`I∃ exige que ${pt(t)} sea libre para ${g.v} en «${pr(g.a)}».`);how.s=`${pt(t)} libre para ${g.v} en ${pr(g.a)}`;ns(sb(g.a,g.v,t))}break;
+case"E⊥":if(g.k=="bot")return F("regla","La meta ya es ⊥: no hace falta E⊥.");ns({k:"bot"});break;
+case"E¬b":{if(g.k!="bot")return F("regla","E¬ hacia atrás concluye ⊥: la meta tiene que ser ⊥.");const p=FPm(o)[a[0]];ns({k:"not",a:p});ns(p)}break;
+case"E→b":{const p=FPm(o)[a[0]];ns({k:"imp",l:p,r:g});ns(p)}break}
+S.log.push(`${R} sobre la meta «${pr(g)}»`)}
+o.how=how;subs.forEach(q=>cl0(S,q));
+const w=subs.find(q=>q.s=="o"&&!entails(q.ctx.map(x=>x.f),q.g));
+return w?{warn:1,t:"camino sin salida",m:`Camino sin salida: «${pr(w.g)}» ya no se sigue de tus hipótesis.`}:null}
+const PM=(r,o)=>{const p={"E∧":["f"],"E→f":["f"],"E¬f":["f"],"E∨":["f"],"E∃":["f"],"E∀":["f","t"],"I∨":["s"],"I∃":["t"],"E¬b":["φ"],"E→b":["φ"]}[r]||[];return(r=="I∨"&&o.g.k!="or")||(r=="I∃"&&o.g.k!="ex")||(r=="E¬b"&&o.g.k!="bot")?[]:p};
+function pl(k,o){if(k=="f")return o.ctx.map((x,i)=>[i,pr(x.f)]);if(k=="t")return Object.keys(TPm()).map(s=>[s,s]);if(k=="s")return[[0,pr(o.g.l)],[1,pr(o.g.r)]];return Object.keys(FPm(o)).map(s=>[s,s])}
+function hint(o){const g=o.g,c=o.ctx,sh={and:"I∧",imp:"I→",not:"I¬",iff:"I↔",all:"I∀"},any=f=>c.some(f);
+if(g.k!="bot"&&sh[g.k])return`La meta es de la forma ${sh[g.k]}: su introducción la desarma sin perder nada (receta, paso 2).`;
+if(any(x=>x.f.k=="and"&&!(has(c,x.f.l)&&has(c,x.f.r))))return"Hay una conjunción entre tus hipótesis: desarmala con E∧ (paso 3).";
+if(any(x=>x.f.k=="ex"&&!has(c,x.f.a)))return"Tenés una existencial sin usar: E∃ te da una hipótesis con la variable fresca (paso 3).";
+if(any(x=>x.f.k=="imp"&&has(c,x.f.l)&&!has(c,x.f.r)))return"Ya tenés el antecedente de una implicación: E→ hacia adelante (paso 3).";
+if(any(x=>x.f.k=="not"&&has(c,x.f.a)&&!has(c,{k:"bot"})))return"Tenés φ y ¬φ: E¬ hacia adelante te da ⊥.";
+if(any(x=>x.f.k=="or"&&!has(c,x.f.l)&&!has(c,x.f.r)))return"Hay una disyunción entre tus hipótesis: E∨ (casos) (paso 3).";
+if(g.k=="bot")return"La meta es ⊥: buscá una φ cuya negación ya tengas (o construila con E→ hacia atrás) y usá E¬.";
+if(any(x=>x.f.k=="all"))return"¿Probaste E∀ con otros términos que aparezcan en el problema?";
+if(g.k=="or"||g.k=="ex")return"I∨/I∃ solo si ya sabés qué lado o testigo vale; si no, probá RAA (paso 4).";
+return"Nada directo: RAA (suponé ¬meta y buscá ⊥) (paso 4).";}
+let ex=0,SL={},AC="r",F3="",OP={},DS={},PH={},pg={};
+const rst=()=>{SL={};AC="r";F3="";OP={}};
+const nw=i=>{const e=E[i],S={G:[],lab:0,log:[]},o=mk(S,null,e.GA,e.PA.map(f=>({f,d:nd(f,"hip")})));cl0(S,o);return{S,H:[],cur:null,MV:{r:null,a:[]},FB:""}};
+const drf=()=>DS[ex]||(DS[ex]=nw(ex));
+const lf=S=>{const r=[],w=o=>o.subs.length?o.subs.forEach(i=>w(S.G[i])):o.s=="o"&&r.push(o);w(S.G[0]);return r},curG=D=>lf(D.S).find(x=>x.id==D.cur)||lf(D.S)[0];
+function go(D,r,a){const S1=structuredClone(D.S),res=mv(S1,S1.G[curG(D).id],r,a);if(res&&res.blocked)return res;D.H.push(D.S);D.S=S1;return res||{}}
+const recE=(t,r)=>{const er=ld("ern",{}),k=t+" · "+rn(r);er[k]=(er[k]||0)+1;sv("ern",er)};
+const errH=(res,r)=>`<details class="err" open><summary class="bad">• ${esc(res.m)}</summary><div>${TT[res.t]||""}${thR(rr(r))}</div></details>${res.warn?'<p class="mut">El movimiento se aplicó: podés deshacerlo.</p>':""}`;
+function cl(n){return{f:n.f,r:n.r,l:n.l,s:n.s,c:n.c.map(cl)}}
+function fx(n){n.c.forEach(fx);if(CAN.includes(n.r)&&n.l)n.l=n.l.split(",").filter(l=>find(n,l.trim())).join(",")}
+function idx(n){const L=[],w=(m,p)=>{m.i=L.length;m.p=p;L.push(m);m.c.forEach(x=>w(x,m))};w(n,null);return L}
+function asm(i){const t=cl(DS[i].S.G[0].d);fx(t);const L=idx(t);E[i].L=L;E[i].q=L.some(n=>KD[n.r]);pg[i]=0;return L}
+const find=(n,l)=>{if(n.r=="hip"&&n.l==l)return n;for(const c of n.c){const x=find(c,l);if(x)return x}};
+const anc=n=>{const a=[];while(n.p){n=n.p;a.push(n)}return a};
+const cs=n=>n.l?n.l.split(",").map(l=>{const h=find(n,l.trim());return h?h.f:"?"}).join(", "):"ninguna";
+const ans=n=>n.r=="E→"||n.r=="E¬"?n.c[1].f:n.c[0].f;
+const cor=n=>{const o={r:n.r};if(SN[n.r])o.p=ans(n);if(CAN.includes(n.r))o.c=cs(n);if(n.r=="hip")o.e=n.l;if(KD[n.r])o.k=KD[n.r];return o};
+const slots=r=>[["r","Regla"]].concat(SN[r]?[["p",SN[r]]]:[],CAN.includes(r)?[["c","Cancela"]]:[],r=="hip"?[["e","Etiqueta"]]:[],KD[r]?[["k","Condición"]]:[]);
+const show=(k,x)=>x===undefined?"__":k=="r"?rn(x):k=="e"?(x===""?"ninguna (premisa)":x):k=="k"?KS[x]:x;
+const vis=n=>anc(n).filter(a=>a.l&&CAN.includes(a.r)).flatMap(a=>a.l.split(",").map(l=>`[${find(a,l.trim()).f}]${l.trim()}`)).join("  ");
+const adv=()=>{pg[ex]=(pg[ex]||0)+1;rst()};
+const nx=()=>{const s=slots(SL.r||"").find(([k])=>SL[k]===undefined);AC=s?s[0]:AC};
+function opt(k,n){if(OP[k])return OP[k];const e=E[ex],pool=[...new Set(e.L.map(x=>x.f))];let o;
+if(k=="r")o=(e.q?BR.concat(QR):BR).map(x=>[x,rn(x)]);
+else if(k=="p"){const c=SN[SL.r]&&n.r==SL.r?ans(n):null;o=sh(pool.filter(x=>x!=c)).slice(0,c?5:6);if(c)o.push(c);o=sh(o).map(x=>[x,x])}
+else if(k=="c"){o=[...new Set([cs(n),"ninguna"].concat(sh(pool).slice(0,3)))];o=sh(o).map(x=>[x,x])}
+else if(k=="e"){o=[];anc(n).filter(a=>a.l&&CAN.includes(a.r)).forEach(a=>a.l.split(",").forEach(l=>o.push([l.trim(),l.trim()+" · cancelada por "+a.r])));o.push(["","ninguna · premisa de Γ"])}
+else o=Object.keys(KT).map(x=>[x,KT[x]]);
+return OP[k]=o}
+function vf(n,u){const c=cor(n),r=[],M=(t,m)=>r.push({t,m});
+if(u.r!=c.r){M("regla",`Regla: elegiste ${rn(u.r)} y no corresponde a «${n.f}» en este punto del árbol.`);return r}
+if(c.p!==undefined&&u.p!=c.p)M("premisa",`${SN[c.r]}: esa fórmula no es la que usó ${c.r} acá.`);
+if(c.c!==undefined&&u.c!=c.c)M("cancelación",`Cancela: ${c.r} cancela ${CT[c.r]}.`);
+if(c.e!==undefined&&u.e!==c.e){const a=anc(n).find(x=>u.e&&x.l.split(",").map(s=>s.trim()).includes(u.e)),h=a&&find(a,u.e);
+M("etiqueta",c.e===""?"Etiqueta: esta fórmula es una premisa de Γ, no se cancela.":!u.e?"Etiqueta: esta hipótesis sí se cancela en una regla de abajo.":h&&h.f!=n.f?`Etiqueta: ${a.r} (${u.e}) cancela ${h.f}, no esta fórmula.`:"Etiqueta: la regla que la cancela es otra.")}
+if(c.k&&u.k!=c.k)M("condición",`Condición: ${c.r} exige otra condición lateral.`);
+return r}
+const ln=(o,ref)=>slots(o.r).map(([k,l])=>{const bad=ref&&(k=="r"?ref.r!=o.r:ref.r!=o.r||ref[k]!==o[k]),x=show(k,o[k]);return `${l}: ${bad?`<span class="df">${esc(x)}</span>`:esc(x)}`}).join(" · ");
+const cmp=n=>`<div class="cmp"><div class="mut">Tu respuesta</div><pre>${ln(SL)}</pre><div class="mut">Respuesta correcta (en rojo, lo que difiere de la tuya)</div><pre>${ln(cor(n),SL)}</pre></div>`;
+function dt(n,c,S){if(n.p&&n.p.i>=c)return"";
+if(n.i>=c)return `<div class="nd"><div class="cn pd${n.i==c?" cu":""}">${esc(n.f)}</div></div>`;
+if(n.r=="hip")return `<div class="nd"><div class="cn">${n.l?`[${esc(n.f)}]<sup>${n.l}</sup>`:esc(n.f)}</div></div>`;
+let lb=n.r+(n.l?`<sup>${n.l}</sup>`:"");if(n.s){S.push(n.s);lb+=` (∗${S.length})`}
+return `<div class="nd"><div class="ks">${n.c.map(x=>dt(x,c,S)).join("")}</div><div class="bar"><i></i><b>${lb}</b></div><div class="cn">${esc(n.f)}</div></div>`}
+function build(){v.onclick=ev=>{const b=ev.target.closest("button");if(!b||!b.closest("#bd"))return;const a=b.dataset.a,i=+b.dataset.i,e=E[ex],l2=PH[ex]=="l"&&e.L;
+if(a=="ex"){ex=i;rst()}
+else if(a=="ph"){if(i==1&&!e.L)return;PH[ex]=i?"l":"b";rst()}
+else if(l2){const L=e.L,c=pg[ex]||0,n=L[c];
+if(a=="act")AC=b.dataset.t;
+else if(a=="p"){const x=opt(AC,n)[i][0];if(AC=="r")SL={r:x};else SL[AC]=x;nx()}
+else if(a=="bs"){if(AC=="r")SL={};else delete SL[AC]}
+else if(a=="clr")rst();else if(a=="rev")adv();else if(a=="rs"){pg[ex]=0;rst()}
+else if(a=="chk"){const miss=slots(SL.r||"").filter(([k])=>SL[k]===undefined);
+if(miss.length)F3=`<p class="bad">Falta completar: ${miss.map(x=>x[1]).join(", ")}.</p>`;
+else{const r=vf(n,SL);if(r.length){r.forEach(x=>recE(x.t,n.r));F3=cmp(n)+r.map(x=>`<details class="err"><summary class="bad">• ${esc(x.m)}</summary><div>${TT[x.t]}${thR(n.r)}</div></details>`).join("")}else adv()}}}
+else{const D=drf(),o=curG(D),M=D.MV,ex1=()=>{const r=M.r,a2=M.a;D.MV={r:null,a:[]};const res=go(D,r,a2);D.FB=res.blocked||res.warn?(recE(res.t,rr(r)),errH(res,r)):""};
+if(a=="g"){D.cur=i;D.MV={r:null,a:[]}}
+else if(a=="r"){D.MV={r:b.dataset.t,a:[]};D.FB="";if(!PM(D.MV.r,o).length)ex1()}
+else if(a=="pf"){const k=PM(M.r,o)[M.a.length];M.a.push(k=="f"||k=="s"?+b.dataset.v:b.dataset.v);if(M.a.length>=PM(M.r,o).length)ex1()}
+else if(a=="hint")D.FB=`<p class="mut">💡 ${esc(hint(o))}</p>`;
+else if(a=="undo"){if(D.H.length)D.S=D.H.pop();D.FB="";D.MV={r:null,a:[]}}
+else if(a=="rs"){delete DS[ex];e.L=null;PH[ex]="b"}
+else if(a=="tl"){asm(ex);PH[ex]="l";rst()}}
+draw()};draw()}
+function draw1(){const D=drf(),S=D.S,o=curG(D);
+const lg=`<details class="card"><summary>Registro (${S.log.length})</summary>${S.log.map((x,i)=>`<div class="mut">${i+1}. ${esc(x)}</div>`).join("")}</details>`;
+if(!o)return `<div class="card"><p class="good">¡Borrador completo!</p><p>Ahora pasalo en limpio: cada nodo con su regla, premisa, cancelación, etiqueta y condición.</p><div class="row"><button class="on" data-a="tl">Pasar en limpio →</button><button data-a="undo">Deshacer</button><button data-a="rs">Reiniciar</button></div></div>${lg}`;
+const op=lf(S),M=D.MV,k=M.r?PM(M.r,o)[M.a.length]:null,bw=[["I∧"],["I→"],["I¬"],["I∨"],["I↔"],["RAA"],["E⊥"],["E¬b","E¬"],["E→b","E→"]].concat(E[ex].q?[["I∀"],["I∃"]]:[]),fw=[["E∧"],["E→f","E→"],["E¬f","E¬"],["E∨"]].concat(E[ex].q?[["E∀"],["E∃"]]:[]),
+B=x=>`<button class="ch${M.r==x[0]?" sel":""}" data-a="r" data-t="${x[0]}">${x[1]||x[0]}</button>`;
+return `<div class="card"><b>Metas abiertas</b> <span class="mut">(${op.length})</span><div class="chs">${op.map(x=>`<button class="ch${x.id==o.id?" sel":""}" data-a="g" data-i="${x.id}">${esc(pr(x.g))}</button>`).join("")}</div>
+<p>Meta: <code>${esc(pr(o.g))}</code></p><div class="mut">Tenés:</div>${o.ctx.map(x=>`<div><code>${esc(pr(x.f))}</code> <span class="mut">${x.d.r=="hip"?(x.d.l?"hipótesis":"premisa"):"derivada"}</span></div>`).join("")||'<div class="mut">nada</div>'}</div>
+<div class="card"><div class="mut">Hacia atrás (sobre la meta)</div><div class="chs">${bw.map(B).join("")}</div><div class="mut">Hacia adelante (sobre algo que tenés)</div><div class="chs">${fw.map(B).join("")}</div>
+${k?`<div class="mut">${{f:"¿Sobre cuál?",t:"¿Con qué término?",s:"¿Qué lado probás?","φ":"¿Qué fórmula φ?"}[k]}</div><div class="chs">${pl(k,o).map(x=>`<button class="ch" data-a="pf" data-v="${esc(x[0])}">${esc(x[1])}</button>`).join("")}</div>`:""}
+<div class="row"><button data-a="hint">💡 Pista</button><button data-a="undo">⌫ Deshacer</button><button data-a="rs">Reiniciar</button></div>${D.FB}</div>${lg}`}
+function draw2(){const e=E[ex],L=e.L,c=Math.min(pg[ex]||0,L.length),n=L[c],S=[];let h="";
+if(n){const vs=vis(n),sl=slots(SL.r||"");
+h+=`<div class="card"><b>Nodo ${c+1}/${L.length}</b><p>Objetivo: <code>${esc(n.f)}</code></p>${vs?`<p class="mut">Hipótesis a la vista: ${esc(vs)}</p>`:""}
+<pre>${sl.map(([k,l])=>`${l}: ${esc(show(k,SL[k]))}`).join(" · ")}</pre>
+<div class="chs">${sl.map(([k,l])=>`<button class="ch${AC==k?" sel":""}" data-a="act" data-t="${k}">${l}${SL[k]!==undefined?" ✓":""}</button>`).join("")}</div>
+<div class="chs">${opt(AC,n).map((o,i)=>`<button class="ch" data-a="p" data-i="${i}">${esc(o[1])}</button>`).join("")}</div>
+<div class="row"><button data-a="bs">⌫ Borrar</button><button data-a="clr">Limpiar</button><button class="on" data-a="chk">Verificar</button><button data-a="rev">Ver respuesta</button></div>${F3}</div>`}
+else h+=`<p class="good">¡Ejercicio completo!</p><button data-a="rs">Repetir</button>`;
+const tr=dt(L[0],c,S);
+return h+`<div class="card"><b>Derivación</b><div class="tr">${tr}</div>${S.map((s,i)=>`<div class="mut">(∗${i+1}) ${esc(s)}</div>`).join("")}</div>`}
+function draw(){const e=E[ex],l2=PH[ex]=="l"&&e.L;
+v.innerHTML=`<div id="bd"><div class="row">${E.map((y,i)=>`<button class="${i==ex?"on":""}" data-a="ex" data-i="${i}">${y.t}</button>`).join("")}</div>
+<details class="card"><summary>Enunciado</summary><p>${esc(e.en)}</p><p class="mut">Premisas: ${esc(e.P.join(" ; ")||"ninguna")}</p></details>
+<div class="row"><button class="${l2?"":"on"}" data-a="ph" data-i="0">1 · Borrador</button><button class="${l2?"on":""}" data-a="ph" data-i="1">2 · En limpio${e.L?"":" 🔒"}</button></div>${l2?draw2():draw1()}</div>`}
+let lv=ld("lvn",{}),cur;
+function quiz(){const done=Q.filter((_,i)=>(lv[i]||0)>=2).length,w=Q.map((_,i)=>1/(1+(lv[i]||0)*2)),s=w.reduce((a,b)=>a+b);let r=Math.random()*s,i=0;while(r>w[i]){r-=w[i];i++}
+if(i==cur&&Q.length>1)i=(i+1)%Q.length;cur=i;const q=Q[i],o=q[1].map((t,k)=>[t,k]).sort(()=>Math.random()-.5);
+v.innerHTML=`<p class="mut">Dominadas: ${done}/${Q.length} (2 aciertos seguidos). Las que fallás aparecen más.</p><div class="card"><h3>${esc(q[0])}</h3>${o.map(([t,k])=>`<button class="opt" data-k="${k}">${esc(t)}</button>`).join("")}<div id="fb"></div></div>`;
+v.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const k=+b.dataset.k,okk=k==0;v.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.dataset.k==0)x.classList.add("ok")});if(!okk)b.classList.add("no");
+lv[i]=okk?(lv[i]||0)+1:0;sv("lvn",lv);$("fb").innerHTML=`<p class="${okk?"ok":"bad"}"><b>${okk?"Correcto.":"No."}</b> ${q[2]}</p><button id="nx">Siguiente</button>`;$("nx").onclick=quiz})}
+function errs(){const er=ld("ern",{}),ks=Object.keys(er).sort((a,b)=>er[b]-er[a]);
+v.onclick=ev=>{const b=ev.target.closest("button");if(b&&b.dataset.a=="sup"){delete er[b.dataset.t];sv("ern",er);errs()}};
+v.innerHTML=ks.length?`<p class="mut">Tipos de error que más cometés (por tipo y regla, no por ejercicio).</p>`+ks.map(k=>{const[t,r]=k.split(" · ");return `<details class="card"><summary><b>${esc(k)}</b> · ${er[k]} ${er[k]==1?"vez":"veces"}</summary>${TT[t]}${thR(r=="Hipótesis"?"hip":r)}<button data-a="sup" data-t="${esc(k)}">Lo superé</button></details>`}).join(""):`<p class="mut">Todavía no registraste errores. Van apareciendo acá a medida que verificás en Practicar.</p>`}
+function tab(i){[0,1,2,3].forEach(j=>$("t"+j).className=j==i?"on":"");[()=>{v.innerHTML=R.map(r=>`<div class="card"><h3>${r[0]}</h3>${r[1]}</div>`).join("")},quiz,build,errs][i]()}
+[0,1,2,3].forEach(i=>$("t"+i).onclick=()=>tab(i));tab(0);
+</script></body></html>

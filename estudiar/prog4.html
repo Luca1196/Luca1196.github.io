@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta name="robots" content="noindex,nofollow">
+<!--
+=====================================================================
+INSTRUCTIVO PARA SEGUIR TRABAJANDO (leer esto en vez de analizar todo el codigo)
+=====================================================================
+QUE ES: app de un solo archivo para que Luca (UdelaR, Programacion 4) aprenda diagramas de comunicacion.
+Tres pestanas: Reglas (teoria), Quiz (preguntas con dominio guardado), Practicar (armar el diagrama linea a linea).
+PREFERENCIAS DE LUCA: todo en espanol; gastar los menos tokens posibles; nada de vistas previas ni rediseños;
+piezas minimas tipo Duolingo (que tenga que acordarse del *, del :=, de la clase); toda la teoria accesible desde los errores;
+el diagrama se dibuja mientras arma la respuesta; al fallar se muestra la correcta con las diferencias en rojo.
+
+PUBLICACION: archivo /mnt/user-data/outputs/prog4-comunicacion.html, artefacto https://claude.ai/artifact/BEVPXgEBwZJgRh26mrWwaa
+Para cambiar algo: publicar con url + file_path + edits (pares old_str/new_str). Para traerlo: action read con esa url.
+Lo nuevo se inserta ANTES de la ultima linea del script: [0,1,2].forEach(i=>$("t"+i).onclick=...);tab(0);
+
+MAPA DEL CODIGO ACTIVO (todo dentro de un unico script):
+  R      reglas: [[titulo, html], ...]
+  Q      quiz: [pregunta, [correcta, distractores...], explicacion]. La correcta va PRIMERA (se mezcla al mostrar). Agregar solo al final
+         (el dominio se guarda por indice en localStorage "lv").
+  E      ejercicios de Practicar (ver abajo). HT: pistas, HT[i][k] = pista del paso k del ejercicio i. CL: texto de clases por defecto.
+  parse  lee lineas "num: origen -> destino  mensaje  <<estereotipo>>" y devuelve {L, err}. key(): identidad de un objeto (nombre o :Clase).
+  pal    arma la paleta de piezas a partir de la solucion; agrega distractores fijos (clase Sistema, ops setEstado/getBeneficio, condicion [hay]).
+         Si el dominio nuevo lo pide, agregar distractores propios ahi.
+  vf     verifica el paso actual contra la linea exacta de la solucion y devuelve textos de error.
+  TH     teoria desplegable de cada error: [[fragmentos], titulo, html]. Un fragmento debe estar contenido en el texto del error que emite vf.
+         Si agregas un error nuevo en vf, agrega su entrada en TH (los especificos antes que los genericos).
+  cmp    muestra tu linea y la correcta con diferencias en rojo (tk2 tokeniza el mensaje, lcs compara).
+  dg     dibuja el SVG (columnas por profundidad desde :Controlador, flecha de entrada con E[ex].sig, flecha punteada = linea en armado, drf()).
+  build3/draw3  interfaz de Practicar. Progreso en localStorage "pg2" (cantidad de pasos hechos por indice de ejercicio).
+  CODIGO VIEJO (sin uso, se puede borrar): prac, build, draw, ctx, bank, build2, draw2, check, P, OB, MS, KP, S0, S, LN, ln, FMT, pi, ok, lineOf NO (se usa).
+
+COMO AGREGAR UN EJERCICIO DESDE UN PDF (letra + diagrama de clases + solucion):
+ 1) Del PDF sacar solo tres cosas: enunciado de la operacion; diagrama de clases (clases, asociaciones con multiplicidad, operaciones con parametros);
+    diagrama de comunicacion de la solucion (cada flecha). Ignorar el resto.
+ 2) Escribir la solucion como texto, una linea por flecha, en el orden de ejecucion:
+      NUM[*]: ORIGEN -> DESTINO  MENSAJE  <<estereotipo>>
+    - NUM anidado (3, 3.1, 3.1.1); un * pegado al NUM si esta dentro de un recorrido (4.1*:).
+    - DESTINO multiobjeto: ":Clase *". Primera aparicion de un objeto: "nombre:Clase"; despues solo "nombre". Anonimo: ":Clase".
+    - Los mensajes de primer nivel salen de :Controlador. Un N.k sale del receptor del N. El padre debe existir y los hijos ser consecutivos.
+    - MENSAJE: "var := op(a, b)" si devuelve algo; "[cond] op(...)" si es condicional. Los parametros separados por ", ". Sin espacios en nombres.
+    - Estereotipo: association | local | parameter | global.
+    - find/next/add van a multiobjetos; create va al objeto nuevo (p := create(est, opc)).
+ 3) Agregar al final del arreglo E un objeto: {t:"nombre corto", en:"enunciado", sig:"op(ci, rut)", cl:"texto de clases y operaciones", exp:[], sol:`lineas`}.
+    No reordenar los E existentes (el progreso guardado usa el indice). El campo cl reemplaza a CL para ese ejercicio.
+ 4) Agregar en HT un arreglo con una pista por linea de sol, en el mismo orden (objetivo del paso, sin revelar la respuesta).
+ 5) Revisar mentalmente que cada linea de sol pase parse() (formato) y que pal() ofrezca las piezas necesarias; ajustar distractores si hace falta.
+ 6) Publicar con edits. No hace falta tocar nada mas: botones, paleta, verificador y diagrama salen de E.
+OTROS: el parcial Programacion 4 de 2026 trae Problema 1 (clases y secuencia del sistema), Problema 2 (comunicacion) y Problema 3 (C++); esta app cubre
+comunicacion y reglas basicas. LIMITES: el verificador exige la solucion exacta y en el mismo orden; no acepta variantes validas.
+ERRORES FRECUENTES: rec() guarda en localStorage "er" un conteo por TIPO de error (titulo de la entrada de TH), no por ejercicio.
+La pestana Mis errores (errs) los lista ordenados por frecuencia con su teoria y un boton Lo supere. vf2 envuelve a vf para detectar clases
+escritas sin dos puntos (Controlador en vez de :Controlador). TH.unshift agrega esa entrada primero porque TH.find devuelve la primera coincidencia.
+Al sumar un tipo de error nuevo: emitirlo en vf o vf2 y agregar su entrada en TH antes de las genericas.
+--><meta charset="utf-8"><title>Prog4 · Diagramas de comunicación</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#fff;--fg:#1c1c1e;--mut:#6b6b70;--card:#f3f3f5;--ac:#2f5fd0;--ok:#1a7f45;--bad:#c0392b;--bd:#d9d9de;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--fg:#ececf0;--mut:#9a9aa3;--card:#232328;--ac:#7aa2ff;--ok:#4cc380;--bad:#ff7b6b;--bd:#35353c}}
+:root[data-theme="dark"]{--bg:#17171a;--fg:#ececf0;--mut:#9a9aa3;--card:#232328;--ac:#7aa2ff;--ok:#4cc380;--bad:#ff7b6b;--bd:#35353c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:4px 0 12px}
+nav{display:flex;gap:8px;margin-bottom:16px}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:8px;padding:8px 12px}
+button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+nav button{flex:1}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.card h3{margin:0 0 6px;font-size:16px}
+code,pre,textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+code{background:var(--bg);padding:1px 5px;border-radius:4px}
+pre{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;overflow-x:auto;margin:8px 0}
+textarea{width:100%;min-height:230px;box-sizing:border-box;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:10px;white-space:pre}
+.opt{display:block;width:100%;text-align:left;margin:6px 0}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 20%,transparent)}
+.opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 20%,transparent)}
+.mut{color:var(--mut);font-size:14px}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.err{color:var(--bad);margin:3px 0}.good{color:var(--ok);font-weight:600}
+.df{color:var(--bad);font-weight:700;text-decoration:underline}.cmp pre{margin:4px 0}
+details.err summary{cursor:pointer}details.err>div{color:var(--fg);border-left:3px solid var(--bad);padding:2px 12px;margin:6px 0 10px;background:var(--bg);border-radius:0 8px 8px 0}details.err p{margin:6px 0}
+.chs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}.ch{padding:6px 10px;font-size:13px;border-radius:12px;border-bottom-width:3px}.ch.sel{background:var(--ac);color:#fff;border-color:var(--ac)}
+.ln{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:4px 0}.ln code{overflow-x:auto;white-space:pre}.pv{min-height:1.4em}
+</style></head><body><main>
+<h1>Diagramas de comunicación · Prog4</h1>
+<nav><button id="t0">Reglas</button><button id="t1">Quiz</button><button id="t2">Practicar</button><button id="t3">Mis errores</button></nav>
+<div id="v"></div>
+</main>
+<script>
+const R=[
+["1. El mensaje inicial","La operación del sistema (la del diagrama de secuencia) llega al <code>:Controlador</code>, no a «Sistema». Desde ahí se delega al resto. <span class='mut'>Parcial: arrancaste en Sistema.</span>"],
+["2. Navegación: ¿cómo conoce el emisor al receptor?","Todo mensaje necesita un camino. Estereotipos: <code>&lt;&lt;association&gt;&gt;</code> hay asociación en el diagrama de clases; <code>&lt;&lt;local&gt;&gt;</code> el objeto está en una variable local (resultado de find, create o un retorno); <code>&lt;&lt;parameter&gt;&gt;</code> llegó como parámetro; <code>&lt;&lt;global&gt;&gt;</code> es global. Si no hay camino, falta navegabilidad: se llega por otro objeto. <span class='mut'>Parcial: buscaste la oferta con find desde Sistema, saltando la Empresa.</span>"],
+["3. Objeto vs multiobjeto","Un multiobjeto (<code>:Clase *</code>) es una colección, y el <code>*</code> es el recuadro doble del dibujo a mano escrito en texto: se le envía <code>find</code>, <code>add</code> o <code>next</code>. Un objeto simple (<code>est:Estudiante</code>) recibe operaciones de la clase. Un objeto sin nombre usa <code>:Clase</code>."],
+["4. Numeración","Lo que se dispara por un mensaje se anida: <code>3</code> → <code>3.1</code> → <code>3.1.1</code>. El mensaje <code>N.k</code> lo envía el objeto que recibió <code>N</code>. Mismo nivel = orden de ejecución, sin saltos."],
+["5. Crear objetos","<code>p := create(est, opc)</code> con <code>&lt;&lt;local&gt;&gt;</code>. Se crea después de tener lo que necesita (est y opc), y el objeto nuevo queda enlazado. <span class='mut'>Parcial: creaste la Postulación antes de buscar al estudiante y a la oferta.</span>"],
+["6. Condición e iteración","Condición: <code>4: [cd] aceptarPostulacion(codOferta)</code>. Iteración: asterisco en la numeración y <code>next()</code> sobre el multiobjeto: <code>4.1*: est -&gt; :Postulacion * pe := next()</code>. Condición dentro de la iteración: <code>4.3*: [cod == codOferta] ...</code>."],
+["7. Responsabilidad","Cada objeto modifica su propio estado: la Postulacion ejecuta <code>aceptarPostulacion()</code> (cambia estado y guarda beneficio); el Controlador no hace setX de objetos ajenos. <span class='mut'>Parcial: setEstado(aceptada) iba a la Oferta.</span>"],
+["8. Polimorfismo","Una operación abstracta se envía a la clase abstracta (<code>:OfertaPasantia</code>) y las implementaciones (Remunerada, NoRemunerada) se muestran en diagramas separados, uno por subclase."],
+["9. Coherencia con el diagrama de clases","La operación debe existir en la clase receptora, con sus parámetros, y la asociación debe ser navegable en esa dirección. Antes de dibujar un mensaje, revisá el diagrama de clases."],
+["10. Diagrama de secuencia del sistema","Actor → <code>:Sistema</code>; <code>loop</code> para repetir, <code>alt</code> para alternativas. Las operaciones devuelven DataTypes (<code>Set(DTTren)</code>). Notas: el sistema «recuerda» datos entre operaciones; confirmar da de alta y libera memoria, cancelar solo libera."]
+];
+const Q=[
+["¿A quién llega la operación del sistema (ej. postularse)?",[":Controlador","Sistema",":Estudiante","El actor"],"El Controlador recibe la operación y delega. En el parcial arrancaste desde «Sistema»."],
+["El Controlador quiere la Empresa por su rut. ¿Qué mensaje y estereotipo?",["find(rut) a :Empresa * con <<association>>","obtenerEmpresa(rut) a Sistema con <<local>>","find(rut) a emp con <<local>>","create(rut) a :Empresa con <<association>>"],"find va al multiobjeto (la colección), y el Controlador llega a ella por asociación."],
+["cd := cuposDisponibles(codOferta), enviado del Controlador a emp (ya obtenida con find). ¿Estereotipo?",["<<local>>","<<association>>","<<parameter>>","<<global>>"],"emp quedó en una variable local del Controlador."],
+["est ejecuta generarPostulacion(opc) y luego envía agregarPostulacion(p) a opc. ¿Estereotipo de ese envío?",["<<parameter>>","<<local>>","<<association>>","<<global>>"],"opc llegó como parámetro de generarPostulacion."],
+["Al mensaje 3 (a emp) le sigue un find de emp a :OfertaPasantia *. ¿Numeración?",["3.1","4","3.0","1.3"],"Lo disparado por un mensaje se anida: 3 → 3.1."],
+["En postularse, ¿cuándo se crea la Postulacion?",["Después de obtener est y opc, porque create(est, opc) los necesita","Primero de todo, y después se buscan","Al final, desde Sistema","Cuando la empresa lo pide"],"El create necesita a ambos como parámetros. En el parcial lo hiciste primero."],
+["¿Cómo se recorren todas las postulaciones de un estudiante?",["Numeración con * y next() sobre :Postulacion *","find(todas) a una Postulacion","getPostulaciones() a Sistema","Numerando 4.1, 4.2, 4.3"],"Iteración: 4.1*: next() sobre el multiobjeto."],
+["En aceptarPostulacion, ¿quién cambia el estado a «aceptada» y guarda el beneficio?",["La propia Postulacion","OfertaPasantia con setEstado","El Controlador con setBeneficio","La Empresa"],"Cada objeto modifica su propio estado. En el parcial setEstado iba a la Oferta."],
+["calcularBeneficio() es abstracta en OfertaPasantia. En el diagrama de comunicación…",["Se envía a :OfertaPasantia y se dibuja un diagrama por subclase","Se dibuja solo Remunerada","Se envía directo a Capacitacion","Se resuelve con un if en el Controlador"],"Polimorfismo: el mensaje va a la clase abstracta y cada implementación se muestra aparte."],
+["El Controlador necesita un objeto al que no llega por asociación, ni es local ni parámetro. ¿Qué indica?",["Falta navegabilidad: hay que llegar por otro objeto","Se usa <<global>> igual","Se dibuja sin estereotipo","Se manda a Sistema"],"Todo emisor debe poder navegar hasta el receptor. Revisá el diagrama de clases primero."],
+["¿Cómo se marca que un mensaje solo ocurre si cd es verdadero?",["Condición entre corchetes: 4: [cd] aceptarPostulacion(...)","Con * en el número","Con <<local>>","No se puede"],"La condición va entre corchetes antes del mensaje."]
+];
+const M={Controlador:[],Estudiante:["generarPostulacion","aceptarPostulacion"],Empresa:["obtenerOferta","cuposDisponibles"],OfertaPasantia:["agregarPostulacion","hayCupos","calcularBeneficio"],Postulacion:["getOfertaPasantiaCodigo","aceptarPostulacion","getEstado"]};
+const CL="Controlador -> Estudiante *, Empresa *\nEmpresa -> OfertaPasantia *\nEstudiante <-> Postulacion *\nPostulacion <-> OfertaPasantia (1)\nOfertaPasantia (abstracta): Remunerada, NoRemunerada\n\nOperaciones:\nEstudiante: generarPostulacion(opc), aceptarPostulacion(cod)\nEmpresa: obtenerOferta(cod), cuposDisponibles(cod)\nOfertaPasantia: agregarPostulacion(p), hayCupos(), calcularBeneficio()\nPostulacion: getOfertaPasantiaCodigo(), aceptarPostulacion(), getEstado()";
+const E=[
+{t:"postularse",en:"postularse(ci, rut, codOferta): el estudiante se postula a una oferta de una empresa. Se crea una Postulacion pendiente enlazada al estudiante y a la oferta.",
+exp:[["Estudiante.find","association"],["Empresa.find","association"],["Empresa.obtenerOferta","local"],["OfertaPasantia.find","association"],["Estudiante.generarPostulacion","local"],["Postulacion.create","local"],["OfertaPasantia.agregarPostulacion","parameter"],["Postulacion.add","association"]],
+sol:`1:     :Controlador -> :Estudiante *    est := find(ci)                   <<association>>
+2:     :Controlador -> :Empresa *       emp := find(rut)                  <<association>>
+3:     :Controlador -> emp:Empresa      opc := obtenerOferta(codOferta)   <<local>>
+3.1:   emp -> :OfertaPasantia *         op := find(codOferta)             <<association>>
+4:     :Controlador -> est:Estudiante   generarPostulacion(opc)           <<local>>
+4.1:   est -> p:Postulacion              p := create(est, opc)             <<local>>
+4.2:   est -> opc:OfertaPasantia         agregarPostulacion(p)             <<parameter>>
+4.2.1: opc -> :Postulacion *             add(p)                            <<association>>
+4.3:   est -> :Postulacion *             add(p)                            <<association>>`},
+{t:"aceptarPostulacion",en:"aceptarPostulacion(ci, rut, codOferta): solo si la oferta tiene cupos, el estudiante acepta su postulación a esa oferta. Se cambia el estado y se guarda el beneficio, calculado según el tipo de oferta.",
+exp:[["Estudiante.find","association"],["Empresa.find","association"],["Empresa.cuposDisponibles","local"],["OfertaPasantia.find","association"],["OfertaPasantia.hayCupos","local"],["Estudiante.aceptarPostulacion","local"],["Postulacion.next","association"],["Postulacion.getOfertaPasantiaCodigo","local"],["Postulacion.aceptarPostulacion","local"],["OfertaPasantia.calcularBeneficio","association"]],
+sol:`1:      :Controlador -> :Estudiante *   est := find(ci)                      <<association>>
+2:      :Controlador -> :Empresa *      emp := find(rut)                     <<association>>
+3:      :Controlador -> emp:Empresa     cd := cuposDisponibles(codOferta)    <<local>>
+3.1:    emp -> :OfertaPasantia *        opc := find(codOferta)               <<association>>
+3.2:    emp -> opc:OfertaPasantia       hay := hayCupos()                    <<local>>
+3.2.1*: opc -> :Postulacion *           p := next()                          <<association>>
+3.2.2*: opc -> p:Postulacion            e := getEstado()                     <<local>>
+4:      :Controlador -> est:Estudiante  [cd] aceptarPostulacion(codOferta)   <<local>>
+4.1*:   est -> :Postulacion *           pe := next()                         <<association>>
+4.2*:   est -> pe:Postulacion           cod := getOfertaPasantiaCodigo()     <<local>>
+4.3*:   est -> pec:Postulacion          [cod == codOferta] aceptarPostulacion()  <<local>>
+4.3.1:  pec -> :OfertaPasantia          b := calcularBeneficio()             <<association>>`}
+];
+const FMT="# formato: num: origen -> destino  mensaje  <<estereotipo>>\n# multiobjeto: :Clase *   iteración: 4.1*:   condición: [cond]\n";
+const $=id=>document.getElementById(id),v=$("v");
+const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const sv=(k,x)=>{try{localStorage.setItem(k,JSON.stringify(x))}catch(e){}};
+function tab(i){[0,1,2,3].forEach(j=>$("t"+j).className=j==i?"on":"");[rules,quiz,build3,errs][i]()}
+function rules(){v.innerHTML=R.map(r=>`<div class="card"><h3>${r[0]}</h3>${r[1]}</div>`).join("")}
+let lv=ld("lv",{}),cur;
+function quiz(){const done=Q.filter((_,i)=>(lv[i]||0)>=2).length;
+const w=Q.map((_,i)=>1/(1+(lv[i]||0)*2)),s=w.reduce((a,b)=>a+b);let r=Math.random()*s,i=0;while(r>w[i]){r-=w[i];i++}
+if(i==cur&&Q.length>1)i=(i+1)%Q.length;cur=i;const q=Q[i];
+const o=q[1].map((t,k)=>[t,k]).sort(()=>Math.random()-.5);
+v.innerHTML=`<p class="mut">Dominadas: ${done}/${Q.length} (2 aciertos seguidos). Las que fallás aparecen más.</p><div class="card"><h3>${q[0]}</h3>${o.map(([t,k])=>`<button class="opt" data-k="${k}">${t.replace(/</g,"&lt;")}</button>`).join("")}<div id="fb"></div></div>`;
+v.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const k=+b.dataset.k,okk=k==0;
+v.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(x.dataset.k==0)x.classList.add("ok")});if(!okk)b.classList.add("no");
+lv[i]=okk?(lv[i]||0)+1:0;sv("lv",lv);
+$("fb").innerHTML=`<p class="${okk?"ok":"bad"}"><b>${okk?"Correcto.":"No."}</b> ${q[2]}</p><button id="nx">Siguiente</button>`;$("nx").onclick=quiz})}
+let ex=0;
+function prac(){const e=E[ex];
+v.innerHTML=`<div class="row">${E.map((x,i)=>`<button class="${i==ex?"on":""}" data-i="${i}">${x.t}</button>`).join("")}</div>
+<div class="card"><p>${e.en}</p><pre>${CL}</pre><p class="mut">Hacelo primero en papel, después pasalo acá.</p>
+<textarea id="ta" spellcheck="false">${FMT}</textarea>
+<div class="row"><button id="vd" class="on">Validar</button><button id="sl">Ver solución</button></div><div id="out"></div></div>`;
+v.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{ex=+b.dataset.i;prac()});
+$("vd").onclick=()=>{const p=parse($("ta").value),r=p.err.concat(p.L.length?check(p.L,e):["No hay mensajes."]);
+$("out").innerHTML=r.length?r.map(x=>`<div class="err">• ${x.replace(/</g,"&lt;")}</div>`).join(""):`<div class="good">Sin errores. Compará igual con la solución.</div>`};
+$("sl").onclick=()=>{const p=document.createElement("pre");p.textContent=e.sol;$("out").innerHTML="";$("out").appendChild(p)}}
+function parse(t){const L=[],err=[];t.split("\n").forEach((raw,i)=>{const s=raw.trim();if(!s||s[0]=="#")return;
+const p=s.split("->");if(p.length!=2){err.push(`Línea ${i+1}: falta "->" (origen -> destino).`);return}
+const l=p[0].match(/^(\d+(?:\.\d+)*)(\*)?:\s*(\S+)\s*$/),r=p[1].trim().match(/^(\S+)\s+(\*\s+)?(.+?)\s*<<(\w+)>>\s*$/);
+if(!l||!r){err.push(`Línea ${i+1}: formato inválido. Ej: 1: :Controlador -> :Estudiante *  est := find(ci)  <<association>>`);return}
+let d=r[1],m=!!r[2]||d.endsWith("*");d=d.replace(/\*$/,"");
+L.push({n:l[1],it:!!l[2],o:l[3],d,m,msg:r[3],st:r[4]})});return{L,err}}
+const key=t=>{const[a,b]=t.split(":");return b===undefined?a:(a||":"+b)};
+function check(L,e){const out=[],C={},N=new Map(),ST=["association","local","parameter","global"],G=["find","add","next"];
+const cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
+L.forEach(x=>{x.oc=cl(x.o);x.dc=cl(x.d);x.me=(x.msg.match(/(\w+)\(/)||[])[1];N.set(x.n,x)});
+const ch={};
+L.forEach(x=>{const ps=x.n.split("."),last=+ps.pop(),par=ps.join(".");(ch[par]=ch[par]||[]).push(last);
+if(!par){if(key(x.o)!=":Controlador")out.push(`${x.n}: el mensaje inicial debe salir de :Controlador (sale de ${x.o}).`)}
+else{const p=N.get(par);if(!p)out.push(`${x.n}: no existe el mensaje ${par} del que cuelga.`);else if(key(p.d)!=key(x.o))out.push(`${x.n}: lo debe enviar el receptor de ${par} (${p.d}), pero sale de ${x.o}.`)}
+if(!ST.includes(x.st))out.push(`${x.n}: estereotipo «${x.st}» inválido. Usá ${ST.join(", ")}.`);
+if(!x.me){out.push(`${x.n}: el mensaje no tiene forma operacion(...).`);return}
+const g=G.includes(x.me);
+if(g&&!x.m)out.push(`${x.n}: ${x.me}() se envía a un multiobjeto (:Clase *).`);
+if(x.m&&!g)out.push(`${x.n}: a un multiobjeto solo se le envía find, add o next.`);
+if(!x.dc||!M[x.dc])out.push(`${x.n}: clase destino desconocida (${x.d}).`);
+else if(x.me!="create"&&!g&&!M[x.dc].includes(x.me))out.push(`${x.n}: ${x.dc} no tiene la operación ${x.me}() en el diagrama de clases.`)});
+Object.entries(ch).forEach(([p,a])=>{a.sort((x,y)=>x-y);for(let i=0;i<a.length;i++)if(a[i]!=i+1){out.push(`Numeración: bajo ${p||"el nivel raíz"} falta ${p?p+".":""}${i+1}.`);break}});
+e.exp.forEach(([tag,st])=>{const f=L.filter(x=>x.dc+"."+x.me==tag);if(!f.length)out.push(`Falta un mensaje ${tag}().`);else if(!f.some(x=>x.st==st))out.push(`${tag}(): se esperaba <<${st}>>.`)});
+return out}
+const OB=[":Controlador",":Estudiante *",":Empresa *",":OfertaPasantia *",":Postulacion *","est:Estudiante","emp:Empresa","opc:OfertaPasantia","p:Postulacion","pe:Postulacion","pec:Postulacion",":OfertaPasantia","est","emp","opc","p","pe","pec"];
+const MS=[["est := find(ci)","emp := find(rut)","opc := obtenerOferta(codOferta)","op := find(codOferta)","generarPostulacion(opc)","p := create(est, opc)","agregarPostulacion(p)","add(p)","setEstado(pendiente)","obtenerEmpresa(rut)"],["est := find(ci)","emp := find(rut)","cd := cuposDisponibles(codOferta)","opc := find(codOferta)","hay := hayCupos()","p := next()","e := getEstado()","[cd] aceptarPostulacion(codOferta)","pe := next()","cod := getOfertaPasantiaCodigo()","[cod == codOferta] aceptarPostulacion()","b := calcularBeneficio()","setEstado(aceptada)","setBeneficio(b)"]];
+const SB=["association","local","parameter","global"],KP=["1","2","3","4",".","*"],esc=t=>t.replace(/</g,"&lt;").replace(/"/g,"&quot;"),S0=()=>({n:"",o:"",d:"",m:"",s:""});
+let S=S0(),LN=[],fb="";
+const ln=x=>`${x.n}: ${x.o} -> ${x.d}  ${x.m}  <<${x.s}>>`;
+function build(){v.onclick=ev=>{const b=ev.target.closest("button");if(!b||!b.closest("#bd"))return;const a=b.dataset.a,t=b.dataset.t;
+if(a=="ex"){ex=+b.dataset.i;LN=[];S=S0();fb=""}
+else if(a=="n")S.n+=t;else if(a=="bs")S.n=S.n.slice(0,-1);
+else if("odms".includes(a))S[a]=S[a]==t?"":t;
+else if(a=="add"){if(S.n&&S.o&&S.d&&S.m&&S.s){LN.push({n:S.n,o:S.o.replace(/ \*$/,""),d:S.d,m:S.m,s:S.s});S=S0();fb=""}}
+else if(a=="del")LN.splice(+b.dataset.i,1);
+else if(a=="chk"){const p=parse(LN.map(ln).join("\n")),r=p.err.concat(p.L.length?check(p.L,E[ex]):["Todavía no agregaste mensajes."]);fb=r.length?r.map(x=>`<div class="err">• ${esc(x)}</div>`).join(""):`<div class="good">¡Sin errores! Compará igual con la solución.</div>`}
+else if(a=="sol")fb=`<pre>${esc(E[ex].sol)}</pre>`;
+draw()};draw()}
+function draw(){const e=E[ex],ch=(k,a)=>`<div class="chs">${a.map(t=>`<button class="ch${S[k]==t?" sel":""}" data-a="${k}" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
+const u=x=>x||"__";
+v.innerHTML=`<div id="bd"><div class="row">${E.map((x,i)=>`<button class="${i==ex?"on":""}" data-a="ex" data-i="${i}">${x.t}</button>`).join("")}</div>
+<div class="card"><p>${e.en}</p><details><summary>Diagrama de clases</summary><pre>${CL}</pre></details></div>
+<div class="card"><div class="mut">Armá cada mensaje tocando las piezas (tocá de nuevo para sacarla):</div><pre class="pv">${esc(`${u(S.n)}: ${u(S.o)} -> ${u(S.d)}  ${u(S.m)}  <<${u(S.s)}>>`)}</pre>
+<b class="mut">Número</b><div class="chs">${KP.map(t=>`<button class="ch" data-a="n" data-t="${t}">${t}</button>`).join("")}<button class="ch" data-a="bs">⌫</button></div>
+<b class="mut">Origen</b>${ch("o",OB.filter(t=>!t.endsWith(" *")))}
+<b class="mut">Destino</b>${ch("d",OB)}
+<b class="mut">Mensaje</b>${ch("m",MS[ex])}
+<b class="mut">Estereotipo</b>${ch("s",SB)}
+<button class="on" data-a="add">Agregar mensaje</button></div>
+<div class="card"><b>Tu diagrama</b>${LN.map((x,i)=>`<div class="ln"><code>${esc(ln(x))}</code><button data-a="del" data-i="${i}">×</button></div>`).join("")||"<p class='mut'>Todavía vacío.</p>"}
+<div class="row"><button class="on" data-a="chk">Comprobar</button><button data-a="sol">Ver solución</button></div>${fb}</div></div>`}
+const P=[[{t:"Estudiante y empresa",en:"Obtené al estudiante (ci) y a la empresa (rut) desde el Controlador.",n:["1","2"],exp:[["Estudiante.find","association"],["Empresa.find","association"]]},
+{t:"La oferta",en:"Pedile la oferta a la empresa por su código.",n:["3","3.1"],exp:[["Empresa.obtenerOferta","local"],["OfertaPasantia.find","association"]]},
+{t:"Crear postulación",en:"El estudiante genera la postulación para la oferta.",n:["4","4.1"],exp:[["Estudiante.generarPostulacion","local"],["Postulacion.create","local"]]},
+{t:"Enlazar",en:"Agregá la postulación a la oferta y al estudiante.",n:["4.2","4.2.1","4.3"],exp:[["OfertaPasantia.agregarPostulacion","parameter"],["Postulacion.add","association"]]}],
+[{t:"Estudiante y empresa",en:"Obtené al estudiante (ci) y a la empresa (rut) desde el Controlador.",n:["1","2"],exp:[["Estudiante.find","association"],["Empresa.find","association"]]},
+{t:"Verificar cupos",en:"El Controlador le pide a la empresa los cupos disponibles; la empresa busca la oferta y le pregunta si hay cupos.",n:["3","3.1","3.2"],exp:[["Empresa.cuposDisponibles","local"],["OfertaPasantia.find","association"],["OfertaPasantia.hayCupos","local"]]},
+{t:"Contar aceptadas",en:"Dentro de hayCupos, la oferta recorre sus postulaciones y consulta el estado de cada una.",n:["3.2.1*","3.2.2*"],exp:[["Postulacion.next","association"],["Postulacion.getEstado","local"]]},
+{t:"Buscar postulación",en:"Si hay cupos, el Controlador delega al estudiante, que recorre sus postulaciones y obtiene el código de oferta de cada una.",n:["4","4.1*","4.2*"],exp:[["Estudiante.aceptarPostulacion","local"],["Postulacion.next","association"],["Postulacion.getOfertaPasantiaCodigo","local"]]},
+{t:"Aceptar y beneficio",en:"En la postulación de esa oferta: se acepta y se calcula el beneficio según el tipo de oferta.",n:["4.3*","4.3.1"],exp:[["Postulacion.aceptarPostulacion","local"],["OfertaPasantia.calcularBeneficio","association"]]}]];
+const NL=String.fromCharCode(10),h=s=>[...s].reduce((x,c)=>(x*31+c.charCodeAt(0))|0,7),sr=a=>[...new Set(a)].sort((x,y)=>h(x)-h(y)),sh=t=>{const a=t.split(":")[0];return t.includes(":")&&a?a:t},nk=x=>x.n+(x.it?"*":""),tk=x=>x.d+(x.m?" *":""),lineOf=x=>`${nk(x)}: ${x.o} -> ${tk(x)}  ${x.msg}  <<${x.st}>>`;
+let pi=0,ok=ld("ok",{});
+function ctx(){const ps=P[ex],p=ps[pi],all=parse(E[ex].sol).L,bf=ps.slice(0,pi).flatMap(q=>q.n);return{p,all,mine:all.filter(x=>p.n.includes(nk(x))),given:all.filter(x=>bf.includes(nk(x)))}}
+function bank(c){const{all,mine,given}=c,mn=new Set(mine.map(nk));
+let ob=[...new Set([...mine.flatMap(x=>[x.o,tk(x)]),...given.flatMap(x=>[sh(x.o),sh(tk(x))]),":Controlador"])];
+ob=sr(ob.concat(sr(OB.filter(t=>!ob.includes(t)&&!ob.includes(sh(t)))).slice(0,2)));
+const ms=[...new Set(mine.map(x=>x.msg))],mb=sr(ms.concat(sr(MS[ex].filter(t=>!ms.includes(t))).slice(0,3)));
+const nb=[...new Set(mine.map(nk))].concat(sr(all.map(nk).filter(n=>!mn.has(n))).slice(0,2)).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+return{ob,mb,nb}}
+function build2(){v.onclick=ev=>{const b=ev.target.closest("button");if(!b||!b.closest("#bd"))return;const a=b.dataset.a,t=b.dataset.t,rs=()=>{LN=[];S=S0();fb=""};
+if(a=="ex"){ex=+b.dataset.i;pi=0;rs()}
+else if(a=="pt"){pi=+b.dataset.i;rs()}
+else if(a=="nx"){pi++;rs()}
+else if(a.length==1&&"nodms".includes(a))S[a]=S[a]==t?"":t;
+else if(a=="add"){if(S.n&&S.o&&S.d&&S.m&&S.s){LN.push({n:S.n,o:S.o.replace(/ [*]$/,""),d:S.d,m:S.m,s:S.s});S=S0();fb=""}}
+else if(a=="del")LN.splice(+b.dataset.i,1);
+else if(a=="sol")fb=`<pre>${esc(ctx().mine.map(lineOf).join(NL))}</pre>`;
+else if(a=="chk"){const c=ctx(),p=parse(c.given.map(lineOf).concat(LN.map(ln)).join(NL)),u=p.L.slice(c.given.length),r=p.err.concat(LN.length?check(p.L,{exp:[]}):["Todavía no agregaste mensajes."]);
+if(LN.length)c.p.exp.forEach(([tag,st])=>{const f=u.filter(x=>x.dc+"."+x.me==tag);if(!f.length)r.push(`Falta un mensaje ${tag}().`);else if(!f.some(x=>x.st==st))r.push(`${tag}(): se esperaba <<${st}>>.`)});
+if(r.length)fb=r.map(x=>`<div class="err">• ${esc(x)}</div>`).join("");else{ok[ex+"-"+pi]=1;sv("ok",ok);fb=`<div class="good">¡Parte completa!</div>`+(pi<P[ex].length-1?`<button class="on" data-a="nx">Siguiente parte</button>`:"")}}
+draw2()};draw2()}
+const nl=x=>({n:x.n.replace("*",""),it:x.n.includes("*"),o:x.o,d:x.d.replace(/ [*]$/,""),m:/ [*]$/.test(x.d),msg:x.m,st:x.s,u:1});
+function dg(G,L,D){const Ls=G.concat(L.map(nl)).concat(D?[D]:[]),C={},dep={":Controlador":0},lab={":Controlador":":Controlador"},oid=x=>key(x.o),did=x=>key(x.d)+(x.m?"*":""),cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
+
+Ls.forEach(x=>{cl(x.o);cl(x.d);const o=oid(x),d=did(x);[[o,x.o,0],[d,x.d,x.m]].forEach(([k,t,s])=>{if(!(k in lab))lab[k]=(t.includes(":")?t:(C[t]?t+":"+C[t]:t))+(s?" *":"")});if(!(o in dep))dep[o]=0;if(!(d in dep))dep[d]=dep[o]+1});
+const ids=Object.keys(lab),cc={},Q={},W=140,H=34,cnt={};
+ids.forEach(k=>{const c=dep[k]||0;(cc[c]=cc[c]||[]).push(k);Q[k]={x:210+c*190,y:10+(cc[c].length-1)*64}});
+const mx=Math.max(...ids.map(k=>Q[k].x))+160,my=Math.max(...ids.map(k=>Q[k].y))+54;
+let s=`<svg width="${mx}" height="${my}" style="font:11px system-ui;color:var(--fg)"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>`;
+ids.forEach(k=>{const p=Q[k];s+=(k.endsWith("*")?`<rect x="${p.x+5}" y="${p.y-5}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--mut)"/>`:"")+`<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--fg)"/><text x="${p.x+W/2}" y="${p.y+21}" text-anchor="middle" fill="var(--fg)" text-decoration="underline">${esc(lab[k])}</text>`});
+const q0=Q[":Controlador"];s+=`<line x1="10" y1="${q0.y+H/2}" x2="${q0.x}" y2="${q0.y+H/2}" stroke="var(--fg)" stroke-width="1.5" marker-end="url(#ar)"/><text x="110" y="${q0.y+H/2-6}" text-anchor="middle" fill="var(--fg)" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(E[ex].sig)}</text><text x="110" y="${q0.y+H/2+14}" text-anchor="middle" fill="var(--mut)" style="font-size:10px">operación del sistema</text>`;
+const cp=(cx,cy,tx,ty)=>{const u=tx-cx,w=ty-cy,t=Math.min(u?W/2/Math.abs(u):1e9,w?H/2/Math.abs(w):1e9);return[cx+u*t,cy+w*t]};
+Ls.forEach(x=>{const a=Q[oid(x)],b=Q[did(x)];if(!a||!b||a===b)return;
+const pk=[oid(x),did(x)].sort().join(">"),i=cnt[pk]=(cnt[pk]||0)+1,ax=a.x+W/2,ay=a.y+H/2,bx=b.x+W/2,by=b.y+H/2,dx=bx-ax,dy=by-ay,l=Math.hypot(dx,dy)||1,nx=-dy/l*(i-1)*14,ny=dx/l*(i-1)*14,f=cp(ax+nx,ay+ny,bx+nx,by+ny),g=cp(bx+nx,by+ny,ax+nx,ay+ny),col=x.u?"var(--ac)":"var(--mut)",t=`${x.n}${x.it?"*":""}: ${x.msg}`;
+s+=`<line x1="${f[0]}" y1="${f[1]}" x2="${g[0]}" y2="${g[1]}" stroke="${col}" stroke-width="1.5"${x.dr?' stroke-dasharray="5 3"':''} marker-end="url(#ar)"/><text x="${(f[0]+g[0])/2}" y="${(f[1]+g[1])/2-3}" text-anchor="middle" fill="${col}" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(t.length>40?t.slice(0,39)+"…":t)}<tspan x="${(f[0]+g[0])/2}" dy="12">«${x.st}»</tspan></text>`});
+return s+"</svg>"}
+function draw2(){const e=E[ex],c=ctx(),{p,given}=c,B=bank(c),u=x=>x||"__",
+ch=(k,a)=>`<div class="chs">${a.map(t=>`<button class="ch${S[k]==t?" sel":""}" data-a="${k}" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
+v.innerHTML=`<div id="bd"><div class="row">${E.map((x,i)=>`<button class="${i==ex?"on":""}" data-a="ex" data-i="${i}">${x.t}</button>`).join("")}</div>
+<details class="card"><summary>Enunciado y diagrama de clases</summary><p>${e.en}</p><pre>${CL}</pre></details>
+<div class="row">${P[ex].map((q,i)=>`<button class="${i==pi?"on":""}" data-a="pt" data-i="${i}">${ok[ex+"-"+i]?"✓ ":""}${i+1}. ${q.t}</button>`).join("")}</div>
+<div class="card"><p><b>Parte ${pi+1}/${P[ex].length}:</b> ${p.en}</p>${given.length?`<div class="mut">Ya hecho:</div><pre>${esc(given.map(lineOf).join(NL))}</pre>`:""}
+<pre class="pv">${esc(`${u(S.n)}: ${u(S.o)} -> ${u(S.d)}  ${u(S.m)}  <<${u(S.s)}>>`)}</pre>
+<b class="mut">Número</b>${ch("n",B.nb)}<b class="mut">Origen</b>${ch("o",B.ob.filter(t=>!t.endsWith(" *")))}<b class="mut">Destino</b>${ch("d",B.ob)}<b class="mut">Mensaje</b>${ch("m",B.mb)}<b class="mut">Estereotipo</b>${ch("s",SB)}
+<button class="on" data-a="add">Agregar mensaje</button></div>
+<div class="card"><b>Diagrama</b><div style="overflow-x:auto">${dg(given,LN)}</div></div>
+<div class="card"><b>Tu parte</b>${LN.map((x,i)=>`<div class="ln"><code>${esc(ln(x))}</code><button data-a="del" data-i="${i}">×</button></div>`).join("")||"<p class='mut'>Todavía vacío.</p>"}
+<div class="row"><button class="on" data-a="chk">Comprobar</button><button data-a="sol">Ver solución</button></div>${fb}</div></div>`}
+const HT=[["Obtené al estudiante a partir de su cédula (ci).","Obtené la empresa a partir de su rut.","Pedile a la empresa la oferta por su código; guardala en opc.","Para eso, la empresa la busca en su colección de ofertas.","Pedile al estudiante que genere la postulación para opc.","El estudiante crea la postulación p, pasándose a sí mismo y a la oferta.","El estudiante le avisa a la oferta que tiene una nueva postulación.","La oferta agrega la postulación a su colección.","El estudiante también agrega la postulación a su colección."],
+["Obtené al estudiante a partir de su cédula (ci).","Obtené la empresa a partir de su rut.","Pedile a la empresa los cupos disponibles de la oferta (guardá el resultado en cd).","La empresa busca la oferta en su colección.","La empresa le pregunta a la oferta si hay cupos.","Para contar las aceptadas, la oferta recorre su colección de postulaciones.","Por cada postulación p, consulta su estado.","Si hay cupos, pedile al estudiante que acepte la postulación de esa oferta.","El estudiante recorre su colección de postulaciones.","De cada postulación pe, obtiene el código de su oferta.","Si el código coincide con codOferta, esa postulación se acepta.","La postulación calcula su beneficio preguntándole a su oferta."]];
+const SL0=()=>({n:"",o:[],d:[],m:[],s:""}),fm=t=>{let o="";t.forEach(k=>{o+=k==":="?" := ":(k==","?", ":(k[0]=="["?k+" ":k))});return o.trim()},fo=t=>t.join("").replace(/[*]$/," *"),
+pm=m=>{const s=m.split(" ").join(""),c=s[0]=="["?s.slice(0,s.indexOf("]")+1):"",t=s.slice(c.length),i=t.indexOf(":="),u=t.slice(i>=0?i+2:0),j=u.indexOf("(");return{c,r:i>=0?t.slice(0,i):"",o:u.slice(0,j),a:u.slice(j+1,u.lastIndexOf(")"))}};
+let SL=SL0(),AC="n",F3="",pg=ld("pg2",{});
+function pal(){const L=parse(E[ex].sol).L,nm=new Set(),cs=new Set(["Sistema"]),vr=new Set(),op=new Set(["setEstado","getBeneficio"]),pr=new Set(),cd=new Set(["[hay]"]);
+L.forEach(x=>{[x.o,x.d].forEach(t=>{if(t.includes(":")){const a=t.split(":")[0];if(a)nm.add(a);cs.add(t.split(":")[1])}else nm.add(t)});
+const c=x.msg[0]=="["?x.msg.slice(0,x.msg.indexOf("]")+1):"";if(c)cd.add(c);
+const q=pm(x.msg);if(q.r)vr.add(q.r);op.add(q.o);q.a.split(",").forEach(a=>{if(a)pr.add(a)})});
+return{nm:sr([...nm]),cs:sr([...cs]),vr:sr([...vr]),op:sr([...op]),pr:sr([...pr]),cd:sr([...cd])}}
+const chp=(t)=>`<button class="ch" data-a="p" data-t="${esc(t)}">${esc(t)}</button>`,grp=(n,a)=>a.length?`<div class="mut">${n}</div><div class="chs">${a.map(chp).join("")}</div>`:"";
+function pv(A,p){if(A=="n")return grp("Numeración",["1","2","3","4",".","*"]);
+if(A=="o"||A=="d")return grp("Nombres",p.nm)+grp("Clases",p.cs)+grp("Símbolos",[":","*"]);
+if(A=="m")return grp("Variables",p.vr)+grp("Operaciones",p.op)+grp("Parámetros",p.pr)+grp("Condición",p.cd)+grp("Símbolos",[":=","(",")",","]);
+return grp("Estereotipo",SB)}
+function vf(x,sl,c){const r=[],kn=new Set([":Controlador",...sl.slice(0,c).flatMap(y=>[key(y.o),key(y.d)])]),n=SL.n,ot=fo(SL.o).split(" *").join(""),dr=fo(SL.d),dm=dr.endsWith(" *"),dt=dr.split(" *").join(""),cl=t=>t.split(":")[1]||"";
+if(n!=nk(x))r.push(n.split("*").join("")==x.n?"Número: revisá la iteración (*).":"Número: revisá la numeración; recordá de qué mensaje cuelga.");
+if(!ot)r.push("Falta el origen.");else if(key(ot)!=key(x.o))r.push("Origen: no es el objeto que envía este mensaje.");
+if(!dt)r.push("Falta el destino.");else if(key(dt)!=key(x.d))r.push(cl(dt)&&cl(dt)==cl(x.d)?"Destino: es el objeto correcto, pero el nombre no coincide con el que se usa después.":"Destino: no es el objeto que recibe este mensaje.");
+else if(dm!=x.m)r.push(x.m?"Destino: es una colección, falta marcarlo como multiobjeto (*).":"Destino: no es una colección, sobra el *.");
+else if(!dt.includes(":")&&!kn.has(key(dt)))r.push("Destino: primera aparición, indicá nombre:Clase.");
+const m=fm(SL.m);
+if(!m)r.push("Falta el mensaje.");else{const a=pm(m),b=pm(x.msg);
+if(a.c!=b.c)r.push(!b.c?"Mensaje: sobra la condición.":!a.c?"Mensaje: falta la condición.":"Mensaje: revisá la condición.");
+if(a.r!=b.r)r.push(!b.r?"Mensaje: no guarda ningún resultado.":!a.r?"Mensaje: falta guardar el resultado en una variable (:=).":"Mensaje: revisá la variable de retorno.");
+if(a.o!=b.o)r.push("Mensaje: la operación no es la correcta.");else if(a.a!=b.a)r.push("Mensaje: revisá los parámetros.")}
+if(SL.s!=x.st)r.push(SL.s?"Estereotipo: pensá cómo conoce el emisor al receptor.":"Falta el estereotipo.");
+return r}
+const adv=()=>{pg[ex]=(pg[ex]||0)+1;sv("pg2",pg);SL=SL0();AC="n";F3=""};
+function build3(){v.onclick=ev=>{const b=ev.target.closest("button");if(!b||!b.closest("#bd"))return;const a=b.dataset.a,t=b.dataset.t;
+if(a=="ex"){ex=+b.dataset.i;SL=SL0();AC="n";F3=""}
+else if(a=="act")AC=t;
+else if(a=="p"){if(AC=="n")SL.n+=t;else if(AC=="s")SL.s=t;else SL[AC].push(t)}
+else if(a=="bs"){if(AC=="n")SL.n=SL.n.slice(0,-1);else if(AC=="s")SL.s="";else SL[AC].pop()}
+else if(a=="clr"){SL=SL0();AC="n";F3=""}
+else if(a=="rst"){pg[ex]=0;sv("pg2",pg);SL=SL0();AC="n";F3=""}
+else if(a=="rev")adv();
+else if(a=="chk"){const sl=parse(E[ex].sol).L,c=pg[ex]||0,r=vf2(sl[c],sl,c);if(r.length){rec(r);F3=cmp(sl[c],sl,c)+r.map(th).join("")}else adv()}
+draw3()};draw3()}
+function draw3(){const sl=parse(E[ex].sol).L,c=Math.min(pg[ex]||0,sl.length),done=sl.slice(0,c),x=sl[c];
+let h=`<div id="bd"><div class="row">${E.map((y,i)=>`<button class="${i==ex?"on":""}" data-a="ex" data-i="${i}">${y.t}</button>`).join("")}</div>
+<details class="card"><summary>Enunciado y diagrama de clases</summary><p>${E[ex].en}</p><pre>${E[ex].cl||CL}</pre></details>
+<div class="card"><b>Mensajes</b> <span class="mut">${c}/${sl.length}</span>${done.map(y=>`<div class="ln"><code class="ok">✓ ${esc(lineOf(y))}</code></div>`).join("")}`;
+if(x){const u=s=>s||"__";h+=`<div class="card" style="background:var(--bg)"><p><b>Mensaje ${c+1}:</b> ${HT[ex][c]}</p>
+<pre class="pv">${esc(`${u(SL.n)}: ${u(fo(SL.o))} -> ${u(fo(SL.d))}  ${u(fm(SL.m))}  <<${u(SL.s)}>>`)}</pre>
+<div class="chs">${[["n","Número"],["o","Origen"],["d","Destino"],["m","Mensaje"],["s","Estereotipo"]].map(([k,l])=>`<button class="ch${AC==k?" sel":""}" data-a="act" data-t="${k}">${l}</button>`).join("")}</div>${pv(AC,pal())}
+<div class="row"><button data-a="bs">⌫ Borrar</button><button data-a="clr">Limpiar</button><button class="on" data-a="chk">Verificar</button><button data-a="rev">Ver respuesta</button></div>${F3}</div>`}
+else h+=`<p class="good">¡Ejercicio completo!</p><button data-a="rst">Reiniciar</button>`;
+h+=`</div><div class="card"><b>Diagrama</b><div style="overflow-x:auto">${dg(done.map(y=>({...y,u:1})),[],drf())}</div></div></div>`;v.innerHTML=h}
+E[0].sig="postularse(ci, rut, codOferta)";E[1].sig="aceptarPostulacion(ci, rut, codOferta)";
+function drf(){const ht=s=>/[A-Za-z]/.test(s),o=fo(SL.o).split(" *").join(""),dd=fo(SL.d),m=dd.endsWith(" *"),d=dd.split(" *").join("");
+if(ht(o)&&ht(d))return{n:SL.n.split("*").join(""),it:SL.n.includes("*"),o,d,m,msg:fm(SL.m)||"…",st:SL.s||"?",u:1,dr:1};
+const t=ht(o)?o:ht(d)?d:"";return t?{n:"",it:0,o:t,d:t,m:false,msg:"",st:"",u:1,dr:1}:null}
+const TH=[
+[["iteración"],"Iteración (*)","<p>Un <code>*</code> pegado al número indica que el mensaje se repite: se está recorriendo una colección. Aparece en el <code>next()</code> sobre el multiobjeto y en todos los mensajes que se ejecutan <i>dentro</i> del recorrido (4.1*, 4.2*, 4.3*).</p><p>Si el mensaje ocurre una sola vez, no lleva <code>*</code>. Preguntate: ¿esto pasa una vez, o una vez por cada elemento de la colección?</p>"],
+[["numeración"],"Numeración","<p>La numeración sigue la anidación de las llamadas. Lo que el Controlador envía directamente es 1, 2, 3… en orden. Cuando el receptor del mensaje <code>N</code> envía otros mensajes para resolverlo, esos son <code>N.1</code>, <code>N.2</code>… y así sucesivamente.</p><p>Para numerar, preguntate qué objeto está ejecutando este mensaje. Si es el Controlador, es de primer nivel. Si es el receptor del 3, es <code>3.x</code>. Ej: el Controlador le pide la oferta a emp (<code>3</code>); emp la busca en su colección (<code>3.1</code>).</p>"],
+[["nombre no coincide"],"Objeto con nombre o anónimo","<p><code>:Clase</code> es un objeto anónimo y <code>nombre:Clase</code> uno con nombre. Si después vas a enviarle mensajes o pasarlo como parámetro, necesita nombre, porque con ese nombre lo vas a referenciar.</p><p>Ej: <code>est:Estudiante</code> se usa después como origen de <code>create</code> y como parámetro. Si lo dejás anónimo, el resto del diagrama no tiene cómo nombrarlo.</p>"],
+[["multiobjeto (*)"],"Multiobjeto","<p>Un multiobjeto (<code>:Clase *</code>) representa una colección de instancias y es la versión en texto del recuadro doble (rectángulos apilados) que se dibuja a mano: el <code>*</code> ocupa el lugar del segundo recuadro. Se usa cuando el mensaje opera sobre el conjunto: <code>find</code> (buscar uno por clave), <code>next</code> (recorrer) y <code>add</code> (agregar).</p><p>Si el destino es una colección y no lo marcás con <code>*</code>, estás diciendo que es un único objeto concreto, y un objeto concreto no tiene <code>find</code>. En el diagrama de clases suele corresponder a una multiplicidad <code>*</code> o a «todas las instancias de la clase».</p><p>No lo confundas con el <code>*</code> pegado al número (<code>4.1*:</code>): ese indica iteración y es otro símbolo, con otro significado.</p>"],
+[["sobra el *"],"Objeto simple","<p>El <code>*</code> se reserva para colecciones. Si el mensaje es una operación propia de la clase (<code>hayCupos()</code>, <code>getEstado()</code>, <code>generarPostulacion(opc)</code>…), va a un objeto concreto que ya obtuviste (est, emp, opc…), no a la colección.</p>"],
+[["primera aparición"],"Primera aparición de un objeto","<p>La primera vez que un objeto aparece en el diagrama se declara con su clase: <code>nombre:Clase</code> (ej. <code>emp:Empresa</code>). Así el diagrama deja claro de qué clase es. Después alcanza con el nombre (<code>emp</code>).</p><p>Ojo: obtener un objeto con <code>emp := find(rut)</code> crea la variable, pero el objeto recién «aparece» en el diagrama cuando es origen o destino de un mensaje.</p>"],
+[["Falta el destino","no es el objeto que recibe"],"Destino del mensaje","<p>El destino es el objeto que recibe el mensaje y lo ejecuta, así que debe tener esa operación en el diagrama de clases (o ser un multiobjeto, para find/add/next). Elegí el destino pensando en quién tiene la información: quien sabe algo es quien lo responde.</p><p>Además, el emisor tiene que poder llegar a ese objeto: por asociación, porque es local o porque le llegó como parámetro.</p>"],
+[["Falta el origen","Origen:"],"Origen del mensaje","<p>El origen es el objeto que está ejecutando el código que envía el mensaje. Los mensajes de primer nivel salen siempre del <code>:Controlador</code>, que recibe la operación del sistema (no existe una caja «Sistema»). Un mensaje <code>N.k</code> sale del objeto que recibió el <code>N</code>.</p>"],
+[["Falta el mensaje"],"Mensaje","<p>Cada flecha lleva el mensaje con la forma <code>operación(parámetros)</code>, y <code>variable := operación(...)</code> si devuelve algo que se usa después.</p>"],
+[["condición"],"Condición","<p>Una condición entre corchetes antes del mensaje indica que solo se envía si es verdadera. Ej: <code>[cd] aceptarPostulacion(codOferta)</code> solo ocurre si <code>cd</code> es verdadero. También puede ir dentro de un recorrido: <code>[cod == codOferta]</code>, que filtra por cada elemento.</p><p>Si el mensaje se envía siempre, no lleva condición.</p>"],
+[["resultado","variable de retorno"],"Resultado (:=)","<p>Si la operación devuelve algo que vas a usar después, se guarda en una variable: <code>est := find(ci)</code>. Ese nombre es el que usás luego como objeto o como parámetro.</p><p>Las operaciones que solo hacen algo (<code>add</code>, <code>agregarPostulacion</code>, <code>generarPostulacion</code>) no guardan resultado: no llevan <code>:=</code>.</p>"],
+[["la operación"],"Operación","<p>La operación debe existir en la clase del destino (mirá el diagrama de clases) y ser la que cumple lo que le estás pidiendo. <code>find</code>, <code>next</code> y <code>add</code> son para multiobjetos y <code>create</code> para crear objetos; el resto son operaciones propias de cada clase.</p>"],
+[["parámetros"],"Parámetros","<p>Los parámetros son lo que el receptor necesita para ejecutar la operación. Tienen que estar disponibles en el emisor: ser parámetros de la operación del sistema (ci, rut, codOferta) o variables que ya obtuviste (est, opc, p…).</p>"],
+[["Estereotipo","estereotipo"],"Estereotipo","<p>El estereotipo dice <b>cómo conoce el emisor al receptor</b>. Preguntate: ¿de dónde saca el emisor a este objeto?</p><p><code>&lt;&lt;association&gt;&gt;</code>: hay una asociación navegable en el diagrama de clases. Ej: el Controlador accede a la colección <code>:Estudiante *</code> para el find.</p><p><code>&lt;&lt;local&gt;&gt;</code>: el receptor es una variable local del emisor (resultado de un find, create o recorrido). Ej: el Controlador ya hizo <code>est := find(ci)</code> y después le envía un mensaje a est.</p><p><code>&lt;&lt;parameter&gt;&gt;</code>: el receptor llegó como parámetro de la operación que se está ejecutando. Ej: est ejecuta <code>generarPostulacion(opc)</code> y le envía un mensaje a opc.</p><p><code>&lt;&lt;global&gt;&gt;</code>: el objeto es accesible globalmente (poco frecuente).</p>"]];
+const th=x=>{const e=TH.find(t=>t[0].some(n=>x.includes(n)));return `<details class="err"><summary>• ${esc(x)} <span class="mut">(tocar para ver teoría)</span></summary>${e?`<div><b>${e[1]}</b>${e[2]}</div>`:""}</details>`};
+const tk2=s=>{const o=[];let i=0;while(i<s.length){const c=s[i];if(c==" "){i++;continue}if(c=="["){const j=s.indexOf("]",i);o.push(s.slice(i,j+1));i=j+1}else if(c==":"&&s[i+1]=="="){o.push(":=");i+=2}else if("(),".includes(c)){o.push(c);i++}else{let j=i;while(j<s.length&&!" (),[:".includes(s[j]))j++;if(j==i)j=i+1;o.push(s.slice(i,j));i=j}}return o};
+const lcs=(a,b)=>{const n=a.length,m=b.length,d=Array.from({length:n+1},()=>Array(m+1).fill(0));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)d[i][j]=a[i]==b[j]?d[i+1][j+1]+1:Math.max(d[i+1][j],d[i][j+1]);const A=a.map(()=>0),B=b.map(()=>0);let i=0,j=0;while(i<n&&j<m){if(a[i]==b[j]){A[i]=B[j]=1;i++;j++}else if(d[i+1][j]>=d[i][j+1])i++;else j++}return[A,B]};
+const rt=(t,f)=>t.map((k,i)=>{const x=esc(k),w=f[i]?x:`<span class="df">${x}</span>`;return k==":="?" "+w+" ":k==","||k[0]=="["?w+" ":w}).join("").trim();
+function cmp(x,sl,c){const kn=new Set([":Controlador",...sl.slice(0,c).flatMap(y=>[key(y.o),key(y.d)])]),ot=fo(SL.o).split(" *").join(""),dr=fo(SL.d),dm=dr.endsWith(" *"),dt=dr.split(" *").join(""),
+f={n:SL.n==nk(x),o:!!ot&&key(ot)==key(x.o),d:!!dt&&key(dt)==key(x.d)&&dm==x.m&&(dt.includes(":")||kn.has(key(dt))),s:SL.s==x.st},
+em=tk2(x.msg),um=SL.m,[A,B]=lcs(um,em),R=(ok,t)=>ok?esc(t):`<span class="df">${esc(t||"__")}</span>`,
+L=(n,o,d,m,s)=>`${R(f.n,n)}: ${R(f.o,o)} -> ${R(f.d,d)}  ${m}  &lt;&lt;${R(f.s,s)}&gt;&gt;`;
+return `<div class="cmp"><div class="mut">Tu respuesta</div><pre>${L(SL.n,fo(SL.o),fo(SL.d),um.length?rt(um,A):'<span class="df">__</span>',SL.s)}</pre><div class="mut">Respuesta correcta (en rojo, lo que difiere de la tuya)</div><pre>${L(nk(x),x.o,tk(x),rt(em,B),x.st)}</pre></div>`}
+TH.unshift([["falta el :"],"Los dos puntos (:) en los objetos","<p>En un diagrama de comunicación cada caja es un <b>objeto</b> y se escribe <code>nombre:Clase</code>. Los dos puntos separan el nombre de la clase. Si el objeto no tiene nombre (es anónimo), se escribe igual <code>:Clase</code>, con los dos puntos adelante.</p><p>Escribir solo <code>Estudiante</code> o <code>Controlador</code>, sin <code>:</code>, nombra la <i>clase</i>, no un objeto, y los mensajes se envían entre objetos. Ej: <code>:Controlador</code>, <code>:Estudiante *</code>, <code>emp:Empresa</code>.</p><p>¿Y cuándo va solo el nombre (<code>emp</code>)? Cuando el objeto ya fue presentado antes con <code>nombre:Clase</code>: ahí ya no repetís la clase ni los dos puntos. Regla: la primera vez, con <code>:</code>; después, solo el nombre.</p>"]);
+function vf2(x,sl,c){let r=vf(x,sl,c);const CS=new Set(pal().cs),bare=t=>t&&!t.includes(":")&&CS.has(t.split(" *").join("")),o=fo(SL.o),d=fo(SL.d);
+if(bare(o)){r=r.filter(e=>e.indexOf("Origen:")!=0);r.unshift("Origen: falta el : delante de la clase (:Clase).")}
+if(bare(d)){r=r.filter(e=>e.indexOf("Destino:")!=0);r.push("Destino: falta el : delante de la clase (:Clase).");if(x.m&&!d.endsWith(" *"))r.push("Destino: es una colección, falta marcarlo como multiobjeto (*).")}
+return r}
+const rec=r=>{const er=ld("er",{}),seen=new Set();r.forEach(x=>{const e=TH.find(t=>t[0].some(n=>x.includes(n))),k=e?e[1]:"Otros";if(seen.has(k))return;seen.add(k);const o=er[k]||{n:0};o.n++;er[k]=o});sv("er",er)};
+function errs(){const er=ld("er",{}),ks=Object.keys(er).sort((a,b)=>er[b].n-er[a].n);
+v.onclick=ev=>{const b=ev.target.closest("button");if(b&&b.dataset.a=="sup"){delete er[b.dataset.t];sv("er",er);errs()}};
+v.innerHTML=ks.length?`<p class="mut">Tipos de error que más cometes (se cuentan por tipo, no por ejercicio).</p>`+ks.map(k=>{const e=TH.find(t=>t[1]==k);return `<details class="card"><summary><b>${esc(k)}</b> · ${er[k].n} ${er[k].n==1?"vez":"veces"}</summary>${e?e[2]:""}<button data-a="sup" data-t="${esc(k)}">Lo superé</button></details>`}).join(""):`<p class="mut">Todavía no registraste errores. Van apareciendo acá a medida que verificás en Practicar.</p>`}
+[0,1,2,3].forEach(i=>$("t"+i).onclick=()=>tab(i));tab(0);
+</script></body></html>
