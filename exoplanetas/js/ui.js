@@ -162,7 +162,7 @@ function porQueFalla(d) {
     else if (d.tid) azar = AZAR_TEC[d.tid] || "";
   }
   return `<div class="falla"><b>¿Por qué falló?</b>
-    ${items ? `<p>${d.d === null || d.d === undefined ? "Las condiciones de este planeta lo impiden:" : "Jugó en contra:"}</p><ul>${items}</ul>` : ""}
+    ${items ? `<p>${d.d === null || d.d === undefined ? "Las condiciones de esta estrella lo impiden:" : "Jugó en contra:"}</p><ul>${items}</ul>` : ""}
     ${azar ? `<p>${items ? "Además: " : ""}${esc(azar)}</p>` : ""}</div>`;
 }
 async function mostrarAnalisis(d, modal) {
@@ -299,7 +299,7 @@ async function abrirJugada(e, plFoco = null) {
       return `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>${va ? "Sin dado: con estas condiciones funciona" : `No funciona: las condiciones suman ${sgn(m.mod)} (falla con ${K.UMBRAL_MAR} o menos)`}</small></span>
         <span class="oj-pct ${va ? "alta" : "baja"}">${va ? "Funciona" : "No"}</span>
         <button type="button" class="btn-juego" data-k="${k}">🔬 Investigar</button></div>
-        <details><summary>Condiciones de este planeta</summary>${detalleBonos(m.partes)}</details></div>`;
+        <details><summary>Condiciones de esta estrella</summary>${detalleBonos(m.partes)}</details></div>`;
     }
     return `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>Necesitas sacar ${obj >= 20 ? "un 20" : obj <= 2 ? "cualquiera menos 1" : `${obj} o más`}</small></span>
       <span class="oj-pct ${o.p >= .7 ? "alta" : o.p >= .45 ? "media" : "baja"}">${ui.ayudas ? pct(o.p) : o.p >= .7 ? "Buena" : o.p >= .45 ? "Regular" : "Difícil"}</span>
@@ -485,7 +485,7 @@ async function vista(tipo, d) {
     const lect = lectura ? `<div class="privado"><p class="tenue">Lo que ve ${esc(MAR[mid].nombre)}:</p><dl class="dato">${Object.entries(lectura).map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>` : "";
     const res = gana ? `<h3>¡Refutado! ${esc(nombreJ(x))} gana +${pozo}</h3>`
       : t.ok ? `<h3>No lo contradice: +${pozo} para ${esc(nombreJ(autor))}</h3>`
-      : t.sinDado ? `<h3>Las condiciones del planeta impiden usar ese Marcador (suman ${sgn(t.mod)}): +${pozo} para ${esc(nombreJ(autor))}</h3>`
+      : t.sinDado ? `<h3>Las condiciones de la estrella impiden usar ese Marcador (suman ${sgn(t.mod)}): +${pozo} para ${esc(nombreJ(autor))}</h3>`
       : `<h3>La tirada falla (${t.d}${sgn(t.mod)} vs ${t.cd}): +${pozo} para ${esc(nombreJ(autor))}</h3>`;
     await ventana({ titulo: "Refutación", color: "var(--mar)", centro: true, cuerpo: `<p>${ficha(x)} <b>${esc(nombreJ(x))}</b> cuestiona ${CAT_NOMBRE[cat]} de ${ficha(autor)} ${esc(nombreJ(autor))} en ${esc(pl.nombre)} con ${esc(MAR[mid].nombre)}.</p>${lect}${res}` });
   }
@@ -600,7 +600,7 @@ const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
   esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "solo con Tránsito debajo"],
   esp_emision: ["si tiene atmósfera", "Atmósfera, Habitable", "con Tránsito o en Gigante Caliente"],
   esp_imagen: ["atmósfera y gases", "Atmósfera, Biofirma", "con Imagen o en Gigante Frío cercano"],
-  contexto: ["si la señal puede ser falsa", "Biofirma", "después de leer sus gases"],
+  contexto: ["si la señal puede ser falsa", "Biofirma", "con un espectro de gases tuyo ahí"],
 };
 // Resumen corto de qué hace una carta, para leerlo antes de jugarla (dos líneas: entra en teléfonos)
 function resumenCarta(c, paso) {
