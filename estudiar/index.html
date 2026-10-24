@@ -16,8 +16,7 @@ PREFERENCIAS DE LUCA: todo en espanol; gastar pocos tokens; nada de vistas previ
 
 ARCHIVOS DEL ARTEFACTO (se publican con Artifact, url + file_path + files):
   index.html   esta pagina (repaso). Para cambiarla: publicar con url + edits (pares old_str/new_str).
-  prog4.html   app de ejercicios de comunicacion (tiene su propio instructivo en el <head>
-<meta name="robots" content="noindex,nofollow">).
+  prog4.html   app de ejercicios de comunicacion (tiene su propio instructivo en el <head>).
   logica.html  app de ejercicios de deduccion natural (tiene su propio instructivo).
   Para actualizar una de las dos apps: leerla con Artifact read + url + path "prog4.html" (o "logica.html"), editarla localmente y republicar con
   files:{"prog4.html":"<ruta local>"}. Los archivos que no se pasan se conservan. Si la app embebida cambia de ejercicios, no hace falta tocar index.html.
@@ -435,8 +434,7 @@ const SWC=[
 /* ===== Prog4: armar un mensaje de a una decisión ===== */
 sw("p4","Estereotipo (parámetro)","est ejecuta generarPostulacion(opc)\nest le envía agregarPostulacion(p) a opc.\nDiagrama de clases:  Estudiante ──> Postulacion *   (sin flecha hacia OfertaPasantia)",[
  st("¿opc está en la firma de la operación?","Sí","No","generarPostulacion(opc): opc llega por parámetro.",""),
- st("Entonces el estereotipo es…","«parameter»","«local»","Llegó por la firma, no salió de un find/create/next.","«parameter»"),
- st("¿Qué parámetro lleva el mensaje?","(p)","(opc)","A la oferta se le pasa la postulación nueva, no a sí misma.","agregarPostulacion(p)")
+ st("Entonces el estereotipo es…","«parameter»","«local»","Llegó por la firma, no salió de un find/create/next.","«parameter»")
 ],"est → opc : agregarPostulacion(p)  «parameter»"),
 sw("p4","Estereotipo (asociación)","est necesita recorrer sus postulaciones.\nDiagrama de clases:  Estudiante ──> Postulacion *",[
  st("¿Está la colección en la firma de la operación?","No","Sí","No viene por parámetro.",""),
@@ -496,7 +494,7 @@ sw("p4","Iteración",null,[
  st("¿Qué marca [foreach]?","Que se repite para cada elemento","Una condición de corte","Es el recorrido sobre la colección."),
  st("Busco si existe alguno que cumpla.\n¿Cuándo corto?","Al encontrar el primero","Al final de la colección","Basta con uno: retorno true."),
  st("Navego de B hacia A.\n¿Qué hago con los resultados de cada b?","Los uno, sin repetidos","Los concateno","Una misma A puede salir de varias B."),
- st("¿Quién compara val con v?","a:A, adentro","El Controlador","No expongo la estructura de A.")
+ Object.assign(st("¿Quién compara val con v?","a:A, adentro","El Controlador","No expongo la estructura de A."),{x:"Recorro las instancias de A y quiero las que tengan algún R con val > v.\nEl Controlador ya hizo el next sobre :A *."})
 ]),
 /* ===== Lógica: armar la meta y desarmar hipótesis, paso a paso ===== */
 sw("lg","Meta ∧","Tengo: φ, ψ\nMeta: φ∧ψ",[
@@ -670,11 +668,23 @@ const EXS=[
 {n:"4.3.1",nd:"4.4",nw:"Lo dispara el 4.3: cuelga de él.",from:"pe",fd:"est",fw:"Lo envía quien recibió el 4.3.",goal:"La postulación le pide el beneficio a su oferta (abstracta).",op:"calcularBeneficio",od:"getBeneficio",ow:"Esa operación está en OfertaPasantia (abstracta: un diagrama por subclase).",pa:"()",pd:"(codOferta)",pw:"No necesita datos.",to:":OfertaPasantia",td:":OfertaPasantia *",tw:"Una postulación tiene una sola oferta (1): no es multiobjeto.",res:"b",rw:"El beneficio se guarda.",t:"A",arrow:"Postulacion ──> OfertaPasantia"}
 ]}];
 const PRE=["1: :Controlador → :Estudiante * : est := find(ci)  «association»","2: :Controlador → :Empresa * : emp := find(rut)  «association»"];
+const SIG={
+"postularse|3":"Empresa.obtenerOferta(codOferta) → devuelve la oferta de esa empresa",
+"postularse|4":"Estudiante.generarPostulacion(opc) → registra una postulación del estudiante a la oferta opc",
+"postularse|4.1":"nueva Postulacion, enlazada a un estudiante y a una oferta",
+"postularse|4.2":"OfertaPasantia.agregarPostulacion(p) → la oferta registra la postulación p",
+"aceptarPostulacion|3":"Empresa.cuposDisponibles(codOferta) → ¿la oferta tiene cupos?",
+"aceptarPostulacion|3.2":"OfertaPasantia.hayCupos() → ¿quedan cupos?",
+"aceptarPostulacion|3.2.2*":"Postulacion.getEstado() → devuelve su estado",
+"aceptarPostulacion|4":"Estudiante.aceptarPostulacion(codOferta) → acepta su postulación a esa oferta",
+"aceptarPostulacion|4.2*":"Postulacion.getOfertaPasantiaCodigo() → devuelve el código de su oferta",
+"aceptarPostulacion|4.3*":"Postulacion.aceptarPostulacion() → cambia su propio estado",
+"aceptarPostulacion|4.3.1":"OfertaPasantia.calcularBeneficio() → devuelve el beneficio"};
 const HAVE={
 "postularse|1":"firma: ci, rut, codOferta","postularse|2":"firma: ci, rut, codOferta · est (1)","postularse|3":"firma: ci, rut, codOferta · est (1), emp (2)","postularse|3.1":"emp ejecuta obtenerOferta(codOferta) · firma: codOferta","postularse|4":"est (1), emp (2), opc (3)","postularse|4.1":"est ejecuta generarPostulacion(opc) · firma: opc","postularse|4.2":"est ejecuta generarPostulacion(opc) · firma: opc · p (4.1)","postularse|4.2.1":"opc ejecuta agregarPostulacion(p) · firma: p","postularse|4.3":"est ejecuta generarPostulacion(opc) · p (4.1)",
 "aceptarPostulacion|3":"firma: ci, rut, codOferta · est (1), emp (2)","aceptarPostulacion|3.1":"emp ejecuta cuposDisponibles(codOferta) · firma: codOferta","aceptarPostulacion|3.2":"emp · opc (3.1)","aceptarPostulacion|3.2.1*":"opc ejecuta hayCupos()","aceptarPostulacion|3.2.2*":"opc · p (3.2.1*, uno por vuelta)","aceptarPostulacion|4":"est (1), emp (2), cd (3) · firma: codOferta","aceptarPostulacion|4.1*":"est ejecuta aceptarPostulacion(codOferta) · firma: codOferta","aceptarPostulacion|4.2*":"est · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3*":"est · firma: codOferta · cod (4.2*) · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3.1":"pe ejecuta aceptarPostulacion()"};
 EXS.forEach(E=>E.L.forEach((L,i)=>{const prev=(E.g=="aceptarPostulacion"?PRE.concat(E.L.slice(0,i).map(lineStr)):E.L.slice(0,i).map(lineStr)).slice(-4);
- SWC.push(sw("p4",E.g+" · "+L.n,E.op.split(" —")[0]+(prev.length?"\nYa: "+prev.slice(-2).join("\n      "):"")+"\nClases: "+CLC+"\nTengo: "+HAVE[E.g+"|"+L.n]+"\n▶ "+L.goal,lineSteps(L),lineStr(L)))}));
+ SWC.push(sw("p4",E.g+" · "+L.n,E.op.split(" —")[0]+(prev.length?"\nYa: "+prev.slice(-2).join("\n      "):"")+"\nTengo: "+HAVE[E.g+"|"+L.n]+(SIG[E.g+"|"+L.n]?"\nOperación que llamo: "+SIG[E.g+"|"+L.n]:"")+(L.t=="A"?"\nClases: "+CLC:"")+"\n▶ "+L.goal,lineSteps(L),lineStr(L)))}));
 
 /* ===== Lógica: combinaciones de átomos (ejercicios del examen: 2c, 3b, 3a) ===== */
 SWC.push(
@@ -766,7 +776,7 @@ sw("p4","Condición [ ]","Operación: aceptarPostulacion(ci, rut, codOferta)\nYa
  st("¿Dónde va?","Antes del mensaje: [cd] aceptarPostulacion(…)","Después del mensaje","La guarda precede al mensaje."),
  st("¿De dónde sale cd?","De un mensaje anterior: cd := …","Aparece sola","La variable de la condición se obtiene antes (el 3)."),
  st("Dentro de un recorrido, ¿el número del mensaje con condición?","Conserva el * (4.3*)","Pierde el *","Sigue dentro de la iteración.")]),
-sw("p4","Guardar resultado","Operación: aceptarPostulacion(ci, rut, codOferta)",[
+sw("p4","Guardar resultado",null,[
  st("Pido getEstado() y uso el estado después.","e := getEstado()","getEstado()","Si lo uso, lo guardo en una variable."),
  st("Envío aceptarPostulacion() y no uso nada del retorno.","aceptarPostulacion()","x := aceptarPostulacion()","Sin uso posterior no hay variable."),
  st("find(ci) devuelve el estudiante que voy a usar.","est := find(ci)","find(ci)","El objeto encontrado se usa en los mensajes siguientes."),
