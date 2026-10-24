@@ -133,7 +133,7 @@ class Bot {
       for (const tid of new Set(jg.tec)) {
         if (!g.puedeMedir(jg, tid, pl)) continue;
         const m = g.modMedir(jg, tid, pl);
-        const p = _G.pTirada(m.mod, m.cd);
+        const p = 1;   // sin dado: si es posible, funciona
         const bio = g.prob(jg, pl, "biofirma");
         let extra = (mio && !pl.confirmado ? 1 : 0) + (tid === "transito" ? 1 + 6 * bio : 0.3);
         if (jg.cient === "tancredi" && !pl.confirmado) extra += 1;
@@ -151,14 +151,14 @@ class Bot {
         if (esp && ((esp[0] === "gigante" && (tid === "astro" || tid === "imagen" || est.metal)) || ((esp[0] === "frio" || esp[0] === "gigante_frio") && tid === "imagen")
           || (esp[0] === "tec:rv" && tid === "rv") || (esp[0] === "caliente" && (tid === "transito" || tid === "rv")) || (esp[0] === "neptuniano" && tid === "transito"))) val += 0.4 * esp[1];
         if (this.e.foco === "gigantes" && (tid === "astro" || tid === "imagen" || tid === "rv" || est.metal)) val *= 1.5;
-        if (this.e.foco === "vida" && tid === "transito" && "KM".includes(est.cl[0])) val *= 1.3;
+        if (this.e.foco === "vida" && tid === "transito" && est.cl[0] === "M") val *= 2.2;   // solo ahí se lee la atmósfera de un mundo rocoso
         if (!("explorador" in g.hitos)) {
           const tipos = new Set(g.planetas.filter(p => p.desc === jg.idx).map(p => p.est.cl[0]));
           if (!tipos.has(est.cl[0])) val += 0.35 * 3;
         }
         if (!("primo_tierra" in g.hitos) && est.cl[0] === "G" && (tid === "transito" || tid === "rv")) val += 0.25;
         if (!("jupiter_caliente" in g.hitos) && tid === "rv") val += 0.6;
-        ops.push({ v: _G.pTirada(m.mod, m.cd) * val * this.e.wDesc, tipo: "desc", tid, est });
+        ops.push({ v: val * this.e.wDesc, tipo: "desc", tid, est });
       }
     }
     return ops;

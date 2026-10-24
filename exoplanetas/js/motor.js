@@ -12,7 +12,7 @@ const CAT_NOMBRE = { atmosfera: "Atmósfera", habitable: "Habitable", biofirma: 
 // Por qué cada estrella ayuda o perjudica a cada técnica (mismas reglas que bonos_estrella en generar_mazo.py)
 function explicarEstrella(tid, est) {
   const m = est.m, lej = est.dist === "lejana", cer = est.dist === "cercana", act = est.act === "activa";
-  const r = [], E = K.ESCALA || 1, add = (v, t) => r.push([v * E, t]);
+  const r = [], add = (v, t) => r.push([v, t]);   // v solo indica a favor (+) o en contra (−)
   if (tid === "transito") {
     if (est.fTr) { add(1, "estrella F grande: solo se ven Gigantes, pero su sombra es profunda"); if (lej) add(-1, "lejana: llega poca luz y hay más ruido"); }
     else {
@@ -35,13 +35,22 @@ function explicarEstrella(tid, est) {
     if (cer) add(2, "cercana: planeta y estrella se ven bien separados");
     if (lej) add(-3, "lejana: el planeta queda pegado al brillo de la estrella");
   } else if (tid === "micro") {
-    if (lej) add(2, "lejana: hay más estrellas de fondo con las que alinearse");
+    if (lej) add(2, "lejana: las lentes reales están a miles de años luz");
+    else add(-9, "no es lejana: las estrellas-lente están a miles de años luz, hacia el centro de la galaxia");
     if (m < 0.6) add(1, "enana: las estrellas-lente típicas son pequeñas");
   }
-  const b = est.bono[tid], s = r.reduce((x, [v]) => x + v, 0);
-  if (b !== null && b !== undefined && s !== b) r.push([b - s, `tope: ningún bono pasa de ±${3 * E}`]);
-  if (!r.length) r.push([0, "estrella promedio para esta técnica: sin ventaja ni desventaja"]);
+  if (tid === "rv" && lej) add(-9, "lejana: llega muy poca luz para medir su espectro con precisión");
+  if (tid === "rv" && m > 1.15) add(-9, "F masiva que gira rápido: sus líneas son anchas y el bamboleo no se mide");
+  if (tid === "astro" && !cer) add(-9, "no es cercana: el vaivén es demasiado pequeño a esa distancia");
+  if (tid === "imagen" && est.edad !== "joven") add(-9, "no es joven: sus planetas ya se enfriaron y no brillan lo suficiente");
+  if (!r.length) r.push([0, "estrella promedio para esta técnica"]);
   return r;
+}
+// Frase del Director al revelar un falso positivo (según la técnica con que se descubrió y la estrella)
+function fraseFalso(pl) {
+  const fr = K.FRASES_FALSO[pl.tecnicas[0]] || K.FRASES_FALSO.transito;
+  const f = fr.find(([c]) => c === "activa" && pl.est.act === "activa") || fr.find(([c]) => c === null) || fr[0];
+  return f[1];
 }
 // ¿Este Marcador te deja publicar esto en este planeta? La Densidad de un Gigante o Neptuniano prueba
 // que es un mundo de gas: sirve también para publicar su Atmósfera.
@@ -182,68 +191,32 @@ class Juego {
   }
   sabe(jg, pl) { return jg.sabe[pl.id] || (jg.sabe[pl.id] = {}); }
   conoce(jg, pl, campo) { return campo in pl.publico || campo in this.sabe(jg, pl); }
-  satur(est) { return K.SATUR * this.planetas.filter(p => p.est === est).length; }
   clPl(pl) { return (pl.rasgos.includes("Gigante") || pl.rasgos.includes("Neptuniano")) ? ["gaseoso"] : []; }
-  bonoCient(jg, claves) {
-    const c = jg.cient && CIEN[jg.cient];
-    return c && claves.includes(c.clave) ? c.bono : 0;
-  }
+  bonoCient() { return 0; }   // sin dado: los científicos ya no dan bonos de tirada
   clavesMar(mid) { return mid.startsWith("esp_") ? ["mar:esp"] : ["mar:" + mid]; }
   puedeActuar(jg, pl) { return pl.vivo && (pl.abierto || pl.desc === jg.idx); }
   planetasRestantes() { return this.mp.filter(x => !x.hallazgo).length; }
 
-  // Bonos de una observación (descubrir) con desglose para la interfaz
-  modDescubrir(jg, tid, est) {
-    const partes = [];
-    const b = est.bono[tid]; partes.push([`estrella ${est.cl}`, b, explicarEstrella(tid, est)]);
-    const s = this.satur(est); if (s) partes.push(["ya hallados ahí", -s, "lo fácil de encontrar en esa estrella ya se encontró"]);
-    const c = this.bonoCient(jg, ["tec:" + tid]); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
-    return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: TEC[tid].cd };
-  }
-  modMedir(jg, tid, pl) {
-    const partes = [[`estrella ${pl.est.cl}`, pl.est.bono[tid], explicarEstrella(tid, pl.est)]];
-    const c = this.bonoCient(jg, ["tec:" + tid, "confirmar", ...this.clPl(pl)]); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
-    return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: TEC[tid].cd };
-  }
-  // Investigar sin dado: funciona salvo que las condiciones sumen UMBRAL_MAR o menos
-  marcadorFunciona(m) { return m.mod > K.UMBRAL_MAR; }
-  pMarcador(m) { return K.MAR_SIN_DADO ? (this.marcadorFunciona(m) ? 1 : 0) : pTirada(m.mod, m.cd); }
-  pRefutar(m) { return K.REF_SIN_DADO ? (this.marcadorFunciona(m) ? 1 : 0) : pTirada(m.mod, m.cd); }
-  modMarcador(jg, mid, pl, refutando = false) {
-    const partes = [];
-    for (const [lab, v, por] of MAR[mid].mods) {
-      let aplica = false;
-      // solo condiciones de la estrella o lecturas previas: un fallo no revela nada oculto del planeta
-      if (lab === "Estrella enana M") aplica = pl.est.cl[0] === "M";
-      else if (lab === "Estrella activa") aplica = pl.est.act === "activa";
-      else if (lab === "Estrella cercana") aplica = pl.est.dist === "cercana";
-      else if (lab === "Estrella lejana") aplica = pl.est.dist === "lejana";
-      else if (lab === "Estrella joven") aplica = pl.est.edad === "joven";
-      else if (lab === "Densidad ya leída") aplica = pl.marcadores.some(x => x.mid === "densidad" && x.ok);
-      if (aplica) partes.push([lab, v, por]);
-    }
-    if (!refutando) {
-      let n = this.senal[`${jg.idx}|${pl.id}|${mid}`] || 0;
-      if (jg.cient === "seager" && mid.startsWith("esp"))
-        n = Object.entries(this.senal).filter(([k]) => k.endsWith(`|${pl.id}|${mid}`)).reduce((s, [, v]) => s + v, 0);
-      if (n) partes.push(["señal acumulada", K.SENAL * n, "las observaciones anteriores se suman a esta"]);
-    }
-    const claves = [...this.clavesMar(mid), ...this.clPl(pl), ...(refutando ? ["refutar"] : [])];
-    const c = this.bonoCient(jg, claves); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
-    return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: MAR[mid].cd };
-  }
+  // Sin dado: si la jugada es posible, funciona (el azar está en los falsos positivos del mazo)
+  modDescubrir(jg, tid, est) { return { mod: 0, partes: [], cd: 0 }; }
+  modMedir(jg, tid, pl) { return { mod: 0, partes: [], cd: 0 }; }
+  marcadorFunciona() { return true; }
+  pMarcador() { return 1; }
+  pRefutar() { return 1; }
+  modMarcador() { return { mod: 0, partes: [], cd: 0 }; }
   // Contexto: necesita un espectro con gases ya leído en el planeta (tuyo; para refutar, de cualquiera)
   requisito(mid, pl, jg = null) {
-    if (mid === "densidad") return pl.tecnicas.includes("transito");   // radio del tránsito + masa del seguimiento
+    // Requisitos: solo datos públicos (estrella, tamaño y temperatura anunciados, lo que está bajo el planeta)
+    const rp = pl.rasgosPub, enanaM = pl.est.cl[0] === "M", activaNoM = pl.est.act === "activa" && !enanaM;
+    if (mid === "densidad") return pl.tecnicas.includes("transito") && !activaNoM;   // radio del tránsito + masa del seguimiento
+    if (mid === "esp_transito") return pl.tecnicas.includes("transito") && !activaNoM && (!rp.includes("Pequeño") || enanaM);
+    if (mid === "esp_emision") return rp.includes("Caliente") && (pl.tecnicas.includes("transito") || rp.includes("Gigante"));
     if (mid === "contexto") return pl.marcadores.some(x => x.ok && (x.mid === "esp_transito" || x.mid === "esp_imagen") && (jg === null || x.jg === jg.idx));
-    if (mid === "esp_emision" && pl.rasgos.includes("Gigante") && pl.rasgos.includes("Caliente")) return true;
-    if (mid === "esp_transito" || mid === "esp_emision") return pl.tecnicas.includes("transito");
     if (mid === "esp_imagen") return pl.tecnicas.includes("imagen") || (pl.rasgos.includes("Gigante") && pl.rasgos.includes("Frío") && pl.est.dist === "cercana");
     return true;
   }
   // requisito con lo que el jugador puede saber (los rasgos públicos)
   requisitoVisible(mid, pl, jg = null) {
-    if (mid === "esp_emision") return pl.tecnicas.includes("transito") || (pl.rasgosPub.includes("Gigante") && pl.rasgosPub.includes("Caliente"));
     if (mid === "esp_imagen") return pl.tecnicas.includes("imagen") || (pl.rasgosPub.includes("Gigante") && pl.rasgosPub.includes("Frío") && pl.est.dist === "cercana");
     return this.requisito(mid, pl, jg);
   }
@@ -253,7 +226,8 @@ class Juego {
   puedeMedir(jg, tid, pl) {
     return this.puedeActuar(jg, pl) && !pl.micro && !pl.tecnicas.includes(tid) && pl.est.bono[tid] !== null
       && (tid !== "astro" || pl.rasgosPub.includes("Gigante"))
-      && (tid !== "imagen" || (pl.rasgosPub.includes("Gigante") && pl.est.edad === "joven"));
+      && (tid !== "imagen" || (pl.rasgosPub.includes("Gigante") && pl.est.edad === "joven"))
+      && !(tid === "transito" && pl.tecnicas.includes("imagen"));   // órbitas enormes: casi nunca transitan
   }
   puedeInvestigar(jg, mid, pl) {
     if (!this.puedeActuar(jg, pl) || !this.requisitoVisible(mid, pl, jg)) return false;
@@ -302,7 +276,7 @@ class Juego {
     let robados = [], intentos = this.mp.length;
     while (robados.length < 2 && intentos-- > 0) {
       const a = this._robarPlaneta(ctx); if (!a) break; ctx.vistos++;
-      if (comp(a)) robados.push(a); else { fondo(a); this.fin = this.planetasRestantes() ? false : this.fin; }
+      if (comp(a) && !(tid === "micro" && a.falso)) robados.push(a); else { fondo(a); this.fin = this.planetasRestantes() ? false : this.fin; }
     }
     if (ctx.hall) { robados.forEach(descartar); return null; }
     if (!robados.length) return null;
@@ -340,15 +314,7 @@ class Juego {
   async descubrir(jg, tid, est) {
     jg.tec.splice(jg.tec.indexOf(tid), 1);
     if (tid === "micro") est.micro = true;
-    const m = this.modDescubrir(jg, tid, est);
-    const t = this.tirar(m.mod, m.cd);
-    this.emit("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} en ${est.cl}`, tid, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} en ${est.cl}`, tid, ...t, partes: m.partes });
-    if (!t.ok) {
-      this.mt.desc.push(tid);
-      this.log(`${jg.nombre} observa ${est.cl} con ${TEC[tid].nombre}: no detecta nada.`, { jg: jg.idx });
-      return { ok: false, tirada: t };
-    }
+    const t = { ok: true, sinDado: true };
     const ctx = { tid };
     const a = this._elegirPlaneta(tid, est, ctx);
     if (ctx.hall) {
@@ -384,15 +350,15 @@ class Juego {
       pl.ptsPlaneta = K.FALSO;
       if (pl.cientDado) { this.sumar(this.j[pl.cientDado[0]], "cientifico", -pl.cientDado[1], "falso positivo"); pl.cientDado = null; }
       if (jg.idx !== pl.pubPlaneta) this.darHito(jg, "revision");
-      this.log(`¡${pl.nombre} era un falso positivo! ${autor.nombre} pierde lo que ganó por él.`, { tipo: "malo" });
-    } else this.log(`${jg.nombre} descarta un candidato: era un falso positivo.`, { jg: jg.idx });
-    this.emit("falso", { jg: jg.idx, pl });
+      this.log(`¡${pl.nombre} era un falso positivo! ${fraseFalso(pl)} ${autor.nombre} pierde lo que ganó por él.`, { tipo: "malo" });
+    } else this.log(`${jg.nombre} descarta un candidato: era un falso positivo. ${fraseFalso(pl)}`, { jg: jg.idx });
+    this.emit("falso", { jg: jg.idx, pl, frase: fraseFalso(pl) });
   }
   // masa verdadera (Astrometría o Imagen) + radio (Tránsito o Densidad) en tu planeta: composición medida
   completaMasa(pl, extra = []) {
     const t = new Set([...pl.tecnicas, ...extra]);
     const radio = t.has("transito") || t.has("densidad") || pl.marcadores.some(m => m.mid === "densidad" && m.ok);
-    return (t.has("astro") || t.has("imagen")) && radio;
+    return t.has("astro") && radio;   // la masa de la Imagen sale de modelos, no es una medida dinámica
   }
   masaReal(jg, pl) {
     if (!K.MASA || pl.masaCobrada || !pl.vivo) return;
@@ -417,11 +383,7 @@ class Juego {
 
   async medir(jg, tid, pl) {
     jg.tec.splice(jg.tec.indexOf(tid), 1);
-    const m = this.modMedir(jg, tid, pl);
-    const t = this.tirar(m.mod, m.cd);
-    this.emit("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} sobre ${pl.nombre}`, tid, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} sobre ${pl.nombre}`, tid, ...t, partes: m.partes });
-    if (!t.ok) { this.mt.desc.push(tid); this.log(`${jg.nombre} intenta medir ${pl.nombre} con ${TEC[tid].nombre}: sin éxito.`, { jg: jg.idx }); return { ok: false, tirada: t }; }
+    const t = { ok: true, sinDado: true };
     if (pl.a.falso) { this.mt.desc.push(tid); this._exponerFalso(jg, pl); return { ok: true, falso: true, tirada: t }; }
     if (!vePlaneta(tid, pl.a, pl.est)) { this.mt.desc.push(tid); this.log(`${TEC[tid].nombre} no logra ver ${pl.nombre}.`, { jg: jg.idx }); return { ok: true, noVe: true, tirada: t }; }
     const antes = new Set(pl.tecnicas).size;
@@ -436,16 +398,8 @@ class Juego {
 
   async investigar(jg, mid, pl) {
     jg.mar.splice(jg.mar.indexOf(mid), 1);
-    const m = this.modMarcador(jg, mid, pl);
-    const t = K.MAR_SIN_DADO ? { ok: this.marcadorFunciona(m), mod: m.mod, cd: m.cd, d: null, sinDado: true } : this.tirar(m.mod, m.cd);
-    this.emit("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, mid, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, mid, ...t, partes: m.partes });
-    if (!t.ok || !this.requisito(mid, pl, jg)) {
-      const k = `${jg.idx}|${pl.id}|${mid}`; this.senal[k] = (this.senal[k] || 0) + 1;
-      pl.marcadores.push({ mid, jg: jg.idx, ok: false });
-      this.log(`${jg.nombre} investiga ${pl.nombre} con ${MAR[mid].nombre}: no concluyente (queda bajo el planeta).`, { jg: jg.idx });
-      return { ok: false, tirada: t };
-    }
+    const t = { ok: true, sinDado: true };
+    if (!this.requisito(mid, pl, jg)) { this.mm.desc.push(mid); return { ok: false, tirada: t }; }   // la interfaz no lo permite
     if (mid === "densidad") {
       if (pl.a.falso) { this.mm.desc.push(mid); this._exponerFalso(jg, pl); return { ok: true, falso: true, tirada: t }; }
       if (new Set(pl.tecnicas).size < 2) { pl.tecnicas.push("densidad"); this._confirmar(jg, pl); }
@@ -556,11 +510,8 @@ class Juego {
   async refutar(x, mid, pl, cat, articulo = null) {
     x.mar.splice(x.mar.indexOf(mid), 1); this.mm.desc.push(mid);
     const autor = this.j[pl.publicado[cat].autor];
-    const m = this.modMarcador(x, mid, pl, true);
-    const t = K.REF_SIN_DADO ? { ok: this.marcadorFunciona(m), mod: m.mod, cd: m.cd, d: null, sinDado: true } : this.tirar(m.mod, m.cd);
+    const t = { ok: this.requisito(mid, pl), sinDado: true };
     this.log(`${x.nombre} refuta con ${MAR[mid].nombre}…`, { jg: x.idx, tipo: "ref" });
-    this.emit("tirada", { jg: x.idx, que: `Refutación con ${MAR[mid].nombre}`, mid, refuta: true, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: x.idx, que: `${x.nombre} refuta ${CAT_NOMBRE[cat]} de ${pl.nombre} con ${MAR[mid].nombre}`, mid, refuta: true, ...t, partes: m.partes });
     let gana = false, lectura = null;
     if (t.ok) {
       lectura = {};
@@ -675,4 +626,4 @@ class Juego {
 }
 
 if (typeof module !== "undefined") module.exports = { Juego, D, K, TEC, MAR, CIEN, HITO, CATS, CAT_NOMBRE, DATO_TEC,
-  CAMPOS_MAR, SIRVE, sirve, sirveLista, VALOR_DESC, ORDEN_TEC, pTirada, verdad, veFalsedad, vePlaneta, compatible, rasgosPub, esTierra };
+  CAMPOS_MAR, SIRVE, sirve, sirveLista, VALOR_DESC, ORDEN_TEC, pTirada, verdad, veFalsedad, vePlaneta, compatible, rasgosPub, esTierra, fraseFalso, explicarEstrella };

@@ -235,7 +235,7 @@ class Humano {
 async function accionHumana(fn) {
   if (ui.ocupado || ui.fase !== "accion") return;
   ui.ocupado = true; ui.sel = null; render();
-  try { await fn(); } finally { ui.ocupado = false; }
+  try { await fn(); ui.tiradas = (ui.tiradas || 0) + 1; } finally { ui.ocupado = false; }
   resolver("accion");
 }
 
@@ -245,10 +245,10 @@ function opcionesEstrella(e, s = ui.sel) {
   if (!s) return out;
   const pls = g.planetas.filter(p => p.est === e);
   if (s.tipo === "tec") {
-    if (g.puedeDescubrir(jg, s.id, e)) { const m = g.modDescubrir(jg, s.id, e); out.push({ tipo: "desc", txt: "Buscar planeta nuevo", p: pTirada(m.mod, m.cd) }); }
-    for (const p of pls) if (g.puedeMedir(jg, s.id, p)) { const m = g.modMedir(jg, s.id, p); out.push({ tipo: "medir", pl: p, txt: `Medir ${p.nombre}`, p: pTirada(m.mod, m.cd) }); }
+    if (g.puedeDescubrir(jg, s.id, e)) out.push({ tipo: "desc", txt: "Buscar planeta nuevo", p: 1 });
+    for (const p of pls) if (g.puedeMedir(jg, s.id, p)) out.push({ tipo: "medir", pl: p, txt: `Medir ${p.nombre}`, p: 1 });
   } else {
-    for (const p of pls) if (g.puedeInvestigar(jg, s.id, p)) { const m = g.modMarcador(jg, s.id, p); out.push({ tipo: "car", pl: p, txt: `Investigar ${p.nombre}`, p: g.pMarcador(m) }); }
+    for (const p of pls) if (g.puedeInvestigar(jg, s.id, p)) out.push({ tipo: "car", pl: p, txt: `Investigar ${p.nombre}`, p: 1 });
   }
   return out;
 }
@@ -294,30 +294,23 @@ async function abrirJugada(e, plFoco = null) {
   const s = ui.sel;
   let ops = opcionesEstrella(e);
   if (plFoco) ops = [...ops.filter(o => o.pl === plFoco), ...ops.filter(o => o.pl !== plFoco)];
-  const filas = ops.map((o, k) => {
-    const m = modOpcion(o, s, e), d = { cd: m.cd, mod: m.mod }, obj = objetivoDado(d);
-    if (o.tipo === "car" && K.MAR_SIN_DADO) {
-      const va = g.marcadorFunciona(m);
-      return `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>${va ? "Sin dado: con estas condiciones funciona" : `No funciona: las condiciones suman ${sgn(m.mod)} (falla con ${K.UMBRAL_MAR} o menos)`}</small></span>
-        <span class="oj-pct ${va ? "alta" : "baja"}">${va ? "Funciona" : "No"}</span>
-        <button type="button" class="btn-juego" data-k="${k}">🔬 Investigar</button></div>
-        <details><summary>Condiciones de esta estrella</summary>${detalleBonos(m.partes)}</details></div>`;
-    }
-    return `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>Necesitas sacar ${obj >= 20 ? "un 20" : obj <= 2 ? "cualquiera menos 1" : `${obj} o más`}</small></span>
-      <span class="oj-pct ${o.p >= .7 ? "alta" : o.p >= .45 ? "media" : "baja"}">${ui.ayudas ? pct(o.p) : o.p >= .7 ? "Buena" : o.p >= .45 ? "Regular" : "Difícil"}</span>
-      <button type="button" class="btn-juego" data-k="${k}">🎲 Tirar</button></div>
-      <details><summary>¿Por qué ${obj}?</summary>${detalleBonos(m.partes)}</details></div>`;
-  }).join("");
+  const BOTON = { desc: "🔭 Observar", medir: "📏 Medir", car: "🔬 Investigar" };
+  const SUB = { desc: "Puede salir un falso positivo: confírmalo antes de publicar", medir: "Agrega su dato; si no hay planeta, lo delata",
+    car: "Lees el resultado en secreto" };
+  const filas = ops.map((o, k) => `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>${SUB[o.tipo]}</small></span>
+      <button type="button" class="btn-juego" data-k="${k}">${BOTON[o.tipo]}</button></div></div>`).join("");
   let porque = "";
   if (!ops.length) {
-    if (s.tipo === "tec") porque = e.bono[s.id] === null ? `<b>${esc(TEC[s.id].nombre)}</b> no funciona aquí: ${esc(textoPlano(TEC[s.id].limite))}` : "Aquí no hay nada que esta técnica pueda buscar o medir ahora.";
-    else porque = "Esta estrella no tiene planetas que este Marcador pueda investigar ahora.";
+    if (s.tipo === "tec") porque = e.bono[s.id] === null
+      ? `<b>${esc(TEC[s.id].nombre)}</b> no se puede usar aquí: ${esc(explicarEstrella(s.id, e).filter(([v]) => v < 0).map(([, x]) => x).join("; ") || textoPlano(TEC[s.id].limite))}.`
+      : "Aquí no hay nada que esta técnica pueda buscar o medir ahora.";
+    else porque = `Ningún planeta de esta estrella cumple el requisito: ${esc(textoPlano(MAR[s.id].req))}`;
   }
-  const bonoTec = s.tipo === "tec" && e.bono[s.id] !== null
-    ? `<div class="lista">${(([b]) => `<div class="fila-bono ${b > 0 ? "pos" : b < 0 ? "neg" : ""}"><b>${b ? sgn(b) : "±0"}</b><span><b class="que">${esc(TEC[s.id].nombre)} en esta estrella</b><small>${explicarEstrella(s.id, e).map(([, x]) => esc(x)).join(" · ")}</small></span></div>`)([e.bono[s.id]])}</div>` : "";
+  const porQueTec = s.tipo === "tec" && e.bono[s.id] !== null
+    ? `<div class="lista"><div class="fila-bono pos"><b>✓</b><span><b class="que">${esc(TEC[s.id].nombre)} sirve en esta estrella</b><small>${explicarEstrella(s.id, e).filter(([v]) => v >= 0).map(([, x]) => esc(x)).join(" · ")}</small></span></div></div>` : "";
   const v = await ventana({ titulo: "Tu jugada", color: "var(--est)", botones: [{ txt: "Elegir otra", valor: null, clase: "gris" }], cuerpo: `
     <div class="par-jugada">${datosCartaHTML(s)}<div class="mas">+</div>${datosEstrellaHTML(e)}</div>
-    ${bonoTec}
+    ${porQueTec}
     ${ops.length ? `<div class="lista">${filas}</div>` : `<p class="sin-op">${porque}</p>`}`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll("[data-k]").forEach(b => b.onclick = () => cerrar(ops[+b.dataset.k])) });
   if (v && ui.sel === s && ui.fase === "accion" && !ui.ocupado) ejecutar(v, e);
@@ -348,11 +341,17 @@ async function revelarPlaneta(pl, est) {
       <dl class="dato"><dt>Estrella</dt><dd>${esc(est.cl)}</dd><dt>Órbita</dt><dd>${esc(fmtCampo("o", pl.publico.o))}</dd><dt>${CAMPO[dato]}</dt><dd>${esc(fmtCampo(dato, pl.publico[dato]))}</dd></dl></div>
     <p>Es <b>privado</b>: solo tú lo investigas. Los rivales solo saben su tamaño y temperatura. Publícalo cuando quieras con el botón <b>Publicar</b> (+${K.CAND}, o +${K.CONF} si ya está confirmado).</p>` });
 }
+// Falso positivo: qué era en realidad la señal (la frase que en la mesa dice el Director)
+function ventanaFalso(pl, txt) {
+  return ventana({ titulo: "¡Falso positivo!", color: "var(--mal)", centro: true, cuerpo: `<p>${txt}</p>
+    <div class="hito-real"><b>¿Qué era la señal?</b><p>${esc(fraseFalso(pl))}</p></div>
+    <p class="tenue">En la ciencia real pasa seguido: por eso un candidato se confirma con un segundo método antes de darlo por planeta.</p>` });
+}
 async function hacerMedir(tid, pl) {
   await accionHumana(async () => {
     const r = await g.medir(J(), tid, pl);
     if (!r.ok) return;
-    if (r.falso) await ventana({ titulo: "¡Falso positivo!", color: "var(--mal)", centro: true, cuerpo: `<p>La segunda observación no ve nada: ${esc(pl.nombre)} no era un planeta.</p><p class="tenue">${esc(pl.a.ctx)}</p>` });
+    if (r.falso) await ventanaFalso(pl, `La segunda observación no ve nada: ${esc(pl.nombre)} no era un planeta.`);
     else if (r.noVe) await ventana({ titulo: "No se ve", centro: true, cuerpo: `<p>${esc(TEC[tid].nombre)} no logra ver este planeta. ${esc(TEC[tid].limite)}</p>` });
     else aviso(`Mediste ${esc(pl.nombre)}: ${CAMPO[DATO_TEC[tid]]} = <b>${esc(fmtCampo(DATO_TEC[tid], pl.publico[DATO_TEC[tid]]))}</b>${pl.confirmado ? " · <b>¡confirmado!</b>" : ""}`);
   });
@@ -360,8 +359,8 @@ async function hacerMedir(tid, pl) {
 async function hacerInvestigar(mid, pl) {
   await accionHumana(async () => {
     const r = await g.investigar(J(), mid, pl);
-    if (!r.ok) { aviso(`No concluyente: la carta queda bajo ${esc(pl.nombre)} (+${K.SENAL} a tu próximo intento ahí).`); return; }
-    if (r.falso) { await ventana({ titulo: "¡Falso positivo!", color: "var(--mal)", centro: true, cuerpo: `<p>Masa y radio no cuadran: ${esc(pl.nombre)} no era un planeta.</p>` }); return; }
+    if (!r.ok) return;
+    if (r.falso) { await ventanaFalso(pl, `El seguimiento no encuentra ninguna masa: ${esc(pl.nombre)} no era un planeta.`); return; }
     await ventana({ titulo: "Lectura secreta", color: "var(--mar)", centro: true, cuerpo: `
       <div class="privado"><dl class="dato">${Object.entries(r.lee).map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>
       <p>Con esto puedes publicar <b>${sirveLista(mid, pl).map(c => CAT_NOMBRE[c]).join(" o ")}</b> en ${esc(pl.nombre)}${mid === "densidad" && sirveLista(mid, pl).includes("atmosfera") ? " (es un mundo de gas: tiene atmósfera)" : ""}, si crees que es cierto.</p>` });
@@ -465,9 +464,8 @@ async function preguntarRefutar(pl, cats, pares, pozo) {
   pozo = pozo || lista.reduce((s, c) => s + K.PUNTOS[c], 0);
   const cands = g.candidatos(J(), pl);
   const bot = pares.map(({ cat, mid }) => {
-    const m = g.modMarcador(J(), mid, pl, true);
     const pv = cands.filter(a => !verdad(a, cat) && veFalsedad(mid, a, cat)).length / cands.length;
-    return { cat, mid, p: g.pRefutar(m), pv, obj: objetivoDado(m), mod: m.mod };
+    return { cat, mid, pv };
   });
   // Lo que puedes saber para decidir: el planeta, lo público, lo que leíste tú y con qué métodos respalda el autor
   const jg = J(), yoSe = g.sabe(jg, pl);
@@ -497,8 +495,8 @@ async function preguntarRefutar(pl, cats, pares, pozo) {
     <p>${ficha(aut)} <b>${esc(nombreJ(aut))}</b> publica <b>${lista.map(c => CAT_NOMBRE[c]).join(" + ")}</b> en ${esc(pl.nombre)}.</p>
     <h3>En juego: ${pozo} puntos</h3>
     ${contexto}
-    <p class="tenue">Si ${K.REF_SIN_DADO ? "tu Marcador funciona en este planeta" : "tu tirada sale"} y lo que ve contradice ${lista.length > 1 ? "cualquiera de las afirmaciones, te llevas todo el artículo" : "lo publicado, los puntos son tuyos"}. Si no, son del autor. El Marcador se gasta igual.</p>
-    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${textoOp(b)}</span>${K.REF_SIN_DADO ? `<b class="nec ${b.p ? "si" : "no"}">${b.p ? "Funciona" : "No funciona"}</b>` : `<b class="nec">${b.obj >= 20 ? "solo 20" : `${b.obj}+`}</b>`}</button>`).join("")}</div>`,
+    <p class="tenue">Si lo que ve tu Marcador contradice ${lista.length > 1 ? "cualquiera de las afirmaciones, te llevas todo el artículo" : "lo publicado, los puntos son tuyos"}. Si no, son del autor. El Marcador se gasta igual.</p>
+    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${textoOp(b)}</span><b class="nec si">Refutar</b></button>`).join("")}</div>`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll(".opcion").forEach(b => b.onclick = () => cerrar(bot[+b.dataset.k])) });
 }
 
@@ -513,7 +511,8 @@ async function vista(tipo, d) {
     const { x, autor, pl, cat, mid, tirada: t, gana, lectura } = d;
     const pozo = d.pozo || K.PUNTOS[cat];
     const lect = lectura ? `<div class="privado"><p class="tenue">Lo que ve ${esc(MAR[mid].nombre)}:</p><dl class="dato">${Object.entries(lectura).map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>` : "";
-    const res = gana ? `<h3>¡Refutado! ${esc(nombreJ(x))} gana +${pozo}</h3>`
+    const fp = gana && pl.a.falso ? `<div class="hito-real"><b>¡No había planeta!</b><p>${esc(fraseFalso(pl))}</p></div>` : "";
+    const res = gana ? `${fp}<h3>¡Refutado! ${esc(nombreJ(x))} gana +${pozo}</h3>`
       : t.ok ? `<h3>No lo contradice: +${pozo} para ${esc(nombreJ(autor))}</h3>`
       : t.sinDado ? `<h3>Las condiciones de la estrella impiden usar ese Marcador (suman ${sgn(t.mod)}): +${pozo} para ${esc(nombreJ(autor))}</h3>`
       : `<h3>La tirada falla (${t.d}${sgn(t.mod)} vs ${t.cd}): +${pozo} para ${esc(nombreJ(autor))}</h3>`;
@@ -595,7 +594,7 @@ function renderHeroe() {
 }
 // Para qué sirve cada carta, en 2-3 palabras (va en la cara de la carta)
 const CORTO = {
-  transito: "mejor: estrellas chicas", rv: "mejor: chicas y tranquilas", astro: "solo: estrellas cercanas",
+  transito: "radio y período", rv: "masa mínima", astro: "solo: estrellas cercanas",
   imagen: "solo: estrellas jóvenes", micro: "solo: estrellas lejanas",
   densidad: "¿roca o gas?", esp_transito: "lee gases", esp_emision: "¿tiene aire?", esp_imagen: "lee gases", contexto: "¿señal falsa?",
 };
@@ -626,9 +625,9 @@ function renderMano() {
   });
 }
 const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
-  densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "solo con Tránsito debajo"],
-  esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "solo con Tránsito debajo"],
-  esp_emision: ["si tiene atmósfera", "Atmósfera, Habitable", "con Tránsito o en Gigante Caliente"],
+  densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "con Tránsito; no en activas (salvo M)"],
+  esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "con Tránsito; si es Pequeño, solo enana M"],
+  esp_emision: ["si tiene atmósfera", "Atmósfera, Habitable", "solo planetas Calientes"],
   esp_imagen: ["atmósfera y gases", "Atmósfera, Biofirma", "con Imagen o en Gigante Frío cercano"],
   contexto: ["si la señal puede ser falsa", "Biofirma", "con un espectro de gases tuyo ahí"],
 };
@@ -691,19 +690,19 @@ function renderAcciones() {
 function detalleCarta(c) {
   if (c.tipo === "tec") {
     const t = TEC[c.id];
-    return ventana({ titulo: `${esc(t.nombre)} · dificultad ${t.cd}`, color: "var(--tec-2)", botones: [], cuerpo: `
+    return ventana({ titulo: esc(t.nombre), color: "var(--tec-2)", botones: [], cuerpo: `
       <p><b>Aporta:</b> ${esc(t.aporta)}</p><p><b>Al descubrir:</b> ${t.sesgo}</p><p><b>Límite:</b> ${esc(t.limite)}</p>
       <p><b>Favorece:</b> ${esc(t.favor)}.<br><b>Perjudica:</b> ${esc(t.perj)}.</p>
       <p><b>Para medir:</b> sobre un planeta tuyo o publicado que no la tenga: agrega su dato. Dos técnicas distintas lo confirman (+${K.CONF - K.CAND} para quien lo publicó).</p>
-      ${["astro", "imagen"].includes(t.id) ? `<p><b>Masa real:</b> si tu planeta tiene también Tránsito o Densidad, +${K.MASA}.</p>` : ""}
+      <p><b>Ojo:</b> la señal puede ser un <b>falso positivo</b>. Confírmala con otra técnica o una Densidad antes de publicar.</p>
+      ${t.id === "astro" ? `<p><b>Masa real:</b> si tu planeta tiene también Tránsito o Densidad, +${K.MASA}.</p>` : ""}
       <p class="tenue"><i>${esc(t.real)}</i></p>` });
   }
   const m = MAR[c.id];
-  return ventana({ titulo: `${esc(m.nombre)}${K.MAR_SIN_DADO ? "" : ` · dificultad ${m.cd}`}`, color: "var(--mar-2)", botones: [], cuerpo: `
-    <p><b>Requisito:</b> ${m.req}</p>
-    <div class="mods">${m.mods.map(([l, v, p]) => `<div><span class="v">${sgn(v)}</span><span>${esc(l)}: ${esc(p)}</span></div>`).join("")}</div>
+  return ventana({ titulo: esc(m.nombre), color: "var(--mar-2)", botones: [], cuerpo: `
+    <p><b>Requisito:</b> ${m.req} Si lo cumple, funciona: no hay dado.</p>
     <p><b>Lees:</b> ${m.revela}.<br><b>Te sirve para publicar:</b> ${esc(m.publica)}.</p>
-    <p><b>Si falla:</b> queda bajo el planeta: +${K.SENAL} a tus reintentos ahí.</p>
+    <p><b>En un falso positivo</b> no lees nada; la Densidad lo delata.</p>
     <p><b>Refuta</b> (si el autor no usó este método y tu lectura lo contradice): ${m.refuta.map(x => CAT_NOMBRE[x]).join(", ") || "nada"}.</p>
     <p class="tenue"><i>${esc(m.real)}</i></p>` });
 }
@@ -712,11 +711,9 @@ function detalleEstrella(e) {
   ventana({ titulo: `Estrella ${esc(e.cl)}`, color: "var(--est)", botones: [], cuerpo: `
     ${datosEstrellaHTML(e)}${e.micro ? '<p class="tenue">Microlente ya usada aquí.</p>' : ""}
     <p>${e.texto}</p>
-    <h3>Qué técnica funciona aquí</h3>
-    <p class="tenue">El bono se suma a tu dado: con <b>+2</b> te alcanza un número 2 más bajo.</p>
-    <div class="lista">${ORDEN_TEC.map(t => { const b = e.bono[t]; return `<div class="fila-bono ${b === null ? "no" : b > 0 ? "pos" : b < 0 ? "neg" : ""}"><b>${b === null ? "✕" : b ? sgn(b) : "±0"}</b><span><b class="que">${esc(TEC[t].nombre)}</b><small>${b === null ? esc(textoPlano(TEC[t].limite)) : explicarEstrella(t, e).map(([v, x]) => esc(x)).join(" · ")}</small></span></div>`; }).join("")}</div>
-    ${pls.length ? `<div class="lista">${pls.map(p => `<button type="button" class="fila" data-pl="${p.id}"><span>${ficha(p.pubPlaneta !== null ? p.pubPlaneta : p.desc)} ${esc(p.nombre)} · ${esc(tamTemp(p))}</span><span class="tenue">${esc(estado(p))}</span></button>`).join("")}</div>` : '<p class="tenue">Sin planetas conocidos.</p>'}
-    <p class="tenue">Cada planeta ya hallado aquí resta −${K.SATUR} a buscar otro.</p>`,
+    <h3>Qué técnica se puede usar aquí</h3>
+    <div class="lista">${ORDEN_TEC.map(t => { const ok = e.bono[t] !== null, rz = explicarEstrella(t, e).filter(([v]) => ok ? v >= 0 : v < 0).map(([, x]) => esc(x)); return `<div class="fila-bono ${ok ? "pos" : "no"}"><b>${ok ? "✓" : "✕"}</b><span><b class="que">${esc(TEC[t].nombre)}</b><small>${rz.join(" · ") || esc(textoPlano(TEC[t].limite))}</small></span></div>`; }).join("")}</div>
+    ${pls.length ? `<div class="lista">${pls.map(p => `<button type="button" class="fila" data-pl="${p.id}"><span>${ficha(p.pubPlaneta !== null ? p.pubPlaneta : p.desc)} ${esc(p.nombre)} · ${esc(tamTemp(p))}</span><span class="tenue">${esc(estado(p))}</span></button>`).join("")}</div>` : '<p class="tenue">Sin planetas conocidos.</p>'}`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll("[data-pl]").forEach(b => b.onclick = () => { cerrar(null); abrirPlaneta(g.planetas.find(p => p.id === +b.dataset.pl)); }) });
 }
 function verCuaderno() {
@@ -804,16 +801,16 @@ function mostrarReglas() {
   return ventana({ titulo: "Cómo se juega", color: "var(--est)", botones: [{ txt: "¡A jugar!", valor: true }], cuerpo: `
     <p>Diriges un equipo de astrónomos. Gana quien junte más <b>reputación</b> en ${K.RONDAS[3]} rondas (con 3 jugadores). La computadora hace de Director: guarda los planetas y su Verdad.</p>
     <h3>Tu turno: una acción</h3>
-    <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Tiras un dado de 20: el juego te dice qué número necesitas, según la carta y los bonos de la estrella.</p>
-    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto. ${K.MAR_SIN_DADO ? `No se tira dado: funciona salvo que las condiciones de la estrella sumen ${K.UMBRAL_MAR} o menos.` : ""}</p>
+    <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Cada estrella dice qué técnicas se pueden usar en ella (✓). No hay dado: el azar está en los <b>falsos positivos</b>, señales que imitan un planeta. Se delatan con una segunda técnica o una Densidad.</p>
+    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto. Cada Marcador tiene un requisito: si el planeta lo cumple, funciona.</p>
     <p><b>Telescopio:</b> gastas tu turno, cambias las cartas que quieras y completas tu mano hasta ${K.MANO_MAX}.</p>
     <p>Al final de tu turno, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
     <h3>Puntos</h3>
     <table class="tabla"><tr><td>Planeta</td><td>+${K.CAND} (+${K.CONF - K.CAND} al confirmarlo)</td></tr>
     ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")}${c === "atmosfera" && K.DENS_ATM ? " (o Densidad, en Gigantes y Neptunianos)" : ""} exitoso tuyo ahí</td></tr>`).join("")}
-    <tr><td>Masa real</td><td>+${K.MASA} · tu planeta tiene Astrometría o Imagen y Tránsito o Densidad</td></tr>
+    <tr><td>Masa real</td><td>+${K.MASA} · tu planeta tiene Astrometría y Tránsito o Densidad</td></tr>
     <tr><td>Hallazgo inesperado</td><td>+${K.HALL}</td></tr></table>
-    <h3>Refutar</h3><p>Cuando alguien publica, un rival puede cuestionarlo con un Marcador que el autor no usó. Si su tirada sale y lo que ve contradice lo publicado, se lleva los puntos.</p>
+    <h3>Refutar</h3><p>Cuando alguien publica, un rival puede cuestionarlo con un Marcador que el autor no usó. Si lo que ve contradice lo publicado, se lleva los puntos.</p>
     <p><b>Artículo:</b> si publicas varias cosas del mismo planeta a la vez, sumas +${K.BONO_ART} por cada una extra, pero se refuta entero: si cae, el rival se lleva todos sus puntos.</p>
     <h3>Científicos</h3><table class="tabla">${D.cientificos.map(c => `<tr><td><b>${esc(c.nombre)}</b><br><span class="tenue">${esc(c.pais || "")}</span></td><td>${habilidades(c.id).map(esc).join(" · ")}</td></tr>`).join("")}</table>
     <h3>Hitos</h3><table class="tabla">${D.hitos.map(h => `<tr><td>${esc(h.nombre)} +${h.pts}</td><td>${esc(h.cond)}</td></tr>`).join("")}</table>
@@ -852,6 +849,7 @@ function crearJuego(pref) {
     if (tipo === "puntos") { setTimeout(() => flotante(d.jg, d.v), 30); }
     if (tipo === "hito") ui.hitosPend.push(d);
     if (tipo === "hallazgo" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> encuentra un hallazgo: ${esc(d.h.nombre)}`, "hito");
+    if (tipo === "falso" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> descubre que ${esc(d.pl.nombre)} era un falso positivo: ${esc(d.frase)}`, "hito");
     if (tipo === "descubre" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> descubre un candidato en ${esc(d.pl.est.cl)}: ${esc(tamTemp(d.pl))}`);
     if (tipo === "turno" || tipo === "cambio" || tipo === "ronda" || tipo === "puntos") render();
     if (tipo === "ronda") aviso(`Ronda ${d.ronda} de ${juego.maxRondas}`);
@@ -880,7 +878,7 @@ const GUIA = [
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano", turno: true, txt: "Esta es tu <b>mano</b>. Toca una carta de <b>TÉCNICA</b>.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
   { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> funciona mejor tu carta. Busca en el cielo una estrella así." },
-  { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta. Si la combinación no es buena, puedes elegir otra antes de tirar el dado.",
+  { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta. Si no te convence, puedes elegir otra antes de jugar el dado.",
     hasta: () => ui.tiradas > 0 },
   { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques." },
   { sel: "#acciones", turnoFin: true, txt: "Final del turno: <b>Publicar</b> cuenta lo que descubriste y te da puntos (si mientes, un rival puede refutarte). Si no, <b>Terminar turno</b>.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
