@@ -166,6 +166,8 @@ function porQueFalla(d) {
     ${azar ? `<p>${items ? "Además: " : ""}${esc(azar)}</p>` : ""}</div>`;
 }
 async function mostrarAnalisis(d, modal) {
+  // sin dado y con éxito: ya sabías que funcionaba (lo dice «Tu jugada»); pasa directo a la lectura
+  if (modal && d.ok) return;
   const res = d.ok ? "Funcionó" : "No funcionó";
   if (!modal) {
     aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> · ${esc(d.que)}: <b style="color:${d.ok ? "var(--ok)" : "var(--mal)"}">${res.toLowerCase()}</b>`);
