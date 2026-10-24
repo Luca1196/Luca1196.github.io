@@ -234,7 +234,7 @@ class Juego {
   }
   // Contexto: necesita un espectro con gases ya leído en el planeta (tuyo; para refutar, de cualquiera)
   requisito(mid, pl, jg = null) {
-    if (mid === "densidad") return !pl.micro;
+    if (mid === "densidad") return pl.tecnicas.includes("transito");   // radio del tránsito + masa del seguimiento
     if (mid === "contexto") return pl.marcadores.some(x => x.ok && (x.mid === "esp_transito" || x.mid === "esp_imagen") && (jg === null || x.jg === jg.idx));
     if (mid === "esp_emision" && pl.rasgos.includes("Gigante") && pl.rasgos.includes("Caliente")) return true;
     if (mid === "esp_transito" || mid === "esp_emision") return pl.tecnicas.includes("transito");

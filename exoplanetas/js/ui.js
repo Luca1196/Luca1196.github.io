@@ -599,7 +599,7 @@ function renderMano() {
   });
 }
 const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
-  densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "necesita su Radio o su Masa"],
+  densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "solo con Tránsito debajo"],
   esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "solo con Tránsito debajo"],
   esp_emision: ["si tiene atmósfera", "Atmósfera, Habitable", "con Tránsito o en Gigante Caliente"],
   esp_imagen: ["atmósfera y gases", "Atmósfera, Biofirma", "con Imagen o en Gigante Frío cercano"],
