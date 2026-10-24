@@ -285,6 +285,12 @@ button:focus-visible { outline: 3px solid var(--oro-2); outline-offset: 2px; }
 .cg-lee { grid-column: 1 / -1; padding: 5px 10px; font-size: 12.5px; font-weight: 800; background: rgba(0,0,0,.25); }
 .msg.con-carta { background: none; border: 0; box-shadow: none; animation: none; padding: 0; justify-self: stretch; }
 .msg .paso { display: block; margin-top: 5px; font-family: "Nunito", sans-serif; font-weight: 800; font-size: 13px; color: var(--oro-2); text-align: center; }
+.analisis { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; font-size: 46px; font-weight: 900; color: #fff; }
+.analisis.ok { background: linear-gradient(#8dffb9, #1fae5b); } .analisis.mal { background: linear-gradient(#ff9aa3, #d12c3c); }
+.falla { width: 100%; text-align: left; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(255,90,110,.12); border: 2px solid rgba(255,90,110,.45); }
+.falla > b { color: #ffb3bb; font-size: 15px; } .falla p { margin: 6px 0 2px; font-size: 13.5px; line-height: 1.4; }
+.falla ul { margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.4; }
+.pl-dot.mas { font-weight: 900; color: var(--texto-2); padding: 0 6px; }
 .credito { margin: 14px 0 2px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12); text-align: center;
   font-size: 13px; line-height: 1.4; color: var(--texto-2); }
 .credito b { color: var(--oro-2); }

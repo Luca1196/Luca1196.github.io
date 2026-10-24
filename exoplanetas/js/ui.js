@@ -141,7 +141,46 @@ function detalleBonos(partes) {
 }
 // Número que hay que sacar en el dado: dificultad de la carta menos los bonos (el 20 siempre sale, el 1 nunca)
 function objetivoDado(d) { return Math.min(20, Math.max(2, d.cd - d.mod)); }
+// Por qué falló: lo que jugó en contra (con su razón física) y la dificultad propia de la técnica
+const AZAR_TEC = {
+  transito: "Solo se ve el planeta si su órbita pasa justo por delante de la estrella, y no siempre transita mientras observas.",
+  rv: "El bamboleo de la estrella es de pocos metros por segundo: el ruido del instrumento o de la propia estrella puede taparlo.",
+  astro: "El vaivén de la estrella en el cielo es minúsculo: a veces no alcanza la precisión, aun en buenas condiciones.",
+  imagen: "La estrella brilla millones de veces más que el planeta: puede quedar escondido en su resplandor.",
+  micro: "Las alineaciones de estrellas son raras y no se repiten: si no ocurrió, no hay nada que ver.",
+};
+function porQueFalla(d) {
+  const contra = [];
+  for (const [lab, v, por] of d.partes || []) {
+    if (Array.isArray(por)) { for (const [pv, t] of por) if (pv < 0) contra.push(t); }
+    else if (v < 0) contra.push(por ? `${lab}: ${por}` : lab);
+  }
+  const items = contra.map(t => `<li>${esc(t)}</li>`).join("");
+  let azar = "";
+  if (d.d !== null && d.d !== undefined) {
+    if (d.refuta) azar = "Tu medición no fue lo bastante precisa para contradecir lo publicado: en ciencia, refutar exige pruebas sólidas.";
+    else if (d.tid) azar = AZAR_TEC[d.tid] || "";
+  }
+  return `<div class="falla"><b>¿Por qué falló?</b>
+    ${items ? `<p>${d.d === null || d.d === undefined ? "Las condiciones de este planeta lo impiden:" : "Jugó en contra:"}</p><ul>${items}</ul>` : ""}
+    ${azar ? `<p>${items ? "Además: " : ""}${esc(azar)}</p>` : ""}</div>`;
+}
+async function mostrarAnalisis(d, modal) {
+  const res = d.ok ? "Funcionó" : "No funcionó";
+  if (!modal) {
+    aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> · ${esc(d.que)}: <b style="color:${d.ok ? "var(--ok)" : "var(--mal)"}">${res.toLowerCase()}</b>`);
+    await sleep(ui.velocidad);
+    return;
+  }
+  await ventana({ titulo: esc(d.que), centro: true, botones: [{ txt: "Continuar", valor: true }], cuerpo: `<div class="dado-caja">
+    <div class="analisis ${d.ok ? "ok" : "mal"}">${d.ok ? "✔" : "✘"}</div>
+    <div class="veredicto" style="color:${d.ok ? "var(--ok)" : "var(--mal)"}">${res}</div>
+    <p class="necesita">${d.ok ? "Lees el resultado en secreto: míralo en tu cuaderno." : `Las condiciones suman <b>${sgn(d.mod)}</b>: con ${K.UMBRAL_MAR} o menos el Marcador no funciona.`}</p>
+    ${d.ok ? "" : porQueFalla(d) + '<p class="tenue">La señal queda acumulada: si lo intentas de nuevo con este Marcador, suma.</p>'}</div>
+    <details class="porque"><summary>Todas las condiciones</summary>${detalleBonos(d.partes)}</details>` });
+}
 async function mostrarTirada(d, modal) {
+  if (d.sinDado) return mostrarAnalisis(d, modal);
   const obj = objetivoDado(d);
   if (modal) ui.tiradas = (ui.tiradas || 0) + 1;
   const veredicto = d.ok ? "¡Éxito!" : "Falló";
@@ -167,6 +206,7 @@ async function mostrarTirada(d, modal) {
   dado.classList.remove("rodando"); dado.textContent = d.d; dado.classList.add(d.ok ? "ok" : "mal");
   const celda = caja.querySelector(`.tira [data-n="${d.d}"]`); if (celda) celda.classList.add("salio");
   ver.innerHTML = `Sacaste ${d.d}: <span style="color:${color}">${veredicto}</span>`;
+  if (!d.ok && caja.isConnected) caja.querySelector(".dado-caja").insertAdjacentHTML("beforeend", porQueFalla(d));
   await p;
 }
 
@@ -206,7 +246,7 @@ function opcionesEstrella(e, s = ui.sel) {
     if (g.puedeDescubrir(jg, s.id, e)) { const m = g.modDescubrir(jg, s.id, e); out.push({ tipo: "desc", txt: "Buscar planeta nuevo", p: pTirada(m.mod, m.cd) }); }
     for (const p of pls) if (g.puedeMedir(jg, s.id, p)) { const m = g.modMedir(jg, s.id, p); out.push({ tipo: "medir", pl: p, txt: `Medir ${p.nombre}`, p: pTirada(m.mod, m.cd) }); }
   } else {
-    for (const p of pls) if (g.puedeInvestigar(jg, s.id, p)) { const m = g.modMarcador(jg, s.id, p); out.push({ tipo: "car", pl: p, txt: `Investigar ${p.nombre}`, p: pTirada(m.mod, m.cd) }); }
+    for (const p of pls) if (g.puedeInvestigar(jg, s.id, p)) { const m = g.modMarcador(jg, s.id, p); out.push({ tipo: "car", pl: p, txt: `Investigar ${p.nombre}`, p: g.pMarcador(m) }); }
   }
   return out;
 }
@@ -254,6 +294,13 @@ async function abrirJugada(e, plFoco = null) {
   if (plFoco) ops = [...ops.filter(o => o.pl === plFoco), ...ops.filter(o => o.pl !== plFoco)];
   const filas = ops.map((o, k) => {
     const m = modOpcion(o, s, e), d = { cd: m.cd, mod: m.mod }, obj = objetivoDado(d);
+    if (o.tipo === "car" && K.MAR_SIN_DADO) {
+      const va = g.marcadorFunciona(m);
+      return `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>${va ? "Sin dado: con estas condiciones funciona" : `No funciona: las condiciones suman ${sgn(m.mod)} (falla con ${K.UMBRAL_MAR} o menos)`}</small></span>
+        <span class="oj-pct ${va ? "alta" : "baja"}">${va ? "Funciona" : "No"}</span>
+        <button type="button" class="btn-juego" data-k="${k}">🔬 Investigar</button></div>
+        <details><summary>Condiciones de este planeta</summary>${detalleBonos(m.partes)}</details></div>`;
+    }
     return `<div class="op-jugada"><div class="oj-cab"><span><b>${esc(o.txt)}</b><small>Necesitas sacar ${obj >= 20 ? "un 20" : obj <= 2 ? "cualquiera menos 1" : `${obj} o más`}</small></span>
       <span class="oj-pct ${o.p >= .7 ? "alta" : o.p >= .45 ? "media" : "baja"}">${ui.ayudas ? pct(o.p) : o.p >= .7 ? "Buena" : o.p >= .45 ? "Regular" : "Difícil"}</span>
       <button type="button" class="btn-juego" data-k="${k}">🎲 Tirar</button></div>
@@ -473,17 +520,19 @@ function renderTablero() {
     const mejor = ops.length ? Math.max(...ops.map(o => o.p)) : null;
     const tags = [DIST_CORTA[e.dist], e.edad === "joven" ? '<span class="tag joven">Joven</span>' : "", e.act === "activa" ? '<span class="tag activa">Activa</span>' : "", e.metal ? '<span class="tag metal">Metálica</span>' : ""];
     const props = propsEstrella(e).map(([cls, t]) => `<span class="prop ${cls}">${t}</span>`).join("");
-    const dots = pls.map(pl => {
+    const MAXP = 3, visibles = pls.length > MAXP ? pls.slice(0, MAXP - 1) : pls;
+    const dots = visibles.map(pl => {
       const dueño = pl.pubPlaneta !== null ? pl.pubPlaneta : pl.desc;
       const op = activo ? ops.find(o => o.pl === pl) : null;
       return `<span class="pl-dot ${pl.vivo ? "" : "muerto"} ${pl.pubPlaneta === null && pl.desc !== YO ? "priv-rival" : ""} ${op ? "objetivo" : ""}" data-pl="${pl.id}" role="button" tabindex="0">
         <span class="bola" style="background:${COLOR[dueño]}">${pl.pubPlaneta === null ? "?" : pl.confirmado ? "✓" : ""}</span><span class="pl-nom">${esc(pl.nombre)}</span>${op && ui.ayudas ? `<span class="pct">${pct(op.p)}</span>` : ""}</span>`;
     }).join("");
+    const extra = pls.length > MAXP ? `<span class="pl-dot mas" title="Toca la estrella para ver todos">+${pls.length - visibles.length}</span>` : "";
     return `<div class="est ${activo ? (ui.ayudas ? (ops.length ? "objetivo" : "apagada") : "elegible") : ""}" data-est="${i}" role="button" tabindex="0" aria-label="Estrella ${esc(e.cl)}">
       <div class="est-cab"><span class="sol" style="background:${LUZ[e.cl[0]]};color:${LUZ[e.cl[0]]}"></span><span class="est-cl">${esc(e.cl)}</span>
         <span class="prop tam">${tamEstrella(e.m)}</span></div>
       <div class="props">${props}</div>
-      <div class="planetas">${dots}</div>
+      <div class="planetas">${dots}${extra}</div>
       ${ui.ayudas && mejor !== null && ops.some(o => !o.pl) ? `<span class="pct">${pct(ops.find(o => !o.pl).p)}</span>` : ""}
     </div>`;
   }).join("");
@@ -618,7 +667,7 @@ function detalleCarta(c) {
       <p class="tenue"><i>${esc(t.real)}</i></p>` });
   }
   const m = MAR[c.id];
-  return ventana({ titulo: `${esc(m.nombre)} · dificultad ${m.cd}`, color: "var(--mar-2)", botones: [], cuerpo: `
+  return ventana({ titulo: `${esc(m.nombre)}${K.MAR_SIN_DADO ? "" : ` · dificultad ${m.cd}`}`, color: "var(--mar-2)", botones: [], cuerpo: `
     <p><b>Requisito:</b> ${m.req}</p>
     <div class="mods">${m.mods.map(([l, v, p]) => `<div><span class="v">${sgn(v)}</span><span>${esc(l)}: ${esc(p)}</span></div>`).join("")}</div>
     <p><b>Lees:</b> ${m.revela}.<br><b>Te sirve para publicar:</b> ${esc(m.publica)}.</p>
@@ -724,7 +773,7 @@ function mostrarReglas() {
     <p>Diriges un equipo de astrónomos. Gana quien junte más <b>reputación</b> en ${K.RONDAS[3]} rondas (con 3 jugadores). La computadora hace de Director: guarda los planetas y su Verdad.</p>
     <h3>Tu turno: una acción</h3>
     <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Tiras un dado de 20: el juego te dice qué número necesitas, según la carta y los bonos de la estrella.</p>
-    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto.</p>
+    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto. ${K.MAR_SIN_DADO ? `No se tira dado: funciona salvo que las condiciones del planeta sumen ${K.UMBRAL_MAR} o menos.` : ""}</p>
     <p><b>Telescopio:</b> gastas tu turno, cambias las cartas que quieras y completas tu mano hasta ${K.MANO_MAX}.</p>
     <p>Al final de tu turno, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
     <h3>Puntos</h3>

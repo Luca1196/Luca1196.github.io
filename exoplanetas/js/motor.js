@@ -198,6 +198,9 @@ class Juego {
     const c = this.bonoCient(jg, ["tec:" + tid, "confirmar", ...this.clPl(pl)]); if (c) partes.push([CIEN[jg.cient].nombre, c, "ventaja de tu científico"]);
     return { mod: partes.reduce((x, [, v]) => x + v, 0), partes, cd: TEC[tid].cd };
   }
+  // Investigar sin dado: funciona salvo que las condiciones sumen UMBRAL_MAR o menos
+  marcadorFunciona(m) { return m.mod > K.UMBRAL_MAR; }
+  pMarcador(m) { return K.MAR_SIN_DADO ? (this.marcadorFunciona(m) ? 1 : 0) : pTirada(m.mod, m.cd); }
   modMarcador(jg, mid, pl, refutando = false) {
     const partes = [];
     for (const [lab, v, por] of MAR[mid].mods) {
@@ -327,8 +330,8 @@ class Juego {
     if (tid === "micro") est.micro = true;
     const m = this.modDescubrir(jg, tid, est);
     const t = this.tirar(m.mod, m.cd);
-    this.emit("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} en ${est.cl}`, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} en ${est.cl}`, ...t, partes: m.partes });
+    this.emit("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} en ${est.cl}`, tid, ...t, partes: m.partes });
+    await this.mostrar("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} en ${est.cl}`, tid, ...t, partes: m.partes });
     if (!t.ok) {
       this.mt.desc.push(tid);
       this.log(`${jg.nombre} observa ${est.cl} con ${TEC[tid].nombre}: no detecta nada.`, { jg: jg.idx });
@@ -404,8 +407,8 @@ class Juego {
     jg.tec.splice(jg.tec.indexOf(tid), 1);
     const m = this.modMedir(jg, tid, pl);
     const t = this.tirar(m.mod, m.cd);
-    this.emit("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} sobre ${pl.nombre}`, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} sobre ${pl.nombre}`, ...t, partes: m.partes });
+    this.emit("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} sobre ${pl.nombre}`, tid, ...t, partes: m.partes });
+    await this.mostrar("tirada", { jg: jg.idx, que: `${TEC[tid].nombre} sobre ${pl.nombre}`, tid, ...t, partes: m.partes });
     if (!t.ok) { this.mt.desc.push(tid); this.log(`${jg.nombre} intenta medir ${pl.nombre} con ${TEC[tid].nombre}: sin éxito.`, { jg: jg.idx }); return { ok: false, tirada: t }; }
     if (pl.a.falso) { this.mt.desc.push(tid); this._exponerFalso(jg, pl); return { ok: true, falso: true, tirada: t }; }
     if (!vePlaneta(tid, pl.a, pl.est)) { this.mt.desc.push(tid); this.log(`${TEC[tid].nombre} no logra ver ${pl.nombre}.`, { jg: jg.idx }); return { ok: true, noVe: true, tirada: t }; }
@@ -422,9 +425,9 @@ class Juego {
   async investigar(jg, mid, pl) {
     jg.mar.splice(jg.mar.indexOf(mid), 1);
     const m = this.modMarcador(jg, mid, pl);
-    const t = this.tirar(m.mod, m.cd);
-    this.emit("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, ...t, partes: m.partes });
+    const t = K.MAR_SIN_DADO ? { ok: this.marcadorFunciona(m), mod: m.mod, cd: m.cd, d: null, sinDado: true } : this.tirar(m.mod, m.cd);
+    this.emit("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, mid, ...t, partes: m.partes });
+    await this.mostrar("tirada", { jg: jg.idx, que: `${MAR[mid].nombre} sobre ${pl.nombre}`, mid, ...t, partes: m.partes });
     if (!t.ok || !this.requisito(mid, pl)) {
       const k = `${jg.idx}|${pl.id}|${mid}`; this.senal[k] = (this.senal[k] || 0) + 1;
       pl.marcadores.push({ mid, jg: jg.idx, ok: false });
@@ -544,8 +547,8 @@ class Juego {
     const m = this.modMarcador(x, mid, pl, true);
     const t = this.tirar(m.mod, m.cd);
     this.log(`${x.nombre} refuta con ${MAR[mid].nombre}…`, { jg: x.idx, tipo: "ref" });
-    this.emit("tirada", { jg: x.idx, que: `Refutación con ${MAR[mid].nombre}`, ...t, partes: m.partes });
-    await this.mostrar("tirada", { jg: x.idx, que: `${x.nombre} refuta ${CAT_NOMBRE[cat]} de ${pl.nombre} con ${MAR[mid].nombre}`, ...t, partes: m.partes });
+    this.emit("tirada", { jg: x.idx, que: `Refutación con ${MAR[mid].nombre}`, mid, refuta: true, ...t, partes: m.partes });
+    await this.mostrar("tirada", { jg: x.idx, que: `${x.nombre} refuta ${CAT_NOMBRE[cat]} de ${pl.nombre} con ${MAR[mid].nombre}`, mid, refuta: true, ...t, partes: m.partes });
     let gana = false, lectura = null;
     if (t.ok) {
       lectura = {};

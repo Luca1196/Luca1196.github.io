@@ -116,7 +116,7 @@ class Bot {
       if (libres.length) for (const mid of new Set(jg.mar)) {
         if (!g.puedeInvestigar(jg, mid, pl)) continue;
         const m = g.modMarcador(jg, mid, pl);
-        const ps = _G.pTirada(m.mod, m.cd);
+        const ps = g.pMarcador(m);
         let info = 0;
         for (const c of _G.SIRVE[mid]) if (libres.includes(c)) {
           const p = g.prob(jg, pl, c);
