@@ -223,7 +223,8 @@ class Juego {
   }
 
   // ---------------------------------------------------------- opciones legales
-  puedeDescubrir(jg, tid, est) { return est.bono[tid] !== null && !(tid === "micro" && est.micro); }
+  llena(est) { return this.planetas.filter(p => p.est === est).length >= (K.MAX_PL || 99); }   // tope de planetas por estrella
+  puedeDescubrir(jg, tid, est) { return est.bono[tid] !== null && !(tid === "micro" && est.micro) && !this.llena(est); }
   puedeMedir(jg, tid, pl) {
     return this.puedeActuar(jg, pl) && !pl.micro && !pl.tecnicas.includes(tid) && pl.est.bono[tid] !== null
       && (tid !== "astro" || pl.rasgosPub.includes("Gigante"))

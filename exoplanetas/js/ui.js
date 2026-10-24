@@ -303,6 +303,7 @@ async function abrirJugada(e, plFoco = null) {
   if (!ops.length) {
     if (s.tipo === "tec") porque = e.bono[s.id] === null
       ? `<b>${esc(TEC[s.id].nombre)}</b> no se puede usar aquí: ${esc(explicarEstrella(s.id, e).filter(([v]) => v < 0).map(([, x]) => x).join("; ") || textoPlano(TEC[s.id].limite))}.`
+      : g.llena(e) ? `Esta estrella ya tiene ${K.MAX_PL} planetas: no se buscan más aquí.`
       : "Aquí no hay nada que esta técnica pueda buscar o medir ahora.";
     else porque = `Ningún planeta de esta estrella cumple el requisito: ${esc(textoPlano(MAR[s.id].req))}`;
   }
@@ -711,6 +712,7 @@ function detalleEstrella(e) {
   ventana({ titulo: `Estrella ${esc(e.cl)}`, color: "var(--est)", botones: [], cuerpo: `
     ${datosEstrellaHTML(e)}${e.micro ? '<p class="tenue">Microlente ya usada aquí.</p>' : ""}
     <p>${e.texto}</p>
+    <p class="tenue">Admite hasta ${K.MAX_PL} planetas${g.llena(e) ? ": ya está completa" : ""}.</p>
     <h3>Qué técnica se puede usar aquí</h3>
     <div class="lista">${ORDEN_TEC.map(t => { const ok = e.bono[t] !== null, rz = explicarEstrella(t, e).filter(([v]) => ok ? v >= 0 : v < 0).map(([, x]) => esc(x)); return `<div class="fila-bono ${ok ? "pos" : "no"}"><b>${ok ? "✓" : "✕"}</b><span><b class="que">${esc(TEC[t].nombre)}</b><small>${rz.join(" · ") || esc(textoPlano(TEC[t].limite))}</small></span></div>`; }).join("")}</div>
     ${pls.length ? `<div class="lista">${pls.map(p => `<button type="button" class="fila" data-pl="${p.id}"><span>${ficha(p.pubPlaneta !== null ? p.pubPlaneta : p.desc)} ${esc(p.nombre)} · ${esc(tamTemp(p))}</span><span class="tenue">${esc(estado(p))}</span></button>`).join("")}</div>` : '<p class="tenue">Sin planetas conocidos.</p>'}`,
