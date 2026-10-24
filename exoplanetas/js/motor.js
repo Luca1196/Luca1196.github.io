@@ -208,6 +208,7 @@ class Juego {
   // Investigar sin dado: funciona salvo que las condiciones sumen UMBRAL_MAR o menos
   marcadorFunciona(m) { return m.mod > K.UMBRAL_MAR; }
   pMarcador(m) { return K.MAR_SIN_DADO ? (this.marcadorFunciona(m) ? 1 : 0) : pTirada(m.mod, m.cd); }
+  pRefutar(m) { return K.REF_SIN_DADO ? (this.marcadorFunciona(m) ? 1 : 0) : pTirada(m.mod, m.cd); }
   modMarcador(jg, mid, pl, refutando = false) {
     const partes = [];
     for (const [lab, v, por] of MAR[mid].mods) {
@@ -552,7 +553,7 @@ class Juego {
     x.mar.splice(x.mar.indexOf(mid), 1); this.mm.desc.push(mid);
     const autor = this.j[pl.publicado[cat].autor];
     const m = this.modMarcador(x, mid, pl, true);
-    const t = this.tirar(m.mod, m.cd);
+    const t = K.REF_SIN_DADO ? { ok: this.marcadorFunciona(m), mod: m.mod, cd: m.cd, d: null, sinDado: true } : this.tirar(m.mod, m.cd);
     this.log(`${x.nombre} refuta con ${MAR[mid].nombre}…`, { jg: x.idx, tipo: "ref" });
     this.emit("tirada", { jg: x.idx, que: `Refutación con ${MAR[mid].nombre}`, mid, refuta: true, ...t, partes: m.partes });
     await this.mostrar("tirada", { jg: x.idx, que: `${x.nombre} refuta ${CAT_NOMBRE[cat]} de ${pl.nombre} con ${MAR[mid].nombre}`, mid, refuta: true, ...t, partes: m.partes });
@@ -571,7 +572,7 @@ class Juego {
       this.log(`El Director lee la lectura: contradice lo publicado. ${x.nombre} gana +${pozo}.`, { jg: x.idx, tipo: "bueno" });
     } else {
       this.log(t.ok ? `El Director lee la lectura: no contradice lo publicado. Los puntos son de ${autor.nombre}.`
-                    : `La tirada de ${x.nombre} falla. Los puntos son de ${autor.nombre}.`, { tipo: "info" });
+                    : `${t.sinDado ? `Las condiciones impiden usar el Marcador de ${x.nombre}` : `La tirada de ${x.nombre} falla`}. Los puntos son de ${autor.nombre}.`, { tipo: "info" });
       if (articulo) this.anotarArticulo(autor, pl, articulo); else this.anotar(autor, pl, cat);
     }
     this.emit("refutacion", { x: x.idx, autor: autor.idx, pl, cat, mid, tirada: t, gana, lectura, pozo, articulo });

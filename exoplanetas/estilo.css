@@ -291,6 +291,7 @@ button:focus-visible { outline: 3px solid var(--oro-2); outline-offset: 2px; }
 .falla > b { color: #ffb3bb; font-size: 15px; } .falla p { margin: 6px 0 2px; font-size: 13.5px; line-height: 1.4; }
 .falla ul { margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.4; }
 .pl-dot.mas { font-weight: 900; color: var(--texto-2); padding: 0 6px; }
+.nec.si { color: var(--ok); } .nec.no { color: #ff8b95; }
 .credito { margin: 14px 0 2px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12); text-align: center;
   font-size: 13px; line-height: 1.4; color: var(--texto-2); }
 .credito b { color: var(--oro-2); }

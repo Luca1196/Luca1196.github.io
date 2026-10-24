@@ -175,8 +175,8 @@ async function mostrarAnalisis(d, modal) {
   await ventana({ titulo: esc(d.que), centro: true, botones: [{ txt: "Continuar", valor: true }], cuerpo: `<div class="dado-caja">
     <div class="analisis ${d.ok ? "ok" : "mal"}">${d.ok ? "✔" : "✘"}</div>
     <div class="veredicto" style="color:${d.ok ? "var(--ok)" : "var(--mal)"}">${res}</div>
-    <p class="necesita">${d.ok ? "Lees el resultado en secreto: míralo en tu cuaderno." : `Las condiciones suman <b>${sgn(d.mod)}</b>: con ${K.UMBRAL_MAR} o menos el Marcador no funciona.`}</p>
-    ${d.ok ? "" : porQueFalla(d) + '<p class="tenue">La señal queda acumulada: si lo intentas de nuevo con este Marcador, suma.</p>'}</div>
+    <p class="necesita">${d.ok ? (d.refuta ? "El Marcador funciona: el Director muestra lo que ve." : "Lees el resultado en secreto: míralo en tu cuaderno.") : `Las condiciones suman <b>${sgn(d.mod)}</b>: con ${K.UMBRAL_MAR} o menos el Marcador no funciona.`}</p>
+    ${d.ok ? "" : porQueFalla(d) + (d.refuta ? "" : '<p class="tenue">La señal queda acumulada: si lo intentas de nuevo con este Marcador, suma.</p>')}</div>
     <details class="porque"><summary>Todas las condiciones</summary>${detalleBonos(d.partes)}</details>` });
 }
 async function mostrarTirada(d, modal) {
@@ -462,13 +462,13 @@ async function preguntarRefutar(pl, cats, pares, pozo) {
   const bot = pares.map(({ cat, mid }) => {
     const m = g.modMarcador(J(), mid, pl, true);
     const pv = cands.filter(a => !verdad(a, cat) && veFalsedad(mid, a, cat)).length / cands.length;
-    return { cat, mid, p: pTirada(m.mod, m.cd), pv, obj: objetivoDado(m) };
+    return { cat, mid, p: g.pRefutar(m), pv, obj: objetivoDado(m), mod: m.mod };
   });
   return ventana({ titulo: lista.length > 1 ? "¿Refutas el artículo?" : "¿Refutas?", color: "var(--mar)", cerrable: false, centro: true, botones: [{ txt: "No refutar", valor: null, clase: "gris" }], cuerpo: `
     <p>${ficha(aut)} <b>${esc(nombreJ(aut))}</b> publica <b>${lista.map(c => CAT_NOMBRE[c]).join(" + ")}</b> en ${esc(pl.nombre)}.</p>
     <h3>En juego: ${pozo} puntos</h3>
-    <p class="tenue">Si tu tirada sale y lo que ve tu Marcador contradice ${lista.length > 1 ? "cualquiera de las afirmaciones, te llevas todo el artículo" : "lo publicado, los puntos son tuyos"}. Si no, son del autor. El Marcador se gasta igual.</p>
-    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${lista.length > 1 ? `${CAT_NOMBRE[b.cat]} · ` : ""}${esc(MAR[b.mid].nombre)}</span><b class="nec">${b.obj >= 20 ? "solo 20" : `${b.obj}+`}</b></button>`).join("")}</div>`,
+    <p class="tenue">Si ${K.REF_SIN_DADO ? "tu Marcador funciona en este planeta" : "tu tirada sale"} y lo que ve contradice ${lista.length > 1 ? "cualquiera de las afirmaciones, te llevas todo el artículo" : "lo publicado, los puntos son tuyos"}. Si no, son del autor. El Marcador se gasta igual.</p>
+    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${lista.length > 1 ? `${CAT_NOMBRE[b.cat]} · ` : ""}${esc(MAR[b.mid].nombre)}</span>${K.REF_SIN_DADO ? `<b class="nec ${b.p ? "si" : "no"}">${b.p ? "Funciona" : "No funciona"}</b>` : `<b class="nec">${b.obj >= 20 ? "solo 20" : `${b.obj}+`}</b>`}</button>`).join("")}</div>`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll(".opcion").forEach(b => b.onclick = () => cerrar(bot[+b.dataset.k])) });
 }
 
@@ -484,7 +484,9 @@ async function vista(tipo, d) {
     const pozo = d.pozo || K.PUNTOS[cat];
     const lect = lectura ? `<div class="privado"><p class="tenue">Lo que ve ${esc(MAR[mid].nombre)}:</p><dl class="dato">${Object.entries(lectura).map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>` : "";
     const res = gana ? `<h3>¡Refutado! ${esc(nombreJ(x))} gana +${pozo}</h3>`
-      : t.ok ? `<h3>No lo contradice: +${pozo} para ${esc(nombreJ(autor))}</h3>` : `<h3>La tirada falla (${t.d}${sgn(t.mod)} vs ${t.cd}): +${pozo} para ${esc(nombreJ(autor))}</h3>`;
+      : t.ok ? `<h3>No lo contradice: +${pozo} para ${esc(nombreJ(autor))}</h3>`
+      : t.sinDado ? `<h3>Las condiciones del planeta impiden usar ese Marcador (suman ${sgn(t.mod)}): +${pozo} para ${esc(nombreJ(autor))}</h3>`
+      : `<h3>La tirada falla (${t.d}${sgn(t.mod)} vs ${t.cd}): +${pozo} para ${esc(nombreJ(autor))}</h3>`;
     await ventana({ titulo: "Refutación", color: "var(--mar)", centro: true, cuerpo: `<p>${ficha(x)} <b>${esc(nombreJ(x))}</b> cuestiona ${CAT_NOMBRE[cat]} de ${ficha(autor)} ${esc(nombreJ(autor))} en ${esc(pl.nombre)} con ${esc(MAR[mid].nombre)}.</p>${lect}${res}` });
   }
 }

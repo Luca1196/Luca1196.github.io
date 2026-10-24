@@ -80,7 +80,7 @@ class Bot {
     for (const mid of ops) {
       const pf = cands.filter(a => !_G.verdad(a, cat) && _G.veFalsedad(mid, a, cat)).length / cands.length;
       const m = g.modMarcador(x, mid, pl, true);
-      const ev = _G.pTirada(m.mod, m.cd) * pf * _G.K.PUNTOS[cat];
+      const ev = g.pRefutar(m) * pf * _G.K.PUNTOS[cat];
       if (ev > ev0) { ev0 = ev; mejor = mid; }
     }
     if (ev0 > this.umbralRef) { await this.pausa("refuta"); return mejor; }
@@ -93,7 +93,7 @@ class Bot {
     for (const { cat, mid } of pares) {
       const pf = cands.filter(a => !_G.verdad(a, cat) && _G.veFalsedad(mid, a, cat)).length / cands.length;
       const m = g.modMarcador(x, mid, pl, true);
-      const ev = _G.pTirada(m.mod, m.cd) * pf * pozo;
+      const ev = g.pRefutar(m) * pf * pozo;
       if (ev > ev0) { ev0 = ev; mejor = { cat, mid }; }
     }
     if (ev0 > this.umbralRef) { await this.pausa("refuta"); return mejor; }
