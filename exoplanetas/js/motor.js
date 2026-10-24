@@ -137,7 +137,7 @@ class Planeta {
     this.ptsPlaneta = 0; this.marcadores = []; this.letra = "";
   }
   ladoDe(i) { return this.lado[i] || (this.lado[i] = new Set()); }
-  get confirmado() { return new Set(this.tecnicas).size >= 2; }
+  get confirmado() { return this.micro || new Set(this.tecnicas).size >= 2; }   // la curva de una microlente lo confirma sola
   get nombre() { return `${this.est.cl}${this.letra}`; }
 }
 
@@ -208,9 +208,9 @@ class Juego {
   // Contexto: necesita un espectro con gases ya leído en el planeta (tuyo; para refutar, de cualquiera)
   requisito(mid, pl, jg = null) {
     // Requisitos: solo datos públicos (estrella, tamaño y temperatura anunciados, lo que está bajo el planeta)
-    const rp = pl.rasgosPub, enanaM = pl.est.cl[0] === "M", activaNoM = pl.est.act === "activa" && !enanaM;
-    if (mid === "densidad") return pl.tecnicas.includes("transito") && !activaNoM;   // radio del tránsito + masa del seguimiento
-    if (mid === "esp_transito") return pl.tecnicas.includes("transito") && !activaNoM && (!rp.includes("Pequeño") || enanaM);
+    const rp = pl.rasgosPub, enanaM = pl.est.cl[0] === "M";
+    if (mid === "densidad") return pl.tecnicas.includes("transito");   // radio del tránsito + masa del seguimiento
+    if (mid === "esp_transito") return pl.tecnicas.includes("transito") && (!rp.includes("Pequeño") || enanaM);
     if (mid === "esp_emision") return rp.includes("Caliente") && (pl.tecnicas.includes("transito") || rp.includes("Gigante"));
     if (mid === "contexto") return pl.marcadores.some(x => x.ok && (x.mid === "esp_transito" || x.mid === "esp_imagen") && (jg === null || x.jg === jg.idx));
     if (mid === "esp_imagen") return pl.tecnicas.includes("imagen") || (pl.rasgos.includes("Gigante") && pl.rasgos.includes("Frío") && pl.est.dist === "cercana");
