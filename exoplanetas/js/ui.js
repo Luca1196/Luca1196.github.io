@@ -467,11 +467,36 @@ async function preguntarRefutar(pl, cats, pares, pozo) {
     const pv = cands.filter(a => !verdad(a, cat) && veFalsedad(mid, a, cat)).length / cands.length;
     return { cat, mid, p: g.pRefutar(m), pv, obj: objetivoDado(m), mod: m.mod };
   });
+  // Lo que puedes saber para decidir: el planeta, lo público, lo que leíste tú y con qué métodos respalda el autor
+  const jg = J(), yoSe = g.sabe(jg, pl);
+  const pub = Object.entries(pl.publico), mio = Object.entries(yoSe).filter(([c]) => !(c in pl.publico));
+  const nomMet = m => (m === "densidad" ? MAR.densidad.nombre : TEC[m] ? TEC[m].nombre : MAR[m] ? MAR[m].nombre : m);
+  const metAut = [...pl.ladoDe(aut)].map(nomMet);
+  const previas = CATS.filter(c => c in pl.publicado && !lista.includes(c));
+  const filaDatos = arr => `<dl class="dato">${arr.map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(fmtCampo(c, v))}</dd>`).join("")}</dl>`;
+  const contexto = `<div class="sec"><h3>${esc(pl.nombre)} · ${esc(tamTemp(pl))} · estrella ${esc(pl.est.cl)}</h3>
+      <p class="tenue">${esc(K.DIST[pl.est.dist])} · ${esc(K.EDAD[pl.est.edad])} · ${esc(K.ACT[pl.est.act])}</p>
+      ${pub.length ? filaDatos(pub) : '<p class="tenue">Sin datos públicos.</p>'}
+      <p class="tenue">El autor lo respalda con: <b>${esc(metAut.join(", ") || "—")}</b>${previas.length ? ` · ya publicado antes: ${previas.map(c => CAT_NOMBRE[c]).join(", ")}` : ""}</p></div>
+    ${mio.length ? `<div class="sec privado"><h3>Lo que leíste tú (secreto)</h3>${filaDatos(mio)}</div>` : '<p class="tenue">No leíste nada de este planeta: refutarías a ciegas.</p>'}`;
+  // qué lee cada Marcador y qué lectura le daría la razón
+  const REFUTA_SI = {
+    atmosfera: { esp: "el espectro sale plano o no hay atmósfera" },
+    habitable: { densidad: "no es rocoso (gas o envoltura de H2)", esp: "no tiene atmósfera", contexto: "su contexto descarta agua líquida" },
+    biofirma: { esp: "los gases no son de los que parecen vida", contexto: "una fuente abiótica explica la señal" },
+  };
+  const textoOp = b => {
+    const campos = CAMPOS_MAR[b.mid], ya = campos.filter(c => c in yoSe || c in pl.publico);
+    const si = REFUTA_SI[b.cat][b.mid.startsWith("esp") ? "esp" : b.mid] || "su lectura contradice lo publicado";
+    const sabido = ya.length ? `<br><small class="tenue">Ya sabes lo que verá: ${ya.map(c => `${CAMPO[c]}: ${esc(yoSe[c] ?? pl.publico[c])}`).join(" · ")}</small>` : "";
+    return `${lista.length > 1 ? `<b>${CAT_NOMBRE[b.cat]}</b> · ` : ""}${esc(MAR[b.mid].nombre)}<br><small class="tenue">Lee ${campos.map(c => CAMPO[c].toLowerCase()).join(" y ")} · gana si ${esc(si)}</small>${sabido}`;
+  };
   return ventana({ titulo: lista.length > 1 ? "¿Refutas el artículo?" : "¿Refutas?", color: "var(--mar)", cerrable: false, centro: true, botones: [{ txt: "No refutar", valor: null, clase: "gris" }], cuerpo: `
     <p>${ficha(aut)} <b>${esc(nombreJ(aut))}</b> publica <b>${lista.map(c => CAT_NOMBRE[c]).join(" + ")}</b> en ${esc(pl.nombre)}.</p>
     <h3>En juego: ${pozo} puntos</h3>
+    ${contexto}
     <p class="tenue">Si ${K.REF_SIN_DADO ? "tu Marcador funciona en este planeta" : "tu tirada sale"} y lo que ve contradice ${lista.length > 1 ? "cualquiera de las afirmaciones, te llevas todo el artículo" : "lo publicado, los puntos son tuyos"}. Si no, son del autor. El Marcador se gasta igual.</p>
-    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${lista.length > 1 ? `${CAT_NOMBRE[b.cat]} · ` : ""}${esc(MAR[b.mid].nombre)}</span>${K.REF_SIN_DADO ? `<b class="nec ${b.p ? "si" : "no"}">${b.p ? "Funciona" : "No funciona"}</b>` : `<b class="nec">${b.obj >= 20 ? "solo 20" : `${b.obj}+`}</b>`}</button>`).join("")}</div>`,
+    <div class="lista">${bot.map((b, k) => `<button type="button" class="opcion" data-k="${k}"><span>${textoOp(b)}</span>${K.REF_SIN_DADO ? `<b class="nec ${b.p ? "si" : "no"}">${b.p ? "Funciona" : "No funciona"}</b>` : `<b class="nec">${b.obj >= 20 ? "solo 20" : `${b.obj}+`}</b>`}</button>`).join("")}</div>`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll(".opcion").forEach(b => b.onclick = () => cerrar(bot[+b.dataset.k])) });
 }
 
