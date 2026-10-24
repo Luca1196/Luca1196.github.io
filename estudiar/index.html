@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Estudio Prog4 y Lógica</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!--
+=====================================================================
+INSTRUCTIVO PARA SEGUIR TRABAJANDO (leer esto en vez de analizar todo el codigo)
+=====================================================================
+QUE ES: app de estudio de Luca (UdelaR) que junta Prog4 (diagramas de comunicacion) y Logica (deduccion natural).
+Pestana Repaso = tarjetas con repaso espaciado (tipo Anki) y preguntas de opcion multiple (tipo Duolingo) para asegurar las BASES.
+Pestanas Ejercicios Prog4 / Ejercicios Logica = las apps de ejercicios completos, cargadas en un iframe desde archivos publicados junto a esta pagina.
+PREFERENCIAS DE LUCA: todo en espanol; gastar pocos tokens; nada de vistas previas ni redisenos; minima friccion para empezar a estudiar.
+
+ARCHIVOS DEL ARTEFACTO (se publican con Artifact, url + file_path + files):
+  index.html   esta pagina (repaso). Para cambiarla: publicar con url + edits (pares old_str/new_str).
+  prog4.html   app de ejercicios de comunicacion (tiene su propio instructivo en el <head>
+<meta name="robots" content="noindex,nofollow">).
+  logica.html  app de ejercicios de deduccion natural (tiene su propio instructivo).
+  Para actualizar una de las dos apps: leerla con Artifact read + url + path "prog4.html" (o "logica.html"), editarla localmente y republicar con
+  files:{"prog4.html":"<ruta local>"}. Los archivos que no se pasan se conservan. Si la app embebida cambia de ejercicios, no hace falta tocar index.html.
+  Los artefactos originales sueltos (Prog4 y Logica) siguen existiendo; ya no son la copia de trabajo.
+
+CODIGO DE ESTA PAGINA (un solo script):
+  CARDS = P4A + LGA, todas escritas a mano. Tarjetas CORTAS: una idea y una decision rapida (pedido de Luca: nada de parrafos).
+  Formato:  mc(subj, tag, enunciado, correcta, [distractores x1-3], explicacion_de_una_linea)   subj = "p4" | "lg"; las opciones se mezclan al mostrar.
+  El enunciado puede tener varias lineas: las primeras son el ESCENARIO (caja monoespaciada) y la ULTIMA es la pregunta.
+  Estilo: "que etiqueta va", "como desarmo esto", "uso find o un metodo", "que cancela esta regla". Opciones de pocas palabras. La teoria larga vive en las
+  pestanas de ejercicios (Reglas / Mis errores), no en las tarjetas. fc(subj, tag, frente, html_dorso) sigue soportado pero no se usa.
+  ID de tarjeta = hash(subj + tipo + enunciado). Si cambias el enunciado se considera una tarjeta nueva (pierde su historial).
+  META DIARIA: nm nuevas por dia (chips 10/20/40). Lo no hecho se ACUMULA en debt: al cambiar de dia, debt = max(0, nm + debt - nw) + dias sin entrar * nm.
+  Meta de hoy = min(nm + debt, nuevas que quedan). NO es un tope: "Empezar con la meta" = vencidas + cuota de nuevas; "Estudiar todo el mazo" = vencidas + TODAS las nuevas
+  (sin limite, para estudiar muchas horas seguidas); "Practica libre" = repasa primero lo mas flojo (fallos y caja baja) sin tocar el calendario (Q.cram).
+  Tags de Prog4 reforzados por los errores frecuentes de Luca: Etiqueta (estereotipo), Destino, Mensaje, Notacion (numeracion, multiobjeto, nombre/anonimo, dos puntos).
+  RONDAS: cada RN=10 tarjetas resueltas hay una pantalla de ronda (aciertos, tiempo, vuelve a empezar con el siguiente tema). La barra fina bajo el contador es una RESERVA de tiempo (RES0 s, tope RMAX): baja solo mientras pensas (se frena al ver la respuesta y con la pestaña oculta), cada acierto a la primera suma ACI s. Si sobra reserva al cerrar la ronda: +10 XP. Nunca penaliza ni corta. Al volver a la pestaña aparece 'Volviste'.
+  Si una tarjeta menciona el diagrama de clases, el enunciado debe mostrarlo ('Diagrama de clases:  A ──> B *').
+  PRACTICO 4 Prog4 (solucion): tags Enlaces, Borrado, Iteración. OJO convención: ese práctico dibuja el origen como :Sistema y escribe 1*[foreach]; el parcial de Luca corrigió :Controlador. Las tarjetas usan Controlador. Confirmar con el docente si ambas valen.
+  ESTRATEGIA (Lógica): tarjetas sobre el estado de la derivación y la recursión armar-meta / desarmar-hipótesis.
+  PRACTICOS: las tarjetas de Lógica reflejan los prácticos 4 (proposicional) y 8 (predicados e igualdad): se cita 'Práctico N · ej' en la primera línea. Tags: Primer paso (teoremas), Detectar error (ej. 5 / ej. 2), Leer derivación (Γ y ρ), Igualdad (I=, E=). Notacion del curso: φ ψ σ; ⊥ se obtiene con E¬; hojas sin corchetes = Γ.
+  QUIZ: las preguntas 'Quiz ejercicios' se copiaron de const Q de prog4.html y logica.html (tag 'Quiz ejercicios'). Si se agregan preguntas a esos Q, agregarlas tambien aca como mc(...). Sus opciones no tienen motivo por opcion (se muestra solo la explicacion).
+  ETIQUETA: las opciones son el MENSAJE completo con cada estereotipo (no etiquetas sueltas); el estereotipo es del receptor.
+  DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso.
+  PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS.
+  OPCIONES: en d (distractores) cada opcion puede llevar motivo: "texto||por que no". Los distractores deben ser TENTADORES (errores reales: regla invertida, eliminacion sin la premisa que pide, regla de otro conector), nunca absurdos. El motivo se muestra al elegirla.
+  DOMINIO: boton 'Ver dominio' (DOM) en tarjetas Prog4 de Etiqueta/Destino/Mensaje/Decision (DOMT). Cada tarjeta Prog4 debe ser consistente con DOM (viene de CL y M en prog4.html). Lógica: toda tarjeta muestra 'Tengo:' y 'Meta:' completos. mc(...,w,h): h = pista propia de la tarjeta (si no, HINT del tag).
+  DIDACTICA: el escenario de una tarjeta debe permitir TRAZAR la respuesta (mostrar de donde salio cada objeto: find, create, next, firma de la operacion,
+  asociacion del diagrama de clases) sin escribir la respuesta en el enunciado. DEF = definicion de cada opcion (se muestra como "Elegiste X..." al fallar; clave = etiqueta
+  o primer token de la opcion, ej. "E∧"). HINT = pregunta clave por tag (boton Pista antes de responder y siempre visible tras un error). Al sumar un tag nuevo, agregar su HINT.
+  Agregar tarjetas: sumarlas al final de P4A o LGA. tag = subtema; la lista de tags se arma sola y alimenta las barras de progreso.
+  Estado guardado en localStorage "est2": {c:{id:{b:caja,due:timestamp,l:fallos,n:repasos}}, nw: nuevas hoy, nm: nuevas por dia, xp, xpd, stk (racha), last, day}.
+  Cajas: IV=[0,1,3,7,14,30,60] dias. Otra vez = caja 0 y vuelve en 10 min; Dificil = misma caja con la mitad del intervalo; Bien = +1 caja; Facil = +2.
+  En mc: acierto a la primera = Bien, error = Otra vez. Las falladas se reencolan 4 lugares mas adelante hasta acertarlas (no cambian el calendario de nuevo).
+  Dominada = caja >= 3 (intervalo de 7 dias o mas). Las nuevas se intercalan entre materias (ilv) para mezclar Prog4 y Logica.
+  Las apps embebidas guardan su progreso aparte (claves lv, pg2, er en Prog4; lvn, ern en Logica): no hay choque con "est2".
+LIMITES: el iframe se ajusta a la altura del contenido cada 500 ms (solo funciona porque es el mismo origen). Las apps embebidas no siguen el
+  selector de tema del visor, solo el modo claro/oscuro del sistema.
+-->
+<style>
+/* Layout: una columna de 640px; arriba pestañas, abajo una sola tarjeta de repaso o la app de ejercicios. Cada materia tiene su acento. */
+:root{--bg:#f4f6f9;--fg:#1a1d23;--mut:#626b7a;--card:#ffffff;--bd:#d8dde6;--p4:#2858c4;--lg:#a9560b;--mu:#7a3fb0;--ac:#2858c4;--onac:#ffffff;--ok:#1a7f45;--bad:#b83227;--okbg:#e3f3e9;--badbg:#fae6e3;--f:system-ui,-apple-system,"Segoe UI",sans-serif;--m:ui-monospace,Menlo,Consolas,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13161b;--fg:#e8ebf1;--mut:#9aa3b2;--card:#1c2027;--bd:#303641;--p4:#7ea4ff;--lg:#f0a566;--mu:#c79bff;--ac:#7ea4ff;--onac:#10141c;--ok:#4cc380;--bad:#ff7d6e;--okbg:#16301f;--badbg:#3b201d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13161b;--fg:#e8ebf1;--mut:#9aa3b2;--card:#1c2027;--bd:#303641;--p4:#7ea4ff;--lg:#f0a566;--mu:#c79bff;--ac:#7ea4ff;--onac:#10141c;--ok:#4cc380;--bad:#ff7d6e;--okbg:#16301f;--badbg:#3b201d;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--f);padding-block:14px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:640px;margin:0 auto}
+.s-p4{--ac:var(--p4)}.s-lg{--ac:var(--lg)}.s-mu{--ac:var(--mu)}
+h1{font-size:19px;margin:0}h2{font-size:20px;margin:0 0 8px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.mut{color:var(--mut);font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}
+.btn{font:inherit;cursor:pointer;border:1px solid var(--bd);border-bottom-width:4px;background:var(--card);color:var(--fg);border-radius:12px;padding:9px 14px;min-width:0}
+.btn:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-top:2px}
+.btn:focus-visible,a:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.btn:disabled{cursor:default}
+.btn.pri{background:var(--ac);color:var(--onac);border-color:var(--ac);border-bottom-color:color-mix(in srgb,var(--ac) 65%,#000)}
+.big{width:100%;padding:13px 14px;font-weight:650;margin-top:12px}
+.tabs{display:flex;gap:6px;margin-bottom:14px}.tab{flex:1;padding:8px 4px;font-size:14px}.tab.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip{padding:5px 12px;border-radius:99px;border-bottom-width:3px;font-size:14px}.chip.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px 16px;margin-top:12px}
+.hero{padding:16px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.nums b{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ac)}.nums span{font-size:13px;color:var(--mut)}
+.sj{color:var(--ac)}
+.pb{flex:1;height:12px;border-radius:99px;background:var(--bd);overflow:hidden;min-width:60px}.pb i{display:block;height:100%;background:var(--ac);border-radius:99px;transition:width .25s}
+.x{padding:2px 12px;font-size:20px;line-height:1.3}
+.cnt{font-variant-numeric:tabular-nums}
+.lbl{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.qt{font-size:18px;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:6px}
+.sn{font-family:var(--m);font-size:15px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.swc{touch-action:pan-y;user-select:none;-webkit-user-select:none;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px 16px;margin-top:12px;transition:transform .2s,border-color .2s;cursor:grab}
+.swopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.swo{border:1px solid var(--bd);border-bottom-width:4px;border-radius:12px;padding:12px 8px;text-align:center;font-weight:600;font-size:15px;overflow-wrap:anywhere;cursor:pointer;min-height:68px;display:flex;align-items:center;justify-content:center;background:var(--card)}
+.swo.ok{border-color:var(--ok);background:var(--okbg)}.swo.no{border-color:var(--bad);background:var(--badbg)}
+.swc.tl .swo.l,.swc.tr .swo.r{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,var(--card))}
+.pace{height:4px;background:var(--bd);border-radius:2px;margin:2px 0 8px;overflow:hidden}.pace i{display:block;height:100%;background:var(--ac);width:0;transition:width 1s linear}
+.hn{border-left:3px solid var(--ac);padding:4px 10px;margin:8px 0;color:var(--mut);font-size:14px}
+.hint{margin:2px 0 0;font-size:14px;padding:4px 12px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;overflow-wrap:anywhere}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}.opt.no{border-color:var(--bad);background:var(--badbg)}
+.fb{border-radius:12px;padding:10px 14px;margin-top:12px;border:1px solid var(--bd)}.fb.ok{background:var(--okbg);border-color:var(--ok)}.fb.no{background:var(--badbg);border-color:var(--bad)}
+.fb div{margin-top:4px;overflow-wrap:anywhere}
+.back{margin:12px 0;padding:10px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--bd);overflow-wrap:anywhere}
+.back p{margin:8px 0}.back pre{font-family:var(--m);font-size:13px;white-space:pre;overflow-x:auto;margin:8px 0;padding:8px;border-radius:8px;background:var(--card);border:1px solid var(--bd)}
+.back code{font-family:var(--m);font-size:13px;background:var(--card);padding:1px 5px;border-radius:4px}
+.rate{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.rate .btn{display:flex;flex-direction:column;align-items:center;padding:8px 6px}.rate span{font-size:12px;color:var(--mut)}
+.r0{border-bottom-color:var(--bad)}.r1{border-bottom-color:var(--lg)}.r2{border-bottom-color:var(--ac)}.r3{border-bottom-color:var(--ok)}
+@media(min-width:560px){.rate{grid-template-columns:repeat(4,1fr)}}
+.tg{display:grid;grid-template-columns:minmax(80px,1fr) 2fr auto;gap:10px;align-items:center;margin-top:8px;font-size:14px}
+.sb{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--bd)}.sb i{display:block;height:100%}
+.fr{width:100%;border:0;display:block;min-height:480px;margin-top:10px;border-radius:12px;background:var(--bg)}
+a{color:var(--ac)}
+.ghost{background:transparent;border-bottom-width:1px;font-size:14px;margin-top:16px}
+@media(prefers-reduced-motion:reduce){.pb i{transition:none}.btn:active:not(:disabled){transform:none}}
+</style>
+<div class="wrap">
+<header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
+<nav class="tabs"><button id="t0" class="btn tab">Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button></nav>
+<div id="v"></div>
+</div>
+<script>
+const $=i=>document.getElementById(i),V=$("v");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const hs=s=>{let x=7;for(const c of s)x=(x*31+c.charCodeAt(0))|0;return(x>>>0).toString(36)};
+const sh=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+const SUBJ={p4:{n:"Prog4",c:"s-p4"},lg:{n:"Lógica",c:"s-lg"},mu:{n:"Música",c:"s-mu"}};
+const mc=(s,g,q,a,d,w,h)=>({k:"mc",s,g,q,a,d,w,h}),fc=(s,g,q,b)=>({k:"fc",s,g,q,b});
+
+/* ---- Tarjetas (cortas): Prog4 ---- */
+const P4A=[
+mc("p4","Etiqueta","est ejecuta generarPostulacion(opc)\nDiagrama de clases:  Estudiante ──> Postulacion *   (sin flecha hacia OfertaPasantia)\n¿Cómo dibujo el envío de agregarPostulacion(p) a opc?","est → opc : agregarPostulacion(p)  «parameter»",["est → opc : agregarPostulacion(p)  «local»||opc no salió de un find/create/next dentro de esta operación: llegó por la firma.","est → opc : agregarPostulacion(p)  «association»||No hay flecha Estudiante → OfertaPasantia en el diagrama de clases.","est → opc : agregarPostulacion(p)||Todo mensaje lleva estereotipo: hay que decir cómo conoce est a opc."],"opc está en la firma de generarPostulacion(opc)."),
+mc("p4","Etiqueta","1: Controlador → :Estudiante * : est := find(ci)\n¿Cómo dibujo el mensaje 2 a est?","2: Controlador → est : generarPostulacion(opc)  «local»",["2: Controlador → est : generarPostulacion(opc)  «association»||est salió del find del mensaje 1, no de una flecha del diagrama de clases.","2: Controlador → est : generarPostulacion(opc)  «parameter»||est no está en la firma de la operación: lo obtuvo con el find.","2: Controlador → :Estudiante * : generarPostulacion(opc)  «association»||generarPostulacion es de un estudiante concreto, no de la colección."],"est es el resultado del find 1: queda en una variable local."),
+mc("p4","Etiqueta","Diagrama de clases:  Controlador ──> Estudiante *\n¿Cómo dibujo el find hacia la colección?","Controlador → :Estudiante * : est := find(ci)  «association»",["Controlador → :Estudiante * : est := find(ci)  «local»||La colección no salió de un find: el Controlador llega a ella por la flecha del diagrama.","Controlador → :Estudiante * : est := find(ci)  «parameter»||La colección no está en la firma de la operación.","Controlador → est : find(ci)  «association»||find va a la colección (:Estudiante *), no a un estudiante concreto."],"La flecha Controlador → Estudiante del diagrama de clases es la asociación."),
+mc("p4","Etiqueta","3.1: emp → :OfertaPasantia * : opc := find(cod)\n¿Cómo dibujo el 3.2 hacia opc?","3.2: emp → opc : hayCupos()  «local»",["3.2: emp → opc : hayCupos()  «association»||La flecha Empresa → OfertaPasantia llega a la colección; el objeto opc lo obtuve con el find 3.1.","3.2: emp → opc : hayCupos()  «parameter»||opc no está en la firma de la operación.","3.2: emp → :OfertaPasantia * : hayCupos()  «association»||hayCupos() la responde una oferta concreta, no la colección."],"opc salió del find 3.1."),
+mc("p4","Etiqueta","Diagrama de clases:  Empresa ──> OfertaPasantia *\n¿Cómo dibujo el find de emp hacia las ofertas?","emp → :OfertaPasantia * : opc := find(cod)  «association»",["emp → :OfertaPasantia * : opc := find(cod)  «local»||La colección no salió de un find: emp llega a ella por la asociación.","emp → :OfertaPasantia * : opc := find(cod)  «parameter»||La colección no viene en la firma de la operación.","emp → opc : find(cod)  «association»||find va al multiobjeto, no a una oferta concreta."],"La flecha Empresa → OfertaPasantia del diagrama de clases."),
+mc("p4","Etiqueta","1: Controlador → :Empresa * : emp := find(rut)\n¿Cómo dibujo el mensaje 3 a emp?","3: Controlador → emp : cuposDisponibles(cod)  «local»",["3: Controlador → emp : cuposDisponibles(cod)  «association»||emp salió del find del mensaje 1; la asociación del Controlador es con la colección.","3: Controlador → emp : cuposDisponibles(cod)  «parameter»||emp no está en la firma de la operación.","3: Controlador → :Empresa * : cuposDisponibles(cod)  «association»||cuposDisponibles(cod) es de una empresa concreta, no de la colección."],"emp es el resultado del find 1: variable local."),
+mc("p4","Etiqueta","est ejecuta generarPostulacion(opc)\n¿Cómo dibujo la creación de la postulación?","est → p:Postulacion : p := create(est, opc)  «local»",["est → p:Postulacion : p := create(est, opc)  «association»||p todavía no existe: el create lo construye y queda en una variable local.","est → p:Postulacion : p := create(est, opc)  «parameter»||p no viene en la firma: lo crea est.","est → :Postulacion * : p := create(est, opc)  «association»||create va al objeto nuevo, no a la colección."],"El create deja al objeto nuevo en una variable local."),
+mc("p4","Etiqueta","4.1*: est → :Postulacion * : pe := next()\n¿Cómo dibujo el 4.2* hacia pe?","4.2*: est → pe : getOfertaPasantiaCodigo()  «local»",["4.2*: est → pe : getOfertaPasantiaCodigo()  «association»||pe salió del next 4.1*, no de una flecha del diagrama de clases.","4.2*: est → pe : getOfertaPasantiaCodigo()  «parameter»||pe no viene en la firma: lo obtuvo con next.","4.2: est → pe : getOfertaPasantiaCodigo()||Está dentro del recorrido: el número lleva el * (4.2*)."],"pe es el resultado del next: variable local, dentro de la iteración."),
+mc("p4","Etiqueta","Diagrama de clases:  Estudiante ──> Postulacion *\n¿Cómo dibujo el next de est hacia sus postulaciones?","est → :Postulacion * : pe := next()  «association»",["est → :Postulacion * : pe := next()  «local»||La colección no salió de un find/create/next: est llega a ella por la asociación.","est → :Postulacion * : pe := next()  «parameter»||La colección no viene en la firma de la operación.","est → pe : next()  «association»||next va al multiobjeto, no a una postulación concreta."],"La flecha Estudiante → Postulacion del diagrama de clases."),
+mc("p4","Etiqueta","Diagrama de clases:  Postulacion ──> OfertaPasantia\n¿Cómo dibujo el envío de calcularBeneficio() a la oferta de pec?","pec → :OfertaPasantia : calcularBeneficio()  «association»",["pec → :OfertaPasantia : calcularBeneficio()  «local»||No salió de un find/create/next: pec conoce a su oferta por la asociación.","pec → :OfertaPasantia : calcularBeneficio()  «parameter»||La oferta no viene en la firma de la operación.","pec → :OfertaPasantia * : calcularBeneficio()  «association»||Una postulación tiene una sola oferta (1): no es un multiobjeto."],"La flecha Postulacion → OfertaPasantia del diagrama de clases."),
+mc("p4","Etiqueta","opc ejecuta agregarPostulacion(p)\nDiagrama de clases:  OfertaPasantia ──> Postulacion *\n¿Cómo dibujo el add de p?","opc → :Postulacion * : add(p)  «association»",["opc → :Postulacion * : add(p)  «parameter»||El estereotipo es del receptor (la colección), no de p, que sí viene por parámetro.","opc → :Postulacion * : add(p)  «local»||La colección no salió de un find/create/next.","opc → p : add(p)  «association»||add va a la colección, no a la postulación."],"La colección de postulaciones se alcanza por la flecha OfertaPasantia → Postulacion."),
+mc("p4","Etiqueta","Necesito cuposDisponibles(cod) de una Empresa; est no llega a ella.\nDiagrama de clases:  Controlador ──> Empresa *   Estudiante ──> Postulacion *   (sin flecha Estudiante → Empresa)\n¿Qué dibujo?","Controlador → :Empresa * : emp := find(rut)  «association»  y después  Controlador → emp : cd := cuposDisponibles(cod)  «local»",["est → :Empresa * : emp := find(rut)  «association»||Sin flecha Estudiante → Empresa no hay asociación: el estereotipo no la crea.","est → emp : cd := cuposDisponibles(cod)  «global»||«global» no reemplaza un camino de navegabilidad.","Controlador → emp : cd := cuposDisponibles(cod)  «association»||Falta el find: el Controlador llega a la colección por asociación, y a emp por «local» tras el find."],"Si el emisor no tiene camino, lo hace el objeto que sí conoce a la clase (acá el Controlador)."),
+mc("p4","Destino","Tengo opc y quiero saber si hay cupos.\n¿A quién envío hayCupos()?","A opc (OfertaPasantia)",["Al Controlador","Al estudiante"],"hayCupos() es una operación de OfertaPasantia."),
+mc("p4","Destino","Tengo p y quiero saber su estado.\n¿A quién envío getEstado()?","A p (Postulacion)",["Al estudiante","A la oferta"],"getEstado() es una operación de Postulacion."),
+mc("p4","Destino","Necesito calcularBeneficio().\n¿A quién se lo envío?","A opc (OfertaPasantia, según su subclase)",["Al estudiante","Al Controlador"],"La define la oferta: es abstracta y se dibuja un diagrama por subclase."),
+mc("p4","Destino","Tengo pe y quiero el código de su oferta.\n¿A quién envío getOfertaPasantiaCodigo()?","A pe (Postulacion)",["A la empresa","Al Controlador"],"Esa operación es de Postulacion, que conoce a su oferta."),
+mc("p4","Destino","El Controlador necesita cuposDisponibles(cod).\n¿A quién se lo envía?","A emp (Empresa)",["A :OfertaPasantia *","A est"],"cuposDisponibles(cod) es una operación de Empresa."),
+mc("p4","Destino","emp busca una oferta por código.\n¿Destino del find?",":OfertaPasantia *",["opc:OfertaPasantia","El Controlador"],"find va al multiobjeto de la clase."),
+mc("p4","Destino","El Controlador busca un estudiante por ci.\n¿Destino del find?",":Estudiante *",["est:Estudiante","emp"],"find va al multiobjeto, no a un objeto concreto."),
+mc("p4","Destino","Ya tengo est.\n¿A quién envío aceptarPostulacion(cod)?","A est (Estudiante)",[":Estudiante *","Al Controlador"],"Es una operación de Estudiante, ya tengo el objeto."),
+mc("p4","Destino","¿Puedo enviarle find a est:Estudiante?","No: find va a :Estudiante *",["Sí, es un método de est","Sí, si est es local"],"find es de colección."),
+mc("p4","Mensaje","¿Cuál está bien escrito?","cd := cuposDisponibles(codOferta)",["cd = cuposDisponibles(codOferta)||El resultado se asigna con :=, no con =.","cuposDisponibles(codOferta) → cd||La variable va a la izquierda: var := operación(parámetros)."],"variable := operación(parámetros)."),
+mc("p4","Mensaje","No uso el resultado después.\n¿Cómo lo escribo?","agregarPostulacion(p)",["x := agregarPostulacion(p)||Una variable que nunca uso sobra.","[p] agregarPostulacion||Los corchetes son para condiciones, no para parámetros."],"Sin resultado útil, sin variable."),
+mc("p4","Mensaje","Paso dos datos.\n¿Cómo lo escribo?","create(est, opc)",["create(est opc)||Los parámetros se separan con coma.","create[est, opc]||Los parámetros van entre paréntesis."],"Entre paréntesis y separados por coma."),
+mc("p4","Mensaje","Devuelve algo y recibe un parámetro.\n¿Cómo lo escribo?","opc := find(codOferta)",["find(codOferta) → opc||La variable va a la izquierda del mensaje.","opc = find||Falta el := y el parámetro."],"Variable, :=, operación y parámetro."),
+mc("p4","Mensaje","Creo la postulación entre est y opc.\n¿Cómo escribo el mensaje?","p := create(est, opc)",["create(p)","p := find(est, opc)"],"Variable, create y los dos objetos que necesita para enlazarse."),
+mc("p4","Mensaje","¿Cuándo guardo el resultado en una variable?","Cuando lo uso después",["Siempre||Si no lo uso, la variable sobra.","Solo si el mensaje es un find||Cualquier resultado que uso después necesita variable (create, método, find)."],"Si lo uso, necesita nombre."),
+mc("p4","Decisión","Tengo ci y quiero al estudiante.\n¿Qué envío?","find(ci) a :Estudiante *",["getEstudiante(ci) a Sistema","obtenerEstudiante() a est"],"Buscar por clave es find sobre la colección."),
+mc("p4","Decisión","Soy el Controlador, tengo emp y quiero una oferta por código.\n¿Qué hago?","obtenerOferta(cod) a emp",["find directo a :OfertaPasantia *","find a emp"],"El Controlador no conoce las ofertas: se lo pide a emp, que hace el find sobre su colección."),
+mc("p4","Decisión","Tengo est y opc y quiero registrar una postulación nueva.\n¿Qué mensaje uso?","create(est, opc)",["find(est, opc)","add(est, opc)"],"Hay que crear un objeto nuevo."),
+mc("p4","Decisión","Quiero revisar todas las postulaciones de est.\n¿Qué hago?","next() con * en el número",["find() a est","add() a la colección"],"Recorrer es next con iteración."),
+mc("p4","Decisión","Quiero guardar p en la colección de la oferta.\n¿Qué hago?","add(p) a :Postulacion *",["find(p)","next(p)"],"Agregar a una colección es add."),
+mc("p4","Decisión","Ya tengo el objeto y quiero un dato suyo.\n¿Qué hago?","Un método suyo",["find a la colección","create"],"Lo que sabe un objeto se le pide a él."),
+mc("p4","Decisión","Solo se acepta si hay cupos.\n¿Cómo lo marco?","[cd] antes del mensaje",["* en el número","«local»"],"La condición va entre corchetes."),
+mc("p4","Decisión","La operación devuelve algo que uso después.\n¿Cómo lo escribo?","var := op(…)",["op(…) *","[var] op(…)"],"El resultado se guarda en una variable."),
+mc("p4","Decisión","calcularBeneficio() es abstracta en OfertaPasantia.\n¿Cómo lo dibujo?","Mensaje a la abstracta y un diagrama por subclase",["Dibujo solo una subclase","Lo resuelvo con un if"],"Cada subclase implementa su versión."),
+mc("p4","Notación","Primera aparición de emp.\n¿Cómo lo escribo?","emp:Empresa",["emp","Empresa"],"Primera vez: nombre:Clase."),
+mc("p4","Notación","emp ya apareció antes.\n¿Cómo lo escribo?","emp",["emp:Empresa",":Empresa"],"Después alcanza con el nombre."),
+mc("p4","Notación","Colección de estudiantes, sin nombre.\n¿Cómo la escribo?",":Estudiante *",[":Estudiante","Estudiante *"],"Con : y con * (el recuadro doble)."),
+mc("p4","Notación","Un objeto de Empresa, sin nombre.\n¿Cómo lo escribo?",":Empresa",["Empresa||Sin los dos puntos sería la clase, no un objeto.","Empresa:||Los dos puntos van antes de la clase."],"Sin nombre igual lleva los dos puntos."),
+mc("p4","Notación","Mensaje dentro de un recorrido.\n¿Cómo lo numero?","Con * pegado: 4.1*",["4.1||Sin * no indica iteración.","*4.1||El * va pegado al final del número."],"El * del número marca iteración."),
+mc("p4","Notación","emp recibió el 3.\n¿Cómo numero su primer mensaje?","3.1",["4","3.0"],"Lo que dispara el 3 cuelga de él."),
+mc("p4","Notación","El Controlador envía su cuarto mensaje.\n¿Qué número lleva?","4",["1.4","3.4"],"Los de primer nivel van 1, 2, 3, 4…"),
+mc("p4","Notación","¿Quién envía los mensajes 1, 2, 3, 4?",":Controlador",["Sistema","El actor"],"La operación del sistema entra al Controlador."),
+mc("p4","Notación","¿Hay una caja «Sistema» en comunicación?","No: la operación entra al Controlador",["Sí, origen del 1","Sí, solo para find"],"El Sistema aparece en la secuencia, no acá."),
+mc("p4","Notación","est ejecuta el 4.\n¿Cómo numero su segundo mensaje?","4.2",["5","4.1.2"],"Es hijo del 4, el segundo."),
+mc("p4","Notación","opc recibió el 4.2.\n¿Cómo numero su primer mensaje?","4.2.1",["4.3","4.1"],"Cuelga del 4.2."),
+mc("p4","Notación","Dos mensajes seguidos del Controlador: 3 y…","4",["3.1||3.1 sería un mensaje que cuelga del 3, no uno del mismo nivel.","3.2||Los 3.x cuelgan del 3; el Controlador sigue con el 4."],"Mismo nivel, siguiente número."),
+mc("p4","Notación","est:Estudiante  y  :Estudiante *\n¿Cuál es la colección?",":Estudiante *",["est:Estudiante","Las dos"],"El * marca la colección."),
+mc("p4","Notación","Voy a usar p después, como parámetro.\n¿Cómo lo escribo?","p:Postulacion",[":Postulacion","Postulacion"],"Si lo voy a nombrar, lleva nombre."),
+mc("p4","Notación","Solo le envío un mensaje a la colección.\n¿Necesita nombre?","No: :Clase * alcanza",["Sí, siempre","Sí, con *"],"Sin nombre alcanza."),
+mc("p4","Notación","Escribo un objeto con nombre.\n¿Qué separa el nombre de la clase?","Los dos puntos: emp:Empresa",["Un punto: emp.Empresa||El punto no se usa en esta notación.","Un guion: emp-Empresa||El separador es :"],"nombre:Clase."),
+mc("p4","Notación","Escribo «Controlador» sin los dos puntos.\n¿Qué estoy nombrando?","La clase, no un objeto",["Un objeto sin nombre","Una colección"],"El objeto es :Controlador."),
+/* Practico 4 (Prog4): enlaces, borrado e iteracion. Ojo: las soluciones del practico dibujan el origen como :Sistema y escriben 1*[foreach]; en el parcial se corrigio :Controlador. */
+mc("p4","Enlaces","Práctico 4 · 2a\nEl link va de A hacia B: A guarda la referencia a la B nueva.\n:A hizo b := create(id).\n¿Qué mensaje sigue?","add(b), de :A a :B * (la colección)",["setA(a), de :B a sí mismo||Eso guarda la referencia de B hacia A; acá la referencia va de A hacia B.","find(id) a :B *||El objeto ya existe y lo tengo en b: no hay nada que buscar.","destroy() a b||destroy elimina la instancia, no la enlaza."],"A mantiene una colección de B: después de crear b, lo agrega con add."),
+mc("p4","Enlaces","Práctico 4 · 2b\nEl link va de B hacia A: B guarda la referencia a su única A.\n:B hizo a := create(id).\n¿Qué mensaje sigue?","setA(a), de :B a sí mismo",["add(a) a :A *||add es para colecciones; B guarda una sola A.","add(b), de :A a :B *||Eso corresponde al link de A hacia B.","setB(b) a :A||Eso guardaría la referencia en A, no en B."],"B guarda su A con setA, un mensaje que se envía a sí misma."),
+mc("p4","Enlaces","Práctico 4 · 2c\nLink en los dos sentidos. a:A hace b := create(id, a).\n¿Para qué se pasa a como parámetro?","Para que b guarde su referencia con setA(a)",["Para que A pueda hacer add(b)||add(b) usa b, que ya devolvió el create.","Para identificar la instancia en la colección||Identificar es el id, no el objeto a.","Es opcional: no cambia el diagrama||Sin a, B no tendría qué guardar en setA."],"Se pasa a sí misma para que la instancia nueva pueda guardar la referencia de vuelta."),
+mc("p4","Enlaces","Práctico 4 · 2c\na:A hace 1: b := create(id, a) y 2: add(b).\n¿Cómo se numera el setA(a) que b se envía a sí mismo?","1.1, porque lo dispara el create",["1.2||Es el primer (y único) mensaje que dispara el create.","2.1||Cuelga del add, que no lo dispara.","3||Ocurre dentro del create, no después del add."],"Lo que dispara el 1 cuelga de él: 1.1."),
+mc("p4","Borrado","Práctico 4 · 2d\nA creó b y quiero eliminar solo el link (A guarda una colección de B).\n¿Qué envía A?","remove(id) a :B *",["destroy() a b||destroy elimina la instancia; acá solo hay que desengancharla.","setA(NULL) a b||Eso corresponde al link de B hacia A.","find(id) y nada más||find solo busca, no desengancha."],"Para sacar el link de la colección: remove(id)."),
+mc("p4","Borrado","Práctico 4 · 2d\nQuiero eliminar el link y también la instancia b de B (la creó A).\n¿Qué secuencia envía A?","b := find(id), remove(id) a :B *, destroy() a b",["remove(id) y listo||Eso solo elimina el link: la instancia sigue existiendo.","destroy() a :B *, sin find||destroy va a la instancia concreta b, no a la colección.","destroy() a b y después remove(id)||Quedaría en la colección una referencia a un objeto ya destruido."],"Primero la busco, saco el link y por último destruyo la instancia."),
+mc("p4","Borrado","Práctico 4 · 2d\nEl link va de B hacia A y quiero eliminar solo el link.\n¿Qué hace :B?","setA(NULL), a sí mismo",["remove(id) a :A *||B guarda una sola referencia, no una colección.","destroy() a :A||Eso destruye la instancia; acá solo se desengancha."],"B borra su referencia a A poniéndola en NULL."),
+mc("p4","Borrado","Práctico 4 · 2d\n¿Destruir un link equivale a destruir la instancia?","No: se desengancha el objeto y puede seguir existiendo",["Sí: sin link el objeto queda inútil||Puede tener otros links o seguir en otra colección.","Sí, siempre||Son operaciones distintas: remove o setX(NULL) contra destroy()."],"En general, quien crea la instancia es responsable de destruirla; el link es otra cosa."),
+mc("p4","Iteración","Práctico 4 · 3a\nRecorro todas las instancias de A.\n¿Cómo escribo el mensaje que obtiene cada una?","1*[foreach]: a := next() a :A *",["1: a := find() a :A *||find busca por clave; para recorrer todas se usa next con iteración.","1*: a := create() a :A *||create construye un objeto nuevo.","1: next() a a:A||next va a la colección, no a una instancia."],"Iteración: * pegado al número y next() sobre el multiobjeto. El práctico además escribe [foreach]."),
+mc("p4","Iteración","Práctico 4 · 3a\n¿Qué indica [foreach] en «1*[foreach]: a := next()»?","Que el mensaje se repite para cada instancia de la colección",["Que a es un parámetro||Un parámetro va entre paréntesis.","Que hay una condición de corte||La condición de corte es otra cosa: se anota aparte."],"Es la marca del recorrido sobre todos los elementos."),
+mc("p4","Iteración","Práctico 4 · 3a\nCada a:A debe decir si tiene algún R con val > v.\n¿Quién compara val con v?","a:A, que recorre sus R",["El Controlador, pidiendo todos los val||Se acopla con extraños y se expone la estructura interna de A.","r:R, comparando con los otros R||R no conoce a los demás R."],"La condición se resuelve adentro: a recorre sus R y pide val a cada uno."),
+mc("p4","Iteración","Práctico 4 · 3b\nLa asociación se navega de B hacia A: cada b devuelve las A que cumplen.\n¿Qué hago con los resultados de cada b?","Los uno (unión de conjuntos) para eliminar repetidos",["Los concateno||Una misma A puede aparecer por varias B y quedaría repetida.","Me quedo con los de la primera b||Perdería las A que cumplen a través de otras B.","Los ordeno por id||Ordenar no elimina los repetidos."],"Una misma A puede aparecer en varias B: resultado = resultado unión aa."),
+mc("p4","Iteración","Práctico 4 · 3a y 7a\nBusco si algún elemento cumple una condición (por ejemplo val > v).\n¿Cuándo corto la iteración?","Apenas encuentro uno que cumple, y retorno true",["Cuando termina la colección||Eso sirve para acumular; para «existe alguno» basta con el primero.","Nunca: siempre recorro todo||Seguir recorriendo no cambia el resultado y desperdicia mensajes."],"Para un «existe alguno»: se detiene y retorna true en cuanto se cumple."),
+/* Quiz de la pestaña Ejercicios Prog4 (viene de prog4.html: const Q) */
+mc("p4","Quiz ejercicios","¿A quién llega la operación del sistema (ej. postularse)?",":Controlador",["Sistema",":Estudiante","El actor"],"El Controlador recibe la operación y delega. En el parcial arrancaste desde «Sistema»."),
+mc("p4","Quiz ejercicios","El Controlador quiere la Empresa por su rut. ¿Qué mensaje y estereotipo?","find(rut) a :Empresa * con <<association>>",["obtenerEmpresa(rut) a Sistema con <<local>>","find(rut) a emp con <<local>>","create(rut) a :Empresa con <<association>>"],"find va al multiobjeto (la colección), y el Controlador llega a ella por asociación."),
+mc("p4","Quiz ejercicios","cd := cuposDisponibles(codOferta), enviado del Controlador a emp (ya obtenida con find). ¿Estereotipo?","<<local>>",["<<association>>","<<parameter>>","<<global>>"],"emp quedó en una variable local del Controlador."),
+mc("p4","Quiz ejercicios","est ejecuta generarPostulacion(opc) y luego envía agregarPostulacion(p) a opc. ¿Estereotipo de ese envío?","<<parameter>>",["<<local>>","<<association>>","<<global>>"],"opc llegó como parámetro de generarPostulacion."),
+mc("p4","Quiz ejercicios","Al mensaje 3 (a emp) le sigue un find de emp a :OfertaPasantia *. ¿Numeración?","3.1",["4","3.0","1.3"],"Lo disparado por un mensaje se anida: 3 → 3.1."),
+mc("p4","Quiz ejercicios","En postularse, ¿cuándo se crea la Postulacion?","Después de obtener est y opc, porque create(est, opc) los necesita",["Primero de todo, y después se buscan","Al final, desde Sistema","Cuando la empresa lo pide"],"El create necesita a ambos como parámetros. En el parcial lo hiciste primero."),
+mc("p4","Quiz ejercicios","¿Cómo se recorren todas las postulaciones de un estudiante?","Numeración con * y next() sobre :Postulacion *",["find(todas) a una Postulacion","getPostulaciones() a Sistema","Numerando 4.1, 4.2, 4.3"],"Iteración: 4.1*: next() sobre el multiobjeto."),
+mc("p4","Quiz ejercicios","En aceptarPostulacion, ¿quién cambia el estado a «aceptada» y guarda el beneficio?","La propia Postulacion",["OfertaPasantia con setEstado","El Controlador con setBeneficio","La Empresa"],"Cada objeto modifica su propio estado. En el parcial setEstado iba a la Oferta."),
+mc("p4","Quiz ejercicios","calcularBeneficio() es abstracta en OfertaPasantia. En el diagrama de comunicación…","Se envía a :OfertaPasantia y se dibuja un diagrama por subclase",["Se dibuja solo Remunerada","Se envía directo a Capacitacion","Se resuelve con un if en el Controlador"],"Polimorfismo: el mensaje va a la clase abstracta y cada implementación se muestra aparte."),
+mc("p4","Quiz ejercicios","El Controlador necesita un objeto al que no llega por asociación, ni es local ni parámetro. ¿Qué indica?","Falta navegabilidad: hay que llegar por otro objeto",["Se usa <<global>> igual","Se dibuja sin estereotipo","Se manda a Sistema"],"Todo emisor debe poder navegar hasta el receptor. Revisá el diagrama de clases primero."),
+mc("p4","Quiz ejercicios","¿Cómo se marca que un mensaje solo ocurre si cd es verdadero?","Condición entre corchetes: 4: [cd] aceptarPostulacion(...)",["Con * en el número","Con <<local>>","No se puede"],"La condición va entre corchetes antes del mensaje.")
+];
+
+/* ---- Tarjetas (cortas): Lógica ---- */
+const LGA=[
+/* d = distractores. "texto||por que no" => el motivo se muestra al elegir esa opcion. */
+/* Armar: meta + lo que tengo; se arma desde la META */
+mc("lg","Armar","Tengo: φ, ψ\nMeta: φ∧ψ\n¿Qué regla cierra la derivación?","I∧: pruebo φ y pruebo ψ",["I∨: pruebo solo φ||I∨ arma una disyunción; la meta es una conjunción y pide los dos lados.","E∧: separo φ y ψ||E∧ saca partes de una conjunción que ya tenés; acá φ∧ψ es la meta.","I→: supongo φ||I→ arma una implicación, no una conjunción."],"La meta es una conjunción: se arma con I∧."),
+mc("lg","Armar","Tengo: φ→σ, σ→ψ\nMeta: φ→ψ\n¿Cómo la armo?","I→: supongo φ, llego a ψ (con E→ dos veces) y cancelo φ",["I→: supongo ψ, llego a φ y cancelo ψ||Invertiste la implicación: se supone el antecedente (φ) y se busca el consecuente (ψ).","E→: de φ→σ y σ→ψ saco φ→ψ||E→ necesita φ como premisa. No hay una regla que encadene implicaciones sin suponer φ.","I∧: junto φ→σ y σ→ψ||I∧ da una conjunción, no la implicación pedida."],"La meta es una implicación: supongo el antecedente y busco el consecuente."),
+mc("lg","Armar","Tengo: φ→ψ, ¬ψ\nMeta: ¬φ\n¿Cómo la armo?","I¬: supongo φ y llego a ⊥",["RAA: supongo ¬φ y llego a ⊥||Suponer ¬φ sirve para probar φ, no ¬φ.","E¬: de ¬ψ saco ¬φ||E¬ no concluye negaciones: junta φ y ¬φ para dar ⊥.","E→: de φ→ψ saco ¬φ||E→ necesita φ, y φ es justo lo que no tengo."],"La meta empieza con ¬: supongo φ, saco ψ con E→ y ⊥ con E¬."),
+mc("lg","Armar","Tengo: ¬¬φ\nMeta: φ\n¿Cómo la armo?","RAA: supongo ¬φ y llego a ⊥",["I¬: supongo φ y llego a ⊥||I¬ concluye ¬φ, no φ.","E¬: de ¬¬φ saco φ||E¬ junta φ y ¬φ para dar ⊥; no quita dobles negaciones.","E⊥: de ¬¬φ concluyo φ||E⊥ necesita un ⊥ ya probado."],"φ no tiene conector que pueda introducir. Con ¬¬φ y ¬φ, E¬ da ⊥."),
+mc("lg","Armar","Tengo: φ\nMeta: φ∨ψ\n¿Cómo la armo?","I∨: parto de φ",["I∧: parto de φ||Habría que probar también ψ; I∧ pide los dos lados.","E∨: separo φ∨ψ||E∨ usa una disyunción que ya tenés; acá es la meta.","I→: supongo φ||I→ arma una implicación, no una disyunción."],"En una disyunción alcanza probar un lado."),
+mc("lg","Armar","Tengo: nada\nMeta: φ∨¬φ\n¿Cómo la armo?","RAA: supongo ¬(φ∨¬φ)",["I∨: pruebo φ||Sin hipótesis no puedo probar φ.","I∨: pruebo ¬φ||Sin hipótesis no puedo probar ¬φ.","I¬: supongo φ||I¬ concluye ¬φ, no una disyunción."],"No puedo probar ni φ ni ¬φ por separado, así que I∨ directo no sirve."),
+mc("lg","Armar","Tengo: (∀x)(P(x)∧Q(x))\nMeta: (∀x)P(x)\n¿Cómo la armo?","I∀: con x arbitraria, derivo P(x)",["I∃: busco un testigo||I∃ arma un ∃; la meta es un ∀.","E∀ con t = a: obtengo P(a)||Eso prueba P(a) para un a concreto, no para todo x.","E∃: supongo P(x)||No hay ningún ∃ para eliminar."],"La meta es un ∀: tomo x arbitraria. x no está libre en la hipótesis, así que se puede."),
+mc("lg","Armar","Tengo: P(a)\nMeta: (∃x)P(x)\n¿Cómo la armo?","I∃: el testigo es a",["I∀: x arbitraria||La meta es un ∃; además P(a) no vale para todo x.","E∃: supongo P(x), x nueva||E∃ usa un ∃ que ya tenés; acá es la meta.","E∀ con t = a||No tengo ningún ∀ para instanciar."],"La meta es un ∃: busco un término t con P(t). Acá t = a."),
+mc("lg","Armar","Tengo: φ→ψ, ψ→φ\nMeta: φ↔ψ\n¿Cómo la armo?","I↔: uso φ→ψ y ψ→φ",["I∧: junto φ→ψ y ψ→φ||I∧ da (φ→ψ)∧(ψ→φ), que no es la fórmula φ↔ψ.","E→: de φ→ψ saco ψ||E→ necesita φ y no la tengo.","I→: supongo φ||I→ arma una implicación, no una equivalencia."],"La meta es una equivalencia: se arma con φ→ψ y ψ→φ."),
+mc("lg","Armar","Tengo: φ, ¬φ\nMeta: ⊥\n¿Qué regla?","E¬: junto φ y ¬φ",["E⊥: parto de un ⊥||E⊥ necesita un ⊥ ya probado; acá ⊥ es la meta.","I¬: concluyo ¬φ||I¬ concluye una negación cancelando una hipótesis; la meta es ⊥.","I∧: junto φ y ¬φ||Daría φ∧¬φ, no ⊥."],"⊥ se obtiene de una contradicción: φ y ¬φ.","⊥ no se arma con una introducción: sale de E¬ al juntar φ y ¬φ. E⊥ es al revés: parte de un ⊥ que ya tenés."),
+mc("lg","Armar","Tengo: φ, ψ\nMeta: ψ\n¿Qué hago?","Nada: ψ ya está entre las hipótesis",["I∧: junto φ y ψ||Daría φ∧ψ; la meta es ψ.","E∧: saco ψ de φ∧ψ||No tengo ninguna conjunción.","I→: supongo ψ||La meta no es una implicación."],"Si la meta ya es una hipótesis, queda como hoja del árbol.","Antes de armar nada, mirá si la meta ya está entre lo que tenés."),
+/* Desarmar: se desarma la HIPOTESIS que hace falta */
+mc("lg","Desarmar","Tengo: φ∧ψ\nMeta: ψ\n¿Qué regla uso?","E∧: me quedo con ψ",["I∧: junto φ y ψ||I∧ arma φ∧ψ; esa ya la tengo y quiero ψ.","E→: de φ saco ψ||No hay ninguna implicación.","I∨: parto de ψ||Daría ψ∨algo, no ψ."],"Una conjunción se separa con E∧."),
+mc("lg","Desarmar","Tengo: φ→ψ, φ\nMeta: ψ\n¿Qué regla?","E→: de φ→ψ y φ obtengo ψ",["I→: supongo φ||Ya tengo φ como premisa; I→ sirve para armar una implicación.","E∧: separo φ→ψ||φ→ψ no es una conjunción.","I∧: junto φ→ψ y φ||Daría una conjunción, no ψ."],"Es el modus ponens."),
+mc("lg","Desarmar","Tengo: φ∨ψ, φ→σ, ψ→σ\nMeta: σ\n¿Qué regla?","E∨: pruebo σ bajo φ y bajo ψ",["E→: de φ→σ saco σ||E→ necesita φ, y todavía no tengo φ.","I∨: elijo un lado||I∨ arma disyunciones; acá hay que usar una que ya tengo.","E∧: separo φ∨ψ||φ∨ψ no es una conjunción."],"Con una disyunción no avanzo sin separar casos."),
+mc("lg","Desarmar","Tengo: (∀x)P(x)\nMeta: P(a)\n¿Qué regla?","E∀: instancio x con a",["I∀: x arbitraria||I∀ arma un ∀; acá ya lo tengo y quiero instanciarlo.","E∃: supongo P(x)||No tengo ningún ∃.","I∃: el testigo es a||Daría (∃x)P(x), no P(a)."],"Instancio con un término a que sea libre para x."),
+mc("lg","Desarmar","Tengo: (∃x)P(x), (∀x)(P(x)→Q(x))\nMeta: (∃x)Q(x)\n¿Cómo uso el ∃?","E∃: supongo P(x) con x nueva",["E∀ con una constante a: obtengo P(a)→Q(a)||No sé que exista un a con P(a); el ∃ sigue sin usarse.","I∃ directo: elijo un testigo||Antes necesito un t con Q(t), y para eso hay que usar el ∃ de P.","I∀: x arbitraria||La meta es un ∃, no un ∀."],"Para usar un ∃ supongo el testigo con una variable nueva y sigo hasta la meta."),
+mc("lg","Desarmar","Tengo: ⊥\nMeta: ψ\n¿Qué regla?","E⊥: de ⊥ concluyo ψ",["E¬: junto ⊥ y ¬ψ||E¬ da ⊥, y ⊥ ya lo tengo.","I¬: supongo ψ||I¬ concluye ¬ψ, no ψ."],"Ex falso: de ⊥ sale cualquier fórmula."),
+/* Primer paso: decidir armar la meta o desarmar hipotesis */
+mc("lg","Primer paso","Tengo: φ∧ψ\nMeta: ψ∧φ\n¿Primer paso?","Armar: I∧ (pruebo ψ y pruebo φ)",["Desarmar: E∧ y listo||E∧ da φ y ψ por separado, no ψ∧φ: falta juntarlas con I∧.","I→: supongo ψ||La meta no es una implicación.","I∨: pruebo ψ||La meta es una conjunción, no una disyunción."],"Miro primero la meta (∧ → I∧). Después saco ψ y φ de la hipótesis con E∧."),
+mc("lg","Primer paso","Tengo: nada\nMeta: φ→(ψ→φ)\n¿Primer paso?","I→: supongo φ",["I→: supongo ψ||El antecedente del conector principal es φ, no ψ.","E→ sobre la meta||E→ necesita premisas y no tengo nada.","I∧: pruebo φ y ψ→φ||La meta es una implicación, no una conjunción."],"La meta es una implicación. Después supongo ψ y φ es una hipótesis."),
+mc("lg","Primer paso","Tengo: nada\nMeta: ¬(φ∧¬φ)\n¿Primer paso?","I¬: supongo φ∧¬φ",["I¬: supongo φ||Hay que suponer toda la conjunción φ∧¬φ, que es lo que niega la meta.","RAA: supongo φ∧¬φ||RAA supone ¬φ para probar φ; la meta empieza con ¬ y se arma con I¬.","I∧: pruebo φ y ¬φ||Eso sería probar una contradicción, que no se puede."],"La meta empieza con ¬. Con E∧ saco φ y ¬φ, y con E¬ llego a ⊥."),
+mc("lg","Primer paso","Tengo: φ∨ψ, ¬ψ\nMeta: φ\n¿Primer paso?","E∨ sobre φ∨ψ",["I∨: pruebo φ||φ no está probada: viene de separar la disyunción.","E¬: junto ψ y ¬ψ||No tengo ψ sola; tengo φ∨ψ.","I¬: supongo φ||La meta es φ, no ¬φ."],"Hay una disyunción y la meta no tiene conector que armar: separo casos. En el caso ψ, con ¬ψ llego a ⊥ y uso E⊥."),
+mc("lg","Primer paso","Tengo: φ→ψ, φ\nMeta: ψ∨σ\n¿Primer paso?","I∨: saco ψ con E→ y elijo ese lado",["I∨: pruebo σ||No tengo forma de probar σ.","E∨: separo ψ∨σ||La disyunción es la meta; no hay una para usar.","I∧: junto ψ y σ||Daría ψ∧σ, no ψ∨σ."],"Con φ→ψ y φ saco ψ por E→, y alcanza un lado de la disyunción."),
+/* Teoremas de los practicos 4 y 8: primer paso segun el conector principal */
+mc("lg","Primer paso","Práctico 4 · 1a\nTengo: nada\nMeta: φ→φ\n¿Primer paso?","I→: supongo φ (y la meta φ es esa misma hipótesis)",["E→: uso φ→φ y φ||Sería circular: φ→φ es lo que quiero probar.","I∧: pruebo φ y φ||La meta es una implicación, no una conjunción.","RAA: supongo ¬φ||No hace falta: la meta se arma con la introducción de su conector."],"Supongo φ, la meta φ ya está como hipótesis y la cancelo con I→."),
+mc("lg","Primer paso","Práctico 4 · 1b\nTengo: nada\nMeta: ⊥→φ\n¿Primer paso?","I→: supongo ⊥; después E⊥ da φ",["E⊥ sobre la meta||E⊥ necesita un ⊥ ya probado; antes hay que suponerlo con I→.","I¬: supongo ⊥||I¬ concluye ¬⊥, no ⊥→φ.","I∨: parto de φ||La meta no es una disyunción."],"El conector principal es →: supongo ⊥ y de ⊥ sale φ."),
+mc("lg","Primer paso","Práctico 4 · 1d\nTengo: nada\nMeta: φ→(ψ→φ∧ψ)\n¿Primer paso?","I→ dos veces (supongo φ y supongo ψ) y al final I∧",["I∧: pruebo φ y ψ→φ∧ψ||El conector principal de la meta es →, no ∧.","E→ con φ y ψ||No tengo ninguna implicación para eliminar.","I¬: supongo φ||La meta no es una negación."],"Dos implicaciones anidadas: supongo φ, supongo ψ, y armo φ∧ψ."),
+mc("lg","Primer paso","Práctico 4 · 1h\nTengo: nada\nMeta: (φ→ψ)∧(φ→¬ψ)→¬φ\n¿Primer paso?","I→: supongo (φ→ψ)∧(φ→¬ψ); después I¬ suponiendo φ",["I∧: pruebo cada lado||El conector principal es →, no ∧: el ∧ está dentro del antecedente.","I¬: supongo (φ→ψ)∧(φ→¬ψ)||I¬ concluye una negación; el conector principal de la meta es →.","RAA: supongo ¬¬φ||La meta es una implicación."],"Hay que ubicar el conector principal: acá es →, cuyo consecuente ¬φ se arma después con I¬."),
+mc("lg","Primer paso","Práctico 4 · 1k\nYa supuse (φ→ψ)→φ con I→.\nMeta: φ\n¿Cómo sigo?","RAA: supongo ¬φ",["I→: supongo φ||φ no es una implicación: no hay I→ para probarla.","E→: de (φ→ψ)→φ saco φ||Necesita φ→ψ y todavía no la tengo.","I¬: supongo φ||I¬ concluye ¬φ, no φ."],"φ no tiene conector que introducir: RAA. Con ¬φ pruebo φ→ψ (E¬ y E⊥) y después E→ da φ."),
+mc("lg","Primer paso","Práctico 4 · 3c\nTengo: ¬(φ∧¬ψ), φ\nMeta: ψ\n¿Cómo sigo?","RAA: supongo ¬ψ; con φ armo φ∧¬ψ y E¬ da ⊥",["I¬: supongo ψ||I¬ concluye ¬ψ, no ψ.","E∧: separo ¬(φ∧¬ψ)||No es una conjunción: es la negación de una.","I→: supongo φ||φ ya es premisa y la meta no es una implicación."],"ψ no tiene conector que armar: RAA. Con ¬ψ y φ armo φ∧¬ψ, y chocando con la premisa llego a ⊥."),
+mc("lg","Primer paso","Práctico 4 · 3e\nTengo: ¬φ\nMeta: φ→ψ\n¿Primer paso?","I→: supongo φ; con ¬φ, E¬ da ⊥ y E⊥ da ψ",["E¬: junto ¬φ y φ||Todavía no tengo φ: primero hay que suponerla con I→.","I∨: parto de ¬φ||La meta no es una disyunción.","E→: uso ¬φ||¬φ no es una implicación con antecedente que pueda usar."],"El conector principal es →: supongo φ, choca con ¬φ y de ⊥ sale ψ."),
+mc("lg","Primer paso","Práctico 4 · 3a\nTengo: φ\nMeta: ¬(¬φ∧¬ψ)\n¿Primer paso?","I¬: supongo ¬φ∧¬ψ; con E∧ saco ¬φ y con φ llego a ⊥",["RAA: supongo ¬¬(¬φ∧¬ψ)||La meta empieza con ¬ y se arma con I¬.","I∧: pruebo ¬φ y ¬ψ||Eso probaría ¬φ∧¬ψ, que choca con φ.","E∧ sobre la hipótesis||Todavía no hay ninguna conjunción que separar."],"La meta es una negación: supongo lo que niega y busco ⊥."),
+mc("lg","Primer paso","Práctico 4 · 7a\nTengo: nada\nMeta: φ∨ψ→ψ∨φ\n¿Primer paso?","I→: supongo φ∨ψ y uso E∨ (en cada caso, I∨)",["I∨: pruebo ψ||Sin la disyunción no puedo probar ψ ni φ.","E∨ sin suponer nada||Todavía no tengo la disyunción: la introduce I→.","I∧: pruebo φ∨ψ y ψ∨φ||El conector principal es →, no ∧."],"Supongo el antecedente y lo separo en casos con E∨."),
+mc("lg","Primer paso","Práctico 4 · 7e\nTengo: nada\nMeta: (φ→ψ)↔(¬φ∨ψ)\n¿Primer paso?","I↔: pruebo (φ→ψ)→(¬φ∨ψ) y (¬φ∨ψ)→(φ→ψ)",["I∧: pruebo cada lado||I∧ arma una conjunción, no una equivalencia.","I→: supongo φ→ψ||Solo cubre una de las dos direcciones.","RAA: supongo ¬(φ→ψ)||La meta tiene un conector que se arma directo."],"Una equivalencia se arma con las dos implicaciones."),
+mc("lg","Primer paso","Práctico 4 · 7f\nTengo: nada\nMeta: (φ→ψ)∨(ψ→φ)\n¿Primer paso?","RAA: supongo ¬((φ→ψ)∨(ψ→φ))",["I∨: pruebo φ→ψ||Sin hipótesis no hay forma directa de probar φ→ψ.","I∨: pruebo ψ→φ||Sin hipótesis no hay forma directa de probar ψ→φ."],"Ningún lado se prueba solo: se va por RAA, como en φ∨¬φ."),
+mc("lg","Primer paso","Práctico 4 · 8a\nYa supuse ¬(¬φ∧¬ψ).\nMeta: φ∨ψ\n¿Cómo sigo?","RAA: supongo ¬(φ∨ψ) y busco ⊥",["I∨: pruebo φ||No tengo φ probada.","E¬ sobre ¬(¬φ∧¬ψ)||Necesito ¬φ∧¬ψ para juntarla, y todavía no la tengo.","I∧: pruebo ¬φ y ¬ψ||Es parte del camino, pero antes hay que suponer ¬(φ∨ψ)."],"Ni φ ni ψ se prueban solos: RAA. Con ¬(φ∨ψ) pruebo ¬φ y ¬ψ, armo ¬φ∧¬ψ y choca con la hipótesis."),
+mc("lg","Primer paso","Práctico 8 · 3a\nTengo: ∀x(φ→ψ)\nMeta: ∀xφ→∀xψ\n¿Primer paso?","I→: supongo ∀xφ y busco ∀xψ",["I∀: x arbitraria||El conector principal de la meta es →, no ∀.","E∀ sobre ∀x(φ→ψ)||Es un paso posterior: primero se arma la meta con I→.","I∃: busco un testigo||No hay ningún ∃."],"El conector principal es →. Después, con ∀xφ supuesta, hago I∀ sobre ∀xψ."),
+mc("lg","Primer paso","Práctico 8 · 3a\nTengo: ∀x(φ→ψ), ∀xφ\nMeta: ∀xψ\n¿Cómo sigo?","I∀: x arbitraria; con E∀ y E→ derivo ψ",["E∀ sobre la meta||La meta es un ∀: se arma, no se instancia.","I→: supongo ψ||La meta no es una implicación.","E∃: supongo ψ||No hay ningún ∃."],"x no está libre en las hipótesis abiertas (está ligada), así que puedo generalizar."),
+/* Detectar errores (practico 4 ej. 5 y practico 8 ej. 2) */
+mc("lg","Detectar error","Práctico 4 · 5\nDe ¬p₂∧¬p₃ obtengo ¬p₂, y el paso está rotulado «I∧».\n¿Es correcto?","No: debe ser E∧ (separa una conjunción)",["Sí: I∧ también separa||I∧ solo arma conjunciones.","No: debe ser E→||E→ necesita una implicación y una premisa.","No: debe ser I∨||I∨ arma una disyunción."],"Cuando una fórmula pierde un componente, la regla es una eliminación.","Revisá cada paso: ¿la regla es introducción (arma el conector) o eliminación (lo usa)? ¿Se cancelan las hipótesis que dicen? ¿Se cumple la restricción (∗)?"),
+mc("lg","Detectar error","Práctico 4 · 5\nTengo la hipótesis [p₂∨p₃]² y escribo «p₂», rotulado E∨.\n¿Qué falla?","E∨ exige llegar a la misma conclusión suponiendo p₂ y suponiendo p₃",["Nada: E∨ saca el primer disyunto||E∨ no elige un lado: analiza los dos casos.","Falta cancelar p₂∨p₃ aquí||Se cancela con I→(2), no con E∨.","Debería ser I∨||I∨ arma disyunciones, no las usa."],"Una disyunción no da uno de sus lados: hay que probar lo mismo en las dos ramas.","Revisá cada paso: ¿la regla es introducción o eliminación? ¿Se cancelan las hipótesis que dicen? ¿Se cumple la restricción (∗)?"),
+mc("lg","Detectar error","Práctico 4 · 5\nJunto p₂ y ¬p₂ y obtengo ⊥, rotulado «I⊥».\n¿Qué regla corresponde?","E¬ (φ y ¬φ dan ⊥)",["I¬||I¬ concluye ¬φ cancelando φ.","E⊥||E⊥ parte de un ⊥ ya probado.","Está bien: I⊥||En este cálculo ⊥ sale por E¬, como en el ejercicio 2."],"⊥ se obtiene juntando una fórmula y su negación con E¬.","Revisá cada paso: ¿la regla es introducción o eliminación? ¿Se cancelan las hipótesis que dicen? ¿Se cumple la restricción (∗)?"),
+mc("lg","Detectar error","Práctico 8 · 2\nTengo ∃xP(x,y) y [P(x,y)]¹. Concluyo P(x,y) con E∃¹.\n¿Qué restricción se viola?","x ∉ FV(ψ): la conclusión P(x,y) tiene x libre",["y debe ser constante||Las variables libres están permitidas; el problema es otro.","Falta cancelar ∃xP(x,y)||E∃ cancela la suposición P(x,y); el ∃xP(x,y) queda como premisa.","Ninguna: E∃ admite cualquier conclusión||E∃ exige que x no esté libre en la conclusión."],"En E∃ la conclusión no puede mencionar la variable del testigo.","Mirá las condiciones (∗): E∃ pide x ∉ FV(ψ) y x ∉ FV de las hipótesis abiertas; I∀ pide x ∉ FV de las hipótesis abiertas."),
+mc("lg","Detectar error","Práctico 8 · 2\nAplico I∀ sobre y para obtener ∀yP(x,y), pero [P(x,y)]¹ sigue abierta.\n¿Qué restricción se viola?","y está libre en una hipótesis abierta",["x debería ser nueva||El problema es y, la variable que se generaliza.","∀y ya estaba en una hipótesis||Que haya otro ∀y no es el problema.","Ninguna: I∀ siempre se puede||I∀ exige x∉FV de las hipótesis abiertas (acá, y)."],"I∀ no se puede cuando la variable aparece libre en una hipótesis aún sin cancelar.","Mirá las condiciones (∗): E∃ pide x ∉ FV(ψ) y x ∉ FV de las hipótesis abiertas; I∀ pide x ∉ FV de las hipótesis abiertas."),
+/* Leer derivaciones: dar Γ y ρ (practico 4 ej. 2 y 4) */
+mc("lg","Leer derivación","En Γ ⊢ ρ, ¿qué es Γ?","Las hipótesis sin cancelar (sin corchetes)",["Las hipótesis canceladas||Las canceladas ya no cuentan: se descargaron.","Todas las fórmulas del árbol||Solo cuentan las hojas sin cancelar.","La última regla aplicada||Γ es un conjunto de fórmulas, no una regla."],"Γ = hojas abiertas; ρ = la fórmula de la raíz."),
+mc("lg","Leer derivación","Práctico 4 · 2a\nDerivación de (φ→¬φ)→¬φ. La hoja φ→¬φ no tiene corchetes; [φ]¹ se cancela con I¬(1); el I→ final no cancela nada.\n¿Qué Γ sirve?","Γ = {φ→¬φ} (o cualquier conjunto que la incluya)",["Γ = ∅||φ→¬φ quedó abierta, así que tiene que estar en Γ.","Γ = {φ}||φ se canceló con I¬(1).","Γ = {¬φ}||¬φ es una fórmula intermedia, no una hoja."],"Γ puede tener fórmulas de más (por eso piden tres Γ distintos)."),
+mc("lg","Leer derivación","Práctico 4 · 2b\nDerivación de (φ→¬φ)→¬φ con [φ→¬φ]² y [φ]¹ ambas canceladas (I¬(1) e I→(2)).\n¿Qué Γ sirve?","Γ = ∅: es un teorema",["Γ = {φ→¬φ}||Se canceló con I→(2).","Γ = {φ}||Se canceló con I¬(1).","Γ = {φ, φ→¬φ}||Ambas están canceladas."],"Sin hojas abiertas, ⊢ ρ."),
+mc("lg","Leer derivación","Práctico 4 · 2c\nIgual que 2b pero la hoja φ (la usada en E→) no tiene corchetes.\n¿Qué Γ sirve?","Γ = {φ} (o un superconjunto)",["Γ = ∅||φ quedó sin cancelar.","Γ = {φ→¬φ}||Esa sí se canceló con I→(2).","Γ = {¬φ}||¬φ es una fórmula intermedia."],"Las hojas abiertas definen Γ."),
+mc("lg","Leer derivación","Práctico 4 · 4\nTengo ψ (de φ→ψ y φ) y γ. Necesito llegar a ⊥ usando ¬(ψ∧γ).\n¿Qué pasos faltan?","I∧ para armar ψ∧γ, y E¬ con ¬(ψ∧γ)",["E∧ sobre ψ y γ||No hay ninguna conjunción que separar.","I¬ directo||I¬ concluye una negación; antes hay que llegar a ⊥.","E→ con ψ y γ||No hay ninguna implicación entre ellas."],"ψ∧γ choca con ¬(ψ∧γ): E¬ da ⊥."),
+mc("lg","Leer derivación","Práctico 4 · 4\nLa derivación sigue ⊥ → ¬γ → φ→¬γ.\n¿Qué cancela cada regla?","I¬ cancela γ; I→ cancela φ",["I¬ cancela φ; I→ cancela γ||Al revés: ¬γ se prueba suponiendo γ.","Las dos cancelan φ||I¬ cancela la suposición del consecuente que niega.","Ninguna cancela nada||Ambas cancelan la hipótesis supuesta."],"¬γ: supuse γ. φ→¬γ: supuse φ."),
+/* Igualdad (practico 8 ej. 7 y 8) */
+mc("lg","Igualdad","¿Qué da la regla I= (reflexividad)?","t =′ t, sin hipótesis",["x =′ y a partir de x||No se puede obtener una igualdad entre dos variables distintas sin hipótesis.","φ(y) a partir de x =′ y||Eso es E= (sustitución).","(∀x)(x =′ y)||Una igualdad con ∀ no sale de I=."],"I= solo prueba que cada término es igual a sí mismo."),
+mc("lg","Igualdad","Tengo x =′ y y φ(x).\nQuiero φ(y).\n¿Qué regla?","E=: sustituyo x por y (t libre para x)",["I=: reflexividad||I= solo da t =′ t.","E∀: instancio||No hay ningún ∀ que instanciar.","I∃: busco un testigo||La meta no es un ∃."],"E= reemplaza iguales dentro de una fórmula."),
+mc("lg","Igualdad","Práctico 8 · 7c\nTengo: nada\nMeta: (∀x)(∃y)x =′ y\n¿Cómo la armo?","I∀ (x arbitraria), I∃ con y := x, y x =′ x por I=",["E=: de x =′ y saco ∃y||E= necesita una igualdad ya probada y una fórmula donde sustituir.","E∀: instancio ∀x||No hay ningún ∀ que instanciar.","RAA: supongo ¬(∀x)(∃y)x =′ y||Es un rodeo: la meta se arma con la introducción de su conector."],"Armo ∀ (x arbitraria) y ∃ (testigo x); la igualdad sale de I=."),
+mc("lg","Igualdad","Práctico 8 · 7a\nTengo: (∀x)(∀y)x =′ y\nMeta: (∀y)(∀x)y =′ x\n¿Cómo la armo?","I∀ dos veces (y, x arbitrarias) y E∀ dos veces sobre la hipótesis",["E=: sustituyo x por y||No hace falta: la hipótesis ya da cualquier igualdad con E∀.","I∃: busco un testigo||No hay ningún ∃.","I=: reflexividad||I= da t =′ t; acá necesito y =′ x con variables distintas."],"La hipótesis ya dice que todo es igual a todo: instancio y armo ∀."),
+/* Cancelar */
+mc("lg","Cancelar","Cierro con I→ y concluyo φ→ψ.\n¿Qué hipótesis cancelo?","φ, el antecedente (si la usé)",["ψ, el consecuente||ψ es lo que concluyo, no lo que supuse.","Todas las abiertas||Solo se cancela el antecedente; las demás quedan abiertas.","Ninguna: I→ no cancela||I→ cancela la hipótesis del antecedente."],"La cancelación puede ser vacía si nunca usé φ."),
+mc("lg","Cancelar","Cierro con I¬ y concluyo ¬φ.\n¿Qué cancelo?","φ",["¬φ||¬φ es la conclusión, no la hipótesis.","⊥||⊥ es lo que obtengo, no lo que supuse.","¬¬φ||I¬ supone φ, no su doble negación."],"Supuse φ y llegué a ⊥."),
+mc("lg","Cancelar","Cierro con RAA y concluyo φ.\n¿Qué cancelo?","¬φ",["φ||φ es la conclusión, no la hipótesis.","⊥||⊥ es lo que obtengo, no lo que supuse.","¬¬φ||RAA supone ¬φ, no su doble negación."],"Supuse ¬φ y llegué a ⊥."),
+mc("lg","Cancelar","Cierro con E∨ sobre φ∨ψ.\n¿Qué cancelo?","φ y ψ, una en cada rama",["Solo φ∨ψ||Esa es la premisa mayor; no se cancela.","Solo φ, en la rama izquierda||También hay que cancelar ψ en la otra rama.","Nada||E∨ cancela las dos suposiciones."],"Las dos suposiciones, con etiquetas distintas."),
+mc("lg","Cancelar","E∃ elimina el ∃: de (∃x)P(x) paso a trabajar con P(x). Al cerrar con E∃, ¿qué hipótesis queda entre corchetes [ ]ⁿ?","P(x), la suposición con la que trabajé",["(∃x)P(x)||No se corchetea: sigue como premisa abierta (queda en Γ); lo que desaparece es su ∃ al pasar a P(x).","ψ||ψ es la conclusión.","P(a)||E∃ supone el testigo con una variable nueva x, no con una constante."],"E∃ quita el ∃ (se pasa a trabajar con P(x), x nueva) y al cerrar se cancela esa suposición P(x); (∃x)P(x) queda como premisa."),
+mc("lg","Cancelar","La hipótesis φ es una premisa del enunciado (Γ).\n¿La encierro entre corchetes?","No: solo se cancelan las que supuse yo",["Sí, con una etiqueta||Las premisas de Γ quedan abiertas.","Sí, al usar I→||I→ cancela lo que supuse para esa regla, no las premisas."],"Las premisas quedan abiertas."),
+/* Condiciones (∗) con casos concretos */
+mc("lg","Condición (∗)","Aplico E∀ a (∀x)(∃y)Q(x,y) con t = y.\n¿Se puede?","No: y queda capturada por ∃y",["Sí: y es un término||Cualquier término sirve solo si es libre para x; y queda capturada.","Sí: y es una variable nueva||No es nueva: aparece ligada en la fórmula."],"t tiene que ser libre para x: daría (∃y)Q(y,y)."),
+mc("lg","Condición (∗)","Aplico E∀ a (∀x)(∃y)Q(x,y) con t = a.\n¿Se puede?","Sí: a es libre para x",["No: hay un ∃ adentro||Un cuantificador no impide sustituir si t no queda capturado.","No: a no es una variable||t puede ser cualquier término libre para x."],"Ningún cuantificador captura a."),
+mc("lg","Condición (∗)","Meta: (∀x)P(x). Hipótesis abierta: Q(x).\n¿Puedo usar I∀?","No: x está libre en una hipótesis abierta",["Sí: Q(x) no es P(x)||I∀ no mira qué fórmula es la hipótesis, sino si x aparece libre.","Sí: siempre se puede||I∀ pide x ∉ FV de las hipótesis abiertas."],"x tiene que ser arbitraria."),
+mc("lg","Condición (∗)","Meta: (∀x)P(x). Hipótesis abierta: Q(y).\n¿Puedo usar I∀?","Sí: x no está libre en ninguna hipótesis abierta",["No: hay una hipótesis abierta||Que haya hipótesis abiertas no alcanza: importa si x está libre en ellas.","No: y es libre||y no es la variable que estoy generalizando."],"Solo importa x."),
+mc("lg","Condición (∗)","Tengo (∃x)P(x) y quiero concluir ψ = P(x) con E∃.\n¿Se puede?","No: x es libre en ψ",["Sí: x es una variable nueva||x aparece libre en la conclusión ψ.","Sí: E∃ admite cualquier ψ||E∃ exige x ∉ FV(ψ)."],"E∃ exige que x no esté libre en ψ."),
+mc("lg","Condición (∗)","Tengo P(f(a)). Quiero concluir (∃x)P(x) con I∃.\n¿Se puede?","Sí: t = f(a) es libre para x",["No: f(a) no es una variable||t puede ser cualquier término libre para x.","No: falta un testigo||f(a) es el testigo."],"Cualquier término sirve si es libre para x."),
+mc("lg","Condición (∗)","¿Es y libre para x en (∀y)P(x,y)?","No: queda capturada por ∀y",["Sí: y no cuantifica a x||La y que sustituiría a x quedaría dentro del alcance de ∀y.","Depende de la regla||Es una propiedad de la fórmula, no de la regla."],"Daría (∀y)P(y,y)."),
+mc("lg","Condición (∗)","¿Es f(x) libre para x en ¬P(x)?","Sí: nada la captura",["No: f(x) contiene a x||Ser libre para x no prohíbe que el término contenga a x.","Depende de las hipótesis||Es una propiedad de la fórmula, no de las hipótesis."],"Sin cuantificadores no hay captura."),
+/* Fórmulas */
+mc("lg","Fórmulas","Variables libres en (∀x)P(x,y)","Solo y",["x e y||x queda ligada por ∀x.","Solo x||x está ligada; la libre es y."],"x queda ligada por ∀x."),
+mc("lg","Fórmulas","En (∀x)P(x) ∧ Q(x)\n¿La x de Q(x) es libre?","Sí",["No||∀x solo alcanza a P(x): ∀ liga más fuerte que ∧."],"∀x solo alcanza a P(x)."),
+mc("lg","Fórmulas","¿Cómo se lee φ∨ψ∧σ?","φ∨(ψ∧σ)",["(φ∨ψ)∧σ||En la app ∧ liga más que ∨."],"∧ liga más que ∨."),
+/* Estrategia: movimientos recursivos (armar meta / desarmar hipotesis) y estado de la derivacion */
+mc("lg","Estrategia","Tengo: φ→ψ\nMeta: ψ\n¿Qué subobjetivo aparece?","Probar φ (y después E→)",["Probar ψ||Es la meta original: sería circular.","Suponer ψ||Si lo supongo no pruebo nada.","Probar ψ→φ||No se necesita la recíproca."],"Para usar una implicación hay que conseguir su antecedente: un subobjetivo más chico."),
+mc("lg","Estrategia","Tengo: ¬φ\nMeta: ⊥\n¿Qué subobjetivo aparece?","Probar φ y juntar con ¬φ por E¬",["Probar ¬¬φ||Es más fuerte de lo necesario.","Aplicar E⊥||E⊥ parte de un ⊥ que todavía no tengo.","Suponer φ||Suponer no basta: hay que probarla desde lo que tengo."],"Una negación en las hipótesis pide su φ para contradecirla."),
+mc("lg","Estrategia","Tengo: q→p, q∧r\nMeta: p (atómica)\n¿Cómo sigo?","E∧ para sacar q y E→ con q→p",["I→: supongo q||La meta p no es una implicación.","I∧: junto q y r||Daría q∧r, no p.","RAA enseguida||RAA va al final: antes miro si p sale de las hipótesis."],"Meta atómica: busco si está o si sale eliminando hipótesis; si no, RAA."),
+mc("lg","Estrategia","Meta: φ→(ψ→σ)\nHago I→ dos veces.\n¿Qué queda?","Hipótesis abiertas φ y ψ; meta σ",["Hipótesis abiertas ψ y σ; meta φ||Se suponen los antecedentes, no los consecuentes.","Sin hipótesis; meta σ||Las suposiciones siguen abiertas hasta que las cancelen las I→.","Hipótesis φ→(ψ→σ); meta ⊥||La meta es σ, no ⊥."],"Cada I→ baja un nivel: sube una hipótesis y la meta pasa a ser el consecuente."),
+mc("lg","Estrategia","Meta: φ\nAplico RAA.\n¿Qué queda?","Hipótesis nueva ¬φ; meta ⊥",["Hipótesis nueva φ; meta ⊥||Eso es I¬ (para probar ¬φ).","Hipótesis nueva ¬φ; meta φ||La meta pasa a ser ⊥.","Sin cambios||RAA agrega la suposición ¬φ."],"RAA cambia el problema: ahora busco una contradicción."),
+mc("lg","Estrategia","Tengo: φ∨ψ\nMeta: χ\n¿Qué pruebo en cada rama de E∨?","χ, suponiendo φ en una rama y ψ en la otra",["φ y ψ por separado||Hay que llegar a la misma conclusión χ en ambas.","χ∨χ||E∨ concluye χ, no una disyunción.","φ∧ψ||No se pueden suponer los dos a la vez."],"Dos subproblemas con la misma meta χ."),
+mc("lg","Estrategia","Práctico 8 · 10c\nTengo: ∀z(P(x,z)∧P(y,z)→P(f(x,y),z)), P(x,f(y,x)), P(y,f(y,x))\nMeta: P(f(x,y), f(y,x))\n¿Con qué término instancio z?","z := f(y,x): el que aparece en la meta y en las otras hipótesis",["z := x||No coincide con las hipótesis ni con la meta.","z := f(x,y)||No coincide con los P(·, f(y,x)) que tengo.","Una variable nueva||Para E∀ elijo el término que me sirve; la variable nueva es para I∀."],"En E∀ el término se elige mirando la meta y los antecedentes que ya tengo."),
+mc("lg","Estrategia","Meta con conector principal y hipótesis con conectores.\n¿Qué conviene hacer primero?","Armar la meta con su introducción; desarmar hipótesis cuando falte material para un subobjetivo",["Desarmar todas las hipótesis antes de tocar la meta||Se llena de fórmulas que quizás no hacen falta: guiate por la meta.","Aplicar RAA de entrada||RAA es el último recurso, para metas sin conector útil.","Elegir cualquier regla aplicable||Sin criterio la derivación se desordena."],"Se repite en cada subobjetivo hasta llegar a fórmulas atómicas."),
+/* Quiz de la pestaña Ejercicios Lógica (viene de logica.html: const Q) */
+mc("lg","Quiz ejercicios","Querés probar φ→ψ. ¿Qué regla usás y qué se cancela?","I→: suponés φ, llegás a ψ y cancelás φ",["I→: suponés ψ, llegás a φ y cancelás ψ","E→: tomás φ y ψ como premisas","RAA: suponés ¬ψ y cancelás ¬ψ"],"I→ cancela el antecedente: de la hipótesis φ deducís ψ y queda φ→ψ."),
+mc("lg","Quiz ejercicios","Querés probar ¬φ. ¿Qué regla usás?","I¬: suponés φ, llegás a ⊥ y cancelás φ",["RAA: suponés ¬φ, llegás a ⊥ y cancelás ¬φ","E¬ aplicada a φ","E⊥ desde φ"],"I¬ concluye ¬φ cancelando φ. RAA concluye φ cancelando ¬φ: no las confundas."),
+mc("lg","Quiz ejercicios","¿Qué premisas necesita E¬ y qué concluye?","¬φ y φ; concluye ⊥",["φ y ψ; concluye φ∧ψ","⊥; concluye cualquier φ","φ→⊥; concluye ¬φ"],"E¬ junta una fórmula y su negación para llegar a ⊥. En el examen: primero ¬φ y después φ."),
+mc("lg","Quiz ejercicios","¿Qué hace E⊥?","De ⊥ concluye cualquier fórmula",["De φ y ¬φ concluye ⊥","Cancela ¬φ y concluye φ","De ⊥ concluye ¬φ cancelando φ"],"Ex falso: de una contradicción sale cualquier cosa. Ej. 2c: de ⊥ se concluye (∀x)Q(x)."),
+mc("lg","Quiz ejercicios","Ninguna introducción ni eliminación directa te lleva a la conclusión φ. ¿Qué intentás?","RAA: suponer ¬φ y buscar ⊥",["I¬ suponiendo φ","I→ suponiendo ⊥","E⊥ sin tener ⊥"],"RAA es el recurso general: suponés ¬φ, llegás a ⊥ y cancelás ¬φ."),
+mc("lg","Quiz ejercicios","En E∨ (de φ∨ψ a σ), ¿qué se cancela?","φ en una rama y ψ en la otra; ambas ramas llegan a σ",["Solo φ∨ψ","Solo ¬σ","Nada"],"Hay dos derivaciones de σ, una bajo φ y otra bajo ψ; las dos hipótesis se cancelan con etiquetas distintas."),
+mc("lg","Quiz ejercicios","Para I∨ con conclusión φ∨ψ, ¿qué necesitás?","Probar φ o probar ψ (alcanza uno)",["Probar φ y ψ","Probar ¬φ","Probar φ→ψ"],"I∨ solo pide un disyunto. En 3a hay que elegir el que se puede probar."),
+mc("lg","Quiz ejercicios","¿Qué premisas tiene E→ para concluir ψ?","φ→ψ y φ",["φ→ψ y ψ","φ y ψ","¬ψ→¬φ"],"Modus ponens. La decisión clave es el antecedente φ."),
+mc("lg","Quiz ejercicios","¿Condición lateral de E∀ (de (∀x)φ(x) a φ(t))?","t libre para x en φ",["x ∉ FV de las hipótesis abiertas","x ∉ FV(ψ) ni de las hipótesis abiertas","Ninguna"],"Al sustituir x por t no se debe capturar ninguna variable de t. Ej. 2c: f(x) libre para x en ¬P(x)."),
+mc("lg","Quiz ejercicios","¿Condición lateral de I∃ (de φ(t) a (∃x)φ(x))?","t libre para x en φ",["x ∉ FV de las hipótesis abiertas","x ∉ FV(ψ) ni de las hipótesis abiertas","Ninguna"],"Igual que E∀: t libre para x en φ. Ej. 3b: x libre para x en P(x,x)."),
+mc("lg","Quiz ejercicios","¿Condición lateral de I∀ (de φ(x) a (∀x)φ(x))?","x ∉ FV de las hipótesis abiertas (no canceladas)",["t libre para x en φ","x ∉ FV(ψ) únicamente","Ninguna"],"Si x es libre en una hipótesis abierta no es arbitraria y no se puede generalizar."),
+mc("lg","Quiz ejercicios","¿Condición lateral de E∃ (de (∃x)φ(x) y ψ bajo [φ(x)])?","x ∉ FV(ψ) ni de las hipótesis abiertas distintas de φ(x)",["t libre para x en φ","x ∉ FV(φ)","Ninguna"],"Ej. 3b: x ∉ FV((∃x)P(x,x), (∀x)(∀y)(∀z)(...))."),
+mc("lg","Quiz ejercicios","¿Cuándo una hipótesis no lleva corchetes ni etiqueta?","Cuando es premisa del juicio (Γ) y no se cancela",["Cuando se cancela con RAA","Cuando se usa dos veces","Cuando es ⊥"],"Las canceladas van como [φ]ⁿ; las premisas de Γ quedan abiertas."),
+mc("lg","Quiz ejercicios","¿Puede aplicarse I→ sin cancelar ninguna hipótesis?","Sí, la cancelación puede ser vacía",["No, siempre debe cancelar φ","Solo si ψ es ⊥","Solo dentro de RAA"],"En 3a, β→γ se obtiene de γ por I→ sin cancelar β."),
+mc("lg","Quiz ejercicios","¿Qué necesita I↔ para concluir φ↔ψ?","φ→ψ y ψ→φ",["φ y ψ","φ∧ψ","¬φ y ¬ψ"],"I↔ junta las dos implicaciones; en 3a se derivan por separado.")
+];
+
+const CARDS=[].concat(P4A,LGA).map(c=>(c.id=hs(c.s+c.k+c.q),c));
+CARDS.forEach(c=>{if(c.k=="mc"){c.why={};c.d=c.d.map(t=>{const p=t.split("||");if(p[1])c.why[p[0]]=p[1];return p[0]})}});
+
+/* ---- Ayudas didácticas: definiciones (por qué no) y pistas por subtema ---- */
+const DEF={"«association»":"«association»: hay una asociación en el diagrama de clases (atributo o colección).","«local»":"«local»: lo obtuvo con find, create o next dentro de esta operación.","«parameter»":"«parameter»: está en la firma de la operación que ejecuta.",
+"I∧":"I∧ arma φ∧ψ a partir de φ y de ψ.","E∧":"E∧ saca φ o ψ de una φ∧ψ que ya tenés.","I→":"I→ prueba φ→ψ: supone φ, llega a ψ y cancela φ.","E→":"E→ usa φ→ψ y φ para obtener ψ.","I¬":"I¬ prueba ¬φ: supone φ, llega a ⊥ y cancela φ.","E¬":"E¬ junta ¬φ y φ para obtener ⊥.","RAA":"RAA prueba φ: supone ¬φ, llega a ⊥ y cancela ¬φ.","E⊥":"E⊥ saca cualquier fórmula de un ⊥ que ya tenés.","I∨":"I∨ arma φ∨ψ desde uno solo de los lados.","E∨":"E∨ usa φ∨ψ: prueba lo mismo bajo φ y bajo ψ.","I∀":"I∀ prueba (∀x)φ(x) con una x arbitraria.","E∀":"E∀ instancia (∀x)φ(x) con un término t.","I∃":"I∃ arma (∃x)φ(x) desde un testigo t.","E∃":"E∃ usa (∃x)φ(x): quita el ∃ y supone φ(x) con x nueva; esa suposición se cancela al cerrar y (∃x)φ(x) queda como premisa.","I↔":"I↔ arma φ↔ψ con φ→ψ y ψ→φ."};
+const HINT={"Etiqueta":"Elegí el estereotipo mirando al RECEPTOR del mensaje. Preguntate: ¿de dónde saca el emisor al receptor? Está en la firma de la operación → «parameter». Lo obtuvo con find, create o next → «local». Hay una asociación en el diagrama de clases → «association».",
+"Destino":"Mirá el dominio: el mensaje va a la clase que tiene esa operación. find, add y next van al multiobjeto (:Clase *).",
+"Mensaje":"Forma: variable := operación(parámetros). Sin variable si no uso el resultado.",
+"Notación":"Primera vez: nombre:Clase. Después, solo el nombre. * en el destino = colección; * pegado al número = iteración.",
+"Decisión":"¿Busco por clave (find)? ¿Recorro (next)? ¿Agrego (add)? ¿Le pido un dato a un objeto (método)?",
+"Armar":"Mirá el conector principal de la meta: se arma con su introducción. Si no sale, RAA.",
+"Primer paso":"Primero mirá la meta: si tiene conector, se arma con su introducción. Después desarmás hipótesis para conseguir lo que falte. Sin conector útil: RAA, o E∨ si hay una disyunción.",
+"Detectar error":"Revisá cada paso: ¿la regla es introducción (arma el conector) o eliminación (lo usa)? ¿Se cancelan las hipótesis que dicen? ¿Se cumple la restricción (∗)?",
+"Leer derivación":"Γ = hojas sin cancelar (sin corchetes). ρ = la fórmula de la raíz. Puede haber fórmulas de más en Γ.",
+"Igualdad":"I= da t =′ t. E= reemplaza iguales dentro de una fórmula (t libre para x).",
+"Estrategia":"Dos movimientos que se repiten: armar la META (introducción de su conector principal) y desarmar HIPÓTESIS (eliminación) cuando falta material. Se baja hasta fórmulas atómicas.",
+"Enlaces":"Quien crea el objeto guarda la referencia: add si es una colección, setX si es una sola. Si el link es en los dos sentidos, se pasa self en el create.",
+"Borrado":"Destruir el link (remove o setX(NULL)) no destruye la instancia: eso es destroy(), en general de quien la creó.",
+"Iteración":"Recorrer = next() sobre :Clase * con * en el número. Se corta apenas se cumple lo buscado. Si se navega al revés puede haber repetidos: unión.",
+"Desarmar":"Mirá el conector de la hipótesis: se desarma con su eliminación.",
+"Cancelar":"Cancelan: I→ (φ), I¬ (φ), RAA (¬φ), E∨ (φ y ψ), E∃ (φ(x)).",
+"Condición (∗)":"E∀ e I∃: t libre para x. I∀ y E∃: x arbitraria o nueva.",
+"Fórmulas":"Libre = no ligada por un cuantificador. ∧ liga más que ∨."};
+const DOM="Controlador ──> Estudiante *, Empresa *\nEmpresa ──> OfertaPasantia *\nEstudiante <──> Postulacion *\nPostulacion <──> OfertaPasantia (1)\nOfertaPasantia (abstracta): Remunerada, NoRemunerada\n\nEstudiante: generarPostulacion(opc), aceptarPostulacion(cod)\nEmpresa: obtenerOferta(cod), cuposDisponibles(cod)\nOfertaPasantia: agregarPostulacion(p), hayCupos(), calcularBeneficio()\nPostulacion: getOfertaPasantiaCodigo(), aceptarPostulacion(), getEstado()",DOMT=["Etiqueta","Destino","Mensaje","Decisión","Quiz ejercicios"];
+const domHtml=c=>c.s=="p4"&&DOMT.includes(c.g)?(Q.ans==null?`<button class="btn ghost hint" data-a="dom">${S.dom?"Ocultar dominio":"Ver dominio"}</button>`:"")+(S.dom?`<div class="sn">${esc(DOM)}</div>`:""):"";
+const dfn=t=>DEF[t]||DEF[String(t).split(/[:\s]/)[0]]||"";
+const H=c=>c.h||HINT[c.g];
+const hintHtml=c=>H(c)&&Q.ans==null?`<button class="btn ghost hint" data-a="hint">${Q.hint?"Ocultar pista":"Pista"}</button>${Q.hint?`<div class="hn">${esc(H(c))}</div>`:""}`:"";
+const wy=(c,t)=>(c.why&&c.why[t]?`<div>Elegiste ${esc(t)}. ${esc(c.why[t])}</div>`:dfn(t)?`<div>Elegiste ${esc(t)}. ${esc(dfn(t))}</div>`:"")+(H(c)?`<div class="hn">${esc(H(c))}</div>`:"");
+
+/* ---- Estado ---- */
+let S={c:{},day:"",nw:0,xp:0,xpd:0,last:"",stk:0,nm:10,debt:0};
+try{Object.assign(S,JSON.parse(localStorage.getItem("est2")||"{}"))}catch(e){}
+const SV=()=>{try{localStorage.setItem("est2",JSON.stringify(S))}catch(e){}};
+const D0=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
+const TD=()=>new Date().toLocaleDateString("en-CA");
+const roll=()=>{const t=TD();if(S.day!=t){if(S.day){const gap=Math.max(0,Math.round((new Date(t)-new Date(S.day))/864e5)-1);S.debt=Math.max(0,S.nm+S.debt-S.nw)+gap*S.nm}S.day=t;S.nw=0;S.xpd=0;SV()}};
+const IV=[0,1,3,7,14,30,60];
+let TAB=0,F="all",Q=null,RS=0,TM=null;
+const RN=10,RES0=120,RMAX=180,ACI=10; /* RN tarjetas por ronda. Reserva de tiempo: empieza en RES0 s, baja solo mientras pensas (se frena al ver la respuesta), cada acierto a la primera suma ACI s (tope RMAX). Si sobra reserva al cerrar la ronda: +10 XP. Nunca penaliza. */
+
+function nxt(s,r){let b=s.b,l=s.l,due;if(r==0){b=0;l++;due=Date.now()+6e5}else{b=r==1?Math.max(1,b):Math.min(6,b+(r==3?2:1));let d=IV[b];if(r==1)d=Math.max(1,Math.round(d/2));due=D0()+d*864e5}return{b,l,due}}
+function lab(c,r){if(r==0)return"10 min";const t=nxt(S.c[c.id]||{b:0,l:0},r),d=Math.round((t.due-D0())/864e5);return d<30?d+" d":Math.round(d/30)+" m"}
+function apply(c,r){let s=S.c[c.id];if(!s){S.nw++;s={b:0,l:0,n:0,due:0}}const t=nxt(s,r);s.b=t.b;s.l=t.l;s.due=t.due;s.n++;S.c[c.id]=s}
+function touch(){const t=TD();if(S.last!=t){const y=new Date(Date.now()-864e5).toLocaleDateString("en-CA");S.stk=S.last==y?S.stk+1:1;S.last=t}}
+function stats(f){const now=Date.now();let n=0,l=0,m=0,d=0;CARDS.forEach(c=>{if(f!="all"&&c.s!=f)return;const s=S.c[c.id];if(!s){n++;return}if(s.due<=now)d++;if(s.b>=3)m++;else l++});return{n,l,m,d}}
+const ilv=a=>{const g={};a.forEach(c=>(g[c.s]=g[c.s]||[]).push(c));const ks=Object.keys(g),o=[];for(let i=0;o.length<a.length;i++)ks.forEach(k=>{if(g[k][i])o.push(g[k][i])});return o};
+const goal=()=>Math.min(S.nm+S.debt,CARDS.filter(c=>!S.c[c.id]).length+S.nw),remain=()=>Math.max(0,goal()-S.nw);
+function mkQ(f,mode){const now=Date.now(),ok=c=>f=="all"||c.s==f;
+if(mode=="libre")return sh(CARDS.filter(c=>ok(c)&&S.c[c.id])).sort((a,b)=>(S.c[b.id].l-S.c[a.id].l)||(S.c[a.id].b-S.c[b.id].b));
+const dd=CARDS.filter(c=>ok(c)&&S.c[c.id]&&S.c[c.id].due<=now).sort((a,b)=>S.c[a.id].due-S.c[b.id].due),nn=CARDS.filter(c=>ok(c)&&!S.c[c.id]);
+return ilv(dd).concat(ilv(nn).slice(0,mode=="todo"?nn.length:remain()))}
+const hdr=()=>{$("hd").textContent=(S.stk?"Racha "+S.stk+(S.stk==1?" día":" días")+" · ":"")+"XP hoy "+S.xpd};
+
+/* ---- Pestañas ---- */
+function tab(i){TAB=i;Q=null;clearInterval(TM);[0,1,2,3].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==0)home();else if(i==3)swOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
+function frame(src,t){V.innerHTML=`<div class="row between" style="margin-top:4px"><span class="mut">Ejercicios completos, paso a paso.</span><a class="mut" href="${src}" target="_blank" rel="noopener">Abrir aparte</a></div><iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
+
+/* ---- Inicio ---- */
+function blk(s){const a=CARDS.filter(c=>c.s==s),st=stats(s),pc=Math.round(st.m/a.length*100);
+const tg=[...new Set(a.map(c=>c.g))].map(g=>{const x=a.filter(c=>c.g==g),m=x.filter(c=>S.c[c.id]&&S.c[c.id].b>=3).length,l=x.filter(c=>S.c[c.id]&&S.c[c.id].b<3).length;return `<div class="tg"><span>${esc(g)}</span><div class="sb"><i style="width:${m/x.length*100}%;background:var(--ok)"></i><i style="width:${l/x.length*100}%;background:var(--ac)"></i></div><span class="mut">${m}/${x.length}</span></div>`}).join("");
+return `<div class="card ${SUBJ[s].c}"><div class="row between"><b class="sj">${SUBJ[s].n}</b><span class="mut">${st.m}/${a.length} dominadas</span></div>${tg}${pc>=60?`<button class="btn big" data-a="tab" data-v="${s=="p4"?1:2}">Bases sólidas: probar ejercicios completos</button>`:""}</div>`}
+function home(){roll();hdr();const st=stats(F),g=goal(),rm=remain(),nl=CARDS.filter(c=>!S.c[c.id]&&(F=="all"||c.s==F)).length,tdN=st.d+Math.min(nl,rm),allN=st.d+nl,deb=Math.max(0,g-S.nm),seen=CARDS.filter(c=>S.c[c.id]&&(F=="all"||c.s==F)).length,cls=F=="lg"?"s-lg":"s-p4";
+let h=`<div class="row">${[["all","Mezclado"],["p4","Prog4"],["lg","Lógica"]].map(([k,t])=>`<button class="btn chip${F==k?" sel":""}" data-a="f" data-v="${k}">${t}</button>`).join("")}</div>
+<div class="card hero ${cls}"><div class="nums"><div><b>${st.d}</b><span>por repasar</span></div><div><b>${S.nw}/${g}</b><span>meta de hoy</span></div><div><b>${st.m}</b><span>dominadas</span></div></div>`;
+if(deb>0)h+=`<p class="mut" style="margin:10px 0 0;text-align:center">La meta incluye ${deb} de días anteriores.</p>`;
+if(tdN)h+=`<button class="btn pri big" data-a="go">Empezar con la meta de hoy (${tdN})</button>`;
+else h+=`<p style="margin:14px 0 0;text-align:center">Meta de hoy cumplida y nada para repasar.</p>`;
+if(allN>tdN)h+=`<button class="btn big" data-a="go2">Estudiar todo el mazo (${allN})</button>`;
+if(seen)h+=`<button class="btn big" data-a="go3">Práctica libre: lo más flojo primero</button><p class="mut" style="margin:8px 0 0;text-align:center">La práctica libre no cambia el calendario.</p>`;
+h+=`</div><div class="row" style="margin-top:12px"><span class="mut">Meta diaria de tarjetas nuevas</span>${[10,20,40].map(n=>`<button class="btn chip${S.nm==n?" sel":""}" data-a="nm" data-v="${n}">${n}</button>`).join("")}</div>`;
+(F=="all"?["p4","lg"]:[F]).forEach(s=>h+=blk(s));
+h+=`<button class="btn ghost" data-a="rst">${RS?"Tocá otra vez para borrar todo el progreso":"Reiniciar progreso"}</button>`;V.innerHTML=h}
+
+/* ---- Sesión ---- */
+function go(mode){roll();const q=mkQ(F,mode);if(!q.length){home();return}Q={q,i:0,n:q.length,dn:0,first:{},ok:0,tot:0,xp:0,per:{p4:[0,0],lg:[0,0]},ans:null,sh:false,o:null,cram:mode=="libre",rn:1,rt:0,res:RES0,rs:0,rsd:{},out:0,back:0,r:{ok:0,tot:0,out:0,bonus:0}};deal()}
+function deal(){const c=Q.q[Q.i];Q.back=0;Q.ans=null;Q.sh=false;Q.hint=false;Q.o=c&&c.k=="mc"?sh([c.a].concat(c.d)):null;draw()}
+function mark(c,rt){if(!Q.first[c.id]){Q.first[c.id]=1;if(!Q.cram){touch();apply(c,rt)}Q.tot++;Q.r.tot++;Q.per[c.s][1]++;if(rt>=1){Q.ok++;Q.r.ok++;Q.per[c.s][0]++}if(rt>=2)Q.res=Math.min(RMAX,Q.res+ACI);const x=rt>=2?10:rt==1?5:0;Q.xp+=x;S.xp+=x;S.xpd+=x;hdr()}SV()}
+function pick(i){const c=Q.q[Q.i];if(Q.ans!=null)return;Q.ans=i;mark(c,Q.o[i]==c.a?2:0);draw()}
+function endR(){const r=Q.r;r.t=Q.rt;r.bonus=Q.res>0?10:0;r.res=Math.round(Q.res);Q.xp+=r.bonus;S.xp+=r.bonus;S.xpd+=r.bonus;SV();hdr();Q.rs=1}
+function nr(){Q.rs=0;Q.rn++;Q.rt=0;Q.res=RES0;Q.r={ok:0,tot:0,out:0,bonus:0};draw()}
+const chk=()=>{if(Q.dn>0&&Q.dn%RN==0&&Q.dn<Q.n&&!Q.rsd[Q.dn]){Q.rsd[Q.dn]=1;endR()}};
+function adv(){const c=Q.q[Q.i];if(Q.o[Q.ans]==c.a){Q.dn++;chk()}else Q.q.splice(Math.min(Q.i+4,Q.q.length),0,c);Q.i++;deal()}
+function rate(r){const c=Q.q[Q.i];mark(c,r);if(r>=1){Q.dn++;chk()}else Q.q.splice(Math.min(Q.i+4,Q.q.length),0,c);Q.i++;deal()}
+function qh(q){const L=q.split("\n"),p=L.pop();return (L.length?`<div class="sn">${esc(L.join("\n"))}</div>`:"")+`<div class="qt">${esc(p)}</div>`}
+const mmss=t=>Math.floor(t/60)+":"+String(t%60).padStart(2,"0");
+function roundScr(){const r=Q.r,nx=Q.q[Q.i],pc=Math.round(Q.dn/Q.n*100);V.innerHTML=`<div class="card"><h2>Ronda ${Q.rn} completa</h2><p style="margin:0"><b>${r.ok}/${r.tot}</b> a la primera · ${mmss(r.t)} pensando · te sobraron ${r.res} s${r.bonus?` · +${r.bonus} XP por ritmo`:""}</p>${r.out?`<p class="mut">Saliste de la pestaña ${r.out} ${r.out==1?"vez":"veces"} en esta ronda.</p>`:""}<div class="pb" style="margin:10px 0"><i style="width:${pc}%"></i></div><p class="mut">${Q.dn}/${Q.n} del total. Mirá lejos 10 segundos y seguí. La próxima arranca con ${nx?SUBJ[nx.s].n:""}.</p><div class="row"><button class="btn pri big" data-a="nr">Siguiente ronda</button><button class="btn" data-a="exit">Terminar por hoy</button></div></div>`}
+function tick(){if(!Q||Q.done||Q.rs||TAB!=0||document.hidden||Q.cram===undefined)return;const c=Q.q[Q.i];if(!c||(c.k=="mc"?Q.ans!=null:Q.sh))return;Q.rt++;Q.res=Math.max(0,Q.res-1);const e=$("pi");if(e)e.style.width=Q.res/RMAX*100+"%"}
+setInterval(tick,1000);
+document.addEventListener("visibilitychange",()=>{if(!Q||Q.done||Q.rs||TAB!=0)return;if(document.hidden){Q.out++;Q.r.out++}else{Q.back=1;draw()}});
+function draw(){const c=Q.q[Q.i];if(!c)return fin();if(Q.rs)return roundScr();const pc=Math.round(Q.dn/Q.n*100);
+let h=`<div class="${SUBJ[c.s].c}"><div class="row"><button class="btn x" data-a="exit" aria-label="Salir de la sesión">×</button><div class="pb"><i style="width:${pc}%"></i></div><span class="mut cnt">R${Q.rn} · ${Q.dn}/${Q.n}</span></div><div class="pace"><i id="pi" style="width:${Q.res/RMAX*100}%"></i></div>${Q.back?`<div class="hn">Volviste. Retomá desde esta tarjeta.</div>`:""}<div class="card"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)}${Q.first[c.id]?" · repetición":""}</div>${qh(c.q)}`;
+if(c.k=="mc"){const ci=Q.o.indexOf(c.a);h+=domHtml(c)+hintHtml(c);h+=Q.o.map((t,i)=>{let k="";if(Q.ans!=null){if(i==ci)k=" ok";else if(i==Q.ans)k=" no"}return `<button class="btn opt${k}" data-a="o" data-i="${i}"${Q.ans!=null?" disabled":""}>${esc(t)}</button>`}).join("");
+if(Q.ans!=null){const r=Q.ans==ci;h+=`<div class="fb ${r?"ok":"no"}"><b>${r?"Correcto":"Incorrecto"}</b>${r?"":`<div>Respuesta: ${esc(c.a)}</div>`}<div>${esc(c.w||"")}</div>${r?"":wy(c,Q.o[Q.ans])}</div><button class="btn pri big" data-a="next">Continuar</button>`}}
+else if(!Q.sh)h+=`<button class="btn pri big" data-a="show">Mostrar respuesta</button>`;
+else h+=`<div class="back">${c.b}</div><div class="rate">${[["Otra vez",0],["Difícil",1],["Bien",2],["Fácil",3]].map(([t,r])=>`<button class="btn r${r}" data-a="r" data-r="${r}"><b>${t}</b><span>${lab(c,r)}</span></button>`).join("")}</div>`;
+V.innerHTML=h+"</div></div>"}
+function fin(){Q.done=1;const per=Object.keys(Q.per).filter(k=>Q.per[k][1]).map(k=>`<div class="tg ${SUBJ[k].c}"><b class="sj">${SUBJ[k].n}</b><span>${Q.per[k][0]}/${Q.per[k][1]} a la primera</span><span></span></div>`).join(""),tm=CARDS.filter(c=>{const s=S.c[c.id];return s&&s.due>Date.now()&&s.due<D0()+2*864e5}).length;
+const mr=mkQ(F,"todo").length;V.innerHTML=`<div class="card"><h2>Sesión completa</h2><p style="margin:0"><b>${Q.ok}/${Q.tot}</b> a la primera · +${Q.xp} XP</p>${per}${Q.cram?`<p class="mut">Práctica libre: no cambió el calendario.</p>`:""}<p class="mut">${tm?"Mañana vuelven "+tm+" tarjetas.":"Mañana no hay repasos pendientes."}</p><div class="row">${mr?`<button class="btn pri" data-a="go2">Seguir con el resto (${mr})</button>`:`<button class="btn pri" data-a="go3">Práctica libre</button>`}<button class="btn" data-a="home">Volver</button></div></div>`}
+
+V.onclick=ev=>{const b=ev.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;if(a!="rst")RS=0;
+if(a=="f"){F=b.dataset.v;home()}else if(a=="nm"){S.nm=+b.dataset.v;SV();home()}
+else if(a=="go")go("meta");else if(a=="go2")go("todo");else if(a=="go3")go("libre");else if(a=="tab")tab(+b.dataset.v);
+else if(a=="rst"){if(RS){S=Object.assign(S,{c:{},nw:0,xp:0,xpd:0,last:"",stk:0,debt:0});SV();RS=0}else RS=1;hdr();home()}
+else if(a=="home"||a=="exit"){Q=null;home()}
+else if(Q&&!Q.done){if(a=="o")pick(+b.dataset.i);else if(a=="nr")nr();else if(a=="dom"){S.dom=!S.dom;SV();draw()}else if(a=="hint"){Q.hint=!Q.hint;draw()}else if(a=="show"){Q.sh=true;draw()}else if(a=="r")rate(+b.dataset.r);else if(a=="next")adv()}};
+document.addEventListener("keydown",e=>{if(!Q||Q.done||TAB!=0||e.ctrlKey||e.metaKey||e.altKey)return;const c=Q.q[Q.i];if(!c)return;const k=e.key,bt=e.target.tagName=="BUTTON";if(Q.rs){if(k=="Enter"&&!bt)nr();return}
+if(c.k=="mc"){if(Q.ans==null&&/^[1-4]$/.test(k)&&Q.o[k-1]!==undefined)pick(k-1);else if(Q.ans!=null&&k=="Enter"&&!bt)adv()}
+else if(!Q.sh&&(k=="Enter"||k==" ")&&!bt){e.preventDefault();Q.sh=true;draw()}else if(Q.sh&&/^[1-4]$/.test(k))rate(k-1)});
+/* ---- Deslizar: cadenas de decisiones binarias. st(pregunta, correcta, incorrecta, motivo, fragmento) ---- */
+const st=(q,a,b,w,f)=>({q,a,b,w,f}),sw=(s,g,ctx,steps,out)=>({s,g,ctx,steps,out,id:hs("sw"+s+g+steps[0].q+(ctx||""))});
+const SWC=[
+/* ===== Prog4: armar un mensaje de a una decisión ===== */
+sw("p4","Estereotipo (parámetro)","est ejecuta generarPostulacion(opc)\nest le envía agregarPostulacion(p) a opc.\nDiagrama de clases:  Estudiante ──> Postulacion *   (sin flecha hacia OfertaPasantia)",[
+ st("¿opc está en la firma de la operación?","Sí","No","generarPostulacion(opc): opc llega por parámetro.",""),
+ st("Entonces el estereotipo es…","«parameter»","«local»","Llegó por la firma, no salió de un find/create/next.","«parameter»"),
+ st("¿Qué parámetro lleva el mensaje?","(p)","(opc)","A la oferta se le pasa la postulación nueva, no a sí misma.","agregarPostulacion(p)")
+],"est → opc : agregarPostulacion(p)  «parameter»"),
+sw("p4","Estereotipo (asociación)","est necesita recorrer sus postulaciones.\nDiagrama de clases:  Estudiante ──> Postulacion *",[
+ st("¿Está la colección en la firma de la operación?","No","Sí","No viene por parámetro.",""),
+ st("¿Salió de un find, create o next de esta operación?","No","Sí","Todavía no la obtuve con ningún mensaje.",""),
+ st("¿Hay flecha en el diagrama de clases?","Sí: Estudiante ──> Postulacion *","No","Esa flecha es la asociación.",""),
+ st("Entonces el estereotipo es…","«association»","«local»","Sin firma ni find, pero con flecha: asociación.","«association»"),
+ st("¿Cómo recorro la colección?","pe := next() con * en el número","pe := find(ci)","Recorrer todas es next con iteración.","next()")
+],"4.1*: est → :Postulacion * : pe := next()  «association»"),
+sw("p4","Estereotipo (local)","4.1*: est → :Postulacion * : pe := next()\nQuiero 4.2*: pe.getOfertaPasantiaCodigo()",[
+ st("¿pe está en la firma?","No","Sí","Es el resultado del next 4.1*.",""),
+ st("¿pe salió de un find, create o next?","Sí: del next","No","Eso es lo que lo vuelve local.",""),
+ st("Entonces el estereotipo es…","«local»","«association»","Resultado de un mensaje: variable local.","«local»"),
+ st("¿Lleva * el número?","Sí: 4.2*, está dentro del recorrido","No: 4.2","El * se mantiene mientras sea parte de la iteración.","4.2*")
+],"4.2*: est → pe : getOfertaPasantiaCodigo()  «local»"),
+sw("p4","Falta camino","Necesito cuposDisponibles(cod) de una Empresa.\nDiagrama de clases:  Controlador ──> Empresa *   Estudiante ──> Postulacion *   (sin flecha Estudiante → Empresa)",[
+ st("¿Puede est llegar a la Empresa?","No: no hay flecha, firma ni find","Sí: con «global»","«global» no reemplaza un camino de navegabilidad.",""),
+ st("¿Quién la conoce?","El Controlador (tiene flecha a Empresa *)","est","El Controlador llega a la colección por asociación.","Controlador"),
+ st("Primero el Controlador…","busca la empresa: emp := find(rut)","le pide el dato a la colección","find devuelve la empresa concreta.","find(rut)"),
+ st("Después le envía cuposDisponibles a…","emp (la empresa concreta)",":Empresa * (la colección)","La operación es de una empresa, no de la colección.","emp")
+],"Controlador → :Empresa * : emp := find(rut)  «association»   y   Controlador → emp : cd := cuposDisponibles(cod)  «local»"),
+/* Decisiones sueltas */
+sw("p4","Notación",null,[
+ st("emp aparece por primera vez.","emp:Empresa","emp","Primera vez: nombre:Clase."),
+ st("emp ya apareció antes.","emp","emp:Empresa","Después alcanza con el nombre."),
+ st("Colección de estudiantes sin nombre.",":Estudiante *",":Estudiante","El * marca la colección (recuadro doble)."),
+ st("Un objeto de Empresa sin nombre.",":Empresa","Empresa","Sin nombre igual lleva los dos puntos."),
+ st("Mensaje dentro de un recorrido.","4.1*","4.1","El * pegado marca iteración."),
+ st("emp recibió el 3: su primer mensaje.","3.1","4","Lo que dispara el 3 cuelga de él."),
+ st("El Controlador envía su cuarto mensaje.","4","1.4","Los de primer nivel van 1, 2, 3, 4…"),
+ st("est ejecuta el 4: su segundo mensaje.","4.2","5","Es el segundo hijo del 4.")
+]),
+/* Prog4: práctico 4 */
+sw("p4","Enlace A → B","Link de A hacia B (A guarda una colección de B).\n:A hace b := create(id)",[
+ st("¿Cómo guarda A la referencia?","add(b)","setA(a)","A guarda una colección: add."),
+ st("¿A quién va el add?",":B * (la colección)","b (el objeto nuevo)","add va a la colección.")
+],"1: :A → :B : b := create(id)\n2: :A → :B * : add(b)"),
+sw("p4","Enlace B → A","Link de B hacia A (B guarda su única A).\n:B hace a := create(id)",[
+ st("B guarda una sola A. ¿Qué usa?","setA(a)","add(a)","Una referencia única: setX."),
+ st("¿Quién envía setA(a)?","b, a sí mismo",":A","Es b quien guarda la referencia.")
+],"1: :B → :A : a := create(id)\n2: :B → :B : setA(a)"),
+sw("p4","Enlace en los dos sentidos",null,[
+ st("a:A hace b := create(id, a).\n¿Para qué se pasa a?","Para que b guarde su referencia con setA(a)","Para identificar el objeto","Sin a, B no tendría qué guardar."),
+ st("¿Quién envía el setA(a)?","b, a sí mismo","a:A","B guarda su propia referencia."),
+ st("¿Cómo se numera ese setA?","1.1: lo dispara el create","2: después del add","Cuelga del create."),
+ st("¿Y el add(b)?","2: a:A → :B * : add(b)","1.2","Es otro mensaje del mismo nivel que el create.")
+]),
+sw("p4","Borrado",null,[
+ st("¿Destruir un link es destruir la instancia?","No","Sí","El link se desengancha y la instancia puede seguir."),
+ st("Sacar el link de una colección.","remove(id)","destroy()","remove desengancha."),
+ st("Eliminar la instancia.","destroy() a b","remove(id)","destroy elimina el objeto."),
+ st("Quito el link y destruyo la instancia.","remove antes que destroy","destroy antes que remove","Si no, la colección queda apuntando a un objeto destruido."),
+ st("Link de B hacia A (referencia única).","setA(NULL)","remove(id)","Se pone la referencia en NULL."),
+ st("¿Quién suele destruir una instancia?","Quien la creó","Cualquier objeto","Quien crea, destruye.")
+]),
+sw("p4","Iteración",null,[
+ st("Recorrer todas las instancias de A.","1*[foreach]: a := next()","1: a := find()","Recorrer es next con iteración."),
+ st("¿Qué marca [foreach]?","Que se repite para cada elemento","Una condición de corte","Es el recorrido sobre la colección."),
+ st("Busco si existe alguno que cumpla.\n¿Cuándo corto?","Al encontrar el primero","Al final de la colección","Basta con uno: retorno true."),
+ st("Navego de B hacia A.\n¿Qué hago con los resultados de cada b?","Los uno, sin repetidos","Los concateno","Una misma A puede salir de varias B."),
+ st("¿Quién compara val con v?","a:A, adentro","El Controlador","No expongo la estructura de A.")
+]),
+/* ===== Lógica: armar la meta y desarmar hipótesis, paso a paso ===== */
+sw("lg","Meta ∧","Tengo: φ, ψ\nMeta: φ∧ψ",[
+ st("¿Armo la meta o desarmo una hipótesis?","Armo: la meta tiene conector ∧","Desarmo una hipótesis","La meta tiene conector principal: se arma con su introducción.",""),
+ st("¿Qué regla?","I∧","E∧","I∧ arma conjunciones; E∧ las separa.","I∧"),
+ st("¿Qué subobjetivos quedan?","Probar φ y probar ψ","Probar φ→ψ","Una conjunción pide las dos partes.","φ, ψ")
+],"I∧: de φ y ψ obtengo φ∧ψ"),
+sw("lg","Meta →","Tengo: φ→σ, σ→ψ\nMeta: φ→ψ",[
+ st("¿Qué regla arma la meta?","I→","E→","El conector principal es →.","I→"),
+ st("¿Qué supongo?","φ, el antecedente","ψ, el consecuente","Se supone el antecedente.","supongo φ"),
+ st("¿Qué busco ahora?","ψ","φ","Hay que llegar al consecuente.","busco ψ"),
+ st("¿Cómo llego a ψ?","E→ dos veces: φ→σ y σ→ψ","I∧ con φ y ψ","Cadena de modus ponens.","E→ ×2"),
+ st("Al cerrar con I→, ¿qué cancelo?","φ","ψ","La hipótesis supuesta.","cancelo φ")
+],"I→: supongo φ, llego a ψ con E→ ×2 y cancelo φ"),
+sw("lg","Meta ¬","Tengo: φ→ψ, ¬ψ\nMeta: ¬φ",[
+ st("¿Qué regla?","I¬","RAA","La meta empieza con ¬: I¬. RAA concluye una fórmula suponiendo su negación.","I¬"),
+ st("¿Qué supongo?","φ","¬φ","I¬ supone lo que niega la meta.","supongo φ"),
+ st("¿Qué busco?","⊥","ψ","Hay que llegar a una contradicción.","busco ⊥"),
+ st("¿Cómo llego a ⊥?","E→ da ψ, y E¬ con ¬ψ da ⊥","I∧ con φ y ψ","Primero ψ, después choco con ¬ψ.","E→, E¬"),
+ st("¿Qué cancelo?","φ","¬φ","La suposición de I¬.","cancelo φ")
+],"I¬: supongo φ, E→ da ψ, E¬ con ¬ψ da ⊥ y cancelo φ"),
+sw("lg","Meta atómica (RAA)","Tengo: ¬¬φ\nMeta: φ",[
+ st("¿La meta φ tiene un conector para armar?","No: es atómica","Sí","Sin conector no hay introducción que usar.",""),
+ st("¿Sale directo de las hipótesis?","No: tengo ¬¬φ, no φ","Sí","¬¬φ no es φ en este cálculo.",""),
+ st("Entonces uso…","RAA","I¬","Es el último recurso para metas sin conector.","RAA"),
+ st("¿Qué supongo?","¬φ","φ","RAA supone la negación de la meta.","supongo ¬φ"),
+ st("¿Qué regla junta ¬φ y ¬¬φ?","E¬, da ⊥","E⊥","E¬ junta φ y ¬φ (acá ¬φ y ¬¬φ).","E¬")
+],"RAA: supongo ¬φ, E¬ con ¬¬φ da ⊥ y cancelo ¬φ"),
+sw("lg","Meta ∨","Tengo: φ\nMeta: φ∨ψ",[
+ st("¿Qué regla?","I∨","I∧","La meta es una disyunción.","I∨"),
+ st("¿Qué lado pruebo?","φ, el que tengo","ψ","Alcanza con un lado.","φ"),
+ st("¿Necesito probar los dos lados?","No","Sí","Eso sería una conjunción.","")
+],"I∨: de φ obtengo φ∨ψ"),
+sw("lg","Meta ∨ sin hipótesis","Tengo: nada\nMeta: φ∨¬φ",[
+ st("¿Puedo probar φ solo?","No","Sí","Sin hipótesis no hay forma.",""),
+ st("¿Puedo probar ¬φ solo?","No","Sí","Tampoco.",""),
+ st("Entonces, ¿qué regla?","RAA","I∨","Ningún lado se prueba directo.","RAA"),
+ st("¿Qué supongo?","¬(φ∨¬φ)","φ∨¬φ","RAA supone la negación de la meta.","supongo ¬(φ∨¬φ)")
+],"RAA: supongo ¬(φ∨¬φ) y busco ⊥"),
+sw("lg","Meta ∀","Tengo: ∀x(P(x)∧Q(x))\nMeta: ∀xP(x)",[
+ st("¿Qué regla arma la meta?","I∀","E∀","La meta es un ∀.","I∀"),
+ st("¿Cómo tiene que ser x?","Arbitraria","Una constante","I∀ generaliza sobre una x cualquiera.","x arbitraria"),
+ st("¿Cómo uso la hipótesis?","E∀ con x, y después E∧","I∃","Instancio y separo la conjunción.","E∀, E∧"),
+ st("¿x está libre en alguna hipótesis abierta?","No: está ligada por ∀","Sí","Se cumple la condición (∗).","")
+],"I∀: x arbitraria; E∀ y E∧ dan P(x)"),
+sw("lg","Meta ∃","Tengo: P(a)\nMeta: ∃xP(x)",[
+ st("¿Qué regla?","I∃","E∃","La meta es un ∃.","I∃"),
+ st("¿Qué testigo uso?","a","Una variable nueva","Ya tengo un término que funciona.","t = a"),
+ st("¿Debe ser a libre para x?","Sí","No","Que no quede capturado.","")
+],"I∃: el testigo es a"),
+sw("lg","Meta ↔","Tengo: φ→ψ, ψ→φ\nMeta: φ↔ψ",[
+ st("¿Qué regla?","I↔","I∧","I↔ arma equivalencias.","I↔"),
+ st("¿Qué pruebo?","φ→ψ y ψ→φ","φ∧ψ","Las dos implicaciones.","φ→ψ, ψ→φ")
+],"I↔: de φ→ψ y ψ→φ obtengo φ↔ψ"),
+sw("lg","Meta ⊥","Tengo: φ, ¬φ\nMeta: ⊥",[
+ st("¿Qué regla da ⊥?","E¬","E⊥","E¬ junta φ y ¬φ. E⊥ parte de ⊥.","E¬"),
+ st("¿Qué junto?","φ y ¬φ","φ∧¬φ","Las dos premisas directas.","")
+],"E¬: de φ y ¬φ obtengo ⊥"),
+sw("lg","Usar ∧","Tengo: φ∧ψ\nMeta: ψ",[
+ st("¿Armo o desarmo?","Desarmo: ψ está dentro de una hipótesis","Armo","La meta es atómica y sale de la hipótesis.",""),
+ st("¿Qué regla?","E∧","I∧","E∧ separa conjunciones.","E∧"),
+ st("¿Qué me quedo?","ψ","φ","Lo que pide la meta.","ψ")
+],"E∧: de φ∧ψ obtengo ψ"),
+sw("lg","Usar →","Tengo: φ→ψ\nMeta: ψ",[
+ st("¿Qué regla uso?","E→","I→","E→ usa la implicación.","E→"),
+ st("¿Qué necesito además?","φ","ψ","El antecedente.","necesito φ"),
+ st("Entonces el subobjetivo es…","Probar φ","Probar ψ","Probar ψ es la meta original: circular.","subobjetivo φ")
+],"E→: con φ→ψ y φ obtengo ψ (subobjetivo: φ)"),
+sw("lg","Usar ∨","Tengo: φ∨ψ, φ→χ, ψ→χ\nMeta: χ",[
+ st("¿Qué hipótesis desarmo?","φ∨ψ","φ→χ","Con una disyunción no avanzo sin separar casos.","E∨ sobre φ∨ψ"),
+ st("¿Cuántas ramas tiene E∨?","Dos","Una","Una por disyunto.",""),
+ st("¿Qué pruebo en cada rama?","χ, suponiendo φ y suponiendo ψ","φ y ψ","Misma conclusión en ambas.","χ en cada rama"),
+ st("¿Qué cancelo?","φ y ψ, una por rama","φ∨ψ","Las suposiciones de las ramas.","cancelo φ y ψ")
+],"E∨: χ bajo φ (E→) y χ bajo ψ (E→); cancelo φ y ψ"),
+sw("lg","Usar ∃","Tengo: ∃xP(x), ∀x(P(x)→Q(x))\nMeta: ∃xQ(x)",[
+ st("¿Qué supongo para usar el ∃?","P(x) con x nueva","P(a) con a constante","E∃ supone el testigo con una variable nueva.","supongo P(x)"),
+ st("Con P(x) y E∀, ¿qué obtengo?","Q(x), por E→","Q(a)","Instancio con la misma x.","Q(x)"),
+ st("¿Cómo llego a la meta?","I∃ con x","I∀","La meta es un ∃.","I∃"),
+ st("Al cerrar E∃, ¿qué hipótesis queda entre corchetes [ ]ⁿ?","P(x), la suposición del testigo","∃xP(x)","∃xP(x) no se corchetea: sigue como premisa abierta. Lo que E∃ elimina es su ∃, para trabajar con P(x), y esa suposición se cancela.","cancelo P(x)"),
+ st("¿x ∉ FV de la conclusión ∃xQ(x)?","Sí: está ligada","No","Se cumple la condición (∗).","")
+],"E∃: supongo P(x), E∀ y E→ dan Q(x), I∃ da ∃xQ(x); cancelo P(x)"),
+sw("lg","Usar ¬ y ⊥",null,[
+ st("Tengo ¬φ y quiero ⊥. ¿Qué me falta?","φ","ψ, cualquier otra fórmula","E¬ pide una fórmula y su negación: acá φ y ¬φ."),
+ st("Tengo ⊥ y quiero ψ.","E⊥","E¬","Ex falso: de ⊥ sale cualquier fórmula."),
+ st("Tengo φ→ψ y φ.","E→","I→","Modus ponens."),
+ st("Tengo φ∨ψ.","E∨, con dos ramas","I∨","Una disyunción se usa separando casos."),
+ st("Tengo ∀xP(x).","E∀: instancio con un término","I∀","Para usar un ∀ lo instancio."),
+ st("Tengo ∃xP(x).","E∃: supongo P(x), x nueva","E∀","Para usar un ∃ supongo el testigo.")
+]),
+sw("lg","Estrategia",null,[
+ st("¿Qué miro primero?","La meta: ¿tiene conector?","Las hipótesis","Con conector, la meta se arma con su introducción."),
+ st("La meta ya está entre las hipótesis.","Nada: es una hoja","I∧","No hace falta ninguna regla."),
+ st("Meta atómica que no está.\n¿Qué pruebo primero?","Si sale de eliminar hipótesis","RAA","RAA es el último recurso."),
+ st("Meta atómica y nada sirve.","RAA","I→","Suponer ¬meta y buscar ⊥."),
+ st("Después de RAA o I¬ la meta pasa a ser…","⊥","La misma fórmula","Busco una contradicción."),
+ st("Armo la meta o desarmo hipótesis.\n¿Qué hago primero?","Armar la meta","Desarmar todo","Guiate por la meta; desarmá cuando falte material.")
+]),
+sw("lg","Cancelación",null,[
+ st("I→ cancela…","El antecedente","El consecuente","Se supone el antecedente."),
+ st("I¬ cancela…","φ","¬φ","Supongo φ para llegar a ⊥."),
+ st("RAA cancela…","¬φ","φ","Supongo ¬φ para llegar a ⊥."),
+ st("E∨ cancela…","Las dos suposiciones","La disyunción","Una por rama."),
+ st("En E∃: ¿qué hipótesis se cancela [ ]ⁿ?","P(x), la suposición sin el ∃","∃xP(x), la premisa","E∃ quita el ∃ para trabajar con P(x); esa suposición se cancela al cerrar. ∃xP(x) queda como premisa abierta (en Γ)."),
+ st("Una premisa de Γ lleva corchetes.","No: solo se cancelan las supuestas","Sí","Las premisas quedan abiertas.")
+]),
+sw("lg","Condiciones (∗)",null,[
+ st("I∀ con x libre en una hipótesis abierta.","No se puede","Se puede","x tiene que ser arbitraria."),
+ st("E∃ con x libre en la conclusión.","No se puede","Se puede","Exige x ∉ FV(ψ)."),
+ st("E∀ con t = y sobre (∀x)(∃y)Q(x,y).","No se puede: y queda capturada","Se puede","t debe ser libre para x."),
+ st("E∀ con t = a sobre (∀x)(∃y)Q(x,y).","Se puede: a es libre para x","No se puede","Nada captura a a."),
+ st("¿Es f(x) libre para x en ¬P(x)?","Sí","No","Sin cuantificadores no hay captura."),
+ st("I∃ con t = f(a) sobre P(f(a)).","Se puede","No se puede","f(a) es libre para x.")
+]),
+sw("lg","Detectar errores",null,[
+ st("De ¬p₂∧¬p₃ saco ¬p₂ y rotulo I∧.","Mal: es E∧","Bien","Separar una conjunción es eliminación."),
+ st("De p₂∨p₃ escribo p₂ con E∨ sin ramas.","Mal: faltan los dos casos","Bien","E∨ exige probar lo mismo bajo cada disyunto."),
+ st("De p₂ y ¬p₂ obtengo ⊥ con «I⊥».","Mal: es E¬","Bien","⊥ sale de E¬."),
+ st("¿Qué es Γ en Γ ⊢ ρ?","Las hojas sin cancelar","Las hojas canceladas","Las canceladas ya no cuentan."),
+ st("I∀ con [P(x,y)]¹ abierta y y libre.","Mal: y libre en hipótesis abierta","Bien","Viola (∗) de I∀.")
+]),
+sw("lg","Igualdad",null,[
+ st("I= da…","t =′ t","x =′ y","Reflexividad."),
+ st("E= sirve para…","Reemplazar iguales dentro de una fórmula","Instanciar un ∀","Sustitución de iguales."),
+ st("(∀x)(∃y)x =′ y: ¿qué pone de testigo?","y := x","y := a","I= da x =′ x.")
+])
+];
+/* ===== Prog4: los dos ejercicios de la app, línea por línea (cada línea = decisiones atómicas) ===== */
+const CLS="Clases: Controlador→Estudiante*, Empresa* · Empresa→OfertaPasantia* · Estudiante↔Postulacion* · Postulacion↔OfertaPasantia (1)";
+const OPS="Operaciones: Estudiante: generarPostulacion(opc), aceptarPostulacion(cod) · Empresa: obtenerOferta(cod), cuposDisponibles(cod) · OfertaPasantia: agregarPostulacion(p), hayCupos(), calcularBeneficio() · Postulacion: getOfertaPasantiaCodigo(), aceptarPostulacion(), getEstado()";
+const CLC="Controlador→Estudiante*, Empresa* · Empresa→Oferta* · Estudiante↔Postulacion* · Postulacion↔Oferta";
+const DOMS=CLS+"\n"+OPS;
+const SS={A:"«association»",L:"«local»",P:"«parameter»"};
+const lineStr=L=>L.n+": "+L.from+" → "+L.to+" : "+(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa+"  "+SS[L.t];
+function lineSteps(L){const a=[],r=L.to.split(":")[0];
+ a.push(st("¿Qué número lleva?",L.n,L.nd,L.nw,L.n+":"));
+ a.push(st("¿Qué operación?",L.op,L.od,L.ow,(L.res?L.res+" := ":"")+L.op));
+ if(L.pa!="()")a.push(st("¿Con qué parámetros?",L.pa,L.pd,L.pw,L.pa));
+ a.push(st("¿A qué objeto va?",L.to,L.td,L.tw,"→ "+L.to));
+ if(L.cond)a.push(st("¿Lleva condición?",L.cond+" antes del mensaje","Ninguna",L.cw,L.cond));
+ if(L.t=="A")a.push(st("¿El receptor ya está en «Tengo»?","No","Sí","Es una colección u objeto que todavía no tengo.",""),
+  st("Estereotipo del receptor","«association»","«local»","Hay flecha en «Clases»: "+L.arrow+". «local» exigiría tenerlo ya en «Tengo».","«association»"));
+ else if(L.new)a.push(st("¿El receptor existe antes del mensaje?","No: lo crea este create","Sí","create produce el objeto nuevo.",""),
+  st("Estereotipo del receptor","«local»","«association»","Lo que devuelve un create queda en variable local; «association» necesita una flecha.","«local»"));
+ else if(L.t=="L")a.push(st("¿"+r+" ya está en «Tengo»?","Sí","No","Es un objeto concreto que ya obtuve.",""),
+  st("Estereotipo del receptor","«local»","«association»","Lo devolvió "+L.ref+" (así figura en «Tengo»): variable local. La flecha de «Clases» solo sirve si todavía no lo tengo.","«local»"));
+ else a.push(st("¿"+r+" ya está en «Tengo»?","Sí","No","Llegó antes.",""),
+  st("Estereotipo del receptor","«parameter»","«local»","Figura como «firma:» en «Tengo» ("+L.sig+"): no salió de ningún find/create/next.","«parameter»"));
+ return a}
+const EXS=[
+{g:"postularse",op:"postularse(ci, rut, codOferta)",L:[
+{n:"1",nd:"1.1",nw:"Primer mensaje de la operación: nivel 1.",from:":Controlador",fd:"Sistema",fw:"La operación del sistema entra al Controlador; no hay caja «Sistema» en comunicación.",goal:"Necesito al estudiante a partir de su cédula.",op:"find",od:"next",ow:"Buscar por clave es find; next recorre todos.",pa:"(ci)",pd:"(ci, rut)",pw:"La clave de búsqueda es ci, que viene de la operación.",to:":Estudiante *",td:"est:Estudiante",tw:"find va a la colección.",res:"est",rw:"Voy a usar al estudiante después.",t:"A",arrow:"Controlador ──> Estudiante *"},
+{n:"2",nd:"1.2",nw:"Otro mensaje del Controlador: mismo nivel, siguiente número.",from:":Controlador",fd:"est",fw:"La flecha hacia Empresa * la tiene el Controlador: est no llega a ella.",goal:"Necesito a la empresa a partir de su rut.",op:"find",od:"obtenerEmpresa",ow:"obtenerEmpresa no existe en las operaciones: se busca con find sobre la colección.",pa:"(rut)",pd:"(ci, rut)",pw:"La empresa se busca por su clave rut.",to:":Empresa *",td:"emp:Empresa",tw:"find va a la colección.",res:"emp",rw:"Voy a pedirle la oferta a esta empresa.",t:"A",arrow:"Controlador ──> Empresa *"},
+{n:"3",nd:"2.1",nw:"Vuelve a ser un mensaje del Controlador: nivel 1.",from:":Controlador",fd:"est",fw:"Es el Controlador quien ya tiene a emp y la operación de la empresa.",goal:"Necesito la oferta, que cuelga de la empresa.",op:"obtenerOferta",od:"find",ow:"El Controlador no tiene flecha a OfertaPasantia: se la pide a emp, que sí la tiene (error del parcial: saltar la Empresa).",pa:"(codOferta)",pd:"(rut, codOferta)",pw:"La oferta se identifica por su código.",to:"emp:Empresa",td:"emp",tw:"Primera aparición de emp como objeto: lleva nombre:Clase.",res:"opc",rw:"La oferta se pasa a otros mensajes.",t:"L",ref:"el find del mensaje 2"},
+{n:"3.1",nd:"4",nw:"Lo dispara el 3: cuelga de él.",from:"emp",fd:":Controlador",fw:"El mensaje 3.k lo envía quien recibió el 3: emp.",goal:"emp busca la oferta entre las suyas.",op:"find",od:"next",ow:"Busca por código: find.",pa:"(codOferta)",pd:"(codOferta, rut)",pw:"Busca por el código de la oferta.",to:":OfertaPasantia *",td:"opc:OfertaPasantia",tw:"find va a la colección.",res:"op",rw:"Es lo que retorna obtenerOferta.",t:"A",arrow:"Empresa ──> OfertaPasantia *"},
+{n:"4",nd:"3.2",nw:"El Controlador sigue con su siguiente mensaje de primer nivel.",from:":Controlador",fd:"emp",fw:"Con est y opc ya obtenidos, el Controlador delega.",goal:"Con est y opc ya obtenidos, pido generar la postulación.",op:"generarPostulacion",od:"create",ow:"El Controlador no crea: delega en el estudiante (4.1).",pa:"(opc)",pd:"(est, opc)",pw:"La operación del estudiante recibe la oferta.",to:"est:Estudiante",td:":Estudiante *",tw:"Es de un estudiante concreto: primera aparición de est como objeto.",res:null,rw:"No uso el resultado.",t:"L",ref:"el find del mensaje 1"},
+{n:"4.1",nd:"5",nw:"Lo dispara el 4: cuelga de él.",from:"est",fd:":Controlador",fw:"Lo envía quien recibió el 4: est.",goal:"est crea la postulación.",op:"create",od:"find",ow:"Hay que crear un objeto nuevo (parcial: no crearla antes de tener est y opc).",pa:"(est, opc)",pd:"(opc)",pw:"La postulación se enlaza a sus dos extremos: se pasan est y opc (no hay otra forma de que los conozca).",to:"p:Postulacion",td:":Postulacion *",tw:"create va al objeto nuevo; primera aparición: nombre:Clase.",res:"p",rw:"p se usa para registrarla.",t:"L",new:1},
+{n:"4.2",nd:"4.1.1",nw:"Segundo mensaje que dispara el 4: hermano del 4.1, no hijo.",from:"est",fd:":Controlador",fw:"Lo envía est, que ejecuta generarPostulacion.",goal:"est le informa la postulación nueva a la oferta.",op:"agregarPostulacion",od:"add",ow:"add va a una colección; opc tiene su operación para registrarla.",pa:"(p)",pd:"(est, p)",pw:"A la oferta se le pasa la postulación creada.",to:"opc:OfertaPasantia",td:":OfertaPasantia *",tw:"Es una oferta concreta: primera aparición como objeto, con nombre:Clase.",res:null,rw:"No uso el resultado.",t:"P",sig:"generarPostulacion(opc)"},
+{n:"4.2.1",nd:"4.3",nw:"Lo dispara el 4.2: cuelga de él.",from:"opc",fd:"est",fw:"Lo envía quien recibió el 4.2: opc.",goal:"opc agrega p a su colección.",op:"add",od:"find",ow:"Agregar a una colección es add.",pa:"(p)",pd:"(opc, p)",pw:"Se agrega la postulación.",to:":Postulacion *",td:"p:Postulacion",tw:"add va a la colección.",res:null,rw:"No uso el resultado.",t:"A",arrow:"OfertaPasantia ──> Postulacion *"},
+{n:"4.3",nd:"4.2.2",nw:"Tercer mensaje que dispara el 4: hermano del 4.1 y del 4.2.",from:"est",fd:"opc",fw:"Lo envía est.",goal:"est también guarda p en su colección (link en los dos sentidos).",op:"add",od:"agregarPostulacion",ow:"Agregar a una colección es add.",pa:"(p)",pd:"(est, p)",pw:"Se agrega la postulación.",to:":Postulacion *",td:"p:Postulacion",tw:"add va a la colección.",res:null,rw:"No uso el resultado.",t:"A",arrow:"Estudiante ──> Postulacion *"}
+]},
+{g:"aceptarPostulacion",op:"aceptarPostulacion(ci, rut, codOferta) — solo si la oferta tiene cupos",L:[
+{n:"3",nd:"2.1",nw:"Nivel 1: lo envía el Controlador.",from:":Controlador",fd:"est",fw:"El Controlador tiene a emp (mensaje 2).",goal:"Pregunto por los cupos disponibles, vía la empresa.",op:"cuposDisponibles",od:"hayCupos",ow:"hayCupos es de la oferta; el Controlador llega a la empresa, que tiene cuposDisponibles.",pa:"(codOferta)",pd:"(ci, codOferta)",pw:"Se pregunta por esa oferta.",to:"emp:Empresa",td:":Empresa *",tw:"Es una empresa concreta ya buscada: primera aparición con nombre:Clase.",res:"cd",rw:"Lo uso como condición del mensaje 4.",t:"L",ref:"el find del mensaje 2"},
+{n:"3.1",nd:"4",nw:"Lo dispara el 3.",from:"emp",fd:":Controlador",fw:"Lo envía quien recibió el 3: emp.",goal:"emp busca la oferta.",op:"find",od:"next",ow:"Busca por código: find.",pa:"(codOferta)",pd:"(rut, codOferta)",pw:"Se busca por el código.",to:":OfertaPasantia *",td:"opc:OfertaPasantia",tw:"find va a la colección.",res:"opc",rw:"La oferta se usa en el 3.2.",t:"A",arrow:"Empresa ──> OfertaPasantia *"},
+{n:"3.2",nd:"3.1.1",nw:"Hermano del 3.1: lo dispara el 3 también.",from:"emp",fd:":Controlador",fw:"Lo envía emp.",goal:"emp le pregunta a la oferta si tiene cupos.",op:"hayCupos",od:"cuposDisponibles",ow:"hayCupos es la operación de la oferta.",pa:"()",pd:"(codOferta)",pw:"No necesita datos.",to:"opc:OfertaPasantia",td:":OfertaPasantia *",tw:"Es una oferta concreta, la del find 3.1.",res:"hay",rw:"Es la respuesta de la pregunta.",t:"L",ref:"el find del mensaje 3.1"},
+{n:"3.2.1*",nd:"3.2.1",nw:"Es un recorrido: lleva * pegado al número.",from:"opc",fd:"emp",fw:"Lo envía quien recibió el 3.2: opc.",goal:"opc recorre sus postulaciones.",op:"next",od:"find",ow:"Recorrer todas es next.",pa:"()",pd:"(ci)",pw:"next no lleva datos.",to:":Postulacion *",td:"p:Postulacion",tw:"next va a la colección.",res:"p",rw:"Cada p se usa en el 3.2.2*.",t:"A",arrow:"OfertaPasantia ──> Postulacion *"},
+{n:"3.2.2*",nd:"3.2.2",nw:"Sigue dentro del recorrido: mantiene el *.",from:"opc",fd:":Controlador",fw:"Lo envía opc.",goal:"opc consulta el estado de cada postulación.",op:"getEstado",od:"setEstado",ow:"Solo se consulta: setEstado cambiaría el estado de un objeto ajeno.",pa:"()",pd:"(aceptada)",pw:"Consultar no lleva datos.",to:"p:Postulacion",td:":Postulacion *",tw:"Es una postulación concreta, la del next.",res:"e",rw:"Se usa el estado.",t:"L",ref:"el next del mensaje 3.2.1*"},
+{n:"4",nd:"3.3",nw:"Vuelve el nivel 1: lo envía el Controlador.",from:":Controlador",fd:"emp",fw:"Es el Controlador quien tiene a est.",goal:"Si hay cupos, el estudiante acepta su postulación.",op:"aceptarPostulacion",od:"setEstado",ow:"Cada objeto cambia su propio estado: el Controlador no hace setX de objetos ajenos.",pa:"(codOferta)",pd:"(ci, codOferta)",pw:"Se acepta la postulación a esa oferta.",to:"est:Estudiante",td:":Estudiante *",tw:"Es un estudiante concreto, el del find 1.",res:null,rw:"No uso el resultado.",cond:"[cd]",cw:"La condición del cupo se anota antes del mensaje.",t:"L",ref:"el find del mensaje 1"},
+{n:"4.1*",nd:"4.1",nw:"Es un recorrido: lleva *.",from:"est",fd:":Controlador",fw:"Lo envía quien recibió el 4: est.",goal:"est recorre sus postulaciones para hallar la de esta oferta.",op:"next",od:"find",ow:"Recorrer todas es next.",pa:"()",pd:"(cod)",pw:"next no lleva datos.",to:":Postulacion *",td:"pe:Postulacion",tw:"next va a la colección.",res:"pe",rw:"Cada pe se usa en el 4.2*.",t:"A",arrow:"Estudiante ──> Postulacion *"},
+{n:"4.2*",nd:"4.2",nw:"Sigue dentro del recorrido: mantiene el *.",from:"est",fd:"pe",fw:"Lo envía est, que recorre.",goal:"Para cada postulación, est pide el código de su oferta.",op:"getOfertaPasantiaCodigo",od:"getEstado",ow:"Necesito el código de la oferta, no el estado.",pa:"()",pd:"(codOferta)",pw:"Consultar no lleva datos.",to:"pe:Postulacion",td:":Postulacion *",tw:"Es una postulación concreta, la del next 4.1*.",res:"cod",rw:"Se compara con codOferta.",t:"L",ref:"el next del mensaje 4.1*"},
+{n:"4.3*",nd:"4.3",nw:"Sigue dentro del recorrido: mantiene el *.",from:"est",fd:"pe",fw:"Lo envía est.",goal:"Si es la postulación de esta oferta, la acepta.",op:"aceptarPostulacion",od:"setEstado",ow:"Cada objeto cambia su propio estado.",pa:"()",pd:"(codOferta)",pw:"La postulación ya sabe cuál es.",to:"pe:Postulacion",td:":Postulacion *",tw:"Es una postulación concreta, la de esta vuelta.",res:null,rw:"No uso el resultado.",cond:"[cod == codOferta]",cw:"La condición se evalúa dentro del recorrido: va antes del mensaje.",t:"L",ref:"el next del mensaje 4.1*"},
+{n:"4.3.1",nd:"4.4",nw:"Lo dispara el 4.3: cuelga de él.",from:"pe",fd:"est",fw:"Lo envía quien recibió el 4.3.",goal:"La postulación le pide el beneficio a su oferta (abstracta).",op:"calcularBeneficio",od:"getBeneficio",ow:"Esa operación está en OfertaPasantia (abstracta: un diagrama por subclase).",pa:"()",pd:"(codOferta)",pw:"No necesita datos.",to:":OfertaPasantia",td:":OfertaPasantia *",tw:"Una postulación tiene una sola oferta (1): no es multiobjeto.",res:"b",rw:"El beneficio se guarda.",t:"A",arrow:"Postulacion ──> OfertaPasantia"}
+]}];
+const PRE=["1: :Controlador → :Estudiante * : est := find(ci)  «association»","2: :Controlador → :Empresa * : emp := find(rut)  «association»"];
+const HAVE={
+"postularse|1":"firma: ci, rut, codOferta","postularse|2":"firma: ci, rut, codOferta · est (1)","postularse|3":"firma: ci, rut, codOferta · est (1), emp (2)","postularse|3.1":"emp ejecuta obtenerOferta(codOferta) · firma: codOferta","postularse|4":"est (1), emp (2), opc (3)","postularse|4.1":"est ejecuta generarPostulacion(opc) · firma: opc","postularse|4.2":"est ejecuta generarPostulacion(opc) · firma: opc · p (4.1)","postularse|4.2.1":"opc ejecuta agregarPostulacion(p) · firma: p","postularse|4.3":"est ejecuta generarPostulacion(opc) · p (4.1)",
+"aceptarPostulacion|3":"firma: ci, rut, codOferta · est (1), emp (2)","aceptarPostulacion|3.1":"emp ejecuta cuposDisponibles(codOferta) · firma: codOferta","aceptarPostulacion|3.2":"emp · opc (3.1)","aceptarPostulacion|3.2.1*":"opc ejecuta hayCupos()","aceptarPostulacion|3.2.2*":"opc · p (3.2.1*, uno por vuelta)","aceptarPostulacion|4":"est (1), emp (2), cd (3) · firma: codOferta","aceptarPostulacion|4.1*":"est ejecuta aceptarPostulacion(codOferta) · firma: codOferta","aceptarPostulacion|4.2*":"est · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3*":"est · firma: codOferta · cod (4.2*) · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3.1":"pe ejecuta aceptarPostulacion()"};
+EXS.forEach(E=>E.L.forEach((L,i)=>{const prev=(E.g=="aceptarPostulacion"?PRE.concat(E.L.slice(0,i).map(lineStr)):E.L.slice(0,i).map(lineStr)).slice(-4);
+ SWC.push(sw("p4",E.g+" · "+L.n,E.op.split(" —")[0]+(prev.length?"\nYa: "+prev.slice(-2).join("\n      "):"")+"\nClases: "+CLC+"\nTengo: "+HAVE[E.g+"|"+L.n]+"\n▶ "+L.goal,lineSteps(L),lineStr(L)))}));
+
+/* ===== Lógica: combinaciones de átomos (ejercicios del examen: 2c, 3b, 3a) ===== */
+SWC.push(
+sw("lg","Combinar 2c (∀ desde contradicción)","Tengo: ψ = (∀x)P(f(x)) ∧ (∃z)¬P(z)   y   (∀x)¬P(x)\nMeta: (∀x)Q(x)",[
+ st("¿Qué miro primero?","La meta: tiene ∀, se arma con I∀","Las hipótesis, para desarmarlas","El conector de la meta se arma sin perder nada.","I∀ ·"),
+ st("Tras I∀, la meta pasa a ser…","Q(x), con x arbitraria","Q(a), con a una constante","I∀ pide una x genérica, no un caso particular."),
+ st("¿Alguna hipótesis habla de Q?","No: Q(x) no sale por eliminaciones","Sí: con E∀ sale Q(x)","P y Q no se relacionan: no hay camino directo a Q."),
+ st("Entonces Q(x) solo puede salir de…","⊥, con E⊥","I¬ suponiendo Q(x)","De una contradicción sale cualquier fórmula.","E⊥ ·"),
+ st("Nueva meta ⊥. ¿Qué regla da ⊥?","E¬: necesito una fórmula y su negación","E⊥","E⊥ usa ⊥, no lo produce.","E¬ ·"),
+ st("¿De dónde saco P(f(x))?","De (∀x)P(f(x)), que está dentro de ψ: primero E∧","De (∃z)¬P(z)","(∃z)¬P(z) no sirve: solo afirma que algo no cumple P.","E∧ ·"),
+ st("Instancio (∀x)P(f(x)) con t = …","x, y obtengo P(f(x))","f(x), y obtengo P(f(f(x)))","Quiero P(f(x)) para que encaje con la negación.","E∀ x ·"),
+ st("Instancio (∀x)¬P(x) con t = …","f(x), y obtengo ¬P(f(x))","x, y obtengo ¬P(x)","Tiene que ser exactamente la negación de P(f(x)).","E∀ f(x) ·"),
+ st("¿Es f(x) libre para x en ¬P(x)?","Sí: no hay cuantificador que capture x","No","No hay ningún ∀ o ∃ dentro de ¬P(x) que ligue la x de f(x)."),
+ st("Cierro con E¬ y después…","E⊥ da Q(x) e I∀ da (∀x)Q(x)","I→","El orden es E¬ → ⊥ → E⊥ → I∀.","E¬"),
+ st("Condición (∗) de I∀","x ∉ FV de las hipótesis abiertas: en ψ y en (∀x)¬P(x) x está ligada","x puede ser libre","Las hipótesis abiertas no tienen x libre: se puede generalizar.")
+],"I∀ ← E⊥ ← E¬ (P(f(x)) por E∀ con x, ¬P(f(x)) por E∀ con f(x))"),
+sw("lg","Combinar 3b (∃ en hipótesis y en meta)","Tengo: (∃x)R(x,x)   y   (∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))\nMeta: (∃x)P(x,x)",[
+ st("¿Puedo hacer I∃ directo?","No: todavía no tengo P(t,t) para ningún t","Sí","I∃ pide ya tener el testigo probado."),
+ st("¿Qué hipótesis desarmo primero?","(∃x)R(x,x), con E∃","La ∀∀∀","El ∃ da un testigo con el que instanciar la otra.","E∃ ·"),
+ st("¿Qué supongo?","R(x,x), con x nueva","R(a,a), con a constante","E∃ supone la fórmula con una variable nueva."),
+ st("Bajo esa suposición, ¿qué meta busco?","(∃x)P(x,x), la misma meta","⊥","E∃ concluye la misma ψ que se prueba adentro."),
+ st("¿Cuántas veces uso E∀ en la ∀∀∀?","Tres: una por cada cuantificador","Una","Hay que quitar ∀x, ∀y y ∀z."),
+ st("¿Con qué términos?","x, x, x: así sale R(x,x)∧R(x,x)→P(x,x)","x, y, z","Quiero que el antecedente use R(x,x), que es lo que tengo.","E∀ ×3 ·"),
+ st("Para el antecedente R(x,x)∧R(x,x)…","I∧ con R(x,x) usada dos veces","No se puede: falta otra premisa","La misma hipótesis puede usarse dos veces.","I∧ ·"),
+ st("Con el antecedente probado, ¿qué regla?","E→, obtengo P(x,x)","I→","E→ saca el consecuente.","E→ ·"),
+ st("Y para llegar a (∃x)P(x,x)…","I∃ con t = x","E∃","I∃ construye el ∃ a partir de P(x,x).","I∃ ·"),
+ st("Al cerrar E∃, ¿qué hipótesis queda entre corchetes [ ]ⁿ?","R(x,x), la suposición sin el ∃","(∃x)R(x,x), la premisa","E∃ quita el ∃ para trabajar con R(x,x); esa suposición se cancela. (∃x)R(x,x) sigue como premisa abierta."),
+ st("Condición (∗) de E∃","x ∉ FV((∃x)P(x,x)) ni de las hipótesis abiertas","t libre para x","La x supuesta no puede escapar a la conclusión.")
+],"E∃ sobre (∃x)R(x,x): bajo [R(x,x)]: E∀×3 → I∧ → E→ → I∃ → (∃x)P(x,x)"),
+sw("lg","Combinar 3a → (casos y contradicción)","Meta: ⊢ (α∨(β∧¬γ)) → (¬α→¬(β→γ))\nTengo: nada",[
+ st("Meta A→B: ¿qué hago?","I→, supongo α∨(β∧¬γ)","I→, supongo ¬α→¬(β→γ)","I→ supone el antecedente de la meta.","I→ ·"),
+ st("Nueva meta ¬α→¬(β→γ).","I→, supongo ¬α","E→","Otra implicación: otro I→.","I→ ·"),
+ st("Nueva meta ¬(β→γ).","I¬, supongo β→γ","I→, supongo β","La meta empieza con ¬: I¬.","I¬ ·"),
+ st("Meta ⊥. Tengo α∨(β∧¬γ), ¬α, β→γ. ¿Qué desarmo?","La disyunción, con E∨","β→γ, con E→","β→γ pide β, que todavía no tengo.","E∨ ·"),
+ st("¿Qué meta lleva cada rama del E∨?","⊥ en las dos","α∨(β∧¬γ)","E∨ concluye lo que se prueba en ambas ramas: ⊥."),
+ st("Rama α: ¿cómo llego a ⊥?","E¬ con ¬α y α","E⊥","Tengo α y ¬α: contradicción directa."),
+ st("Rama β∧¬γ: ¿qué saco primero?","E∧: β y ¬γ","I∧","Hay que desarmar la conjunción.","E∧ ·"),
+ st("Con β y β→γ obtengo…","γ, por E→","¬γ","Modus ponens."),
+ st("Con γ y ¬γ…","E¬ da ⊥","E⊥","γ y ¬γ son fórmula y negación."),
+ st("E∨ cancela…","α y β∧¬γ, una por rama","α∨(β∧¬γ)","Cancela las suposiciones de las ramas, no la disyunción."),
+ st("Orden de cierre, de adentro hacia afuera","I¬ cancela β→γ; I→ cancela ¬α; I→ cancela α∨(β∧¬γ)","I→ cancela α∨(β∧¬γ) primero","Cada cancelación corresponde a la suposición más reciente.")
+],"I→, I→, I¬ y adentro E∨ (rama α: E¬; rama β∧¬γ: E∧, E→, E¬)"),
+sw("lg","Combinar 3a ← (cuando no sé qué disyunto)","Meta: ⊢ (¬α→¬(β→γ)) → (α∨(β∧¬γ))\nTengo: nada",[
+ st("Meta A→B: ¿qué hago?","I→, supongo ¬α→¬(β→γ)","I→, supongo α∨(β∧¬γ)","I→ supone el antecedente de la meta.","I→ ·"),
+ st("Meta α∨(β∧¬γ): ¿I∨ directo?","No: no sé qué lado probar","Sí, con α","Sin saber qué disyunto vale, I∨ es un camino sin salida."),
+ st("Entonces…","RAA: supongo ¬(α∨(β∧¬γ)) y busco ⊥","I¬","Es el recurso cuando un ∨ no se puede elegir.","RAA ·"),
+ st("Tengo la hipótesis ¬α→¬(β→γ). ¿Qué pruebo para usarla?","¬α, su antecedente","β→γ","E→ necesita el antecedente."),
+ st("Probar ¬α: ¿regla?","I¬: supongo α, busco ⊥","RAA","La meta empieza con ¬: I¬.","I¬ ·"),
+ st("Con α, ¿cómo llego a ⊥?","I∨ da α∨(β∧¬γ); E¬ con su negación","E→","Tengo ¬(α∨(β∧¬γ)): armo la disyunción desde α.","I∨ ·"),
+ st("Con ¬α y la hipótesis, E→ me da…","¬(β→γ)","β→γ","Es el consecuente de la hipótesis."),
+ st("Para usar ¬(β→γ) pruebo…","β→γ, y obtengo ⊥ con E¬","β∧¬γ","E¬ junta β→γ con su negación."),
+ st("Probar β→γ: ¿regla?","I→: supongo β, busco γ","RAA","La meta es una implicación: I→.","I→ ·"),
+ st("γ es atómica y no está. ¿Qué uso?","RAA: supongo ¬γ","I∨","Es el caso de meta atómica sin salida directa.","RAA ·"),
+ st("Con β y ¬γ armo…","β∧¬γ por I∧, luego α∨(β∧¬γ) por I∨; E¬ con ¬(α∨(β∧¬γ)) da ⊥","E→","Esta vez sí puedo elegir el lado: tengo β∧¬γ.","I∧ · I∨ ·"),
+ st("El RAA interno cancela…","¬γ","¬(α∨(β∧¬γ))","Cancela su propia suposición."),
+ st("El RAA externo cancela…","¬(α∨(β∧¬γ))","¬α","Cancela la suposición que abrió el camino."),
+ st("El último I→ cancela…","¬α→¬(β→γ)","α∨(β∧¬γ)","Cancela el antecedente de la meta original.")
+],"I→; RAA; I¬ (¬α); E→; I→ + RAA (β→γ); E¬; cierre"),
+sw("lg","Patrones: qué hago cuando…",null,[
+ st("Meta (∀x)Q(x) y ninguna hipótesis nombra Q.","Busco ⊥ y uso E⊥ + I∀","Busco una instancia Q(a)","Sin Q en las hipótesis, solo una contradicción prueba Q."),
+ st("Tengo (∃x)R(x,x) y la meta es otra fórmula.","E∃ primero: supongo R(x,x)","I∃ de entrada","El ∃ de las hipótesis se abre para trabajar con su testigo."),
+ st("Meta (∃x)P(x,x) sin testigo a la vista.","Primero consigo P(t,t), después I∃","I∃ con cualquier t","I∃ necesita P(t,t) ya probado."),
+ st("Tengo A∨B y la meta es ⊥ o una fórmula.","E∨: la misma meta en cada rama","E∧","Una disyunción se usa por casos."),
+ st("Meta A∨B y no sé cuál lado vale.","RAA suponiendo ¬(A∨B)","I∨ con A","I∨ solo si ya sé cuál lado se prueba."),
+ st("Meta ¬(β→γ).","I¬: supongo β→γ y busco ⊥","I→ suponiendo β","La meta empieza con ¬."),
+ st("Meta β→γ, con γ atómica.","I→ suponiendo β; si γ no sale, RAA con ¬γ","I¬","La meta es una implicación."),
+ st("Meta φ↔ψ.","I↔: pruebo φ→ψ y ψ→φ por separado","I∧","↔ se arma con dos implicaciones."),
+ st("Tengo φ y ¬φ en algún punto.","E¬ da ⊥, y E⊥ da cualquier meta","I∧","Una contradicción vale para cualquier meta."),
+ st("Tengo ∀xP(x) y necesito P(t).","E∀ con el t que encaja con otra fórmula que tengo","E∀ con cualquier t","Elijo el t que haga coincidir las fórmulas.")
+])
+);
+
+/* Contexto propio de cada paso (Tengo / Meta en ese punto): cada tarjeta se entiende sola */
+const LGX={
+"Meta →":[0,0,"Tengo: φ→σ, σ→ψ y el supuesto φ (de I→)\nMeta original: φ→ψ","Tengo: φ→σ, σ→ψ, supuesto φ\nMeta: ψ","Derivé ψ bajo el supuesto φ\nMeta original: φ→ψ (con I→)"],
+"Meta ¬":[0,0,"Tengo: φ→ψ, ¬ψ y el supuesto φ (de I¬)\nMeta original: ¬φ","Tengo: φ→ψ, ¬ψ, supuesto φ\nMeta: ⊥","Derivé ⊥ bajo el supuesto φ\nMeta original: ¬φ (con I¬)"],
+"Meta atómica (RAA)":[0,0,0,0,"Tengo: ¬¬φ y el supuesto ¬φ (de RAA)\nMeta: ⊥"],
+"Meta ∀":[0,0,"Tengo: ∀x(P(x)∧Q(x))\nMeta tras I∀: P(x), con x arbitraria","Cierro con I∀ hacia ∀xP(x)\nHipótesis abierta: ∀x(P(x)∧Q(x))"],
+"Usar ∃":[0,"Tengo: ∀x(P(x)→Q(x)) y el supuesto P(x) (x nueva, de E∃)\nMeta: ∃xQ(x)","Tengo: P(x), Q(x) (por E∀ y E→)\nMeta: ∃xQ(x)","Llegué a ∃xQ(x) bajo el supuesto P(x)\nPremisa del E∃: ∃xP(x)","Cierro E∃ sobre ∃xP(x) con conclusión ∃xQ(x)\nHipótesis abiertas: ∀x(P(x)→Q(x))"],
+"Combinar 2c (∀ desde contradicción)":[0,"Tengo: ψ, (∀x)¬P(x)\nMeta: (∀x)Q(x), armo con I∀","Tengo: ψ, (∀x)¬P(x)\nMeta: Q(x), con x arbitraria","Tengo: ψ, (∀x)¬P(x)\nMeta: Q(x), con x arbitraria","Tengo: ψ, (∀x)¬P(x)\nMeta: ⊥ (de ahí saldrá Q(x) con E⊥)","Tengo: ψ = (∀x)P(f(x))∧(∃z)¬P(z), (∀x)¬P(x)\nMeta: ⊥ (por E¬ necesito P(f(x)) y ¬P(f(x)))","Tengo: (∀x)P(f(x)) (salió de ψ por E∧), (∀x)¬P(x)\nMeta: ⊥","Tengo: P(f(x)), (∀x)¬P(x)\nMeta: ⊥","Tengo: P(f(x)), (∀x)¬P(x)\nQuiero instanciar con t = f(x)","Tengo: P(f(x)), ¬P(f(x))\nMeta: ⊥, y después Q(x)","Tengo: Q(x) (por E⊥)\nMeta: (∀x)Q(x), cierro con I∀\nHipótesis abiertas: ψ, (∀x)¬P(x)"],
+"Combinar 3b (∃ en hipótesis y en meta)":[0,0,"Tengo: (∃x)R(x,x), (∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))\nMeta: (∃x)P(x,x)\nAbro E∃ sobre (∃x)R(x,x)","Supuesto: R(x,x), x nueva (de E∃)\nTengo además: la ∀∀∀\nMeta: (∃x)P(x,x)","Supuesto: R(x,x)\nTengo: (∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))\nMeta: (∃x)P(x,x)","Supuesto: R(x,x)\nTengo: (∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))\nMeta: (∃x)P(x,x)","Tengo: R(x,x) y R(x,x)∧R(x,x)→P(x,x)\nMeta: (∃x)P(x,x)","Tengo: R(x,x)∧R(x,x) y R(x,x)∧R(x,x)→P(x,x)\nMeta: (∃x)P(x,x)","Tengo: P(x,x)\nMeta: (∃x)P(x,x)","Derivé (∃x)P(x,x) bajo el supuesto R(x,x)\nPremisa del E∃: (∃x)R(x,x)","Cierro E∃ sobre (∃x)R(x,x) con conclusión (∃x)P(x,x)\nHipótesis abierta: la ∀∀∀"],
+"Combinar 3a → (casos y contradicción)":[0,"Supuesto: α∨(β∧¬γ)\nMeta: ¬α→¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α\nMeta: ¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta: ⊥","Abro E∨ sobre α∨(β∧¬γ)\nSupuestos: ¬α, β→γ\nMeta: ⊥","Rama α. Supuestos: α, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Supuestos: β∧¬γ, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: β, ¬γ, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: γ, ¬γ\nMeta: ⊥","Las dos ramas llegaron a ⊥ (E∨ sobre α∨(β∧¬γ))\nCierro E∨","Llegué a ⊥ con supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta original: ⊢ (α∨(β∧¬γ))→(¬α→¬(β→γ))"],
+"Combinar 3a ← (cuando no sé qué disyunto)":[0,"Supuesto: ¬α→¬(β→γ)\nMeta: α∨(β∧¬γ)","Supuesto: ¬α→¬(β→γ)\nMeta: α∨(β∧¬γ)","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ)) (de RAA)\nMeta: ⊥","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: ¬α (para usar E→ con la hipótesis)","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ)), α (de I¬)\nMeta: ⊥","Tengo: ¬α→¬(β→γ), ¬α\nMeta: ⊥ (¬α ya probado)","Tengo: ¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: ⊥","Tengo: ¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: β→γ (para E¬ con ¬(β→γ))","Supuestos: …, ¬(β→γ), β (de I→)\nMeta: γ","Supuestos: …, β, ¬γ (de RAA)\nMeta: ⊥","Probé ⊥ bajo el supuesto ¬γ\nMeta del bloque: γ","Probé ⊥ bajo el supuesto ¬(α∨(β∧¬γ))\nMeta del bloque: α∨(β∧¬γ)","Derivé α∨(β∧¬γ) bajo ¬α→¬(β→γ)\nMeta original: ⊢ (¬α→¬(β→γ))→(α∨(β∧¬γ))"]
+};
+SWC.forEach(c=>{const m=c.s=="lg"&&LGX[c.g];if(m)c.steps.forEach((s,i)=>{if(m[i])s.x=m[i]})});
+SWC.push(
+sw("p4","Condición [ ]","Operación: aceptarPostulacion(ci, rut, codOferta)\nYa dibujado: 3: :Controlador → emp:Empresa : cd := cuposDisponibles(codOferta)  «local»\nQuiero que 4 (aceptarPostulacion en est) ocurra solo si hay cupos.",[
+ st("¿Cómo expreso «solo si hay cupos»?","Condición [cd]","Otro objeto","Una condición se anota en el propio mensaje."),
+ st("¿Dónde va?","Antes del mensaje: [cd] aceptarPostulacion(…)","Después del mensaje","La guarda precede al mensaje."),
+ st("¿De dónde sale cd?","De un mensaje anterior: cd := …","Aparece sola","La variable de la condición se obtiene antes (el 3)."),
+ st("Dentro de un recorrido, ¿el número del mensaje con condición?","Conserva el * (4.3*)","Pierde el *","Sigue dentro de la iteración.")]),
+sw("p4","Guardar resultado","Operación: aceptarPostulacion(ci, rut, codOferta)",[
+ st("Pido getEstado() y uso el estado después.","e := getEstado()","getEstado()","Si lo uso, lo guardo en una variable."),
+ st("Envío aceptarPostulacion() y no uso nada del retorno.","aceptarPostulacion()","x := aceptarPostulacion()","Sin uso posterior no hay variable."),
+ st("find(ci) devuelve el estudiante que voy a usar.","est := find(ci)","find(ci)","El objeto encontrado se usa en los mensajes siguientes."),
+ st("create(…) crea el objeto nuevo que voy a usar.","p := create(est, opc)","create(est, opc)","El objeto nuevo queda en una variable."),
+ st("next() dentro de un recorrido.","pe := next()","next()","Cada vuelta usa el elemento obtenido.")]),
+sw("lg","Usar ∀","Tengo: ∀x(P(x)→Q(x)), P(a)\nMeta: Q(a)",[
+ st("¿Armo o desarmo?","Desarmo: la hipótesis es ∀","Armo con I∀","La meta Q(a) es atómica y sale de eliminar."),
+ st("¿Qué regla?","E∀","I∀","E∀ instancia un ∀ con un término."),
+ st("¿Qué término uso?","a, el que pide la meta","Una variable nueva","Se elige el término que sirve: a."),
+ st("¿Debe ser a libre para x?","Sí","No","Si no, a quedaría capturada por un cuantificador."),
+ st("Tras E∀ tengo P(a)→Q(a). ¿Qué hago?","E→ con P(a)","I→","Con el antecedente P(a) alcanza.")])
+);
+const LGR={"Meta ∧":[0,0,"I∧"],"Meta →":[0,"I→","I→","I→","I→"],"Meta ¬":[0,"I¬","I¬","I¬","I¬"],"Meta atómica (RAA)":[0,0,0,"RAA","RAA"],"Meta ∨":[0,"I∨","I∨"],"Meta ∨ sin hipótesis":[0,0,0,"RAA"],"Meta ∀":[0,"I∀","I∀","I∀"],"Meta ∃":[0,"I∃","I∃"],"Meta ↔":[0,"I↔"],"Usar ∧":[0,"E∧","E∧"],"Usar →":[0,"E→","E→"],"Usar ∨":[0,"E∨","E∨","E∨"],"Usar ∃":[0,"E∃","E∃","E∃","E∃"],"Usar ∀":[0,"E∀","E∀","E∀"]};
+SWC.forEach(c=>{const m=c.s=="lg"&&LGR[c.g];if(m)c.steps.forEach((s,i)=>{if(m[i])s.x=(s.x||c.ctx)+"\nRegla elegida: "+m[i]})});
+/* ===== Música: acordes por parte (cifrados de internet; un acorde cambiado en el lado equivocado) ===== */
+const MU=(t,art,key,secs,ord)=>{const h=t+" — "+art+"\n"+key+"\n(cifrado de internet: verificalo con el disco)",
+ steps=secs.map(([n,ok,bad,w])=>{const q=st("¿Qué acordes lleva "+n+"?",ok,bad,w);q.x=h+"\nParte: "+n;return q});
+ if(ord){const q=st("¿En qué orden van las partes?",ord[0],ord[1],ord[2]);q.x=h;steps.push(q)}
+ return sw("mu",t,h,steps)};
+SWC.push(
+MU("Mi país","Rubén Rada","Sol mayor",[
+ ["la estrofa","G – D°7 – Em – Em/D – C – B7 – Am7 – D7","G – D°7 – Em – Em/D – C – B7 – Dm7 – D7","El penúltimo acorde es Am7 (ii de Sol), que lleva al D7 final."],
+ ["el pre-estribillo","Em – Em/D – Em/D♭ – C – B7 – Am7 – D7","Em – Em/D – Em/D♭ – C – B7 – Am7 – G","Termina en D7 sin resolver a G: la resolución llega con el estribillo."],
+ ["el estribillo","C9 – D7 – G (dos veces)","C9 – D7 – Em (dos veces)","Cierra en el acorde de reposo, G, no en Em."]],
+ ["Estrofa → pre-estribillo → estrofa → estribillo (×2) → final con el estribillo","Estrofa → estribillo → pre-estribillo → estrofa → final","El pre-estribillo prepara el estribillo, no al revés."]),
+MU("Ciudad mágica","Tan Biónica","La menor",[
+ ["la estrofa","Am – C – G – F (se repite)","Am – C – Em – F (se repite)","El tercer acorde es G."],
+ ["el coro","F – C (×2), F – C – E, y luego F – E – Am – C – G – Am (×2)","F – C (×2), F – C – G, y luego F – E – Am – C – G – Am (×2)","El E (dominante de Am) está en el tercer compás: prepara el regreso a Am."]],
+ ["Estrofa → estrofa → coro → estrofa → coro","Estrofa → coro → coro → estrofa → estrofa","El coro entra después de las dos primeras estrofas y no antes."]),
+MU("Cae el sol","Airbag","Do# menor",[
+ ["la intro","C#m – A – E – E","C#m – A – E – B","La intro termina sostenida en E: B aparece en las estrofas y en el estribillo."],
+ ["la estrofa","C#m – A – E | C#m – A – E | B – C#m | B – C#m – A | B","C#m – A – E | C#m – A – E | A – C#m | B – C#m – A | B","Después de los dos primeros compases cae sobre B – C#m, no sobre A – C#m."],
+ ["el estribillo","C#m – A – E – B (×2) y cierra C#m – A – E – B – C#m – A – E","C#m – A – E – F#m (×2) y cierra C#m – A – E – B – C#m – A – E","El cuarto acorde es B, que lleva de vuelta a C#m."]]),
+MU("Ai se eu te pego (Nossa, nossa)","Michel Teló","Capo 4 (formas de Sol mayor)",[
+ ["toda la canción","G – D – Em – C, repetidos de punta a punta","G – D – Em – Am, repetidos de punta a punta","El cuarto acorde es C: la progresión I – V – vi – IV."],
+ ["el estribillo (¿cambia?)","No cambia: la misma progresión G – D – Em – C","Cambia: pasa a C – D – G","Es una sola vuelta de cuatro acordes que no cambia de sección."]]),
+MU("Hoy","Gloria Estefan","Capo 4 (formas de Mi menor)",[
+ ["la estrofa","Em – D – C – D – G | Em – D – C – B7 – Em","Em – D – C – D – G | Em – D – C – A7 – Em","El B7 es el dominante de Em: cierra la frase."],
+ ["el pre-estribillo","C – D – G – Em | C – D – G – B7 – Em","C – D – G – Am | C – D – G – B7 – Em","La primera frase cierra en Em, no en Am."],
+ ["el estribillo","C – D – G – B7 – Em (dos veces)","C – D – G – E7 – Em (dos veces)","El acorde antes de Em es el dominante, B7."]],
+ ["Estrofa → pre-estribillo → estribillo → estrofa → pre-estribillo → estribillo (×2)","Estrofa → estribillo → pre-estribillo → estribillo","El pre-estribillo va antes del estribillo."]),
+MU("I Want to Break Free","Queen","Mi mayor (cifra de referencia)",[
+ ["la estrofa y el estribillo","E – A – E – B – A – E  (I – IV – I – V – IV – I)","E – A – E – C#m – A – E","Es V (B), no vi (C#m), lo que lleva a IV."],
+ ["el puente","B – A – B – A – C#m – F#sus4 – F# – A – B – C#m – B – A – B – C#m – B – A – B – E","B – A – B – A – F#m – F#sus4 – F# – A – B – C#m – B – A – B – C#m – B – A – B – E","Después de B – A – B – A llega C#m."],
+ ["el solo","E – A – E – B – A – E – B – A – E","E – A – E – B – A – E – B – D – E","Es A, no D: la progresión se queda en I – IV – V."]]),
+MU("Cielo de un solo color","No Te Va Gustar","La menor",[
+ ["la estrofa","Am – Em – F (se repite)","Am – Dm – F (se repite)","El segundo acorde es Em."],
+ ["el segundo bloque","Am – Em – F – Am – Em – F, cierra G – F","Am – Em – F – Am – Em – C, cierra G – F","Los dos grupos terminan en F."],
+ ["el tercer bloque","G – F – Am (se repite), cierra G – F – Am – G – F","G – C – Am (se repite), cierra G – F – Am – G – F","Va G – F – Am, bajando por grados."]])
+);
+
+SWC.push(
+sw("p4","postularse · orden","Operación del sistema: postularse(ci, rut, codOferta)\n"+CLS,[
+ st("¿Qué hago primero?","Buscar est, emp y la oferta","Crear la postulación","create necesita est y opc: antes hay que tenerlos (error del parcial)."),
+ st("¿Puede el Controlador buscar la oferta directo con find?","No: se la pide a emp","Sí","No tiene flecha a OfertaPasantia (error del parcial: saltar la Empresa)."),
+ st("¿Quién crea la postulación?","est, dentro de generarPostulacion","El Controlador","El Controlador delega; la crea quien se enlaza."),
+ st("¿Cómo se enlaza la postulación nueva?","En los dos lados: opc y est la guardan","Solo en opc","Estudiante ↔ Postulacion y Postulacion ↔ OfertaPasantia: los dos guardan (add)."),
+ st("¿Cuántas veces aparece add(p)?","Dos: en la colección de opc y en la de est","Una","Una por cada lado del link.")
+]),
+sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: aceptarPostulacion(ci, rut, codOferta)\n"+DOMS,[
+ st("¿Quién cambia el estado de la postulación?","La postulación (aceptarPostulacion())","El Controlador con setEstado","Cada objeto modifica su propio estado."),
+ st("Parcial: setEstado(aceptada) iba a la Oferta.\n¿Qué estaba mal?","La oferta no es dueña de ese estado","Faltaba el *","El estado es de la postulación."),
+ st("¿Cuándo se acepta?","Solo si hay cupos: [cd]","Siempre","La condición del cupo va antes del mensaje."),
+ st("¿Quién calcula el beneficio?","La oferta, según su subclase","El estudiante","calcularBeneficio es de OfertaPasantia."),
+ st("calcularBeneficio() es abstracta.\n¿Cuántos diagramas?","Uno por subclase (Remunerada y NoRemunerada)","Uno solo con un if","Cada subclase implementa su versión."),
+ st("El recorrido de postulaciones…","Son varios mensajes: next, consulta y acción con condición","Es un solo mensaje","next, getOfertaPasantiaCodigo y la acción [cod == codOferta].")
+])
+);
+
+
+/* ---- Pestaña Deslizar: decisiones binarias (estado propio en localStorage "sw1") ---- */
+let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
+try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}
+const SV2=()=>{try{localStorage.setItem("sw1",JSON.stringify(S2))}catch(e){}};
+let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
+const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
+function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
+ const ok=c=>SF=="all"||c.s==SF,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c));
+ if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
+ let pool=SWC.filter(c=>ok(c)&&c.id!=SLAST);if(!pool.length)pool=SWC.filter(ok);
+ const w=pool.map(c=>1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i)),0));let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;
+ while(r>w[k]&&k<pool.length-1){r-=w[k];k++}
+ return{c:pool[k],i:0,only:false,built:[],err:0}}
+function swNew(){SW=swPick();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swStep(){SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
+ let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
+ `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
+ `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["p4","Prog4"],["lg","Lógica"],["mu","Música"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
+ if(u.recap){h+=`<div class="card"><h2>Serie completa</h2><p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
+ const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
+ cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
+ h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
+ ((s.x||c.ctx)?`<div class="sn">${esc(s.x||c.ctx)}</div>`:"")+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.join(" · "))} …</div>`:"")+
+ `<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+
+ (u.ans=="no"?`<div class="fb no"><b>Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div></div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
+ V.innerHTML=h;swBind()}
+function swBind(){const el=$("swc");if(!el||SW.ans)return;
+ el.onpointerdown=e=>{SDRAG={x:e.clientX,dx:0};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition="none"};
+ el.onpointermove=e=>{if(!SDRAG)return;SDRAG.dx=e.clientX-SDRAG.x;el.style.transform=`translateX(${SDRAG.dx}px) rotate(${SDRAG.dx/30}deg)`;el.classList.toggle("tl",SDRAG.dx<-30);el.classList.toggle("tr",SDRAG.dx>30)};
+ el.onpointerup=el.onpointercancel=()=>{if(!SDRAG)return;const dx=SDRAG.dx;SDRAG=null;el.style.transition="";if(Math.abs(dx)>80)swChoose(dx<0?"L":"R");else{el.style.transform="";el.classList.remove("tl","tr")}}}
+function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=(side=="L")==u.cl,k=c.id+":"+u.i;
+ u.ans=ok?"ok":"no";u.pick=side;S2.box[k]=ok?Math.min(4,(S2.box[k]||0)+1):0;S2.n++;SUN++;
+ if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
+ else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+3});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
+ SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
+function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.steps[u.i];
+ if(u.recap||u.only){swNew();return}
+ if(s&&s.f)u.built.push(s.f);u.i++;
+ if(u.i>=u.c.steps.length){u.bonus=u.err==0?5:0;S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
+ swStep()}
+function swOpen(){SW=null;swNew()}
+V.addEventListener("click",ev=>{if(TAB!=3)return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
+ if(w=="L"||w=="R")swChoose(w);else if(w=="go")swAdvance();else if(w=="sf"){SF=b.dataset.v;swNew()}});
+document.addEventListener("keydown",e=>{if(TAB!=3||!SW||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
+ if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
+ else if((k=="Enter"||k==" ")&&e.target.tagName!="BUTTON"){e.preventDefault();if(SW.recap||SW.ans=="no")swAdvance()}});
+
+[0,1,2,3].forEach(i=>$("t"+i).onclick=()=>tab(i));
+tab({repaso:0,prog4:1,logica:2}[location.hash.slice(1)]||0);
+</script>
+
+</html>
