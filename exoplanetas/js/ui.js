@@ -7,7 +7,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const COLOR = ["var(--j0)", "var(--j1)", "var(--j2)", "var(--j3)"];
 const ETIQ = { transito: "Trán", rv: "VRad", astro: "Astr", imagen: "Imag", micro: "Micr" };
 const LUZ = { F: "#e9edff", G: "#ffe27a", K: "#ffad5c", M: "#ff6f4f" };
-const CAMPO = { o: "Órbita", R: "Radio", M: "Masa", dens: "Densidad", atm: "Atmósfera", gases: "Gases", ctx: "Contexto" };
+const CAMPO = { o: "Órbita", R: "Radio", M: "Masa", dens: "Densidad", atm: "Atmósfera", gases: "Gases", term: "Calor", ctx: "Contexto" };
 const DIST_CORTA = { cercana: "Cercana", media: "Media", lejana: "Lejana" };
 const CANCELADO = new Error("partida cancelada");
 const ICO = {
@@ -481,13 +481,13 @@ async function preguntarRefutar(pl, cats, pares, pozo) {
     ${mio.length ? `<div class="sec privado"><h3>Lo que leíste tú (secreto)</h3>${filaDatos(mio)}</div>` : '<p class="tenue">No leíste nada de este planeta: refutarías a ciegas.</p>'}`;
   // qué lee cada Marcador y qué lectura le daría la razón
   const REFUTA_SI = {
-    atmosfera: { esp: "el espectro sale plano o no hay atmósfera" },
-    habitable: { densidad: "no es rocoso (gas o envoltura de H2)", esp: "no tiene atmósfera", contexto: "su contexto descarta agua líquida" },
+    atmosfera: { esp_emision: "el calor muestra que no hay aire" },
+    habitable: { densidad: "no es rocoso (gas o envoltura de H2)", esp_emision: "el calor muestra que no hay aire", contexto: "su contexto descarta agua líquida" },
     biofirma: { esp: "los gases no son de los que parecen vida", contexto: "una fuente abiótica explica la señal" },
   };
   const textoOp = b => {
     const campos = CAMPOS_MAR[b.mid], ya = campos.filter(c => c in yoSe || c in pl.publico);
-    const si = REFUTA_SI[b.cat][b.mid.startsWith("esp") ? "esp" : b.mid] || "su lectura contradice lo publicado";
+    const tab = REFUTA_SI[b.cat], si = tab[b.mid] || tab[b.mid.startsWith("esp") ? "esp" : b.mid] || "su lectura contradice lo publicado";
     const sabido = ya.length ? `<br><small class="tenue">Ya sabes lo que verá: ${ya.map(c => `${CAMPO[c]}: ${esc(yoSe[c] ?? pl.publico[c])}`).join(" · ")}</small>` : "";
     return `${lista.length > 1 ? `<b>${CAT_NOMBRE[b.cat]}</b> · ` : ""}${esc(MAR[b.mid].nombre)}<br><small class="tenue">Lee ${campos.map(c => CAMPO[c].toLowerCase()).join(" y ")} · gana si ${esc(si)}</small>${sabido}`;
   };
@@ -627,7 +627,7 @@ function renderMano() {
 const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
   densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "con Tránsito; no en activas (salvo M)"],
   esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "con Tránsito; si es Pequeño, solo enana M"],
-  esp_emision: ["si tiene atmósfera", "Atmósfera, Habitable", "solo planetas Calientes"],
+  esp_emision: ["su calor: ¿tiene aire?", "Atmósfera, Habitable", "solo planetas Calientes"],
   esp_imagen: ["atmósfera y gases", "Atmósfera, Biofirma", "con Imagen o en Gigante Frío cercano"],
   contexto: ["si la señal puede ser falsa", "Biofirma", "con un espectro de gases tuyo ahí"],
 };
@@ -703,7 +703,7 @@ function detalleCarta(c) {
     <p><b>Requisito:</b> ${m.req} Si lo cumple, funciona: no hay dado.</p>
     <p><b>Lees:</b> ${m.revela}.<br><b>Te sirve para publicar:</b> ${esc(m.publica)}.</p>
     <p><b>En un falso positivo</b> no lees nada; la Densidad lo delata.</p>
-    <p><b>Refuta</b> (si el autor no usó este método y tu lectura lo contradice): ${m.refuta.map(x => CAT_NOMBRE[x]).join(", ") || "nada"}.</p>
+    <p><b>Refuta</b> (si tu lectura lo contradice, aunque el autor haya usado este método): ${m.refuta.map(x => CAT_NOMBRE[x]).join(", ") || "nada"}.</p>
     <p class="tenue"><i>${esc(m.real)}</i></p>` });
 }
 function detalleEstrella(e) {
@@ -810,7 +810,7 @@ function mostrarReglas() {
     ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")}${c === "atmosfera" && K.DENS_ATM ? " (o Densidad, en Gigantes y Neptunianos)" : ""} exitoso tuyo ahí</td></tr>`).join("")}
     <tr><td>Masa real</td><td>+${K.MASA} · tu planeta tiene Astrometría y Tránsito o Densidad</td></tr>
     <tr><td>Hallazgo inesperado</td><td>+${K.HALL}</td></tr></table>
-    <h3>Refutar</h3><p>Cuando alguien publica, un rival puede cuestionarlo con un Marcador que el autor no usó. Si lo que ve contradice lo publicado, se lleva los puntos.</p>
+    <h3>Refutar</h3><p>Cuando alguien publica, un rival puede cuestionarlo con un Marcador, aunque sea del mismo tipo que usó el autor: si mintió, repetir la observación lo delata. Si lo que ve contradice lo publicado, se lleva los puntos.</p>
     <p><b>Artículo:</b> si publicas varias cosas del mismo planeta a la vez, sumas +${K.BONO_ART} por cada una extra, pero se refuta entero: si cae, el rival se lleva todos sus puntos.</p>
     <h3>Científicos</h3><table class="tabla">${D.cientificos.map(c => `<tr><td><b>${esc(c.nombre)}</b><br><span class="tenue">${esc(c.pais || "")}</span></td><td>${habilidades(c.id).map(esc).join(" · ")}</td></tr>`).join("")}</table>
     <h3>Hitos</h3><table class="tabla">${D.hitos.map(h => `<tr><td>${esc(h.nombre)} +${h.pts}</td><td>${esc(h.cond)}</td></tr>`).join("")}</table>

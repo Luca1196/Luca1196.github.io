@@ -60,7 +60,7 @@ function sirve(mid, cat, pl) {
 }
 function sirveLista(mid, pl) { return CATS.filter(c => sirve(mid, c, pl)); }
 const DATO_TEC = { transito: "R", rv: "M", astro: "M", imagen: "M", micro: "M" };
-const CAMPOS_MAR = { densidad: ["dens"], esp_transito: ["atm", "gases"], esp_emision: ["atm"],
+const CAMPOS_MAR = { densidad: ["dens"], esp_transito: ["atm", "gases"], esp_emision: ["term"],
                      esp_imagen: ["atm", "gases"], contexto: ["ctx"] };
 // «Te sirve para publicar» de cada Marcador (texto de la carta)
 const SIRVE = { densidad: ["habitable"], esp_transito: ["atmosfera", "biofirma"],
@@ -104,8 +104,9 @@ function veFalsedad(mid, a, cat) {
   if (a.falso) return true;
   const esp = mid.startsWith("esp");
   if (cat === "biofirma") return mid === "contexto" || (CAMPOS_MAR[mid].includes("gases") && !K.GASES_VIDA.includes(a.gases));
-  if (cat === "habitable") return mid === "contexto" || (mid === "densidad" && a.dens !== K.DENS_ROCA) || (esp && a.atm === "Ninguna");
-  return esp;
+  // un espectro plano no prueba que no haya aire (pueden ser nubes): solo el Calor de la emisión lo decide
+  if (cat === "habitable") return mid === "contexto" || (mid === "densidad" && a.dens !== K.DENS_ROCA) || (mid === "esp_emision" && !a.atmOk);
+  return mid === "esp_emision";
 }
 function vePlaneta(tid, a, est) {
   if (tid === "astro") return esGig(a);
@@ -244,7 +245,7 @@ class Juego {
   puedeRefutar(jg, mid, pl, cat) {
     const autor = pl.publicado[cat].autor;
     if (!K.REFUTAN[cat].includes(mid) || !this.requisito(mid, pl)) return false;
-    if (pl.ladoDe(autor).has(mid) && jg.cient !== "fernandez") return false;
+    // replicación: vale el mismo método que usó el autor
     return true;
   }
 
@@ -524,6 +525,7 @@ class Juego {
       for (const c of todas) pl.publicado[c] = { autor: x.idx, estado: "anulada" };
       this.sumar(x, "refutar", pozo, articulo ? "refuta un artículo entero" : `refuta ${CAT_NOMBRE[cat]}`);
       this.darHito(x, "revision");
+      if (x.cient === "fernandez" && K.FERN_REF) this.sumar(x, "cientifico", K.FERN_REF, "refutación ganada (Fernández)");
       this.log(`El Director lee la lectura: contradice lo publicado. ${x.nombre} gana +${pozo}.`, { jg: x.idx, tipo: "bueno" });
     } else {
       this.log(t.ok ? `El Director lee la lectura: no contradice lo publicado. Los puntos son de ${autor.nombre}.`

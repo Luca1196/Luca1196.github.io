@@ -10,8 +10,9 @@ const ESTILOS = {
   gigantes: { nombre: "Cazador de gigantes", foco: "gigantes", cients: ["charbonneau", "marois"] },
   verificador: { nombre: "Verificador", wAjeno: 1.5, wDesc: 1.1, refMult: 0.3, cients: ["fernandez", "tancredi"] },
 };
+const FAROL = (typeof process !== "undefined" && process.env && process.env.FAROL !== undefined) ? +process.env.FAROL : 0.15;   // prob. de farolear (audaz)
 const CARACTER = {
-  mentiroso: { nombre: "audaz", certeza: 0.35, umbralRef: 0.1 },
+  mentiroso: { nombre: "audaz", certeza: 0.35, umbralRef: 0.1, farol: FAROL },
   conservador: { nombre: "prudente", certeza: 0.7, umbralRef: 1.2 },
 };
 
@@ -59,6 +60,7 @@ class Bot {
         // esperar al Contexto si lo tengo y todavía no lo leí
         if (cat === "biofirma" && !fin && P < 0.95 && jg.mar.includes("contexto") && !g.conoce(jg, pl, "ctx")) continue;
         if (P >= umbral && P >= 0.12) articulo.push(cat);
+        else if (this.c.farol && g.rnd() < this.c.farol) articulo.push(cat);   // farol: publica sin estar seguro
       }
       if (articulo.length) {
         await this.pausa("publica");
