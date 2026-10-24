@@ -362,7 +362,7 @@ async function hacerInvestigar(mid, pl) {
     if (r.falso) { await ventana({ titulo: "¡Falso positivo!", color: "var(--mal)", centro: true, cuerpo: `<p>Masa y radio no cuadran: ${esc(pl.nombre)} no era un planeta.</p>` }); return; }
     await ventana({ titulo: "Lectura secreta", color: "var(--mar)", centro: true, cuerpo: `
       <div class="privado"><dl class="dato">${Object.entries(r.lee).map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>
-      <p>Con esto puedes publicar <b>${SIRVE[mid].map(c => CAT_NOMBRE[c]).join(" o ")}</b> en ${esc(pl.nombre)}, si crees que es cierto.</p>` });
+      <p>Con esto puedes publicar <b>${sirveLista(mid, pl).map(c => CAT_NOMBRE[c]).join(" o ")}</b> en ${esc(pl.nombre)}${mid === "densidad" && sirveLista(mid, pl).includes("atmosfera") ? " (es un mundo de gas: tiene atmósfera)" : ""}, si crees que es cierto.</p>` });
   });
 }
 async function hacerTelescopio() {
@@ -594,7 +594,7 @@ function renderMano() {
   });
 }
 const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
-  densidad: ["si es roca, agua o gas", "Habitable", "necesita su Radio o su Masa"],
+  densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "necesita su Radio o su Masa"],
   esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "solo con Tránsito debajo"],
   esp_emision: ["si tiene atmósfera", "Atmósfera, Habitable", "con Tránsito o en Gigante Caliente"],
   esp_imagen: ["atmósfera y gases", "Atmósfera, Biofirma", "con Imagen o en Gigante Frío cercano"],
@@ -778,7 +778,7 @@ function mostrarReglas() {
     <p>Al final de tu turno, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
     <h3>Puntos</h3>
     <table class="tabla"><tr><td>Planeta</td><td>+${K.CAND} (+${K.CONF - K.CAND} al confirmarlo)</td></tr>
-    ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")} exitoso tuyo ahí</td></tr>`).join("")}
+    ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")}${c === "atmosfera" && K.DENS_ATM ? " (o Densidad, en Gigantes y Neptunianos)" : ""} exitoso tuyo ahí</td></tr>`).join("")}
     <tr><td>Masa real</td><td>+${K.MASA} · tu planeta tiene Astrometría o Imagen y Tránsito o Densidad</td></tr>
     <tr><td>Hallazgo inesperado</td><td>+${K.HALL}</td></tr></table>
     <h3>Refutar</h3><p>Cuando alguien publica, un rival puede cuestionarlo con un Marcador que el autor no usó. Si su tirada sale y lo que ve contradice lo publicado, se lleva los puntos.</p>

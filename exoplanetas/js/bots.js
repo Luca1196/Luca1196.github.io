@@ -2,7 +2,7 @@
 //  Bots rivales: estilos de juego del simulador (vida, explorador, gigantes, verificador)
 // ===================================================================
 const M_ = (typeof module !== "undefined") ? require("./motor.js") : null;
-const _G = M_ || { K, TEC, MAR, CATS, SIRVE, VALOR_DESC, pTirada, verdad, veFalsedad, vePlaneta, esTierra };
+const _G = M_ || { K, TEC, MAR, CATS, SIRVE, sirve, sirveLista, VALOR_DESC, pTirada, verdad, veFalsedad, vePlaneta, esTierra };
 
 const ESTILOS = {
   vida: { nombre: "Buscador de vida", foco: "vida", cients: ["seager", "kaltenegger"] },
@@ -118,7 +118,7 @@ class Bot {
         const m = g.modMarcador(jg, mid, pl);
         const ps = g.pMarcador(m);
         let info = 0;
-        for (const c of _G.SIRVE[mid]) if (libres.includes(c)) {
+        for (const c of _G.sirveLista(mid, pl)) if (libres.includes(c)) {
           const p = g.prob(jg, pl, c);
           info += PT(c) * (p * (1 - p) * 2 + 0.25 * p) + (g.sirveParaPublicar(jg, pl, c) ? 0 : 0.6 * p * PT(c));
         }

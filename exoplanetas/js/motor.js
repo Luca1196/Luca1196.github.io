@@ -43,6 +43,13 @@ function explicarEstrella(tid, est) {
   if (!r.length) r.push([0, "estrella promedio para esta técnica: sin ventaja ni desventaja"]);
   return r;
 }
+// ¿Este Marcador te deja publicar esto en este planeta? La Densidad de un Gigante o Neptuniano prueba
+// que es un mundo de gas: sirve también para publicar su Atmósfera.
+function sirve(mid, cat, pl) {
+  return SIRVE[mid].includes(cat) || (!!K.DENS_ATM && mid === "densidad" && cat === "atmosfera" && !!pl
+    && (pl.rasgos.includes("Gigante") || pl.rasgos.includes("Neptuniano")));
+}
+function sirveLista(mid, pl) { return CATS.filter(c => sirve(mid, c, pl)); }
 const DATO_TEC = { transito: "R", rv: "M", astro: "M", imagen: "M", micro: "M" };
 const CAMPOS_MAR = { densidad: ["dens"], esp_transito: ["atm", "gases"], esp_emision: ["atm"],
                      esp_imagen: ["atm", "gases"], contexto: ["ctx"] };
@@ -248,7 +255,7 @@ class Juego {
     return !CAMPOS_MAR[mid].every(c => this.conoce(jg, pl, c));
   }
   sirveParaPublicar(jg, pl, cat) {
-    return [...pl.ladoDe(jg.idx)].some(m => MAR[m] && SIRVE[m].includes(cat));
+    return [...pl.ladoDe(jg.idx)].some(m => MAR[m] && sirve(m, cat, pl));
   }
   puedePublicar(jg, pl, cat) {
     if (!pl.vivo || cat in pl.publicado) return false;
@@ -663,4 +670,4 @@ class Juego {
 }
 
 if (typeof module !== "undefined") module.exports = { Juego, D, K, TEC, MAR, CIEN, HITO, CATS, CAT_NOMBRE, DATO_TEC,
-  CAMPOS_MAR, SIRVE, VALOR_DESC, ORDEN_TEC, pTirada, verdad, veFalsedad, vePlaneta, compatible, rasgosPub, esTierra };
+  CAMPOS_MAR, SIRVE, sirve, sirveLista, VALOR_DESC, ORDEN_TEC, pTirada, verdad, veFalsedad, vePlaneta, compatible, rasgosPub, esTierra };
