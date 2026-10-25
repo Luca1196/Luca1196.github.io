@@ -423,3 +423,4 @@ a.opcion { color: inherit; text-decoration: none; box-sizing: border-box; }
   .msg { order: -2; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+.uso-tec { background: rgba(80,200,255,.12); border-left: 4px solid var(--tec-2, #4cc3ff); border-radius: 8px; padding: 6px 10px; }

@@ -283,7 +283,7 @@ function datosCartaHTML(c) {
   if (c.tipo === "tec") {
     const t = TEC[c.id];
     return `<div class="ficha-carta tec"><span class="fc-tipo">Técnica</span><b class="fc-nom">${esc(t.nombre)}</b>
-      <p>Cómo funciona: ${esc(textoPlano(t.real))}</p><p class="bien">Te da: ${esc(textoPlano(t.aporta))}</p><p class="mal">Límite: ${esc(textoPlano(t.limite))}</p></div>`;
+      <p class="bien"><b>Se usa en:</b> ${esc(USO[c.id])}</p><p>Te da: ${esc(textoPlano(t.aporta))}</p><p class="mal">Límite: ${esc(textoPlano(t.limite))}</p></div>`;
   }
   const m = MAR[c.id], r = RESUMEN_MAR[c.id];
   return `<div class="ficha-carta mar"><span class="fc-tipo">Marcador</span><b class="fc-nom">${esc(m.nombre)}</b>
@@ -635,6 +635,19 @@ const CORTO = {
   imagen: "solo: estrellas jóvenes", micro: "solo: estrellas lejanas",
   densidad: "¿roca o gas?", esp_transito: "lee gases", esp_emision: "¿tiene aire?", esp_imagen: "lee gases", contexto: "¿señal falsa?",
 };
+// Dónde se puede usar cada técnica (información principal de la carta: se puede o no, sin "mejor")
+const USO = {
+  transito: "todas las estrellas (en las F grandes solo ve Gigantes)",
+  rv: "estrellas que no sean lejanas, salvo las F más masivas",
+  astro: "solo estrellas cercanas",
+  imagen: "solo estrellas jóvenes",
+  micro: "solo estrellas lejanas, una vez por estrella",
+};
+function usoEnMesa(tid) {
+  if (typeof g === "undefined" || !g || !g.estrellas) return "";
+  const ok = g.estrellas.filter(e => e.bono[tid] !== null).map(e => e.cl);
+  return ok.length ? `En la mesa: ${ok.join(", ")}` : "En la mesa: ninguna por ahora";
+}
 const NOMBRE_CARTA = { densidad: "Densidad", esp_imagen: "Espectro de imagen" };   // nombres cortos para la cara de la carta
 function cartaHTML(tipo, id, attrs = "", clase = "", extra = "") {
   const c = { ...(tipo === "tec" ? TEC[id] : MAR[id]) };
@@ -653,7 +666,7 @@ function renderMano() {
   const chances = ui.fase === "accion" && !ui.ocupado && ui.ayudas;
   $("#mano").innerHTML = cartas.map((c, i) => cartaHTML(c.tipo, c.id, `data-i="${i}" style="--rot:${((i - (n - 1) / 2) * 3.5).toFixed(1)}deg"`,
     (ui.sel && ui.sel.i === i ? "sel " : "") + (ui.fase === "descartar" ? "descartar" : ""),
-    chances ? (u => u ? `<span class="chance ${u.p >= .7 ? "alta" : u.p >= .45 ? "media" : "baja"}" title="Mejor chance ahora">${pct(u.p)}</span>` : `<span class="chance no" title="Ahora no tiene dónde usarse">—</span>`)(mejorUso(c)) : "")).join("");
+    chances ? (u => u ? `<span class="chance ${u.p >= .7 ? "alta" : u.p >= .45 ? "media" : "baja"}" title="Chance ahora">${pct(u.p)}</span>` : `<span class="chance no" title="Ahora no tiene dónde usarse">—</span>`)(mejorUso(c)) : "")).join("");
   $("#mano").querySelectorAll(".carta").forEach(b => b.onclick = () => {
     const i = +b.dataset.i, c = cartas[i];
     if (ui.fase === "descartar" && ui.esperando.descarte) { resolver("descarte", { tipo: c.tipo, id: c.id }); return; }
@@ -675,8 +688,8 @@ function resumenCarta(c, paso) {
   let txt, lee;
   if (c.tipo === "tec") {
     const t = TEC[c.id];
-    txt = `Cómo funciona: ${corta(t.real).replace(/^./, x => x.toLowerCase())}`;
-    lee = `Te da: ${corta(t.aporta).replace(/^./, x => x.toLowerCase())}`;
+    txt = `<b>Se usa en ${esc(USO[c.id])}</b>`;
+    lee = esc(usoEnMesa(c.id)) || `Te da: ${corta(t.aporta).replace(/^./, x => x.toLowerCase())}`;
   } else {
     const m = MAR[c.id], r = RESUMEN_MAR[c.id];
     txt = r ? `Lees ${esc(r[0])} · publicas ${esc(r[1])}` : `Lees ${corta(m.revela)}`;
@@ -728,9 +741,10 @@ function detalleCarta(c) {
   if (c.tipo === "tec") {
     const t = TEC[c.id];
     return ventana({ titulo: esc(t.nombre), color: "var(--tec-2)", botones: [], cuerpo: `
+      <p class="uso-tec"><b>Se usa en:</b> ${esc(USO[t.id])}.${usoEnMesa(t.id) ? `<br><small>${esc(usoEnMesa(t.id))}.</small>` : ""}</p>
       <p><b>Cómo funciona:</b> ${esc(textoPlano(t.real))}</p>
       <p><b>Te da:</b> ${esc(textoPlano(t.aporta))}</p><p><b>Al descubrir:</b> ${t.sesgo}</p><p><b>Límite:</b> ${t.limite}</p>
-      <p><b>¿En qué estrellas?</b> Cada carta de Estrella marca con ✓ o ✕ si esta técnica puede usarse ahí.</p>
+      <p class="tenue">No hay «mejor» ni «peor»: en cada estrella la técnica se puede usar (✓) o no (✕). Toca una estrella para ver por qué.</p>
       <p><b>Para medir:</b> sobre un planeta tuyo o publicado que no la tenga: agrega su dato. Dos técnicas distintas lo confirman (+${K.CONF - K.CAND} para quien lo publicó).</p>
       <p><b>Ojo:</b> la señal puede ser un <b>falso positivo</b>. Confírmala con otra técnica o una Densidad antes de publicar.</p>
       ${t.id === "astro" ? `<p><b>Masa real:</b> si tu planeta tiene también Tránsito o Densidad, +${K.MASA}.</p>` : ""}
@@ -918,7 +932,7 @@ async function empezar(pref) {
 const GUIA = [
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano", turno: true, txt: "Esta es tu <b>mano</b>. Toca una carta de <b>TÉCNICA</b>.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
-  { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> funciona mejor tu carta. Busca en el cielo una estrella así." },
+  { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> se puede usar tu carta. Busca en el cielo una estrella así." },
   { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta. Si no te convence, puedes elegir otra antes de jugar el dado.",
     hasta: () => ui.tiradas > 0 },
   { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques." },
