@@ -333,7 +333,7 @@ async function hacerDescubrir(tid, est) {
   await accionHumana(async () => {
     const r = await g.descubrir(J(), tid, est);
     if (!r.ok) return;
-    if (r.hallazgo) await ventana({ titulo: "¡Hallazgo inesperado!", color: "var(--hito)", centro: true, cuerpo: `<h3>${esc(r.hallazgo.nombre)} · +${K.HALL}</h3><p>${esc(r.hallazgo.hist)}</p><p class="tenue">Buscando planetas encontraste otra cosa: sumas puntos y no hay candidato esta vez.</p>` });
+    if (r.hallazgo) await mostrarHitos(true);
     else if (r.vacio) await ventana({ titulo: "Sin candidato", centro: true, cuerpo: "<p>La señal no correspondía a ningún planeta compatible con esta estrella.</p>" });
     else await revelarPlaneta(r.pl, est);
   });
@@ -459,11 +459,28 @@ async function publicarHumano(pl, cat, cats) {
 
 // Cartel de hito: puntos, quién lo logró y el caso real que lo inspira.
 // soloMios: los de un rival esperan a que termine su turno (si no, el cartel aparece antes de ver qué hizo).
+// Hallazgo inesperado (exocometas, agujero negro, enana marrón): cartel como el de los hitos, propio o ajeno
+async function cartelHallazgo(d, mio) {
+  const h = d.h, tec = TEC[h.tec] ? TEC[h.tec].nombre : "";
+  const lugar = `${d.est ? ` en ${esc(d.est.cl)}` : ""}${tec ? ` con ${esc(tec)}` : ""}`;
+  mio ? Sfx.hito() : Sfx.descubrir();
+  await ventana({ titulo: "¡Hallazgo inesperado!", color: "var(--hito)", centro: true, cerrable: false,
+    botones: [{ txt: mio ? "¡Genial!" : "Continuar", valor: true }], cuerpo: `
+    <div class="hito-cartel">
+      <div class="hito-pts">+${K.HALL}</div>
+      <h3>${esc(h.nombre)}</h3>
+      <p class="hito-quien">${ficha(d.jg)} ${mio ? `<b>¡Lo encontraste${lugar}!</b>` : `<b>${esc(nombreJ(d.jg))}</b> lo encontró${lugar}`}</p>
+      <p class="tenue">Buscando planetas, apareció otra cosa: suma puntos, pero esta vez no hay candidato.</p>
+      <div class="hito-real"><b>Caso real</b><p>${esc(h.hist)}</p></div>
+    </div>` });
+}
 async function mostrarHitos(soloMios = false) {
   while (ui.hitosPend && ui.hitosPend.length) {
     const k = soloMios ? ui.hitosPend.findIndex(x => x.jg === YO) : 0;
     if (k < 0) break;
-    const d = ui.hitosPend.splice(k, 1)[0], h = HITO[d.id], mio = d.jg === YO;
+    const d = ui.hitosPend.splice(k, 1)[0], mio = d.jg === YO;
+    if (d.hall) { await cartelHallazgo(d, mio); continue; }
+    const h = HITO[d.id];
     mio ? Sfx.hito() : Sfx.toque();
     await ventana({ titulo: "¡Hito de la astronomía!", color: "var(--hito)", centro: true, cerrable: false,
       botones: [{ txt: mio ? "¡Genial!" : "Continuar", valor: true }], cuerpo: `
@@ -872,7 +889,7 @@ function crearJuego(pref) {
     if (tipo === "log") ui.log.push(d);
     if (tipo === "puntos") { setTimeout(() => flotante(d.jg, d.v), 30); }
     if (tipo === "hito") ui.hitosPend.push(d);
-    if (tipo === "hallazgo" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> encuentra un hallazgo: ${esc(d.h.nombre)}`, "hito");
+    if (tipo === "hallazgo") ui.hitosPend.push({ hall: true, jg: d.jg, h: d.h, est: d.est });
     if (tipo === "falso" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> descubre que ${esc(d.pl.nombre)} era un falso positivo: ${esc(d.frase)}`, "hito");
     if (tipo === "descubre" && d.jg !== YO) aviso(`${ficha(d.jg)} <b>${esc(nombreJ(d.jg))}</b> descubre un candidato en ${esc(d.pl.est.cl)}: ${esc(tamTemp(d.pl))}`);
     if (tipo === "turno" || tipo === "cambio" || tipo === "ronda" || tipo === "puntos") render();
