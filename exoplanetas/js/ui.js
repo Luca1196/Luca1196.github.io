@@ -94,6 +94,7 @@ function aviso(txt, clase = "") {
   while ($("#avisos").children.length > 3) $("#avisos").firstChild.remove();
 }
 function flotante(idx, v) {
+  if (idx === YO) (v > 0 ? Sfx.moneda(v) : Sfx.fallo()); else Sfx.rival();
   const el = document.getElementById("pts-" + idx); if (!el) return;
   const r = el.getBoundingClientRect();
   const f = document.createElement("div"); f.className = "flotante"; f.textContent = sgn(v);
@@ -119,6 +120,7 @@ function ventana({ titulo, cuerpo, botones = [{ txt: "Continuar", valor: true, c
     const x = capa.querySelector(".h-cerrar"); if (x) x.onclick = () => cerrar(null);
     capa.addEventListener("click", e => { if (e.target === capa && cerrable) cerrar(null); });
     $("#capa").appendChild(capa);
+    Sfx.abrir();
     if (alAbrir) alAbrir(capa, cerrar);
     const f = capa.querySelector(".acciones .btn-juego:not(.gris)") || capa.querySelector(".h-cerrar"); if (f) f.focus();
   });
@@ -174,6 +176,7 @@ async function mostrarAnalisis(d, modal) {
     await sleep(ui.velocidad);
     return;
   }
+  if (!d.ok) Sfx.fallo();
   await ventana({ titulo: esc(d.que), centro: true, botones: [{ txt: "Continuar", valor: true }], cuerpo: `<div class="dado-caja">
     <div class="analisis ${d.ok ? "ok" : "mal"}">${d.ok ? "✔" : "✘"}</div>
     <div class="veredicto" style="color:${d.ok ? "var(--ok)" : "var(--mal)"}">${res}</div>
@@ -219,7 +222,7 @@ class Humano {
   async turno(juego, jg) {
     if (juego !== g) throw CANCELADO;
     ui.fase = "accion"; ui.sel = null; render();
-    banner("Tu turno");
+    banner("Tu turno"); Sfx.turno();
     await nuevaEspera("accion");
     await mostrarHitos(true);
     ui.fase = "post"; ui.sel = null; render();
@@ -337,6 +340,7 @@ async function hacerDescubrir(tid, est) {
 }
 async function revelarPlaneta(pl, est) {
   const dato = pl.tecnicas[0] === "transito" ? "R" : "M";
+  Sfx.descubrir();
   await ventana({ titulo: "¡Candidato!", color: "var(--pla)", centro: true, cuerpo: `
     <div class="privado"><h3>${esc(pl.nombre)} · ${esc(tamTemp(pl))}</h3>
       <dl class="dato"><dt>Estrella</dt><dd>${esc(est.cl)}</dd><dt>Órbita</dt><dd>${esc(fmtCampo("o", pl.publico.o))}</dd><dt>${CAMPO[dato]}</dt><dd>${esc(fmtCampo(dato, pl.publico[dato]))}</dd></dl></div>
@@ -344,6 +348,7 @@ async function revelarPlaneta(pl, est) {
 }
 // Falso positivo: qué era en realidad la señal (la frase que en la mesa dice el Director)
 function ventanaFalso(pl, txt) {
+  Sfx.falso();
   return ventana({ titulo: "¡Falso positivo!", color: "var(--mal)", centro: true, cuerpo: `<p>${txt}</p>
     <div class="hito-real"><b>¿Qué era la señal?</b><p>${esc(fraseFalso(pl))}</p></div>
     <p class="tenue">En la ciencia real pasa seguido: por eso un candidato se confirma con un segundo método antes de darlo por planeta.</p>` });
@@ -362,6 +367,7 @@ async function hacerInvestigar(mid, pl) {
     const r = await g.investigar(J(), mid, pl);
     if (!r.ok) return;
     if (r.falso) { await ventanaFalso(pl, `El seguimiento no encuentra ninguna masa: ${esc(pl.nombre)} no era un planeta.`); return; }
+    Sfx.exito();
     await ventana({ titulo: "Lectura secreta", color: "var(--mar)", centro: true, cuerpo: `
       <div class="privado"><dl class="dato">${Object.entries(r.lee).map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>
       <p>Con esto puedes publicar <b>${sirveLista(mid, pl).map(c => CAT_NOMBRE[c]).join(" o ")}</b> en ${esc(pl.nombre)}${mid === "densidad" && sirveLista(mid, pl).includes("atmosfera") ? " (es un mundo de gas: tiene atmósfera)" : ""}, si crees que es cierto.</p>` });
@@ -397,6 +403,7 @@ async function hacerTelescopio() {
     } });
   if (!v) return;
   const total = Math.max(1, K.MANO_MAX - cartas.length + marc.size);
+  Sfx.barajar();
   await accionHumana(async () => { await g.telescopio(jg, [...marc].map(k => cartas[k]), { tec: nTec, mar: total - nTec }); });
 }
 
@@ -429,13 +436,13 @@ async function publicarHumano(pl, cat, cats) {
   if (ui.ocupado || ui.fase !== "post") return;
   ui.ocupado = true; render();
   try {
-    if (cat === "planeta") g.publicarPlaneta(J(), pl);
+    if (cat === "planeta") { g.publicarPlaneta(J(), pl); Sfx.publicar(); }
     else if (cat === "articulo") {
       const r = await g.publicarArticulo(J(), pl, cats);
-      if (r && !r.refutado) banner(`+${cats.reduce((s, c) => s + K.PUNTOS[c], 0) + K.BONO_ART * (cats.length - 1)} Artículo`, "nadie lo refutó");
+      if (r && !r.refutado) { Sfx.publicar(); banner(`+${cats.reduce((s, c) => s + K.PUNTOS[c], 0) + K.BONO_ART * (cats.length - 1)} Artículo`, "nadie lo refutó"); }
     } else {
       const r = await g.publicar(J(), pl, cat);
-      if (r && !r.refutado) banner(`+${K.PUNTOS[cat]} ${CAT_NOMBRE[cat]}`, "nadie lo refutó");
+      if (r && !r.refutado) { Sfx.publicar(); banner(`+${K.PUNTOS[cat]} ${CAT_NOMBRE[cat]}`, "nadie lo refutó"); }
     }
     await mostrarHitos();
   } finally { ui.ocupado = false; render(); }
@@ -448,6 +455,7 @@ async function mostrarHitos(soloMios = false) {
     const k = soloMios ? ui.hitosPend.findIndex(x => x.jg === YO) : 0;
     if (k < 0) break;
     const d = ui.hitosPend.splice(k, 1)[0], h = HITO[d.id], mio = d.jg === YO;
+    mio ? Sfx.hito() : Sfx.toque();
     await ventana({ titulo: "¡Hito de la astronomía!", color: "var(--hito)", centro: true, cerrable: false,
       botones: [{ txt: mio ? "¡Genial!" : "Continuar", valor: true }], cuerpo: `
       <div class="hito-cartel">
@@ -517,6 +525,8 @@ async function vista(tipo, d) {
       : t.ok ? `<h3>No lo contradice: +${pozo} para ${esc(nombreJ(autor))}</h3>`
       : t.sinDado ? `<h3>Las condiciones de la estrella impiden usar ese Marcador (suman ${sgn(t.mod)}): +${pozo} para ${esc(nombreJ(autor))}</h3>`
       : `<h3>La tirada falla (${t.d}${sgn(t.mod)} vs ${t.cd}): +${pozo} para ${esc(nombreJ(autor))}</h3>`;
+    if (gana) (x === YO ? Sfx.victoria() : autor === YO ? Sfx.refutado() : Sfx.toque());
+    else if (autor === YO) Sfx.exito(); else if (x === YO) Sfx.fallo();
     await ventana({ titulo: "Refutación", color: "var(--mar)", centro: true, cuerpo: `<p>${ficha(x)} <b>${esc(nombreJ(x))}</b> cuestiona ${CAT_NOMBRE[cat]} de ${ficha(autor)} ${esc(nombreJ(autor))} en ${esc(pl.nombre)} con ${esc(MAR[mid].nombre)}.</p>${lect}${res}` });
   }
 }
@@ -621,7 +631,7 @@ function renderMano() {
   $("#mano").querySelectorAll(".carta").forEach(b => b.onclick = () => {
     const i = +b.dataset.i, c = cartas[i];
     if (ui.fase === "descartar" && ui.esperando.descarte) { resolver("descarte", { tipo: c.tipo, id: c.id }); return; }
-    if (ui.fase === "accion" && !ui.ocupado) { ui.sel = ui.sel && ui.sel.i === i ? null : { ...c, i }; render(); return; }
+    if (ui.fase === "accion" && !ui.ocupado) { ui.sel = ui.sel && ui.sel.i === i ? null : { ...c, i }; ui.sel ? Sfx.elegir() : Sfx.toque(); render(); return; }
     detalleCarta(c);
   });
 }
@@ -749,12 +759,14 @@ async function menu() {
     <button type="button" class="opcion" data-v="bitacora"><span>Bitácora de la partida</span></button>
     <button type="button" class="opcion" data-v="tutorial"><span>Tutorial</span></button>
     <button type="button" class="opcion" data-v="reglas"><span>Cómo se juega</span></button>
+    <button type="button" class="opcion" data-v="sonido"><span>Sonido</span><b>${Sfx.activo ? "Activado" : "Apagado"}</b></button>
     <button type="button" class="opcion" data-v="nueva"><span>Nueva partida</span></button>${MENU_SITIO ? `<a class="opcion" href="${MENU_SITIO}"><span>Volver a los juegos</span></a>` : ""}</div>${CREDITO}`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll("[data-v]").forEach(b => b.onclick = () => cerrar(b.dataset.v)) });
   if (v === "bitacora") verBitacora();
   if (v === "reglas") mostrarReglas();
   if (v === "tutorial") mostrarTutorial();
   if (v === "nueva") abrirPreparacion();
+  if (v === "sonido") { const on = Sfx.alternar(); aviso(on ? "Sonido activado" : "Sonido apagado"); }
 }
 async function abrirPlaneta(pl) {
   const jg = J();
@@ -792,7 +804,7 @@ async function mostrarFinal() {
     return `<tr><td>${k + 1}.</td><td>${ficha(jg.idx)} ${esc(jg.nombre)}<br><span class="tenue">${esc(det)}</span></td><td class="num"><b>${g.total(jg)}</b></td></tr>`;
   }).join("");
   const planetas = g.planetas.map(pl => `<tr><td>${esc(pl.nombre)}</td><td>${esc(pl.a.arq)}</td><td>${pl.a.falso ? "No hay planeta" : `Atm. ${pl.a.atmOk ? "sí" : "no"} · Hab. ${esc(pl.a.hab)} · Vida ${esc(pl.a.vida)}`}</td></tr>`).join("");
-  if (gan.idx === YO) banner("¡VICTORIA!", "tu equipo tiene la mayor reputación");
+  if (gan.idx === YO) { banner("¡VICTORIA!", "tu equipo tiene la mayor reputación"); Sfx.victoria(); } else Sfx.derrota();
   const v = await ventana({ titulo: gan.idx === YO ? "¡Ganaste!" : `Gana ${esc(gan.nombre)}`, color: "var(--hito)", cuerpo: `
     <table class="tabla">${filas}</table>
     <h3>La Verdad de cada planeta</h3><div style="overflow-x:auto"><table class="tabla"><tr><th>Planeta</th><th>Era</th><th>Verdad</th></tr>${planetas || '<tr><td colspan="3">No se descubrieron planetas.</td></tr>'}</table></div>`,
