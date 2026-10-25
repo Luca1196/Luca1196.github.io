@@ -283,7 +283,7 @@ function datosCartaHTML(c) {
   if (c.tipo === "tec") {
     const t = TEC[c.id];
     return `<div class="ficha-carta tec"><span class="fc-tipo">Técnica</span><b class="fc-nom">${esc(t.nombre)}</b>
-      <p>Te da: ${esc(textoPlano(t.aporta))}</p><p class="bien">Mejor en: ${esc(t.favor)}</p><p class="mal">Peor en: ${esc(t.perj)}</p></div>`;
+      <p>Cómo funciona: ${esc(textoPlano(t.real))}</p><p class="bien">Te da: ${esc(textoPlano(t.aporta))}</p><p class="mal">Límite: ${esc(textoPlano(t.limite))}</p></div>`;
   }
   const m = MAR[c.id], r = RESUMEN_MAR[c.id];
   return `<div class="ficha-carta mar"><span class="fc-tipo">Marcador</span><b class="fc-nom">${esc(m.nombre)}</b>
@@ -341,9 +341,18 @@ async function hacerDescubrir(tid, est) {
 async function revelarPlaneta(pl, est) {
   const dato = pl.tecnicas[0] === "transito" ? "R" : "M";
   Sfx.descubrir();
+  // sin spoiler: primero los datos medidos; qué tipo de planeta es se deduce (y se puede abrir para comprobar)
+  const r = pl.rasgosPub, tam = r.find(x => ["Pequeño", "Neptuniano", "Gigante"].includes(x)) || "";
+  const temp = r.includes("Caliente") ? "Caliente" : r.includes("Frío") ? "Frío" : "Templado";
+  const porTam = { Pequeño: "hasta 1,8 veces la Tierra (o pocas masas terrestres): tamaño Tierra o súper-Tierra",
+    Neptuniano: "entre 1,8 y 8 veces la Tierra (decenas de masas terrestres): tamaño Neptuno",
+    Gigante: "8 veces la Tierra o más (cientos de masas terrestres): tamaño Júpiter" }[tam] || "";
+  const porTemp = { Caliente: "órbita 1 o 2: muy cerca de su estrella", Templado: "órbita 3: ni muy cerca ni muy lejos", Frío: "órbita 4: lejos de su estrella" }[temp];
   await ventana({ titulo: "¡Candidato!", color: "var(--pla)", centro: true, cuerpo: `
-    <div class="privado"><h3>${esc(pl.nombre)} · ${esc(tamTemp(pl))}</h3>
+    <div class="privado"><h3>Candidato en ${esc(est.cl)} <small class="tenue">(${esc(pl.nombre)})</small></h3>
       <dl class="dato"><dt>Estrella</dt><dd>${esc(est.cl)}</dd><dt>Órbita</dt><dd>${esc(fmtCampo("o", pl.publico.o))}</dd><dt>${CAMPO[dato]}</dt><dd>${esc(fmtCampo(dato, pl.publico[dato]))}</dd></dl></div>
+    <details class="porque"><summary>¿Qué tipo de planeta es? Piénsalo y toca para comprobar</summary>
+      <p><b>${esc(tam)}</b>: ${esc(porTam)}.</p><p><b>${esc(temp)}</b>: ${esc(porTemp)}.</p></details>
     <p>Es <b>privado</b>: solo tú lo investigas. Los rivales solo saben su tamaño y temperatura. Publícalo cuando quieras con el botón <b>Publicar</b> (+${K.CAND}, o +${K.CONF} si ya está confirmado).</p>` });
 }
 // Falso positivo: qué era en realidad la señal (la frase que en la mesa dice el Director)
@@ -636,7 +645,7 @@ function renderMano() {
   });
 }
 const RESUMEN_MAR = {   // [qué lees, qué publicas, cuándo se puede]
-  densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "con Tránsito; no en activas (salvo M)"],
+  densidad: ["si es roca, agua o gas", "Habitable (y Atmósfera en gigantes)", "solo con Tránsito debajo"],
   esp_transito: ["atmósfera y gases", "Atmósfera, Biofirma", "con Tránsito; si es Pequeño, solo enana M"],
   esp_emision: ["su calor: ¿tiene aire?", "Atmósfera, Habitable", "solo planetas Calientes"],
   esp_imagen: ["atmósfera y gases", "Atmósfera, Biofirma", "con Imagen o en Gigante Frío cercano"],
@@ -649,8 +658,8 @@ function resumenCarta(c, paso) {
   let txt, lee;
   if (c.tipo === "tec") {
     const t = TEC[c.id];
-    txt = `Te da: ${corta(t.aporta).replace(/^./, x => x.toLowerCase())}`;
-    lee = `Mejor en ${esc(t.favor.split(":")[0])}`;
+    txt = `Cómo funciona: ${corta(t.real).replace(/^./, x => x.toLowerCase())}`;
+    lee = `Te da: ${corta(t.aporta).replace(/^./, x => x.toLowerCase())}`;
   } else {
     const m = MAR[c.id], r = RESUMEN_MAR[c.id];
     txt = r ? `Lees ${esc(r[0])} · publicas ${esc(r[1])}` : `Lees ${corta(m.revela)}`;
@@ -702,12 +711,13 @@ function detalleCarta(c) {
   if (c.tipo === "tec") {
     const t = TEC[c.id];
     return ventana({ titulo: esc(t.nombre), color: "var(--tec-2)", botones: [], cuerpo: `
-      <p><b>Aporta:</b> ${esc(t.aporta)}</p><p><b>Al descubrir:</b> ${t.sesgo}</p><p><b>Límite:</b> ${esc(t.limite)}</p>
-      <p><b>Favorece:</b> ${esc(t.favor)}.<br><b>Perjudica:</b> ${esc(t.perj)}.</p>
+      <p><b>Cómo funciona:</b> ${esc(textoPlano(t.real))}</p>
+      <p><b>Te da:</b> ${esc(textoPlano(t.aporta))}</p><p><b>Al descubrir:</b> ${t.sesgo}</p><p><b>Límite:</b> ${t.limite}</p>
+      <p><b>¿En qué estrellas?</b> Cada carta de Estrella marca con ✓ o ✕ si esta técnica puede usarse ahí.</p>
       <p><b>Para medir:</b> sobre un planeta tuyo o publicado que no la tenga: agrega su dato. Dos técnicas distintas lo confirman (+${K.CONF - K.CAND} para quien lo publicó).</p>
       <p><b>Ojo:</b> la señal puede ser un <b>falso positivo</b>. Confírmala con otra técnica o una Densidad antes de publicar.</p>
       ${t.id === "astro" ? `<p><b>Masa real:</b> si tu planeta tiene también Tránsito o Densidad, +${K.MASA}.</p>` : ""}
-      <p class="tenue"><i>${esc(t.real)}</i></p>` });
+` });
   }
   const m = MAR[c.id];
   return ventana({ titulo: esc(m.nombre), color: "var(--mar-2)", botones: [], cuerpo: `
