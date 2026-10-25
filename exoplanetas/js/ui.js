@@ -643,11 +643,6 @@ const USO = {
   imagen: "solo estrellas jóvenes",
   micro: "solo estrellas lejanas, una vez por estrella",
 };
-function usoEnMesa(tid) {
-  if (typeof g === "undefined" || !g || !g.estrellas) return "";
-  const ok = g.estrellas.filter(e => e.bono[tid] !== null).map(e => e.cl);
-  return ok.length ? `En la mesa: ${ok.join(", ")}` : "En la mesa: ninguna por ahora";
-}
 const NOMBRE_CARTA = { densidad: "Densidad", esp_imagen: "Espectro de imagen" };   // nombres cortos para la cara de la carta
 function cartaHTML(tipo, id, attrs = "", clase = "", extra = "") {
   const c = { ...(tipo === "tec" ? TEC[id] : MAR[id]) };
@@ -688,8 +683,8 @@ function resumenCarta(c, paso) {
   let txt, lee;
   if (c.tipo === "tec") {
     const t = TEC[c.id];
-    txt = `<b>Se usa en ${esc(USO[c.id])}</b>`;
-    lee = esc(usoEnMesa(c.id)) || `Te da: ${corta(t.aporta).replace(/^./, x => x.toLowerCase())}`;
+    txt = `<b>Se usa en: ${esc(USO[c.id])}</b>`;
+    lee = corta(t.real);
   } else {
     const m = MAR[c.id], r = RESUMEN_MAR[c.id];
     txt = r ? `Lees ${esc(r[0])} · publicas ${esc(r[1])}` : `Lees ${corta(m.revela)}`;
@@ -741,7 +736,7 @@ function detalleCarta(c) {
   if (c.tipo === "tec") {
     const t = TEC[c.id];
     return ventana({ titulo: esc(t.nombre), color: "var(--tec-2)", botones: [], cuerpo: `
-      <p class="uso-tec"><b>Se usa en:</b> ${esc(USO[t.id])}.${usoEnMesa(t.id) ? `<br><small>${esc(usoEnMesa(t.id))}.</small>` : ""}</p>
+      <p class="uso-tec"><b>Se usa en:</b> ${esc(USO[t.id])}.</p>
       <p><b>Cómo funciona:</b> ${esc(textoPlano(t.real))}</p>
       <p><b>Te da:</b> ${esc(textoPlano(t.aporta))}</p><p><b>Al descubrir:</b> ${t.sesgo}</p><p><b>Límite:</b> ${t.limite}</p>
       <p class="tenue">No hay «mejor» ni «peor»: en cada estrella la técnica se puede usar (✓) o no (✕). Toca una estrella para ver por qué.</p>
