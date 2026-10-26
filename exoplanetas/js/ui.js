@@ -338,7 +338,7 @@ async function hacerDescubrir(tid, est) {
     const r = await g.descubrir(J(), tid, est);
     if (!r.ok) return;
     if (r.hallazgo) await mostrarHitos(true);
-    else if (r.vacio) await ventana({ titulo: "Sin candidato", centro: true, cuerpo: "<p>La señal no correspondía a ningún planeta compatible con esta estrella.</p>" });
+    else if (r.vacio) { Sfx.fallo(); await ventana({ titulo: "Sin candidato", centro: true, cuerpo: `<p>${esc(r.motivo)}</p><p class="tenue">La carta de Técnica se descarta.</p>` }); }
     else await revelarPlaneta(r.pl, est);
   });
 }

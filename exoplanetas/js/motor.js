@@ -277,6 +277,9 @@ class Juego {
         if (esGig(a) && (tid !== "imagen" || a.rasgos.includes("Joven")) && comp(a)) return a;
         fondo(a); this.fin = false;
       }
+      ctx.motivo = tid === "astro" ? "La Astrometría solo detecta Gigantes, y en el mazo de Planetas ya no queda ninguno para esta estrella."
+        : tid === "imagen" ? "La Imagen directa solo ve Gigantes jóvenes, y en el mazo de Planetas ya no queda ninguno."
+        : `${est.cl} es una estrella F grande: con Tránsito solo se ven Gigantes, y en el mazo de Planetas ya no queda ninguno para esta estrella.`;
       return null;
     }
     let robados = [], intentos = this.mp.length;
@@ -285,11 +288,12 @@ class Juego {
       if (comp(a) && !(tid === "micro" && a.falso)) robados.push(a); else { fondo(a); this.fin = this.planetasRestantes() ? false : this.fin; }
     }
     if (ctx.hall) { robados.forEach(descartar); return null; }
-    if (!robados.length) return null;
+    if (!robados.length) { ctx.motivo = "En el mazo de Planetas ya no quedan planetas posibles para esta estrella."; return null; }
     if (tid === "micro") {
       const val = robados.filter(a => a.o === 3 || a.o === 4).sort((x, y) => x.M - y.M);
       robados.filter(a => !val.includes(a)).forEach(descartar);
       val.slice(1).forEach(descartar);
+      if (!val.length) ctx.motivo = "La Microlente solo halla planetas de órbita templada o fría (3 o 4), lejos de su estrella, y ninguno de los planetas robados la tenía.";
       return val[0] || null;
     }
     if (est.enana) {            // enana M: un gigante se descarta y se roba otro
@@ -334,8 +338,9 @@ class Juego {
     }
     if (!a) {
       this.mt.desc.push(tid);
-      this.log(`${jg.nombre} observa ${est.cl}: la señal no corresponde a ningún planeta.`, { jg: jg.idx });
-      return { ok: true, vacio: true, tirada: t };
+      const motivo = ctx.motivo || "En el mazo de Planetas ya no quedan planetas posibles para esta estrella.";
+      this.log(`${jg.nombre} observa ${est.cl} con ${TEC[tid].nombre} y no encuentra candidato: ${motivo}`, { jg: jg.idx });
+      return { ok: true, vacio: true, motivo, tirada: t };
     }
     const pl = new Planeta(a, est, jg.idx);
     pl.letra = "bcdefgh"[this.planetas.filter(p => p.est === est).length] || "x";
