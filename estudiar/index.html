@@ -41,7 +41,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   QUIZ: las preguntas 'Quiz ejercicios' se copiaron de const Q de prog4.html y logica.html (tag 'Quiz ejercicios'). Si se agregan preguntas a esos Q, agregarlas tambien aca como mc(...). Sus opciones no tienen motivo por opcion (se muestra solo la explicacion).
   ETIQUETA: las opciones son el MENSAJE completo con cada estereotipo (no etiquetas sueltas); el estereotipo es del receptor.
   DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso.
-  PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS.
+  PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS. Cada tarjeta de línea muestra el diagrama (swDg/dgm, copia de dg de prog4.html) con las líneas ya dibujadas en gris y la flecha actual en trazo discontinuo que se completa según los pasos respondidos (cada paso lleva .k: n, op, pa, to, cond, q, st).
   OPCIONES: en d (distractores) cada opcion puede llevar motivo: "texto||por que no". Los distractores deben ser TENTADORES (errores reales: regla invertida, eliminacion sin la premisa que pide, regla de otro conector), nunca absurdos. El motivo se muestra al elegirla.
   DOMINIO: boton 'Ver dominio' (DOM) en tarjetas Prog4 de Etiqueta/Destino/Mensaje/Decision (DOMT). Cada tarjeta Prog4 debe ser consistente con DOM (viene de CL y M en prog4.html). Lógica: toda tarjeta muestra 'Tengo:' y 'Meta:' completos. mc(...,w,h): h = pista propia de la tarjeta (si no, HINT del tag).
   DIDACTICA: el escenario de una tarjeta debe permitir TRAZAR la respuesta (mostrar de donde salio cada objeto: find, create, next, firma de la operacion,
@@ -628,6 +628,26 @@ const CLC="Controlador→Estudiante*, Empresa* · Empresa→Oferta* · Estudiant
 const DOMS=CLS+"\n"+OPS;
 const SS={A:"«association»",L:"«local»",P:"«parameter»"};
 const lineStr=L=>L.n+": "+L.from+" → "+L.to+" : "+(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa+"  "+SS[L.t];
+const key=t=>{const[a,b]=t.split(":");return b===undefined?a:(a||":"+b)};
+function dgm(G,D,sig){const Ls=G.concat(D?[D]:[]),C={},dep={":Controlador":0},lab={":Controlador":":Controlador"},oid=x=>key(x.o),did=x=>key(x.d)+(x.m?"*":""),cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
+
+Ls.forEach(x=>{cl(x.o);cl(x.d);const o=oid(x),d=did(x);[[o,x.o,0],[d,x.d,x.m]].forEach(([k,t,s])=>{if(!(k in lab))lab[k]=(t.includes(":")?t:(C[t]?t+":"+C[t]:t))+(s?" *":"")});if(!(o in dep))dep[o]=0;if(!(d in dep))dep[d]=dep[o]+1});
+const ids=Object.keys(lab),cc={},Q={},W=140,H=34,cnt={};
+ids.forEach(k=>{const c=dep[k]||0;(cc[c]=cc[c]||[]).push(k);Q[k]={x:210+c*190,y:10+(cc[c].length-1)*64}});
+const mx=Math.max(...ids.map(k=>Q[k].x))+160,my=Math.max(...ids.map(k=>Q[k].y))+54;
+let s=`<svg width="${mx}" height="${my}" role="img" aria-label="Diagrama de comunicación" style="font:11px system-ui;color:var(--fg)"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>`;
+ids.forEach(k=>{const p=Q[k];s+=(k.endsWith("*")?`<rect x="${p.x+5}" y="${p.y-5}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--mut)"/>`:"")+`<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--fg)"/><text x="${p.x+W/2}" y="${p.y+21}" text-anchor="middle" fill="var(--fg)" text-decoration="underline">${esc(lab[k])}</text>`});
+const q0=Q[":Controlador"];s+=`<line x1="10" y1="${q0.y+H/2}" x2="${q0.x}" y2="${q0.y+H/2}" stroke="var(--fg)" stroke-width="1.5" marker-end="url(#ar)"/><text x="110" y="${q0.y+H/2-6}" text-anchor="middle" fill="var(--fg)" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(sig)}</text><text x="110" y="${q0.y+H/2+14}" text-anchor="middle" fill="var(--mut)" style="font-size:10px">operación del sistema</text>`;
+const cp=(cx,cy,tx,ty)=>{const u=tx-cx,w=ty-cy,t=Math.min(u?W/2/Math.abs(u):1e9,w?H/2/Math.abs(w):1e9);return[cx+u*t,cy+w*t]};
+Ls.forEach(x=>{const a=Q[oid(x)],b=Q[did(x)];if(!a||!b||a===b)return;
+const pk=[oid(x),did(x)].sort().join(">"),i=cnt[pk]=(cnt[pk]||0)+1,ax=a.x+W/2,ay=a.y+H/2,bx=b.x+W/2,by=b.y+H/2,dx=bx-ax,dy=by-ay,l=Math.hypot(dx,dy)||1,nx=-dy/l*(i-1)*14,ny=dx/l*(i-1)*14,f=cp(ax+nx,ay+ny,bx+nx,by+ny),g=cp(bx+nx,by+ny,ax+nx,ay+ny),col=x.u?"var(--ac)":"var(--mut)",t=`${x.n}${x.it?"*":""}: ${x.msg}`;
+s+=`<line x1="${f[0]}" y1="${f[1]}" x2="${g[0]}" y2="${g[1]}" stroke="${col}" stroke-width="1.5"${x.dr?' stroke-dasharray="5 3"':''} marker-end="url(#ar)"/><text x="${(f[0]+g[0])/2}" y="${(f[1]+g[1])/2-3}" text-anchor="middle" fill="${col}" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(t.length>40?t.slice(0,39)+"…":t)}<tspan x="${(f[0]+g[0])/2}" dy="12">«${x.st}»</tspan></text>`});
+return s+"</svg>"}
+const STN={A:"association",L:"local",P:"parameter"};
+const tobj=(L,u,dr)=>({n:L.n.replace("*",""),it:L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa,st:STN[L.t],u,dr});
+function swDg(c,idx,done){const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
+ if(kn("to")){d={n:kn("n")?L.n.replace("*",""):"?",it:kn("n")&&L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond&&kn("cond")?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+(kn("pa")||L.pa=="()"?L.pa:"(…)"),st:kn("st")?STN[L.t]:"…",u:1,dr:!kn("st")}}
+ return `<div class="sn" style="overflow-x:auto;padding:4px">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig)}</div>`}
 function lineSteps(L){const a=[],r=L.to.split(":")[0];
  a.push(st("¿Qué número lleva?",L.n,L.nd,L.nw,L.n+":"));
  a.push(st("¿Qué operación?",L.op,L.od,L.ow,(L.res?L.res+" := ":"")+L.op));
@@ -642,6 +662,7 @@ function lineSteps(L){const a=[],r=L.to.split(":")[0];
   st("Estereotipo del receptor","«local»","«association»","Lo devolvió "+L.ref+" (así figura en «Tengo»): variable local. La flecha de «Clases» solo sirve si todavía no lo tengo.","«local»"));
  else a.push(st("¿"+r+" ya está en «Tengo»?","Sí","No","Llegó antes.",""),
   st("Estereotipo del receptor","«parameter»","«local»","Figura como «firma:» en «Tengo» ("+L.sig+"): no salió de ningún find/create/next.","«parameter»"));
+ const ks=["n","op"].concat(L.pa!="()"?["pa"]:[]).concat(["to"]).concat(L.cond?["cond"]:[]).concat(["q","st"]);a.forEach((x,i)=>x.k=ks[i]);
  return a}
 const EXS=[
 {g:"postularse",op:"postularse(ci, rut, codOferta)",L:[
@@ -683,8 +704,9 @@ const SIG={
 const HAVE={
 "postularse|1":"firma: ci, rut, codOferta","postularse|2":"firma: ci, rut, codOferta · est (1)","postularse|3":"firma: ci, rut, codOferta · est (1), emp (2)","postularse|3.1":"emp ejecuta obtenerOferta(codOferta) · firma: codOferta","postularse|4":"est (1), emp (2), opc (3)","postularse|4.1":"est ejecuta generarPostulacion(opc) · firma: opc","postularse|4.2":"est ejecuta generarPostulacion(opc) · firma: opc · p (4.1)","postularse|4.2.1":"opc ejecuta agregarPostulacion(p) · firma: p","postularse|4.3":"est ejecuta generarPostulacion(opc) · p (4.1)",
 "aceptarPostulacion|3":"firma: ci, rut, codOferta · est (1), emp (2)","aceptarPostulacion|3.1":"emp ejecuta cuposDisponibles(codOferta) · firma: codOferta","aceptarPostulacion|3.2":"emp · opc (3.1)","aceptarPostulacion|3.2.1*":"opc ejecuta hayCupos()","aceptarPostulacion|3.2.2*":"opc · p (3.2.1*, uno por vuelta)","aceptarPostulacion|4":"est (1), emp (2), cd (3) · firma: codOferta","aceptarPostulacion|4.1*":"est ejecuta aceptarPostulacion(codOferta) · firma: codOferta","aceptarPostulacion|4.2*":"est · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3*":"est · firma: codOferta · cod (4.2*) · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3.1":"pe ejecuta aceptarPostulacion()"};
-EXS.forEach(E=>E.L.forEach((L,i)=>{const prev=(E.g=="aceptarPostulacion"?PRE.concat(E.L.slice(0,i).map(lineStr)):E.L.slice(0,i).map(lineStr)).slice(-4);
- SWC.push(sw("p4",E.g+" · "+L.n,E.op.split(" —")[0]+(prev.length?"\nYa: "+prev.slice(-2).join("\n      "):"")+"\nTengo: "+HAVE[E.g+"|"+L.n]+(SIG[E.g+"|"+L.n]?"\nOperación que llamo: "+SIG[E.g+"|"+L.n]:"")+(L.t=="A"?"\nClases: "+CLC:"")+"\n▶ "+L.goal,lineSteps(L),lineStr(L)))}));
+const PREO=[{n:"1",it:0,o:":Controlador",d:":Estudiante",m:true,msg:"est := find(ci)",st:"association"},{n:"2",it:0,o:":Controlador",d:":Empresa",m:true,msg:"emp := find(rut)",st:"association"}];
+EXS.forEach(E=>E.L.forEach((L,i)=>{const prevO=(E.g=="aceptarPostulacion"?PREO:[]).concat(E.L.slice(0,i).map(x=>tobj(x,0,0)));
+ SWC.push(Object.assign(sw("p4",E.g+" · "+L.n,E.op.split(" —")[0]+"\nTengo: "+HAVE[E.g+"|"+L.n]+(SIG[E.g+"|"+L.n]?"\nOperación que llamo: "+SIG[E.g+"|"+L.n]:"")+(L.t=="A"?"\nClases: "+CLC:"")+"\n▶ "+L.goal,lineSteps(L),lineStr(L)),{dg:{sig:E.op.split(" —")[0],prev:prevO,cur:L}}))}));
 
 /* ===== Lógica: combinaciones de átomos (ejercicios del examen: 2c, 3b, 3a) ===== */
 SWC.push(
@@ -866,11 +888,11 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
  `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["p4","Prog4"],["lg","Lógica"],["mu","Música"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
- if(u.recap){h+=`<div class="card"><h2>Serie completa</h2><p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
+ if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
  const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
- ((s.x||c.ctx)?`<div class="sn">${esc(s.x||c.ctx)}</div>`:"")+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.join(" · "))} …</div>`:"")+
+ ((s.x||c.ctx)?`<div class="sn">${esc(s.x||c.ctx)}</div>`:"")+swDg(c,u.i,0)+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.join(" · "))} …</div>`:"")+
  `<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+
  (u.ans=="no"?`<div class="fb no"><b>Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div></div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
  V.innerHTML=h;swBind()}
