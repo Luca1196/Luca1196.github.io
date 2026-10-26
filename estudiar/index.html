@@ -41,6 +41,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   QUIZ: las preguntas 'Quiz ejercicios' se copiaron de const Q de prog4.html y logica.html (tag 'Quiz ejercicios'). Si se agregan preguntas a esos Q, agregarlas tambien aca como mc(...). Sus opciones no tienen motivo por opcion (se muestra solo la explicacion).
   ETIQUETA: las opciones son el MENSAJE completo con cada estereotipo (no etiquetas sueltas); el estereotipo es del receptor.
   DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso.
+  MUSICA (pestaña 4, estado 'mu1'): estilo Simon en un bajo de 6 cuerdas BEADGC (13 trastes). MSEC = [cancion,artista,parte,'tónicas separadas por espacio']; cada tónica se muestra en una posición al azar y vale cualquier octava (misma nota). La secuencia crece de a una desde 2. Agregar partes al final de MSEC. Las tónicas vienen de cifrados de internet (verificar con el disco).
   PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS. Cada tarjeta de línea muestra el diagrama (swDg/dgm, copia de dg de prog4.html) con las líneas ya dibujadas en gris y la flecha actual en trazo discontinuo que se completa según los pasos respondidos (cada paso lleva .k: n, op, pa, to, cond, q, st).
   OPCIONES: en d (distractores) cada opcion puede llevar motivo: "texto||por que no". Los distractores deben ser TENTADORES (errores reales: regla invertida, eliminacion sin la premisa que pide, regla de otro conector), nunca absurdos. El motivo se muestra al elegirla.
   DOMINIO: boton 'Ver dominio' (DOM) en tarjetas Prog4 de Etiqueta/Destino/Mensaje/Decision (DOMT). Cada tarjeta Prog4 debe ser consistente con DOM (viene de CL y M en prog4.html). Lógica: toda tarjeta muestra 'Tengo:' y 'Meta:' completos. mc(...,w,h): h = pista propia de la tarjeta (si no, HINT del tag).
@@ -65,6 +66,10 @@ LIMITES: el iframe se ajusta a la altura del contenido cada 500 ms (solo funcion
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--f);padding-block:14px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:640px;margin:0 auto}
 .s-p4{--ac:var(--p4)}.s-lg{--ac:var(--lg)}.s-mu{--ac:var(--mu)}
+.fbd{min-width:560px}.fbr{display:grid;grid-template-columns:26px repeat(13,1fr);align-items:center}.fbh span{font-size:11px;color:var(--mut);text-align:center}.fbs{font-size:12px;color:var(--mut);text-align:center}
+.fc{font:11px var(--m,monospace);height:34px;border:0;border-bottom:2px solid var(--mut);border-right:1px solid var(--bd);background:var(--card);color:var(--mut);cursor:pointer;padding:0}.fc.nut{border-right:3px solid var(--fg)}.fc:active{background:var(--bd)}
+.fc.lit{background:var(--ac);color:var(--onac)}.fc.ok{background:var(--ok);color:#fff}.fc.no{background:var(--bad);color:#fff}
+
 h1{font-size:19px;margin:0}h2{font-size:20px;margin:0 0 8px}
 .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .mut{color:var(--mut);font-size:14px}
@@ -75,7 +80,7 @@ h1{font-size:19px;margin:0}h2{font-size:20px;margin:0 0 8px}
 .btn:disabled{cursor:default}
 .btn.pri{background:var(--ac);color:var(--onac);border-color:var(--ac);border-bottom-color:color-mix(in srgb,var(--ac) 65%,#000)}
 .big{width:100%;padding:13px 14px;font-weight:650;margin-top:12px}
-.tabs{display:flex;gap:6px;margin-bottom:14px}.tab{flex:1;padding:8px 4px;font-size:14px}.tab.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.tab{flex:1;padding:8px 4px;font-size:14px}.tab.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .chip{padding:5px 12px;border-radius:99px;border-bottom-width:3px;font-size:14px}.chip.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px 16px;margin-top:12px}
 .hero{padding:16px}
@@ -116,7 +121,7 @@ a{color:var(--ac)}
 </style>
 <div class="wrap">
 <header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
-<nav class="tabs"><button id="t0" class="btn tab">Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button></nav>
+<nav class="tabs"><button id="t0" class="btn tab">Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button></nav>
 <div id="v"></div>
 </div>
 <script>
@@ -124,7 +129,7 @@ const $=i=>document.getElementById(i),V=$("v");
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const hs=s=>{let x=7;for(const c of s)x=(x*31+c.charCodeAt(0))|0;return(x>>>0).toString(36)};
 const sh=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
-const SUBJ={p4:{n:"Prog4",c:"s-p4"},lg:{n:"Lógica",c:"s-lg"},mu:{n:"Música",c:"s-mu"}};
+const SUBJ={p4:{n:"Prog4",c:"s-p4"},lg:{n:"Lógica",c:"s-lg"}};
 const mc=(s,g,q,a,d,w,h)=>({k:"mc",s,g,q,a,d,w,h}),fc=(s,g,q,b)=>({k:"fc",s,g,q,b});
 
 /* ---- Tarjetas (cortas): Prog4 ---- */
@@ -374,7 +379,7 @@ return ilv(dd).concat(ilv(nn).slice(0,mode=="todo"?nn.length:remain()))}
 const hdr=()=>{$("hd").textContent=(S.stk?"Racha "+S.stk+(S.stk==1?" día":" días")+" · ":"")+"XP hoy "+S.xpd};
 
 /* ---- Pestañas ---- */
-function tab(i){TAB=i;Q=null;clearInterval(TM);[0,1,2,3].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==0)home();else if(i==3)swOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
+function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==0)home();else if(i==3)swOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
 function frame(src,t){V.innerHTML=`<div class="row between" style="margin-top:4px"><span class="mut">Ejercicios completos, paso a paso.</span><a class="mut" href="${src}" target="_blank" rel="noopener">Abrir aparte</a></div><iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
 
 /* ---- Inicio ---- */
@@ -813,43 +818,6 @@ sw("lg","Usar ∀","Tengo: ∀x(P(x)→Q(x)), P(a)\nMeta: Q(a)",[
 );
 const LGR={"Meta ∧":[0,0,"I∧"],"Meta →":[0,"I→","I→","I→","I→"],"Meta ¬":[0,"I¬","I¬","I¬","I¬"],"Meta atómica (RAA)":[0,0,0,"RAA","RAA"],"Meta ∨":[0,"I∨","I∨"],"Meta ∨ sin hipótesis":[0,0,0,"RAA"],"Meta ∀":[0,"I∀","I∀","I∀"],"Meta ∃":[0,"I∃","I∃"],"Meta ↔":[0,"I↔"],"Usar ∧":[0,"E∧","E∧"],"Usar →":[0,"E→","E→"],"Usar ∨":[0,"E∨","E∨","E∨"],"Usar ∃":[0,"E∃","E∃","E∃","E∃"],"Usar ∀":[0,"E∀","E∀","E∀"]};
 SWC.forEach(c=>{const m=c.s=="lg"&&LGR[c.g];if(m)c.steps.forEach((s,i)=>{if(m[i])s.x=(s.x||c.ctx)+"\nRegla elegida: "+m[i]})});
-/* ===== Música: acordes por parte (cifrados de internet; un acorde cambiado en el lado equivocado) ===== */
-const MU=(t,art,key,secs,ord)=>{const h=t+" — "+art+"\n"+key+"\n(cifrado de internet: verificalo con el disco)",
- steps=secs.map(([n,ok,bad,w])=>{const q=st("¿Qué acordes lleva "+n+"?",ok,bad,w);q.x=h+"\nParte: "+n;return q});
- if(ord){const q=st("¿En qué orden van las partes?",ord[0],ord[1],ord[2]);q.x=h;steps.push(q)}
- return sw("mu",t,h,steps)};
-SWC.push(
-MU("Mi país","Rubén Rada","Sol mayor",[
- ["la estrofa","G – D°7 – Em – Em/D – C – B7 – Am7 – D7","G – D°7 – Em – Em/D – C – B7 – Dm7 – D7","El penúltimo acorde es Am7 (ii de Sol), que lleva al D7 final."],
- ["el pre-estribillo","Em – Em/D – Em/D♭ – C – B7 – Am7 – D7","Em – Em/D – Em/D♭ – C – B7 – Am7 – G","Termina en D7 sin resolver a G: la resolución llega con el estribillo."],
- ["el estribillo","C9 – D7 – G (dos veces)","C9 – D7 – Em (dos veces)","Cierra en el acorde de reposo, G, no en Em."]],
- ["Estrofa → pre-estribillo → estrofa → estribillo (×2) → final con el estribillo","Estrofa → estribillo → pre-estribillo → estrofa → final","El pre-estribillo prepara el estribillo, no al revés."]),
-MU("Ciudad mágica","Tan Biónica","La menor",[
- ["la estrofa","Am – C – G – F (se repite)","Am – C – Em – F (se repite)","El tercer acorde es G."],
- ["el coro","F – C (×2), F – C – E, y luego F – E – Am – C – G – Am (×2)","F – C (×2), F – C – G, y luego F – E – Am – C – G – Am (×2)","El E (dominante de Am) está en el tercer compás: prepara el regreso a Am."]],
- ["Estrofa → estrofa → coro → estrofa → coro","Estrofa → coro → coro → estrofa → estrofa","El coro entra después de las dos primeras estrofas y no antes."]),
-MU("Cae el sol","Airbag","Do# menor",[
- ["la intro","C#m – A – E – E","C#m – A – E – B","La intro termina sostenida en E: B aparece en las estrofas y en el estribillo."],
- ["la estrofa","C#m – A – E | C#m – A – E | B – C#m | B – C#m – A | B","C#m – A – E | C#m – A – E | A – C#m | B – C#m – A | B","Después de los dos primeros compases cae sobre B – C#m, no sobre A – C#m."],
- ["el estribillo","C#m – A – E – B (×2) y cierra C#m – A – E – B – C#m – A – E","C#m – A – E – F#m (×2) y cierra C#m – A – E – B – C#m – A – E","El cuarto acorde es B, que lleva de vuelta a C#m."]]),
-MU("Ai se eu te pego (Nossa, nossa)","Michel Teló","Capo 4 (formas de Sol mayor)",[
- ["toda la canción","G – D – Em – C, repetidos de punta a punta","G – D – Em – Am, repetidos de punta a punta","El cuarto acorde es C: la progresión I – V – vi – IV."],
- ["el estribillo (¿cambia?)","No cambia: la misma progresión G – D – Em – C","Cambia: pasa a C – D – G","Es una sola vuelta de cuatro acordes que no cambia de sección."]]),
-MU("Hoy","Gloria Estefan","Capo 4 (formas de Mi menor)",[
- ["la estrofa","Em – D – C – D – G | Em – D – C – B7 – Em","Em – D – C – D – G | Em – D – C – A7 – Em","El B7 es el dominante de Em: cierra la frase."],
- ["el pre-estribillo","C – D – G – Em | C – D – G – B7 – Em","C – D – G – Am | C – D – G – B7 – Em","La primera frase cierra en Em, no en Am."],
- ["el estribillo","C – D – G – B7 – Em (dos veces)","C – D – G – E7 – Em (dos veces)","El acorde antes de Em es el dominante, B7."]],
- ["Estrofa → pre-estribillo → estribillo → estrofa → pre-estribillo → estribillo (×2)","Estrofa → estribillo → pre-estribillo → estribillo","El pre-estribillo va antes del estribillo."]),
-MU("I Want to Break Free","Queen","Mi mayor (cifra de referencia)",[
- ["la estrofa y el estribillo","E – A – E – B – A – E  (I – IV – I – V – IV – I)","E – A – E – C#m – A – E","Es V (B), no vi (C#m), lo que lleva a IV."],
- ["el puente","B – A – B – A – C#m – F#sus4 – F# – A – B – C#m – B – A – B – C#m – B – A – B – E","B – A – B – A – F#m – F#sus4 – F# – A – B – C#m – B – A – B – C#m – B – A – B – E","Después de B – A – B – A llega C#m."],
- ["el solo","E – A – E – B – A – E – B – A – E","E – A – E – B – A – E – B – D – E","Es A, no D: la progresión se queda en I – IV – V."]]),
-MU("Cielo de un solo color","No Te Va Gustar","La menor",[
- ["la estrofa","Am – Em – F (se repite)","Am – Dm – F (se repite)","El segundo acorde es Em."],
- ["el segundo bloque","Am – Em – F – Am – Em – F, cierra G – F","Am – Em – F – Am – Em – C, cierra G – F","Los dos grupos terminan en F."],
- ["el tercer bloque","G – F – Am (se repite), cierra G – F – Am – G – F","G – C – Am (se repite), cierra G – F – Am – G – F","Va G – F – Am, bajando por grados."]])
-);
-
 SWC.push(
 sw("p4","postularse · orden","Operación del sistema: postularse(ci, rut, codOferta)\n"+CLS,[
  st("¿Qué hago primero?","Buscar est, emp y la oferta","Crear la postulación","create necesita est y opc: antes hay que tenerlos (error del parcial)."),
@@ -887,7 +855,7 @@ function swStep(){SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
- `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["p4","Prog4"],["lg","Lógica"],["mu","Música"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
+ `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["p4","Prog4"],["lg","Lógica"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
  const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
@@ -917,8 +885,52 @@ document.addEventListener("keydown",e=>{if(TAB!=3||!SW||e.ctrlKey||e.metaKey||e.
  if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
  else if((k=="Enter"||k==" ")&&e.target.tagName!="BUTTON"){e.preventDefault();if(SW.recap||SW.ans=="no")swAdvance()}});
 
-[0,1,2,3].forEach(i=>$("t"+i).onclick=()=>tab(i));
-tab({repaso:0,prog4:1,logica:2}[location.hash.slice(1)]||0);
+/* ===== Música (pestaña 4): estilo Simon con un bajo de 6 cuerdas BEADGC; la secuencia son las tónicas de cada parte ===== */
+const MSEC=[
+["Mi país","Rubén Rada","Estrofa","G D E D C B A D"],["Mi país","Rubén Rada","Pre-estribillo","E D C# C B A D"],["Mi país","Rubén Rada","Estribillo","C D G C D G"],
+["Ciudad mágica","Tan Biónica","Estrofa","A C G F A C G F"],["Ciudad mágica","Tan Biónica","Coro","F C F C F C E F E A C G A"],
+["Cae el sol","Airbag","Intro","C# A E E"],["Cae el sol","Airbag","Estrofa","C# A E C# A E B C# B C# A B"],["Cae el sol","Airbag","Estribillo","C# A E B C# A E B C# A E B C# A E"],
+["Ai se eu te pego","Michel Teló","Toda la canción","G D E C G D E C"],
+["Hoy","Gloria Estefan","Estrofa","E D C D G E D C B E"],["Hoy","Gloria Estefan","Pre-estribillo","C D G E C D G B E"],["Hoy","Gloria Estefan","Estribillo","C D G B E C D G B E"],
+["I Want to Break Free","Queen","Estrofa","E A E B A E"],["I Want to Break Free","Queen","Solo","E A E B A E B A E"],["I Want to Break Free","Queen","Puente","B A B A C# F# F# A B C# B A B C# B A B E"],
+["Cielo de un solo color","No Te Va Gustar","Estrofa","A E F A E F"],["Cielo de un solo color","No Te Va Gustar","Segundo bloque","A E F A E F G F"],["Cielo de un solo color","No Te Va Gustar","Tercer bloque","G F A G F A G F A G F"]];
+const NPC={C:0,"C#":1,D:2,"D#":3,E:4,F:5,"F#":6,G:7,"G#":8,A:9,"A#":10,B:11},NN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const MSTR=[["C",0,130.81],["G",7,98],["D",2,73.42],["A",9,55],["E",4,41.2],["B",11,30.87]],MF=13;
+let S3=(()=>{try{return JSON.parse(localStorage.getItem("mu1")||"{}")}catch(e){return{}}})();
+const mSave=()=>{try{localStorage.setItem("mu1",JSON.stringify(S3))}catch(e){}};
+let MU=null,MT=[],MAU=null;
+const mPc=(s,f)=>(MSTR[s][1]+f)%12,mNm=(s,f)=>NN[mPc(s,f)];
+function muStop(){MT.forEach(clearTimeout);MT=[]}
+function mTone(s,f){if(S3.snd===0)return;try{MAU=MAU||new(window.AudioContext||window.webkitAudioContext)();const a=MAU,fr=MSTR[s][2]*Math.pow(2,f/12),t=a.currentTime,g=a.createGain(),lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.7);lp.connect(g);g.connect(a.destination);[[1,"sawtooth",.6],[2,"triangle",.5],[3,"sine",.25]].forEach(([m,ty,v])=>{const o=a.createOscillator(),h=a.createGain();o.type=ty;o.frequency.value=fr*m;h.gain.value=v;o.connect(h);h.connect(lp);o.start(t);o.stop(t+.75)})}catch(e){}}
+function muOpen(){muStop();if(!MU)MU={i:0,seq:[],lvl:0,inp:0,mode:"idle",err:0,msg:"Elegí una parte y tocá Empezar.",lit:null,rev:0};muDraw()}
+function muKey(){return MSEC[MU.i][0]+"|"+MSEC[MU.i][2]}
+function muStart(){muStop();const r=MSEC[MU.i][3].split(" "),pos=pc=>{const o=[];for(let s=0;s<6;s++)for(let f=0;f<MF;f++)if(mPc(s,f)==pc)o.push([s,f]);return o[Math.floor(Math.random()*o.length)]};
+ MU.seq=r.map(n=>{const p=pos(NPC[n]);return{n,s:p[0],f:p[1]}});MU.lvl=Math.min(2,MU.seq.length);MU.err=0;MU.rev=0;muShow()}
+function muShow(){muStop();MU.mode="show";MU.inp=0;MU.lit=null;MU.msg="Mirá la secuencia…";muDraw();
+ for(let k=0;k<MU.lvl;k++){const q=MU.seq[k];MT.push(setTimeout(()=>{MU.lit=[q.s,q.f];mTone(q.s,q.f);muPaint()},500+k*750));MT.push(setTimeout(()=>{MU.lit=null;muPaint()},500+k*750+520))}
+ MT.push(setTimeout(()=>{MU.mode="in";MU.msg="Tu turno: tónica 1 de "+MU.lvl;muDraw()},500+MU.lvl*750))}
+function muTap(s,f){if(!MU||MU.mode!="in")return;mTone(s,f);const q=MU.seq[MU.inp];
+ if(mPc(s,f)==NPC[q.n]){MU.inp++;MU.lit=[s,f,"ok"];if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
+  if(MU.lvl==N){MU.mode="done";MU.msg="¡Parte completa!"+(MU.err?" Errores: "+MU.err+".":" Sin errores.");MU.rev=1;muDraw();return}
+  MU.mode="wait";MU.msg="¡Bien! Sube a "+(MU.lvl+1)+" tónicas.";muDraw();MT.push(setTimeout(()=>{MU.lvl++;muShow()},900));return}
+  MU.msg="Tónica "+(MU.inp+1)+" de "+MU.lvl;muDraw()}
+ else{MU.err++;MU.mode="wait";MU.lit=[s,f,"no"];MU.msg="Era "+q.n+" (cuerda "+MSTR[q.s][0]+", traste "+q.f+"). Se repite la secuencia.";muDraw();MT.push(setTimeout(()=>{MU.lit=[q.s,q.f,"ok"];muPaint()},500));MT.push(setTimeout(muShow,2200))}}
+function muPaint(){const el=$("fb");if(el)el.innerHTML=muBoard()}
+function muBoard(){const nm=S3.nm,L=MU.lit;let h=`<div class="fbr fbh"><span></span>${Array.from({length:MF},(_,f)=>`<span>${f}</span>`).join("")}</div>`;
+ for(let s=0;s<6;s++){h+=`<div class="fbr"><b class="fbs">${MSTR[s][0]}</b>`;for(let f=0;f<MF;f++){const c=L&&L[0]==s&&L[1]==f?(L[2]||"lit"):"";h+=`<button class="fc${f==0?" nut":""}${c?" "+c:""}" data-m="t" data-s="${s}" data-f="${f}" aria-label="Cuerda ${MSTR[s][0]}, traste ${f}">${nm?mNm(s,f):(f==3||f==5||f==7||f==9||f==12)&&s==5?"·":""}</button>`}h+=`</div>`}return h}
+function muDraw(){const m=MU,s=MSEC[m.i],N=s[3].split(" ").length,best=(S3.best||{})[muKey()]||0;let opts="",g="";MSEC.forEach((x,i)=>{if(x[0]!=g){if(g)opts+="</optgroup>";opts+=`<optgroup label="${esc(x[0]+" · "+x[1])}">`;g=x[0]}opts+=`<option value="${i}"${i==m.i?" selected":""}>${esc(x[2])} (${x[3].split(" ").length})</option>`});opts+="</optgroup>";
+ const shown=m.rev?s[3]:m.seq.slice(0,m.mode=="in"||m.mode=="wait"?Math.max(0,m.inp):0).map(x=>x.n).join(" ");
+ V.innerHTML=`<div class="s-mu"><div class="row between"><b class="sj">Tónicas</b><span class="mut">Mejor ${best}/${N}${m.lvl?" · Nivel "+m.lvl+"/"+N:""} · Errores ${m.err}</span></div>
+ <select id="msel" style="margin:8px 0;width:100%;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg)">${opts}</select>
+ <div class="sn" id="mmsg">${esc(m.msg)}</div><div style="overflow-x:auto;padding-bottom:6px"><div id="fb" class="fbd">${muBoard()}</div></div>
+ <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" data-m="go">${m.mode=="idle"||m.mode=="done"?"Empezar":"Reiniciar"}</button><button class="btn" data-m="rep"${m.mode=="in"?"":" disabled"}>Repetir secuencia</button><button class="btn chip${S3.nm?" sel":""}" data-m="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-m="snd">Sonido</button></div>
+ ${shown?`<div class="mut" style="margin-top:8px">Tónicas hasta ahora: <b>${esc(shown)}</b></div>`:""}
+ <p class="mut" style="margin-top:10px;font-size:13px">Cualquier octava vale: tocá la misma nota en el traste que prefieras. Las tónicas salen de cifrados de internet; verifícalas con el disco.</p></div>`;
+ const sel=$("msel");sel.onchange=()=>{muStop();MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
+V.addEventListener("click",ev=>{if(TAB!=4||!MU)return;const b=ev.target.closest("[data-m]");if(!b)return;const a=b.dataset.m;
+ if(a=="t")muTap(+b.dataset.s,+b.dataset.f);else if(a=="go")muStart();else if(a=="rep"&&MU.mode=="in")muShow();else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();muDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();muDraw()}});
+[0,1,2,3,4].forEach(i=>$("t"+i).onclick=()=>tab(i));
+tab({repaso:0,prog4:1,logica:2,musica:4}[location.hash.slice(1)]||0);
 </script>
 
 </html>
