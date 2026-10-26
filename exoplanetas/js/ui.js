@@ -64,8 +64,7 @@ function habilidades(cid) {
   if (K.MASA_CIENT && K.MASA_CIENT[cid]) out.push(`+${K.MASA_CIENT[cid]} extra por Masa real`);
   if (cid === "tancredi") out.push(`+${K.TANC_FP} por falso positivo destapado`, `+${K.TANC_HALL} extra por Hallazgo`);
   if (cid === "charbonneau" && K.CHARB_MIDE) out[out.length - 1] += " (medida con un Espectro tuyo, en cualquier orden)";
-  if (cid === "fernandez") out.push(`+${K.FERN} al investigar ajeno`, "Refuta con cualquier Marcador");
-  if (cid === "seager") out.push("Señal compartida en espectros");
+  if (cid === "fernandez") out.push(`+${K.FERN} al investigar ajeno`, `+${K.FERN_REF} por refutación ganada`);
   if (c.bono) {
     const cl = c.clave;
     const que = cl.startsWith("tec:") ? TEC[cl.slice(4)].nombre : cl === "mar:esp" ? "Espectros" : cl === "mar:contexto" ? "Contexto"
@@ -222,10 +221,14 @@ function resolver(k, v) { const r = ui.esperando[k]; delete ui.esperando[k]; if 
 class Humano {
   async turno(juego, jg) {
     if (juego !== g) throw CANCELADO;
-    ui.fase = "accion"; ui.sel = null; render();
-    banner("Tu turno"); Sfx.turno();
-    await nuevaEspera("accion");
-    await mostrarHitos(true);
+    if (ui.reanudarPost) ui.reanudarPost = false;     // partida recuperada después de tu acción: sigues en publicar
+    else {
+      ui.fase = "accion"; ui.sel = null; render();
+      banner("Tu turno"); Sfx.turno();
+      await nuevaEspera("accion");
+      await mostrarHitos(true);
+      guardarPartida("post");
+    }
     ui.fase = "post"; ui.sel = null; render();
     if (K.ROBO) await juego.reponer(jg);
     else await nuevaEspera("fin");          // sin robo: publicas si quieres y terminas el turno
@@ -595,7 +598,7 @@ function renderTablero() {
       const dueño = pl.pubPlaneta !== null ? pl.pubPlaneta : pl.desc;
       const op = activo ? ops.find(o => o.pl === pl) : null;
       return `<span class="pl-dot ${pl.vivo ? "" : "muerto"} ${pl.pubPlaneta === null && pl.desc !== YO ? "priv-rival" : ""} ${op ? "objetivo" : ""}" data-pl="${pl.id}" role="button" tabindex="0">
-        <span class="bola" style="background:${COLOR[dueño]}">${pl.pubPlaneta === null ? "?" : pl.confirmado ? "✓" : ""}</span><span class="pl-nom">${esc(pl.nombre)}</span>${op && ui.ayudas ? `<span class="pct">${pct(op.p)}</span>` : ""}</span>`;
+        <span class="bola" style="background:${COLOR[dueño]}">${pl.pubPlaneta === null ? "?" : pl.confirmado ? "✓" : ""}</span><span class="pl-nom">${esc(pl.nombre)}</span>${tecsCortas(pl)}${op && ui.ayudas ? `<span class="pct">${pct(op.p)}</span>` : ""}</span>`;
     }).join("");
     const extra = pls.length > MAXP ? `<span class="pl-dot mas" title="Toca la estrella para ver todos">+${pls.length - visibles.length}</span>` : "";
     return `<div class="est ${activo ? (ui.ayudas ? (ops.length ? "objetivo" : "apagada") : "elegible") : ""}" data-est="${i}" role="button" tabindex="0" aria-label="Estrella ${esc(e.cl)}">
@@ -803,7 +806,7 @@ async function menu() {
   if (v === "bitacora") verBitacora();
   if (v === "reglas") mostrarReglas();
   if (v === "tutorial") mostrarTutorial();
-  if (v === "nueva") abrirPreparacion();
+  if (v === "nueva") nuevaPartida();
   if (v === "sonido") { const on = Sfx.alternar(); aviso(on ? "Sonido activado" : "Sonido apagado"); }
 }
 async function abrirPlaneta(pl) {
@@ -823,6 +826,7 @@ async function abrirPlaneta(pl) {
   }
   const v = await ventana({ titulo: `${esc(pl.nombre)} · ${esc(tamTemp(pl))}`, color: "var(--pla)", botones: [], cuerpo: `
     <p>${ficha(pl.pubPlaneta !== null ? pl.pubPlaneta : pl.desc)} ${esc(estado(pl))}</p>
+    <p class="pl-metodo"><b>Descubierto con ${esc(nombreTec(pl.tecnicas[0]))}</b>${new Set(pl.tecnicas).size > 1 ? ` · medido también con ${esc([...new Set(pl.tecnicas.slice(1))].filter(t => t !== pl.tecnicas[0]).map(nombreTec).join(", "))}` : ""}</p>
     ${rivalPriv ? "<p>Candidato privado: solo su descubridor conoce sus datos.</p>" : `
     <div class="sec"><h3>Datos públicos</h3>${pub.length ? `<dl class="dato">${pub.map(([c, v]) => `<dt>${CAMPO[c]}</dt><dd>${esc(fmtCampo(c, v))}</dd>`).join("")}</dl>` : '<p class="tenue">Sin datos públicos.</p>'}
       <p class="tenue">Métodos: ${esc(metodos.join(" · ") || "—")}</p></div>
@@ -847,7 +851,7 @@ async function mostrarFinal() {
     <table class="tabla">${filas}</table>
     <h3>La Verdad de cada planeta</h3><div style="overflow-x:auto"><table class="tabla"><tr><th>Planeta</th><th>Era</th><th>Verdad</th></tr>${planetas || '<tr><td colspan="3">No se descubrieron planetas.</td></tr>'}</table></div>`,
     botones: [{ txt: "Cerrar", valor: null, clase: "gris" }, { txt: "Jugar otra", valor: "nueva" }] });
-  if (v === "nueva") abrirPreparacion();
+  if (v === "nueva") nuevaPartida();
 }
 function mostrarReglas() {
   return ventana({ titulo: "Cómo se juega", color: "var(--est)", botones: [{ txt: "¡A jugar!", valor: true }], cuerpo: `
@@ -869,13 +873,55 @@ function mostrarReglas() {
     <p class="tenue">${esc(K.PIE)}</p>` });
 }
 
+// ---------------------------------------------------------- partida guardada en el teléfono
+// Se guarda al empezar tu turno y después de tu acción; al volver a abrir la página, sigue donde quedó.
+const CLAVE_PARTIDA = "exo-partida";
+const VERSION = ((document.querySelector('script[src*="ui.js"]') || {}).src || "").split("v=")[1] || "";
+function guardarPartida(fase) {
+  if (!g || g.terminado) return;
+  const tras = fase === "post";                  // tras tu acción el turno ya se contó: al reanudar se vuelve a contar
+  if (ui.reanudarPost) fase = "post";             // recuperada en publicar y vuelta a guardar antes de terminar
+  const est = g.guardar({ fase });
+  if (tras) est.turnos--;
+  const datos = { version: VERSION, pref: { ...preferencias, cient: g.j[YO].cient, nombre: g.j[YO].nombre },
+    rivales: g.j.filter(x => !x.humano).map(x => ({ nombre: x.nombre, estilo: x.ctrl.estilo, car: x.ctrl.caracter, cient: x.cient })),
+    estado: est, log: ui.log.slice(-200) };
+  try { localStorage.setItem(CLAVE_PARTIDA, JSON.stringify(datos)); } catch (e) {}
+}
+function leerPartida() { try { return JSON.parse(localStorage.getItem(CLAVE_PARTIDA) || "null"); } catch (e) { return null; } }
+function borrarPartida() { try { localStorage.removeItem(CLAVE_PARTIDA); } catch (e) {} }
+// Nueva partida: antes busca en el servidor si hay una versión nueva del juego; si la hay, recarga la página
+async function nuevaPartida() {
+  if (VERSION && location.protocol.startsWith("http")) {
+    try {
+      const r = await fetch(location.pathname + "?buscar=" + Date.now(), { cache: "no-store" });
+      const nueva = ((await r.text()).match(/ui\.js\?v=([\w.-]+)/) || [])[1];
+      if (nueva && nueva !== VERSION) {
+        borrarPartida();
+        aviso("Hay una versión nueva del juego: actualizando…");
+        setTimeout(() => location.replace(location.pathname + "?v=" + nueva), 400);
+        return;
+      }
+    } catch (e) { /* sin conexión: se juega con la versión que hay */ }
+  }
+  abrirPreparacion();
+}
+
 // ---------------------------------------------------------- partida
+// técnicas bajo un planeta, abreviadas (la primera es con la que se descubrió): algunos Marcadores las exigen
+const TEC_CORTA = { transito: "Tr", rv: "VR", astro: "As", imagen: "Im", micro: "Mi", densidad: "De" };
+function nombreTec(t) { return t === "densidad" ? "Densidad" : TEC[t].nombre; }
+function tecsCortas(pl) {
+  const ts = [...new Set(pl.tecnicas)];
+  return ts.length ? `<span class="pl-tec" title="${esc(ts.map(nombreTec).join(", "))}">${ts.map(t => TEC_CORTA[t] || t).join("·")}</span>` : "";
+}
 const ESTILO_CIENT = { vida: ["seager", "kaltenegger"], explorador: ["borucki", "mayor"], gigantes: ["charbonneau", "marois"], verificador: ["fernandez", "tancredi"] };
-function crearJuego(pref) {
+function crearJuego(pref, fijos = null) {
   const usados = new Set([pref.cient]);
   const jugadores = [{ nombre: pref.nombre || "Tu equipo", humano: true, cient: pref.cient, ctrl: new Humano() }];
   const estilos = Object.keys(ESTILOS).sort(() => Math.random() - 0.5);
-  for (let i = 0; i < pref.rivales; i++) {
+  if (fijos) for (const r of fijos) jugadores.push({ nombre: r.nombre, estilo: r.estilo, cient: r.cient, ctrl: new Bot(r.estilo, r.car) });
+  else for (let i = 0; i < pref.rivales; i++) {
     const est = estilos[i % estilos.length];
     const car = est === "verificador" ? "mentiroso" : (Math.random() < 0.5 ? "mentiroso" : "conservador");
     const cid = ESTILO_CIENT[est].find(c => !usados.has(c)) || D.cientificos.find(c => !usados.has(c.id)).id;
@@ -883,6 +929,7 @@ function crearJuego(pref) {
     jugadores.push({ nombre: `Equipo ${CIEN[cid].nombre.split(" y ")[0].split(" ").pop()}`, estilo: est, cient: cid, ctrl: new Bot(est, car) });
   }
   const juego = new Juego({ jugadores });
+  juego.alGuardar = fase => { if (juego === g) guardarPartida(fase); };
   ui.hitosPend = [];
   for (const jg of juego.j) if (jg.ctrl instanceof Bot) {
     jg.ctrl.pausa = async () => { if (juego !== g) throw CANCELADO; render(); await mostrarHitos(true); await sleep(ui.velocidad); };
@@ -908,17 +955,27 @@ function crearJuego(pref) {
   });
   return juego;
 }
-async function empezar(pref) {
+async function empezar(pref, guardada = null) {
   for (const k of Object.keys(ui.esperando)) delete ui.esperando[k];
   document.querySelectorAll("#capa .velo").forEach(v => v.remove());
-  Object.assign(ui, { fase: "espera", sel: null, ocupado: false, log: [], velocidad: +pref.velocidad, ayudas: false });   // nunca se muestran porcentajes: se elige por los datos
-  g = crearJuego(pref);
+  Object.assign(ui, { fase: "espera", sel: null, ocupado: false, log: [], velocidad: +pref.velocidad, ayudas: false, reanudarPost: false });   // nunca se muestran porcentajes: se elige por los datos
+  if (guardada) {
+    g = crearJuego(pref, guardada.rivales);
+    g.restaurar(guardada.estado);
+    ui.log = guardada.log || [];
+    ui.reanudarPost = guardada.estado.fase === "post";
+  } else {
+    borrarPartida();
+    g = crearJuego(pref);
+  }
   guia.paso = -1; render();
-  if (!preferencias.tutorialVisto) iniciarGuia();
+  if (!guardada && !preferencias.tutorialVisto) iniciarGuia();
+  if (guardada) aviso(`Partida recuperada: ronda ${g.ronda} de ${g.maxRondas}`);
   const esta = g;
   try {
     await g.jugar();
     if (esta !== g) return;
+    borrarPartida();
     ui.fase = "fin"; render();
     await mostrarFinal();
   } catch (e) { if (e !== CANCELADO) { console.error(e); aviso("Error en la partida: " + esc(e.message)); } }
@@ -1007,4 +1064,8 @@ dibujarFondo();
 addEventListener("resize", () => { dibujarFondo(); });
 g = crearJuego(preferencias);
 render();
-abrirPreparacion();
+(() => {
+  const s = leerPartida();
+  if (s) { try { empezar(s.pref, s); return; } catch (e) { console.error(e); borrarPartida(); } }
+  abrirPreparacion();
+})();

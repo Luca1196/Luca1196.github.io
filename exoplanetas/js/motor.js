@@ -70,14 +70,16 @@ const RASGOS_PUB = ["Pequeño", "Neptuniano", "Gigante", "Caliente", "Frío"];
 const VALOR_DESC = { transito: 3.0, rv: 2.4, astro: 1.8, imagen: 2.2, micro: 1.4 };
 const ORDEN_TEC = ["transito", "rv", "astro", "imagen", "micro"];
 
-function rng32(seed) {           // mulberry32
+function rng32(seed) {           // mulberry32 (con su estado accesible, para guardar la partida)
   let a = seed >>> 0;
-  return function () {
+  const f = function () {
     a |= 0; a = (a + 0x6D2B79F5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+  f.estado = () => a; f.fijar = v => { a = v; };
+  return f;
 }
 
 function pTirada(mod, cd) {
@@ -589,18 +591,23 @@ class Juego {
   }
   async jugar() {
     this.emit("inicio", {});
+    let i0 = 0;
+    if (this.reanudar) { i0 = this.turnoDe; this.ronda--; }   // partida guardada: sigue en el turno donde quedó
     while (this.ronda < this.maxRondas && !this.fin) {
       this.ronda++;
-      this.emit("ronda", { ronda: this.ronda });
-      for (let i = 0; i < this.j.length; i++) {
+      if (!this.reanudar) this.emit("ronda", { ronda: this.ronda });
+      this.reanudar = false;
+      for (let i = i0; i < this.j.length; i++) {
         this.turnoDe = i;
         await this.turno(this.j[i]);
         if (this.mt.vacio && this.mm.vacio) this.fin = true;
       }
+      i0 = 0;
     }
     return this.terminar();
   }
   async turno(jg) {
+    if (jg.humano && this.alGuardar) this.alGuardar("accion");
     this.turnos++;
     this.emit("turno", { jg: jg.idx });
     // período de exclusividad: vencido, el candidato privado se publica solo
@@ -623,6 +630,43 @@ class Juego {
       if (c.tipo === "tec") { jg.tec.splice(jg.tec.indexOf(c.id), 1); this.mt.desc.push(c.id); }
       else { jg.mar.splice(jg.mar.indexOf(c.id), 1); this.mm.desc.push(c.id); }
     }
+  }
+  // ---------------------------------------------------------- guardar y restaurar (partida en el teléfono)
+  // Se guarda al empezar el turno del humano (o tras su acción): todo lo demás se recalcula igual,
+  // porque el azar sale del generador con semilla, cuyo estado también se guarda.
+  guardar(extra = {}) {
+    const iE = e => this.estrellas.indexOf(e), iA = a => D.planetas.indexOf(a);
+    const pl = this.planetas.map(p => {
+      const o = {};
+      for (const [k, v] of Object.entries(p)) if (!["a", "est", "rasgos", "rasgosPub", "lado"].includes(k)) o[k] = v;
+      o.a = iA(p.a); o.est = iE(p.est); o.lado = Object.fromEntries(Object.entries(p.lado).map(([k, s]) => [k, [...s]]));
+      return o;
+    });
+    return { v: 1, seed: this.seed, rnd: this.rnd.estado(), estrellas: this.estrellas,
+      mt: { cartas: this.mt.cartas, desc: this.mt.desc }, mm: { cartas: this.mm.cartas, desc: this.mm.desc },
+      mp: this.mp.map(x => x.hallazgo ? { h: x.id } : { a: iA(x) }), planetas: pl, plId: _plId,
+      senal: this.senal, hitos: this.hitos, descartePlanetas: this.descartePlanetas, maxRondas: this.maxRondas,
+      ronda: this.ronda, turnoDe: this.turnoDe, fin: this.fin, turnos: this.turnos,
+      j: this.j.map(x => ({ tec: x.tec, mar: x.mar, pts: x.pts, sabe: x.sabe, hallazgos: x.hallazgos.map(h => h.id) })), ...extra };
+  }
+  restaurar(s) {
+    this.seed = s.seed; this.rnd.fijar(s.rnd);
+    this.estrellas = s.estrellas;
+    Object.assign(this.mt, s.mt); Object.assign(this.mm, s.mm);
+    const H = Object.fromEntries(D.hallazgos.map(h => [h.id, h]));
+    this.mp = s.mp.map(x => x.h ? { ...H[x.h], hallazgo: true } : D.planetas[x.a]);
+    this.planetas = s.planetas.map(o => {
+      const p = new Planeta(D.planetas[o.a], this.estrellas[o.est], o.desc);
+      for (const [k, v] of Object.entries(o)) if (!["a", "est", "lado"].includes(k)) p[k] = v;
+      p.lado = Object.fromEntries(Object.entries(o.lado).map(([k, arr]) => [k, new Set(arr)]));
+      return p;
+    });
+    _plId = Math.max(s.plId || 0, ...this.planetas.map(p => p.id), 0);
+    for (const k of ["senal", "hitos", "descartePlanetas", "maxRondas", "ronda", "turnoDe", "fin", "turnos"]) this[k] = s[k];
+    s.j.forEach((x, i) => Object.assign(this.j[i], { tec: x.tec, mar: x.mar, pts: x.pts, sabe: x.sabe,
+      hallazgos: x.hallazgos.map(id => D.hallazgos.find(h => h.id === id)) }));
+    this.reanudar = true;
+    return this;
   }
   terminar() {
     if (this.terminado) return this;
