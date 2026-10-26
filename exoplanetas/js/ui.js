@@ -63,7 +63,7 @@ function habilidades(cid) {
   if (u) out.push(`+${u[2]} por ${CAT_NOMBRE[u[0]]}${u[1] ? ` en ${u[1]}` : ""}${u[3] ? " tuyo" : ""}`);
   if (K.MASA_CIENT && K.MASA_CIENT[cid]) out.push(`+${K.MASA_CIENT[cid]} extra por Masa real`);
   if (cid === "tancredi") out.push(`+${K.TANC_FP} por falso positivo destapado`, `+${K.TANC_HALL} extra por Hallazgo`);
-  if (cid === "charbonneau" && K.CHARB_MIDE) out[out.length - 1] += " (medida con Espectro)";
+  if (cid === "charbonneau" && K.CHARB_MIDE) out[out.length - 1] += " (medida con un Espectro tuyo, en cualquier orden)";
   if (cid === "fernandez") out.push(`+${K.FERN} al investigar ajeno`, "Refuta con cualquier Marcador");
   if (cid === "seager") out.push("Señal compartida en espectros");
   if (c.bono) {

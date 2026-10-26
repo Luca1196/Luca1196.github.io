@@ -358,6 +358,7 @@ class Juego {
       this.sumar(autor, "planetas", -pl.ptsPlaneta + K.FALSO, "falso positivo");
       pl.ptsPlaneta = K.FALSO;
       if (pl.cientDado) { this.sumar(this.j[pl.cientDado[0]], "cientifico", -pl.cientDado[1], "falso positivo"); pl.cientDado = null; }
+      if (pl.charbCobrado != null) { this.sumar(this.j[pl.charbCobrado], "cientifico", -K.CIENT_PUB.charbonneau[2], "falso positivo"); pl.charbCobrado = null; }
       if (jg.idx !== pl.pubPlaneta) this.darHito(jg, "revision");
       this.log(`¡${pl.nombre} era un falso positivo! ${fraseFalso(pl)} ${autor.nombre} pierde lo que ganó por él.`, { tipo: "malo" });
     } else this.log(`${jg.nombre} descarta un candidato: era un falso positivo. ${fraseFalso(pl)}`, { jg: jg.idx });
@@ -419,6 +420,7 @@ class Juego {
     const lee = {};
     for (const c of CAMPOS_MAR[mid]) { this.sabe(jg, pl)[c] = pl.a[c]; lee[c] = pl.a[c]; }
     pl.ladoDe(jg.idx).add(mid);
+    this.charbCobrar(jg, pl);
     if (jg.cient === "fernandez" && K.FERN && pl.pubPlaneta !== null && pl.pubPlaneta !== jg.idx) this.sumar(jg, "cientifico", K.FERN, "revisión independiente");
     this.log(`${jg.nombre} investiga ${pl.nombre} con ${MAR[mid].nombre} y lee el resultado en secreto.`, { jg: jg.idx });
     this.emit("cambio", {});
@@ -544,17 +546,27 @@ class Juego {
     await this.mostrar("refutacion", { x: x.idx, autor: autor.idx, pl, cat, mid, tirada: t, gana, lectura, pozo, articulo });
     return { refutado: true, gana, tirada: t, lectura };
   }
-  // Atmósfera de un Gigante sin un Espectro propio: se sabe que la tiene, pero no la midió
-  atmSinMedir(jg, pl, cat) {
-    return cat === "atmosfera" && pl.rasgosPub.includes("Gigante")
-      && ![...pl.ladoDe(jg.idx)].some(m => MAR[m] && m.startsWith("esp") && sirve(m, cat, pl));
+  // Charbonneau: +bono por la Atmósfera de un Gigante que publicó Y midió con un Espectro suyo, en cualquier orden
+  charbPendiente(jg, pl) {
+    const a = pl.publicado.atmosfera;
+    return !!K.CHARB_MIDE && jg.cient === "charbonneau" && pl.vivo && pl.charbCobrado == null && pl.rasgosPub.includes("Gigante")
+      && (!a || (a.autor === jg.idx && a.estado !== "anulada"));
+  }
+  charbCobrar(jg, pl) {
+    if (!this.charbPendiente(jg, pl)) return;
+    const a = pl.publicado.atmosfera;
+    if (!a || a.estado !== "ok" || ![...pl.ladoDe(jg.idx)].some(m => m.startsWith("esp"))) return;
+    const v = K.CIENT_PUB.charbonneau[2];
+    pl.charbCobrado = jg.idx;
+    this.sumar(jg, "cientifico", v, `atmósfera medida en ${pl.nombre} (Charbonneau)`);
+    this.log(`${jg.nombre} suma +${v}: midió con un espectro la atmósfera de ${pl.nombre} (Charbonneau).`, { jg: jg.idx, tipo: "bueno" });
   }
   anotar(autor, pl, cat) {
     pl.publicado[cat] = { autor: autor.idx, estado: "ok" };
     this.sumar(autor, cat, K.PUNTOS[cat], `${CAT_NOMBRE[cat]} en ${pl.nombre}`);
     const cp = K.CIENT_PUB && K.CIENT_PUB[autor.cient];
-    const sinMedir = K.CHARB_MIDE && autor.cient === "charbonneau" && this.atmSinMedir(autor, pl, cat);
-    if (cp && cp[0] === cat && (!cp[1] || pl.rasgos.includes(cp[1])) && (!cp[3] || pl.desc === autor.idx) && !sinMedir) this.sumar(autor, "cientifico", cp[2], `especialidad de ${CIEN[autor.cient].nombre}`);
+    if (K.CHARB_MIDE && autor.cient === "charbonneau") this.charbCobrar(autor, pl);
+    else if (cp && cp[0] === cat && (!cp[1] || pl.rasgos.includes(cp[1])) && (!cp[3] || pl.desc === autor.idx)) this.sumar(autor, "cientifico", cp[2], `especialidad de ${CIEN[autor.cient].nombre}`);
     if (cat === "habitable" && pl.est.cl[0] === "G") this.darHito(autor, "primo_tierra");
     if (cat === "biofirma") this.darHito(autor, "primera_bio");
     if (cat === "atmosfera" && !esTierra(pl.a)) this.darHito(autor, "atm_otro");
