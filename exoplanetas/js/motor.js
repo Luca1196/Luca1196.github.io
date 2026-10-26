@@ -236,6 +236,8 @@ class Juego {
     return !CAMPOS_MAR[mid].every(c => this.conoce(jg, pl, c));
   }
   sirveParaPublicar(jg, pl, cat) {
+    // todo Gigante gaseoso tiene atmósfera: se puede publicar sin Marcador (si era un falso positivo, la Emisión lo refuta)
+    if (cat === "atmosfera" && K.ATM_GIG && pl.rasgosPub.includes("Gigante")) return true;
     return [...pl.ladoDe(jg.idx)].some(m => MAR[m] && sirve(m, cat, pl));
   }
   puedePublicar(jg, pl, cat) {
@@ -323,6 +325,7 @@ class Juego {
       this.mt.desc.push(tid);
       jg.hallazgos.push(ctx.hall);
       this.sumar(jg, "hallazgos", K.HALL, ctx.hall.nombre);
+      if (jg.cient === "tancredi" && K.TANC_HALL) this.sumar(jg, "cientifico", K.TANC_HALL, "objeto que no es planeta (Tancredi)");
       this.log(`${jg.nombre} observa ${est.cl} y encuentra algo inesperado: ${ctx.hall.nombre} (+${K.HALL}).`, { jg: jg.idx, tipo: "hallazgo" });
       this.emit("hallazgo", { jg: jg.idx, h: ctx.hall, est });
       return { ok: true, hallazgo: ctx.hall, tirada: t };
@@ -345,6 +348,10 @@ class Juego {
 
   _exponerFalso(jg, pl) {
     pl.vivo = false;
+    if (jg.cient === "tancredi" && K.TANC_FP) {   // Tancredi: demostrar que algo no es un planeta
+      this.sumar(jg, "cientifico", K.TANC_FP, "no era un planeta (Tancredi)");
+      this.log(`${jg.nombre} suma +${K.TANC_FP}: demostró que no era un planeta (Tancredi).`, { jg: jg.idx, tipo: "bueno" });
+    }
     if (pl.pubPlaneta !== null) {
       pl.expuesto = true;
       const autor = this.j[pl.pubPlaneta];
@@ -537,11 +544,17 @@ class Juego {
     await this.mostrar("refutacion", { x: x.idx, autor: autor.idx, pl, cat, mid, tirada: t, gana, lectura, pozo, articulo });
     return { refutado: true, gana, tirada: t, lectura };
   }
+  // Atmósfera de un Gigante sin un Espectro propio: se sabe que la tiene, pero no la midió
+  atmSinMedir(jg, pl, cat) {
+    return cat === "atmosfera" && pl.rasgosPub.includes("Gigante")
+      && ![...pl.ladoDe(jg.idx)].some(m => MAR[m] && m.startsWith("esp") && sirve(m, cat, pl));
+  }
   anotar(autor, pl, cat) {
     pl.publicado[cat] = { autor: autor.idx, estado: "ok" };
     this.sumar(autor, cat, K.PUNTOS[cat], `${CAT_NOMBRE[cat]} en ${pl.nombre}`);
     const cp = K.CIENT_PUB && K.CIENT_PUB[autor.cient];
-    if (cp && cp[0] === cat && (!cp[1] || pl.rasgos.includes(cp[1])) && (!cp[3] || pl.desc === autor.idx)) this.sumar(autor, "cientifico", cp[2], `especialidad de ${CIEN[autor.cient].nombre}`);
+    const sinMedir = K.CHARB_MIDE && autor.cient === "charbonneau" && this.atmSinMedir(autor, pl, cat);
+    if (cp && cp[0] === cat && (!cp[1] || pl.rasgos.includes(cp[1])) && (!cp[3] || pl.desc === autor.idx) && !sinMedir) this.sumar(autor, "cientifico", cp[2], `especialidad de ${CIEN[autor.cient].nombre}`);
     if (cat === "habitable" && pl.est.cl[0] === "G") this.darHito(autor, "primo_tierra");
     if (cat === "biofirma") this.darHito(autor, "primera_bio");
     if (cat === "atmosfera" && !esTierra(pl.a)) this.darHito(autor, "atm_otro");

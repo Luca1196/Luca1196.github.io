@@ -23,6 +23,7 @@ class Bot {
     this.estilo = estilo; this.caracter = caracter;
     this.pausa = pausa || (async () => {});
   }
+  charbMide(g, jg, pl, cat) { return _G.K.CHARB_MIDE && jg.cient === "charbonneau" && g.atmSinMedir(jg, pl, cat); }
   get umbralRef() { return this.c.umbralRef * this.e.refMult; }
 
   async turno(g, jg) {
@@ -59,6 +60,8 @@ class Bot {
         if (fin) umbral = Math.min(umbral, 0.25);
         // esperar al Contexto si lo tengo y todavía no lo leí
         if (cat === "biofirma" && !fin && P < 0.95 && jg.mar.includes("contexto") && !g.conoce(jg, pl, "ctx")) continue;
+        // Charbonneau: su especialidad es MEDIR la atmósfera de un gigante; si puede medirla, espera
+        if (this.charbMide(g, jg, pl, cat) && !fin && g.rondasRestantes() > 2 && jg.mar.some(m => m.startsWith("esp") && g.puedeInvestigar(jg, m, pl))) continue;
         if (P >= umbral && P >= 0.12) articulo.push(cat);
         else if (this.c.farol && g.rnd() < this.c.farol) articulo.push(cat);   // farol: publica sin estar seguro
       }
@@ -122,9 +125,11 @@ class Bot {
         let info = 0;
         for (const c of _G.sirveLista(mid, pl)) if (libres.includes(c)) {
           const p = g.prob(jg, pl, c);
-          info += PT(c) * (p * (1 - p) * 2 + 0.25 * p) + (g.sirveParaPublicar(jg, pl, c) ? 0 : 0.6 * p * PT(c));
+          info += PT(c) * (p * (1 - p) * 2 + 0.25 * p) + (g.sirveParaPublicar(jg, pl, c) && !(this.charbMide(g, jg, pl, c)) ? 0 : 0.6 * p * PT(c))
+            + (this.charbMide(g, jg, pl, c) && mid.startsWith("esp") ? _G.K.CIENT_PUB.charbonneau[2] * p : 0);
         }
         if (mid === "densidad" && _G.K.MASA && !pl.masaCobrada && mio && g.completaMasa(pl, ["densidad"])) info += _G.K.MASA;
+        if (mid === "densidad" && jg.cient === "tancredi" && _G.K.TANC_FP) { const c = g.candidatos(jg, pl); info += _G.K.TANC_FP * c.filter(a => a.falso).length / c.length; }
         if (mid === "densidad" && !pl.confirmado) {
           const dueño = pl.pubPlaneta !== null ? pl.pubPlaneta : pl.desc;
           info += (_G.K.CONF - _G.K.CAND) * (dueño === jg.idx ? 1 : -0.5);
@@ -138,7 +143,7 @@ class Bot {
         const p = 1;   // sin dado: si es posible, funciona
         const bio = g.prob(jg, pl, "biofirma");
         let extra = (mio && !pl.confirmado ? 1 : 0) + (tid === "transito" ? 1 + 6 * bio : 0.3);
-        if (jg.cient === "tancredi" && !pl.confirmado) extra += 1;
+        if (jg.cient === "tancredi" && _G.K.TANC_FP) { const c = g.candidatos(jg, pl); extra += _G.K.TANC_FP * c.filter(a => a.falso).length / c.length; }
         if (_G.K.MASA && !pl.masaCobrada && mio && g.completaMasa(pl, [tid])) extra += _G.K.MASA;
         ops.push({ v: p * (1 + extra) * foco, tipo: "medir", tid, pl });
       }

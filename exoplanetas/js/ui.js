@@ -62,7 +62,8 @@ function habilidades(cid) {
   if (p) out.push(p[0].startsWith("tec:") ? `+${p[1]} por planeta con ${TEC[p[0].slice(4)].nombre}` : `+${p[1]} por planeta ${NOM[p[0]] || p[0]}`);
   if (u) out.push(`+${u[2]} por ${CAT_NOMBRE[u[0]]}${u[1] ? ` en ${u[1]}` : ""}${u[3] ? " tuyo" : ""}`);
   if (K.MASA_CIENT && K.MASA_CIENT[cid]) out.push(`+${K.MASA_CIENT[cid]} extra por Masa real`);
-  if (cid === "tancredi") out.push(`+${K.TANC} al confirmar ajeno`);
+  if (cid === "tancredi") out.push(`+${K.TANC_FP} por falso positivo destapado`, `+${K.TANC_HALL} extra por Hallazgo`);
+  if (cid === "charbonneau" && K.CHARB_MIDE) out[out.length - 1] += " (medida con Espectro)";
   if (cid === "fernandez") out.push(`+${K.FERN} al investigar ajeno`, "Refuta con cualquier Marcador");
   if (cid === "seager") out.push("Señal compartida en espectros");
   if (c.bono) {
@@ -423,7 +424,8 @@ function publicables() {
     if (!pl.vivo) continue;
     if (pl.desc === YO && pl.pubPlaneta === null) out.push({ pl, cat: "planeta", txt: `Planeta ${pl.nombre}`, pts: pl.confirmado ? K.CONF : K.CAND });
     const cs = CATS.filter(c => g.puedePublicar(jg, pl, c));
-    for (const c of cs) out.push({ pl, cat: c, txt: `${CAT_NOMBRE[c]} en ${pl.nombre}`, pts: K.PUNTOS[c], p: g.prob(jg, pl, c) });
+    for (const c of cs) out.push({ pl, cat: c, txt: `${CAT_NOMBRE[c]} en ${pl.nombre}`, pts: K.PUNTOS[c], p: g.prob(jg, pl, c),
+      nota: c === "atmosfera" && K.ATM_GIG && pl.rasgosPub.includes("Gigante") ? "todo gigante gaseoso tiene atmósfera" : "" });
     if (cs.length > 1) out.push({ pl, cat: "articulo", cats: cs, txt: `Artículo en ${pl.nombre}: ${cs.map(c => CAT_NOMBRE[c]).join(" + ")}`,
       pts: cs.reduce((s, c) => s + K.PUNTOS[c], 0) + (K.BONO_ART || 0) * (cs.length - 1), art: true });
   }
@@ -435,7 +437,7 @@ async function abrirPublicar() {
   const v = await ventana({ titulo: "Publicar", color: "var(--pla)", botones: [], cuerpo: `
     ${puede ? "" : '<p class="tenue">Se publica al final de tu turno, después de jugar.</p>'}
     ${ops.length ? `<div class="lista">${ops.map((o, k) => `<button type="button" class="pub-btn" data-k="${k}" ${puede ? "" : "disabled"}>
-      <span>${esc(o.txt)}${o.art ? `<br><small class="tenue">todo junto: +${K.BONO_ART} por cada extra, pero si lo refutan, el rival se lleva todo</small>` : ""}${o.p !== undefined && ui.ayudas ? `<br><small class="tenue">cierto con probabilidad ${pct(o.p)}</small>` : ""}</span><b>+${o.pts}</b></button>`).join("")}</div>`
+      <span>${esc(o.txt)}${o.nota ? `<br><small class="tenue">${esc(o.nota)}</small>` : ""}${o.art ? `<br><small class="tenue">todo junto: +${K.BONO_ART} por cada extra, pero si lo refutan, el rival se lleva todo</small>` : ""}${o.p !== undefined && ui.ayudas ? `<br><small class="tenue">cierto con probabilidad ${pct(o.p)}</small>` : ""}</span><b>+${o.pts}</b></button>`).join("")}</div>`
       : '<p>Todavía no tienes nada para publicar. Descubre un planeta, o investígalo con un Marcador que sirva para eso.</p>'}
     <p class="tenue">Al publicar Atmósfera, Habitable o Biofirma, un rival puede refutarte en el acto con un Marcador que tú no usaste.</p>`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll(".pub-btn").forEach(b => b.onclick = () => cerrar(ops[+b.dataset.k])) });
