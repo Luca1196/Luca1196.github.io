@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="es"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<title>Estudio Prog4 y Lógica</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Estudio Prog4 y Lógica</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <!--
 =====================================================================
@@ -66,7 +61,7 @@ LIMITES: el iframe se ajusta a la altura del contenido cada 500 ms (solo funcion
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--f);padding-block:14px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:640px;margin:0 auto}
 .s-p4{--ac:var(--p4)}.s-lg{--ac:var(--lg)}.s-mu{--ac:var(--mu)}
-.fbd{min-width:980px}.fbr{display:grid;grid-template-columns:26px repeat(25,1fr);align-items:center}.fbh span{font-size:11px;color:var(--mut);text-align:center}.fbs{font-size:12px;color:var(--mut);text-align:center}
+.fbd{min-width:980px;position:relative}.mtr{position:absolute;left:0;top:0;pointer-events:none}.fbr{display:grid;grid-template-columns:26px repeat(25,1fr);align-items:center}.fbh span{font-size:11px;color:var(--mut);text-align:center}.fbs{font-size:12px;color:var(--mut);text-align:center}
 .fc{font:11px var(--m,monospace);height:34px;border:0;border-bottom:2px solid var(--mut);border-right:1px solid var(--bd);background:var(--card);color:var(--mut);cursor:pointer;padding:0}.fc.nut{border-right:3px solid var(--fg)}.fc:active{background:var(--bd)}
 .fc.lit{background:var(--ac);color:var(--onac)}.fc.ok{background:var(--ok);color:#fff}.fc.no{background:var(--bad);color:#fff}
 
@@ -902,21 +897,25 @@ let MU=null,MT=[],MAU=null;
 const mPc=(s,f)=>(MSTR[s][1]+f)%12,mNm=(s,f)=>NN[mPc(s,f)];
 function muStop(){MT.forEach(clearTimeout);MT=[]}
 function mTone(s,f){if(S3.snd===0)return;try{MAU=MAU||new(window.AudioContext||window.webkitAudioContext)();const a=MAU,fr=MSTR[s][2]*Math.pow(2,f/12),t=a.currentTime,g=a.createGain(),lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.7);lp.connect(g);g.connect(a.destination);[[1,"sawtooth",.6],[2,"triangle",.5],[3,"sine",.25]].forEach(([m,ty,v])=>{const o=a.createOscillator(),h=a.createGain();o.type=ty;o.frequency.value=fr*m;h.gain.value=v;o.connect(h);h.connect(lp);o.start(t);o.stop(t+.75)})}catch(e){}}
-function muOpen(){muStop();if(!MU)MU={i:0,seq:[],lvl:0,inp:0,mode:"idle",err:0,msg:"Elegí una parte y tocá Empezar.",lit:null,rev:0};muDraw()}
+function muOpen(){muStop();if(!MU)MU={path:[],i:0,seq:[],lvl:0,inp:0,mode:"idle",err:0,msg:"Elegí una parte y tocá Empezar.",lit:null,rev:0};muDraw()}
 function muKey(){return MSEC[MU.i][0]+"|"+MSEC[MU.i][2]}
 const mLow=pc=>{let b=null;for(let s=0;s<6;s++)for(let f=0;f<MF;f++)if(mPc(s,f)==pc){const q=MSTR[s][2]*Math.pow(2,f/12);if(!b||q<b[2])b=[s,f,q]}return b};
 function muStart(){muStop();const r=MSEC[MU.i][3].split(" ");
  MU.seq=r.map(n=>({n}));MU.lvl=Math.min(2,MU.seq.length);MU.err=0;MU.rev=0;muShow()}
-function muShow(){muStop();MU.mode="show";MU.inp=0;MU.lit=null;MU.msg="Mirá la secuencia…";muDraw();
+function muShow(){muStop();MU.path=[];MU.mode="show";MU.inp=0;MU.lit=null;MU.msg="Mirá la secuencia…";muDraw();
  for(let k=0;k<MU.lvl;k++){const q=MU.seq[k];MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n]};const b=mLow(NPC[q.n]);mTone(b[0],b[1]);muPaint()},500+k*750));MT.push(setTimeout(()=>{MU.lit=null;muPaint()},500+k*750+520))}
  MT.push(setTimeout(()=>{MU.mode="in";MU.msg="Tu turno: tónica 1 de "+MU.lvl;muDraw()},500+MU.lvl*750))}
 function muTap(s,f){if(!MU||MU.mode!="in")return;mTone(s,f);const q=MU.seq[MU.inp];
- if(mPc(s,f)==NPC[q.n]){MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
+ if(mPc(s,f)==NPC[q.n]){MU.path.push([s,f,"ok"]);MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
   if(MU.lvl==N){MU.mode="done";MU.msg="¡Parte completa!"+(MU.err?" Errores: "+MU.err+".":" Sin errores.");MU.rev=1;muDraw();return}
   MU.mode="wait";MU.msg="¡Bien! Sube a "+(MU.lvl+1)+" tónicas.";muDraw();MT.push(setTimeout(()=>{MU.lvl++;muShow()},900));return}
   MU.msg="Tónica "+(MU.inp+1)+" de "+MU.lvl;muDraw()}
- else{MU.err++;MU.mode="wait";MU.lit={tap:[s,f],c:"no"};MU.msg="Era "+q.n+": se ilumina en todas las posiciones donde suena. Se repite la secuencia.";muDraw();MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n],c:"ok"};muPaint()},500));MT.push(setTimeout(muShow,2200))}}
-function muPaint(){const el=$("fb");if(el)el.innerHTML=muBoard()}
+ else{MU.path.push([s,f,"no"]);MU.err++;MU.mode="wait";MU.lit={tap:[s,f],c:"no"};MU.msg="Era "+q.n+": se ilumina en todas las posiciones donde suena. Se repite la secuencia.";muDraw();MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n],c:"ok"};muPaint()},500));MT.push(setTimeout(muShow,2200))}}
+function muTrace(){const fb=$("fb");if(!fb||!MU||!MU.path||!MU.path.length)return;const P=MU.path.map(([s,f,c])=>{const b=fb.querySelector(`.fc[data-s="${s}"][data-f="${f}"]`);return b?[b.offsetLeft+b.offsetWidth/2,b.offsetTop+b.offsetHeight/2,c]:null}).filter(Boolean);if(!P.length)return;
+ let g="";P.forEach((q,i)=>{if(i){const a=P[i-1];g+=`<line x1="${a[0]}" y1="${a[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${q[2]=="no"?"var(--bad)":"var(--ac)"}" stroke-width="3" stroke-linecap="round"${q[2]=="no"?' stroke-dasharray="5 4"':''} opacity=".85"/>`}});
+ P.forEach((q,i)=>{g+=`<circle cx="${q[0]}" cy="${q[1]}" r="10" fill="${q[2]=="no"?"var(--bad)":"var(--ac)"}" stroke="var(--bg)" stroke-width="2"/><text x="${q[0]}" y="${q[1]+4}" text-anchor="middle" font-size="11" font-weight="700" fill="${q[2]=="no"?"#fff":"var(--onac)"}">${i+1}</text>`});
+ fb.insertAdjacentHTML("beforeend",`<svg class="mtr" width="${fb.offsetWidth}" height="${fb.offsetHeight}" aria-hidden="true">${g}</svg>`)}
+function muPaint(){const el=$("fb");if(el){el.innerHTML=muBoard();muTrace()}}
 function muBoard(){const nm=S3.nm,L=MU.lit;let h=`<div class="fbr fbh"><span></span>${Array.from({length:MF},(_,f)=>`<span>${f}</span>`).join("")}</div>`;
  for(let s=0;s<6;s++){h+=`<div class="fbr"><b class="fbs">${MSTR[s][0]}</b>`;for(let f=0;f<MF;f++){const c=!L?"":L.tap?(L.tap[0]==s&&L.tap[1]==f?L.c:""):(mPc(s,f)==L.pc?(L.c||"lit"):"");h+=`<button class="fc${f==0?" nut":""}${c?" "+c:""}" data-m="t" data-s="${s}" data-f="${f}" aria-label="Cuerda ${MSTR[s][0]}, traste ${f}">${nm?mNm(s,f):(f==3||f==5||f==7||f==9||f==12||f==15||f==17||f==19||f==21||f==24)&&s==5?"·":""}</button>`}h+=`</div>`}return h}
 function muDraw(){const m=MU,s=MSEC[m.i],N=s[3].split(" ").length,best=(S3.best||{})[muKey()]||0;let opts="",g="";MSEC.forEach((x,i)=>{if(x[0]!=g){if(g)opts+="</optgroup>";opts+=`<optgroup label="${esc(x[0]+" · "+x[1])}">`;g=x[0]}opts+=`<option value="${i}"${i==m.i?" selected":""}>${esc(x[2])} (${x[3].split(" ").length})</option>`});opts+="</optgroup>";
@@ -927,11 +926,10 @@ function muDraw(){const m=MU,s=MSEC[m.i],N=s[3].split(" ").length,best=(S3.best|
  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" data-m="go">${m.mode=="idle"||m.mode=="done"?"Empezar":"Reiniciar"}</button><button class="btn" data-m="rep"${m.mode=="in"?"":" disabled"}>Repetir secuencia</button><button class="btn chip${S3.nm?" sel":""}" data-m="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-m="snd">Sonido</button></div>
  ${shown?`<div class="mut" style="margin-top:8px">Tónicas hasta ahora: <b>${esc(shown)}</b></div>`:""}
  <p class="mut" style="margin-top:10px;font-size:13px">Se ilumina la nota en todas las octavas y posiciones (trastes 0 a 24): todas valen, tocá la que prefieras. Las tónicas salen de cifrados de internet; verifícalas con el disco.</p></div>`;
- const sel=$("msel");sel.onchange=()=>{muStop();MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
+ muTrace();const sel=$("msel");sel.onchange=()=>{muStop();MU.path=[];MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
 V.addEventListener("click",ev=>{if(TAB!=4||!MU)return;const b=ev.target.closest("[data-m]");if(!b)return;const a=b.dataset.m;
  if(a=="t")muTap(+b.dataset.s,+b.dataset.f);else if(a=="go")muStart();else if(a=="rep"&&MU.mode=="in")muShow();else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();muDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();muDraw()}});
 [0,1,2,3,4].forEach(i=>$("t"+i).onclick=()=>tab(i));
 tab({repaso:0,prog4:1,logica:2,musica:4}[location.hash.slice(1)]||0);
 </script>
-
 </html>
