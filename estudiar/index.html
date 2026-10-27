@@ -35,7 +35,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   PRACTICOS: las tarjetas de Lógica reflejan los prácticos 4 (proposicional) y 8 (predicados e igualdad): se cita 'Práctico N · ej' en la primera línea. Tags: Primer paso (teoremas), Detectar error (ej. 5 / ej. 2), Leer derivación (Γ y ρ), Igualdad (I=, E=). Notacion del curso: φ ψ σ; ⊥ se obtiene con E¬; hojas sin corchetes = Γ.
   QUIZ: las preguntas 'Quiz ejercicios' se copiaron de const Q de prog4.html y logica.html (tag 'Quiz ejercicios'). Si se agregan preguntas a esos Q, agregarlas tambien aca como mc(...). Sus opciones no tienen motivo por opcion (se muestra solo la explicacion).
   ETIQUETA: las opciones son el MENSAJE completo con cada estereotipo (no etiquetas sueltas); el estereotipo es del receptor.
-  DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso.
+  DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso. Las de Lógica muestran su árbol creciendo si tienen entrada en TRS (mismo título).
   MUSICA (pestaña 4, estado 'mu1'): estilo Simon en un bajo de 6 cuerdas BEADGC (25 trastes (0-24)). MSEC = [cancion,artista,parte,'tónicas separadas por espacio']; cada tónica ilumina todas sus posiciones (trastes 0-24) y vale cualquiera (misma nota). La secuencia crece de a una desde 2. En acordes con bajo (ej. D/F#) la tónica es la nota del bajo (F#). Agregar partes al final de MSEC. Las tónicas vienen de cifrados de internet (verificar con el disco).
   PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS. Cada tarjeta de línea muestra el diagrama (swDg/dgm, copia de dg de prog4.html) con las líneas ya dibujadas en gris y la flecha actual en trazo discontinuo que se completa según los pasos respondidos (cada paso lleva .k: n, op, pa, to, cond, q, st).
   OPCIONES: en d (distractores) cada opcion puede llevar motivo: "texto||por que no". Los distractores deben ser TENTADORES (errores reales: regla invertida, eliminacion sin la premisa que pide, regla de otro conector), nunca absurdos. El motivo se muestra al elegirla.
@@ -88,6 +88,7 @@ h1{font-size:19px;margin:0}h2{font-size:20px;margin:0 0 8px}
 .lbl{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .qt{font-size:18px;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:6px}
 .sn{font-family:var(--m);font-size:15px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pft{white-space:normal;overflow-x:auto;text-align:center;padding:10px 40px 10px 12px}.pft>*{margin:auto}.pt{display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom}.pk{display:flex;gap:18px;align-items:flex-end}.pr{align-self:stretch;border-top:1.5px solid var(--fg);position:relative;margin:2px -4px;min-width:30px}.pn{position:absolute;left:100%;top:-9px;padding-left:4px;font-size:12px;white-space:nowrap;color:var(--mut)}.pr.nw{border-color:var(--ac)}.pr.nw .pn{color:var(--ac);font-weight:700}.pf{white-space:nowrap;padding:0 2px}.pf.nw{color:var(--ac);font-weight:700}.pf.ph{color:var(--mut);border:1px dashed var(--mut);border-radius:6px;padding:0 8px}.pd{color:var(--mut);line-height:1}
 .swc{touch-action:pan-y;user-select:none;-webkit-user-select:none;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px 16px;margin-top:12px;transition:transform .2s,border-color .2s;cursor:grab}
 .swopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .swo{border:1px solid var(--bd);border-bottom-width:4px;border-radius:12px;padding:12px 8px;text-align:center;font-weight:600;font-size:15px;overflow-wrap:anywhere;cursor:pointer;min-height:68px;display:flex;align-items:center;justify-content:center;background:var(--card)}
@@ -645,7 +646,15 @@ s+=`<line x1="${f[0]}" y1="${f[1]}" x2="${g[0]}" y2="${g[1]}" stroke="${col}" st
 return s+"</svg>"}
 const STN={A:"association",L:"local",P:"parameter"};
 const tobj=(L,u,dr)=>({n:L.n.replace("*",""),it:L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa,st:STN[L.t],u,dr});
-function swDg(c,idx,done){const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
+/* Árbol de deducción natural que crece en Deslizar: N(fórmula, aparece en el paso, regla, regla en el paso, [premisas], {c: n° de cancelación, ca: paso en que se corchetea, open: subobjetivo pendiente, fa: paso en que se revela la fórmula si el nodo aparece antes}). "Paso" = cantidad de pasos ya respondidos de la cadena. */
+function pfT(n,i,done){const v=x=>done||i>=x,nw=x=>!done&&x>0&&i==x;
+ if(!v(n.at))return'<span class="pf ph">?</span>';
+ const c=n.o.c&&v(n.o.ca),fv=!n.o.fa||v(n.o.fa),f=!fv?'<span class="pf ph">?</span>':`<span class="pf${nw(n.at)||nw(n.o.fa)||(c&&!n.k.length&&nw(n.o.ca))?" nw":""}">${c&&!n.k.length?"["+esc(n.f)+"]<sup>"+n.o.c+"</sup>":esc(n.f)}</span>`;
+ if(!n.k.length&&!n.o.open)return f;
+ const rk=n.r&&v(n.ra),kv=n.k.some(x=>v(x.at));
+ if(!rk&&!kv)return`<div class="pt"><span class="pd">⋮</span>${f}</div>`;
+ return`<div class="pt"><div class="pk">${n.k.map(x=>pfT(x,i,done)).join("")}</div><div class="pr${rk&&(nw(n.ra)||(c&&nw(n.o.ca)))?" nw":""}"><span class="pn">${rk?esc(n.r)+(c?"<sup>"+n.o.c+"</sup>":""):"?"}</span></div>${f}</div>`}
+function swDg(c,idx,done){if(c.tr)return`<div class="sn pft">${pfT(c.tr,idx,done)}</div>`;const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
  if(kn("to")){d={n:kn("n")?L.n.replace("*",""):"?",it:kn("n")&&L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond&&kn("cond")?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+(kn("pa")||L.pa=="()"?L.pa:"(…)"),st:kn("st")?STN[L.t]:"…",u:1,dr:!kn("st")}}
  return `<div class="sn" style="overflow-x:auto;padding:4px">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig)}</div>`}
 function lineSteps(L){const a=[],r=L.to.split(":")[0];
@@ -831,6 +840,29 @@ sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: acept
 ])
 );
 
+
+/* ---- Árboles de las cadenas de Lógica (se asignan por título) ---- */
+const N=(f,at,r,ra,k,o)=>({f,at,r,ra,k:k||[],o:o||{}});
+const TRS={
+"Meta ∧":N("φ∧ψ",0,"I∧",2,[N("φ",3),N("ψ",3)]),
+"Meta →":N("φ→ψ",0,"I→",1,[N("ψ",3,"E→",4,[N("σ",4,"E→",4,[N("φ",4,0,0,0,{c:1,ca:5}),N("φ→σ",4)]),N("σ→ψ",4)])],{c:1,ca:5}),
+"Meta ¬":N("¬φ",0,"I¬",1,[N("⊥",3,"E¬",4,[N("ψ",4,"E→",4,[N("φ",4,0,0,0,{c:1,ca:5}),N("φ→ψ",4)]),N("¬ψ",4)])],{c:1,ca:5}),
+"Meta atómica (RAA)":N("φ",0,"RAA",3,[N("⊥",4,"E¬",5,[N("¬φ",5,0,0,0,{c:1,ca:5}),N("¬¬φ",5)])],{c:1,ca:5}),
+"Meta ∨":N("φ∨ψ",0,"I∨",1,[N("φ",2)]),
+"Meta ∨ sin hipótesis":N("φ∨¬φ",0,"RAA",3,[N("⊥",4,0,0,0,{open:1})]),
+"Meta ∀":N("∀xP(x)",0,"I∀",1,[N("P(x)",3,"E∧",3,[N("P(x)∧Q(x)",3,"E∀",3,[N("∀x(P(x)∧Q(x))",3)])])]),
+"Meta ∃":N("∃xP(x)",0,"I∃",1,[N("P(a)",2)]),
+"Meta ↔":N("φ↔ψ",0,"I↔",1,[N("φ→ψ",2),N("ψ→φ",2)]),
+"Meta ⊥":N("⊥",0,"E¬",1,[N("φ",2),N("¬φ",2)]),
+"Usar ∧":N("ψ",0,"E∧",2,[N("φ∧ψ",2)]),
+"Usar →":N("ψ",0,"E→",1,[N("φ→ψ",1),N("φ",2,0,0,0,{open:1})]),
+"Usar ∨":N("χ",0,"E∨",1,[N("φ∨ψ",1),N("χ",3,"E→",3,[N("φ",3,0,0,0,{c:1,ca:4}),N("φ→χ",3)]),N("χ",3,"E→",3,[N("ψ",3,0,0,0,{c:2,ca:4}),N("ψ→χ",3)])],{c:"1,2",ca:4}),
+"Usar ∃":N("∃xQ(x)",0,"E∃",1,[N("∃xP(x)",1),N("∃xQ(x)",1,"I∃",3,[N("Q(x)",2,"E→",2,[N("P(x)",1,0,0,0,{c:1,ca:4}),N("P(x)→Q(x)",2,"E∀",2,[N("∀x(P(x)→Q(x))",2)])])])],{c:1,ca:4}),
+"Combinar 2c (∀ desde contradicción)":N("(∀x)Q(x)",0,"I∀",1,[N("Q(x)",2,"E⊥",4,[N("⊥",4,"E¬",5,[N("P(f(x))",5,"E∀",7,[N("(∀x)P(f(x))",6,"E∧",6,[N("(∀x)P(f(x))∧(∃z)¬P(z)",6)])]),N("¬P(f(x))",7,"E∀",8,[N("(∀x)¬P(x)",7)],{fa:8})])])]),
+"Combinar 3b (∃ en hipótesis y en meta)":N("(∃x)P(x,x)",0,"E∃",2,[N("(∃x)R(x,x)",2),N("(∃x)P(x,x)",4,"I∃",9,[N("P(x,x)",6,"E→",8,[N("R(x,x)∧R(x,x)",7,"I∧",7,[N("R(x,x)",7,0,0,0,{c:1,ca:10}),N("R(x,x)",7,0,0,0,{c:1,ca:10})]),N("R(x,x)∧R(x,x)→P(x,x)",6,"E∀",6,[N("(∀z)(R(x,x)∧R(x,z)→P(x,z))",6,"E∀",6,[N("(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))",6,"E∀",6,[N("(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))",6)])])])])])],{c:1,ca:10}),
+"Combinar 3a → (casos y contradicción)":N("(α∨(β∧¬γ))→(¬α→¬(β→γ))",0,"I→",1,[N("¬α→¬(β→γ)",1,"I→",2,[N("¬(β→γ)",2,"I¬",3,[N("⊥",3,"E∨",4,[N("α∨(β∧¬γ)",4,0,0,0,{c:3,ca:11}),N("⊥",5,"E¬",6,[N("α",6,0,0,0,{c:4,ca:10}),N("¬α",6,0,0,0,{c:2,ca:11})]),N("⊥",5,"E¬",9,[N("γ",8,"E→",8,[N("β",7,"E∧",7,[N("β∧¬γ",7,0,0,0,{c:5,ca:10})]),N("β→γ",8,0,0,0,{c:1,ca:11})]),N("¬γ",7,"E∧",7,[N("β∧¬γ",7,0,0,0,{c:5,ca:10})])])],{c:"4,5",ca:10})],{c:1,ca:11})],{c:2,ca:11})],{c:3,ca:11}),
+"Combinar 3a ← (cuando no sé qué disyunto)":N("(¬α→¬(β→γ))→(α∨(β∧¬γ))",0,"I→",1,[N("α∨(β∧¬γ)",1,"RAA",3,[N("⊥",3,"E¬",8,[N("β→γ",8,"I→",9,[N("γ",9,"RAA",10,[N("⊥",10,"E¬",11,[N("α∨(β∧¬γ)",11,"I∨",11,[N("β∧¬γ",11,"I∧",11,[N("β",11,0,0,0,{c:4,ca:14}),N("¬γ",11,0,0,0,{c:5,ca:12})])]),N("¬(α∨(β∧¬γ))",11,0,0,0,{c:2,ca:13})])],{c:5,ca:12})],{c:4,ca:14}),N("¬(β→γ)",4,"E→",7,[N("¬α",4,"I¬",5,[N("⊥",5,"E¬",6,[N("α∨(β∧¬γ)",6,"I∨",6,[N("α",6,0,0,0,{c:3,ca:14})]),N("¬(α∨(β∧¬γ))",6,0,0,0,{c:2,ca:13})])],{c:3,ca:14}),N("¬α→¬(β→γ)",4,0,0,0,{c:1,ca:14})],{fa:7})])],{c:2,ca:13})],{c:1,ca:14})};
+SWC.forEach(c=>{if(c.s=="lg"&&TRS[c.g])c.tr=TRS[c.g]});
 
 /* ---- Pestaña Deslizar: decisiones binarias (estado propio en localStorage "sw1") ---- */
 let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
