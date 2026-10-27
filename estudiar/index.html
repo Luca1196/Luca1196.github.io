@@ -882,7 +882,7 @@ document.addEventListener("keydown",e=>{if(TAB!=3||!SW||e.ctrlKey||e.metaKey||e.
 
 /* ===== Música (pestaña 4): estilo Simon con un bajo de 6 cuerdas BEADGC; la secuencia son las tónicas de cada parte ===== */
 const MSEC=[
-["Mi país","Rubén Rada","Estrofa","G D E D C B A F#"],["Mi país","Rubén Rada","Pre-estribillo","E D C# C B A F#"],["Mi país","Rubén Rada","Estribillo","C D G C D G"],
+["Mi país","Rubén Rada","Estrofa","G F# E D C B A F#"],["Mi país","Rubén Rada","Pre-estribillo","E D C# C B A F#"],["Mi país","Rubén Rada","Estribillo","C D G C D G"],
 ["Ciudad mágica","Tan Biónica","Estrofa","A C G F A C G F"],["Ciudad mágica","Tan Biónica","Coro","F C F C F C E F E A C G A"],
 ["Cae el sol","Airbag","Intro","C# A E E"],["Cae el sol","Airbag","Estrofa","C# A E C# A E B C# B C# A B"],["Cae el sol","Airbag","Estribillo","C# A E B C# A E B C# A E B C# A E"],
 ["Ai se eu te pego","Michel Teló","Toda la canción","G D E C G D E C"],
@@ -899,13 +899,13 @@ function muStop(){MT.forEach(clearTimeout);MT=[]}
 function mTone(s,f){if(S3.snd===0)return;try{MAU=MAU||new(window.AudioContext||window.webkitAudioContext)();const a=MAU,fr=MSTR[s][2]*Math.pow(2,f/12),t=a.currentTime,g=a.createGain(),lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.7);lp.connect(g);g.connect(a.destination);[[1,"sawtooth",.6],[2,"triangle",.5],[3,"sine",.25]].forEach(([m,ty,v])=>{const o=a.createOscillator(),h=a.createGain();o.type=ty;o.frequency.value=fr*m;h.gain.value=v;o.connect(h);h.connect(lp);o.start(t);o.stop(t+.75)})}catch(e){}}
 function muOpen(){muStop();if(!MU)MU={path:[],i:0,seq:[],lvl:0,inp:0,mode:"idle",err:0,msg:"Elegí una parte y tocá Empezar.",lit:null,rev:0};muDraw()}
 function muKey(){return MSEC[MU.i][0]+"|"+MSEC[MU.i][2]}
-const mLow=pc=>{let b=null;for(let s=0;s<6;s++)for(let f=0;f<MF;f++)if(mPc(s,f)==pc){const q=MSTR[s][2]*Math.pow(2,f/12);if(!b||q<b[2])b=[s,f,q]}return b};
+let MFR=null;const mLow=pc=>{let b=null,bd=0;for(let s=0;s<6;s++)for(let f=0;f<MF;f++)if(mPc(s,f)==pc){const q=MSTR[s][2]*Math.pow(2,f/12),d=MFR?Math.abs(Math.log2(q/MFR)):q;if(!b||d<bd){b=[s,f,q];bd=d}}return b};
 function muStart(){muStop();const r=MSEC[MU.i][3].split(" ");
  MU.seq=r.map(n=>({n}));MU.lvl=Math.min(2,MU.seq.length);MU.err=0;MU.rev=0;muShow()}
 function muShow(){muStop();MU.path=[];MU.mode="show";MU.inp=0;MU.lit=null;MU.msg="Mirá la secuencia…";muDraw();
  for(let k=0;k<MU.lvl;k++){const q=MU.seq[k];MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n]};const b=mLow(NPC[q.n]);mTone(b[0],b[1]);muPaint()},500+k*750));MT.push(setTimeout(()=>{MU.lit=null;muPaint()},500+k*750+520))}
  MT.push(setTimeout(()=>{MU.mode="in";MU.msg="Tu turno: tónica 1 de "+MU.lvl;muDraw()},500+MU.lvl*750))}
-function muTap(s,f){if(!MU||MU.mode!="in")return;mTone(s,f);const q=MU.seq[MU.inp];
+function muTap(s,f){if(!MU||MU.mode!="in")return;MFR=MSTR[s][2]*Math.pow(2,f/12);mTone(s,f);const q=MU.seq[MU.inp];
  if(mPc(s,f)==NPC[q.n]){MU.path.push([s,f,"ok"]);MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
   if(MU.lvl==N){MU.mode="done";MU.msg="¡Parte completa!"+(MU.err?" Errores: "+MU.err+".":" Sin errores.");MU.rev=1;muDraw();return}
   MU.mode="wait";MU.msg="¡Bien! Sube a "+(MU.lvl+1)+" tónicas.";muDraw();MT.push(setTimeout(()=>{MU.lvl++;muShow()},900));return}
