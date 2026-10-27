@@ -911,6 +911,8 @@ function muTap(s,f){if(!MU||MU.mode!="in")return;mTone(s,f);const q=MU.seq[MU.in
   MU.mode="wait";MU.msg="¡Bien! Sube a "+(MU.lvl+1)+" tónicas.";muDraw();MT.push(setTimeout(()=>{MU.lvl++;muShow()},900));return}
   MU.msg="Tónica "+(MU.inp+1)+" de "+MU.lvl;muDraw()}
  else{MU.path.push([s,f,"no"]);MU.err++;MU.mode="wait";MU.lit={tap:[s,f],c:"no"};MU.msg="Era "+q.n+": se ilumina en todas las posiciones donde suena. Se repite la secuencia.";muDraw();MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n],c:"ok"};muPaint()},500));MT.push(setTimeout(muShow,2200))}}
+let MSC=null;
+function muScr(){const sc=$("fbs");if(!sc)return;if(MSC===null){const c=sc.querySelector('.fc[data-f="5"]');if(!c||!c.offsetLeft)return;MSC=Math.max(0,c.offsetLeft-34)}sc.scrollLeft=MSC;sc.onscroll=()=>{MSC=sc.scrollLeft}}
 function muTrace(){const fb=$("fb");if(!fb||!MU||!MU.path||!MU.path.length)return;const P=MU.path.map(([s,f,c])=>{const b=fb.querySelector(`.fc[data-s="${s}"][data-f="${f}"]`);return b?[b.offsetLeft+b.offsetWidth/2,b.offsetTop+b.offsetHeight/2,c]:null}).filter(Boolean);if(!P.length)return;
  let g="";P.forEach((q,i)=>{if(i){const a=P[i-1];g+=`<line x1="${a[0]}" y1="${a[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${q[2]=="no"?"var(--bad)":"var(--ac)"}" stroke-width="3" stroke-linecap="round"${q[2]=="no"?' stroke-dasharray="5 4"':''} opacity=".85"/>`}});
  P.forEach((q,i)=>{g+=`<circle cx="${q[0]}" cy="${q[1]}" r="10" fill="${q[2]=="no"?"var(--bad)":"var(--ac)"}" stroke="var(--bg)" stroke-width="2"/><text x="${q[0]}" y="${q[1]+4}" text-anchor="middle" font-size="11" font-weight="700" fill="${q[2]=="no"?"#fff":"var(--onac)"}">${i+1}</text>`});
@@ -922,11 +924,11 @@ function muDraw(){const m=MU,s=MSEC[m.i],N=s[3].split(" ").length,best=(S3.best|
  const shown=m.rev?s[3]:m.seq.slice(0,m.mode=="in"||m.mode=="wait"?Math.max(0,m.inp):0).map(x=>x.n).join(" ");
  V.innerHTML=`<div class="s-mu"><div class="row between"><b class="sj">Tónicas</b><span class="mut">Mejor ${best}/${N}${m.lvl?" · Nivel "+m.lvl+"/"+N:""} · Errores ${m.err}</span></div>
  <select id="msel" style="margin:8px 0;width:100%;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg)">${opts}</select>
- <div class="sn" id="mmsg">${esc(m.msg)}</div><div style="overflow-x:auto;padding-bottom:6px"><div id="fb" class="fbd">${muBoard()}</div></div>
+ <div class="sn" id="mmsg">${esc(m.msg)}</div><div id="fbs" style="overflow-x:auto;padding-bottom:6px"><div id="fb" class="fbd">${muBoard()}</div></div>
  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" data-m="go">${m.mode=="idle"||m.mode=="done"?"Empezar":"Reiniciar"}</button><button class="btn" data-m="rep"${m.mode=="in"?"":" disabled"}>Repetir secuencia</button><button class="btn chip${S3.nm?" sel":""}" data-m="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-m="snd">Sonido</button></div>
  ${shown?`<div class="mut" style="margin-top:8px">Tónicas hasta ahora: <b>${esc(shown)}</b></div>`:""}
  <p class="mut" style="margin-top:10px;font-size:13px">Se ilumina la nota en todas las octavas y posiciones (trastes 0 a 24): todas valen, tocá la que prefieras. Las tónicas salen de cifrados de internet; verifícalas con el disco.</p></div>`;
- muTrace();const sel=$("msel");sel.onchange=()=>{muStop();MU.path=[];MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
+ muTrace();muScr();const sel=$("msel");sel.onchange=()=>{muStop();MU.path=[];MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
 V.addEventListener("click",ev=>{if(TAB!=4||!MU)return;const b=ev.target.closest("[data-m]");if(!b)return;const a=b.dataset.m;
  if(a=="t")muTap(+b.dataset.s,+b.dataset.f);else if(a=="go")muStart();else if(a=="rep"&&MU.mode=="in")muShow();else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();muDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();muDraw()}});
 [0,1,2,3,4].forEach(i=>$("t"+i).onclick=()=>tab(i));
