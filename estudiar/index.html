@@ -49,6 +49,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   En mc: acierto a la primera = Bien, error = Otra vez. Las falladas se reencolan 4 lugares mas adelante hasta acertarlas (no cambian el calendario de nuevo).
   Dominada = caja >= 3 (intervalo de 7 dias o mas). Las nuevas se intercalan entre materias (ilv) para mezclar Prog4 y Logica.
   Las apps embebidas guardan su progreso aparte (claves lv, pg2, er en Prog4; lvn, ern en Logica): no hay choque con "est2".
+  ERRORES (pestaña 5, estado 'err1'): logA(w,s,g,ok,info) cuenta intentos por pestaña|materia|tag (st) y guarda cada fallo en log (tope 4000): t, w (rep/sw/mu), s, g, q, x (contexto), a (correcta), p (elegida), ms (tiempo hasta responder), rp (era reintento), b (caja previa en Repaso). Lo llaman pick (Repaso), swChoose (Deslizar) y muTap (Música). 'Copiar para Claude' arma un texto compacto: tasas por tag, confusiones correcta→elegida y fallos agrupados por pregunta (desde la última exportación o todo), más los conteos 'er'/'ern' de las apps embebidas. Sirve para que Claude ajuste el algoritmo y las tarjetas según lo que más cuesta.
 LIMITES: el iframe se ajusta a la altura del contenido cada 500 ms (solo funciona porque es el mismo origen). Las apps embebidas no siguen el
   selector de tema del visor, solo el modo claro/oscuro del sistema.
 -->
@@ -117,7 +118,7 @@ a{color:var(--ac)}
 </style>
 <div class="wrap">
 <header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
-<nav class="tabs"><button id="t0" class="btn tab">Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button></nav>
+<nav class="tabs"><button id="t0" class="btn tab">Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button><button id="t5" class="btn tab">Errores</button></nav>
 <div id="v"></div>
 </div>
 <script>
@@ -354,6 +355,11 @@ const wy=(c,t)=>(c.why&&c.why[t]?`<div>Elegiste ${esc(t)}. ${esc(c.why[t])}</div
 let S={c:{},day:"",nw:0,xp:0,xpd:0,last:"",stk:0,nm:10,debt:0};
 try{Object.assign(S,JSON.parse(localStorage.getItem("est2")||"{}"))}catch(e){}
 const SV=()=>{try{localStorage.setItem("est2",JSON.stringify(S))}catch(e){}};
+/* ---- Registro de errores (pestaña Errores, localStorage "err1") ---- */
+let E1={log:[],st:{},exp:0};
+try{Object.assign(E1,JSON.parse(localStorage.getItem("err1")||"{}"))}catch(e){}
+const SVE=()=>{try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}};
+function logA(w,s,g,ok,info){const k=w+"|"+s+"|"+g,v=E1.st[k]||(E1.st[k]=[0,0]);v[1]++;if(ok)v[0]++;else{E1.log.push(Object.assign({t:Date.now(),w,s,g},info));if(E1.log.length>4000)E1.log.splice(0,E1.log.length-4000)}SVE()}
 const D0=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
 const TD=()=>new Date().toLocaleDateString("en-CA");
 const roll=()=>{const t=TD();if(S.day!=t){if(S.day){const gap=Math.max(0,Math.round((new Date(t)-new Date(S.day))/864e5)-1);S.debt=Math.max(0,S.nm+S.debt-S.nw)+gap*S.nm}S.day=t;S.nw=0;S.xpd=0;SV()}};
@@ -375,7 +381,7 @@ return ilv(dd).concat(ilv(nn).slice(0,mode=="todo"?nn.length:remain()))}
 const hdr=()=>{$("hd").textContent=(S.stk?"Racha "+S.stk+(S.stk==1?" día":" días")+" · ":"")+"XP hoy "+S.xpd};
 
 /* ---- Pestañas ---- */
-function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==0)home();else if(i==3)swOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
+function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==0)home();else if(i==5)erOpen();else if(i==3)swOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
 function frame(src,t){V.innerHTML=`<div class="row between" style="margin-top:4px"><span class="mut">Ejercicios completos, paso a paso.</span><a class="mut" href="${src}" target="_blank" rel="noopener">Abrir aparte</a></div><iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
 
 /* ---- Inicio ---- */
@@ -396,9 +402,9 @@ h+=`<button class="btn ghost" data-a="rst">${RS?"Tocá otra vez para borrar todo
 
 /* ---- Sesión ---- */
 function go(mode){roll();const q=mkQ(F,mode);if(!q.length){home();return}Q={q,i:0,n:q.length,dn:0,first:{},ok:0,tot:0,xp:0,per:{p4:[0,0],lg:[0,0]},ans:null,sh:false,o:null,cram:mode=="libre",rn:1,rt:0,res:RES0,rs:0,rsd:{},out:0,back:0,r:{ok:0,tot:0,out:0,bonus:0}};deal()}
-function deal(){const c=Q.q[Q.i];Q.back=0;Q.ans=null;Q.sh=false;Q.hint=false;Q.o=c&&c.k=="mc"?sh([c.a].concat(c.d)):null;draw()}
+function deal(){const c=Q.q[Q.i];Q.ts=Date.now();Q.back=0;Q.ans=null;Q.sh=false;Q.hint=false;Q.o=c&&c.k=="mc"?sh([c.a].concat(c.d)):null;draw()}
 function mark(c,rt){if(!Q.first[c.id]){Q.first[c.id]=1;if(!Q.cram){touch();apply(c,rt)}Q.tot++;Q.r.tot++;Q.per[c.s][1]++;if(rt>=1){Q.ok++;Q.r.ok++;Q.per[c.s][0]++}if(rt>=2)Q.res=Math.min(RMAX,Q.res+ACI);const x=rt>=2?10:rt==1?5:0;Q.xp+=x;S.xp+=x;S.xpd+=x;hdr()}SV()}
-function pick(i){const c=Q.q[Q.i];if(Q.ans!=null)return;Q.ans=i;mark(c,Q.o[i]==c.a?2:0);draw()}
+function pick(i){const c=Q.q[Q.i];if(Q.ans!=null)return;Q.ans=i;const ok=Q.o[i]==c.a,cs=S.c[c.id];logA("rep",c.s,c.g||"",ok,{q:c.q,a:c.a,p:String(Q.o[i]).split("||")[0],ms:Date.now()-(Q.ts||Date.now()),rp:Q.first[c.id]?1:0,b:cs?cs.b:-1,id:c.id});mark(c,ok?2:0);draw()}
 function endR(){const r=Q.r;r.t=Q.rt;r.bonus=Q.res>0?10:0;r.res=Math.round(Q.res);Q.xp+=r.bonus;S.xp+=r.bonus;S.xpd+=r.bonus;SV();hdr();Q.rs=1}
 function nr(){Q.rs=0;Q.rn++;Q.rt=0;Q.res=RES0;Q.r={ok:0,tot:0,out:0,bonus:0};draw()}
 const chk=()=>{if(Q.dn>0&&Q.dn%RN==0&&Q.dn<Q.n&&!Q.rsd[Q.dn]){Q.rsd[Q.dn]=1;endR()}};
@@ -877,8 +883,8 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  const w=pool.map(c=>1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i)),0));let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;
  while(r>w[k]&&k<pool.length-1){r-=w[k];k++}
  return{c:pool[k],i:0,only:false,built:[],err:0}}
-function swNew(){SW=swPick();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
-function swStep(){SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swNew(){SW=swPick();SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swStep(){SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
@@ -896,7 +902,7 @@ function swBind(){const el=$("swc");if(!el||SW.ans)return;
  el.onpointermove=e=>{if(!SDRAG)return;SDRAG.dx=e.clientX-SDRAG.x;el.style.transform=`translateX(${SDRAG.dx}px) rotate(${SDRAG.dx/30}deg)`;el.classList.toggle("tl",SDRAG.dx<-30);el.classList.toggle("tr",SDRAG.dx>30)};
  el.onpointerup=el.onpointercancel=()=>{if(!SDRAG)return;const dx=SDRAG.dx;SDRAG=null;el.style.transition="";if(Math.abs(dx)>80)swChoose(dx<0?"L":"R");else{el.style.transform="";el.classList.remove("tl","tr")}}}
 function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=(side=="L")==u.cl,k=c.id+":"+u.i;
- u.ans=ok?"ok":"no";u.pick=side;S2.box[k]=ok?Math.min(4,(S2.box[k]||0)+1):0;S2.n++;SUN++;
+ u.ans=ok?"ok":"no";u.pick=side;logA("sw",c.s,c.g,ok,{q:s.q,x:s.x||c.ctx||"",a:s.a,p:s.b,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:u.i+1});S2.box[k]=ok?Math.min(4,(S2.box[k]||0)+1):0;S2.n++;SUN++;
  if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
  else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+3});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
  SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
@@ -938,7 +944,8 @@ function muShow(){muStop();MU.path=[];MU.mode="show";MU.inp=0;MU.lit=null;MU.msg
  for(let k=0;k<MU.lvl;k++){const q=MU.seq[k];MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n]};const b=mLow(NPC[q.n]);mTone(b[0],b[1]);muPaint()},500+k*750));MT.push(setTimeout(()=>{MU.lit=null;muPaint()},500+k*750+520))}
  MT.push(setTimeout(()=>{MU.mode="in";MU.msg="Tu turno: tónica 1 de "+MU.lvl;muDraw()},500+MU.lvl*750))}
 function muTap(s,f){if(!MU||MU.mode!="in")return;MFR=MSTR[s][2]*Math.pow(2,f/12);mTone(s,f);const q=MU.seq[MU.inp];
- if(mPc(s,f)==NPC[q.n]){MU.path.push([s,f,"ok"]);MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
+ const mOk=mPc(s,f)==NPC[q.n];logA("mu","mu",MSEC[MU.i][0]+" · "+MSEC[MU.i][2],mOk,{q:"tónica "+(MU.inp+1)+" de "+MU.lvl,a:q.n,p:mNm(s,f)});
+ if(mOk){MU.path.push([s,f,"ok"]);MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
   if(MU.lvl==N){MU.mode="done";MU.msg="¡Parte completa!"+(MU.err?" Errores: "+MU.err+".":" Sin errores.");MU.rev=1;muDraw();return}
   MU.mode="wait";MU.msg="¡Bien! Sube a "+(MU.lvl+1)+" tónicas.";muDraw();MT.push(setTimeout(()=>{MU.lvl++;muShow()},900));return}
   MU.msg="Tónica "+(MU.inp+1)+" de "+MU.lvl;muDraw()}
@@ -963,7 +970,34 @@ function muDraw(){const m=MU,s=MSEC[m.i],N=s[3].split(" ").length,best=(S3.best|
  muTrace();muScr();const sel=$("msel");sel.onchange=()=>{muStop();MU.path=[];MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
 V.addEventListener("click",ev=>{if(TAB!=4||!MU)return;const b=ev.target.closest("[data-m]");if(!b)return;const a=b.dataset.m;
  if(a=="t")muTap(+b.dataset.s,+b.dataset.f);else if(a=="go")muStart();else if(a=="rep"&&MU.mode=="in")muShow();else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();muDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();muDraw()}});
-[0,1,2,3,4].forEach(i=>$("t"+i).onclick=()=>tab(i));
-tab({repaso:0,prog4:1,logica:2,musica:4}[location.hash.slice(1)]||0);
+/* ===== Errores (pestaña 5): resumen, lista y exportación para Claude ===== */
+const WN={rep:"Repaso",sw:"Deslizar",mu:"Música"},SN={p4:"Prog4",lg:"Lógica",mu:"Música"};
+let ERW="all",ERR=0,ERT="";
+const fd=t=>new Date(t).toLocaleString("es-UY",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+const ld2=k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")}catch(e){return{}}};
+function erTxt(all){const L=E1.log.filter(e=>all||e.t>E1.exp);let o=`ERRORES DE ESTUDIO (${all?"todo el historial":"desde la última exportación"}) · ${L.length} fallos`+(L.length?` · ${fd(L[0].t)} a ${fd(L[L.length-1].t)}`:"")+"\n\n## Tasa por tag (fallos/intentos, histórico)\n";
+ Object.entries(E1.st).map(([k,[ok,n]])=>[k,n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]).forEach(([k,f,n])=>{const[w,s,g]=k.split("|");o+=`- ${WN[w]}/${SN[s]}/${g}: ${f}/${n} (${Math.round(f/n*100)}%)\n`});
+ const cf={};L.forEach(e=>{const k=SN[e.s]+" · "+e.a+"  →  "+e.p;cf[k]=(cf[k]||0)+1});const cfs=Object.entries(cf).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,25);
+ if(cfs.length){o+="\n## Confusiones repetidas (correcta → elegí)\n";cfs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}
+ const G={};L.forEach(e=>{const k=e.w+"|"+e.g+"|"+e.q+"|"+e.p;const x=G[k]||(G[k]={e,n:0,ms:0,rp:0});x.n++;x.ms+=e.ms||0;x.rp+=e.rp?1:0;x.last=e.t});
+ o+="\n## Fallos agrupados (más repetidos primero)\n";Object.values(G).sort((a,b)=>b.n-a.n||b.last-a.last).forEach(({e,n,ms,rp})=>{o+=`\n[${WN[e.w]}/${SN[e.s]}/${e.g}${e.n?" paso "+e.n:""}] ${n}×${rp?" ("+rp+" en reintento)":""} · ${Math.round(ms/n/1000)} s promedio${e.b>=0&&e.b!==undefined?" · caja "+e.b:""}\n`+(e.x?"  Contexto: "+e.x.replace(/\n/g," / ")+"\n":"")+`  P: ${e.q.replace(/\n/g," / ")}\n  Correcta: ${e.a}\n  Elegí: ${e.p}\n`});
+ const a=ld2("er"),b=ld2("ern");if(Object.keys(a).length||Object.keys(b).length){o+="\n## Apps de ejercicios (conteo por tipo)\n";Object.entries(a).forEach(([k,v])=>o+=`- Prog4: ${k}: ${v.n}\n`);Object.entries(b).forEach(([k,v])=>o+=`- Lógica: ${k}: ${v}\n`)}
+ return o}
+function erOpen(){const L=E1.log.filter(e=>ERW=="all"||e.w==ERW),nw=E1.log.filter(e=>e.t>E1.exp).length,st=Object.entries(E1.st).filter(([k])=>ERW=="all"||k.startsWith(ERW+"|")).map(([k,[ok,n]])=>[k.split("|"),n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]);
+ let h=`<div class="row between"><b>${E1.log.length} errores guardados</b><span class="mut">${nw} nuevos desde la última exportación${E1.exp?" ("+fd(E1.exp)+")":""}</span></div>
+ <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px"><button class="btn pri" data-e="cp">Copiar para Claude (nuevos)</button><button class="btn" data-e="cpa">Copiar todo</button><button class="btn" data-e="dl">Descargar .txt</button></div>
+ ${ERT?`<p class="mut" style="margin:8px 0 4px">Si no se copió solo, seleccioná el texto y copialo:</p><textarea id="ert" style="width:100%;height:140px;font:12px var(--m);background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:8px">${esc(ERT)}</textarea>`:""}
+ <div class="row" style="margin-top:12px;gap:6px;flex-wrap:wrap">${[["all","Todo"],["rep","Repaso"],["sw","Deslizar"],["mu","Música"]].map(([k,t])=>`<button class="btn chip${ERW==k?" sel":""}" data-e="w" data-v="${k}">${t}</button>`).join("")}</div>
+ <div class="card"><h2>Dónde fallo más</h2>${st.length?st.slice(0,15).map(([[w,s,g],f,n])=>`<div class="row between" style="gap:8px;margin:4px 0"><span>${esc(SN[s]+" · "+g)} <span class="mut">(${WN[w]})</span></span><span class="mut" style="white-space:nowrap">${f}/${n} · <b>${Math.round(f/n*100)}%</b></span></div>`).join(""):'<p class="mut" style="margin:0">Todavía no hay errores. Se guardan solos al estudiar en Repaso, Deslizar y Música.</p>'}</div>
+ <div class="card"><h2>Últimos errores</h2>${L.slice(-40).reverse().map(e=>`<div style="border-top:1px solid var(--bd);padding:8px 0"><div class="mut" style="font-size:12px">${fd(e.t)} · ${WN[e.w]} · ${esc(SN[e.s]+" · "+e.g)}${e.ms?" · "+Math.round(e.ms/1000)+" s":""}</div><div>${esc(e.q.split("\n").pop())}</div><div style="font-size:14px"><span style="color:var(--bad)">✗ ${esc(e.p)}</span> · <span style="color:var(--ok)">✓ ${esc(e.a)}</span></div></div>`).join("")||'<p class="mut" style="margin:0">Nada por acá.</p>'}</div>
+ <button class="btn ghost" data-e="clr">${ERR?"Tocá otra vez para borrar todos los errores":"Borrar registro de errores"}</button>`;
+ V.innerHTML=h}
+function erCopy(all){ERT=erTxt(all);const done=()=>{if(!all){E1.exp=Date.now();SVE()}};try{navigator.clipboard.writeText(ERT).then(()=>{done();ERT="";erOpen();const b=V.querySelector('[data-e="'+(all?"cpa":"cp")+'"]');if(b)b.textContent="Copiado ✓"},()=>{done();erOpen()})}catch(e){done();erOpen()}}
+V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[data-e]");if(!b)return;const a=b.dataset.e;
+ if(a=="cp")erCopy(0);else if(a=="cpa")erCopy(1);else if(a=="w"){ERW=b.dataset.v;erOpen()}
+ else if(a=="dl"){const u=URL.createObjectURL(new Blob([erTxt(1)],{type:"text/plain"})),l=document.createElement("a");l.href=u;l.download="errores-"+TD()+".txt";l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+ else if(a=="clr"){if(ERR){E1={log:[],st:{},exp:0};SVE();ERR=0}else ERR=1;erOpen()}});
+[0,1,2,3,4,5].forEach(i=>$("t"+i).onclick=()=>tab(i));
+tab({repaso:0,prog4:1,logica:2,musica:4,errores:5}[location.hash.slice(1)]||0);
 </script>
 </html>
