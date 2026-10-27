@@ -202,8 +202,9 @@ function redondear(numero, decimales = 2) {
   return Number(numero.toFixed(decimales));
 }
 
+/* Coma decimal (el punto queda reservado para separar miles) */
 function formato(numero, decimales = 2) {
-  return numero.toFixed(decimales);
+  return numero.toFixed(decimales).replace(".", ",");
 }
 
 function mezclar(array) {
@@ -591,8 +592,8 @@ function generarPogsonDiferencia() {
       valor: dif,
       explicacion: `
         <strong>✅ ¡Correcto!</strong>
-        <div class="paso">m₁ − m₂ = −2.5 log₁₀(F₁/F₂)</div>
-        <div class="paso">m₁ − m₂ = −2.5 log₁₀(${formato(cociente, 3)})</div>
+        <div class="paso">m₁ − m₂ = −2,5 log₁₀(F₁/F₂)</div>
+        <div class="paso">m₁ − m₂ = −2,5 log₁₀(${formato(cociente, 3)})</div>
         <div class="paso">m₁ − m₂ = ${formato(dif, 2)}</div>
       `
     },
@@ -600,8 +601,8 @@ function generarPogsonDiferencia() {
       tipo: "signo",
       valor: dif_error_signo,
       explicacion: `
-        <strong>❌ Error de signo en el 2.5.</strong>
-        <p>El −2.5 lleva signo negativo; pasarlo como si fuera positivo invierte la relación entre brillo y magnitud.</p>
+        <strong>❌ Error de signo en el 2,5.</strong>
+        <p>El −2,5 lleva signo negativo; pasarlo como si fuera positivo invierte la relación entre brillo y magnitud.</p>
       `
     },
     {
@@ -657,8 +658,8 @@ function generarPogsonCociente() {
       valor: F,
       explicacion: `
         <strong>✅ ¡Correcto!</strong>
-        <div class="paso">F₁/F₂ = 10^(−(m₁−m₂)/2.5)</div>
-        <div class="paso">F₁/F₂ = 10^(−(${formato(dif, 2)})/2.5)</div>
+        <div class="paso">F₁/F₂ = 10^(−(m₁−m₂)/2,5)</div>
+        <div class="paso">F₁/F₂ = 10^(−(${formato(dif, 2)})/2,5)</div>
         <div class="paso">F₁/F₂ = ${formato(F, 3)}</div>
       `
     },
@@ -666,8 +667,8 @@ function generarPogsonCociente() {
       tipo: "signo",
       valor: F_error_signo,
       explicacion: `
-        <strong>❌ Error de signo en el 2.5.</strong>
-        <p>Al dividir por 2.5 hay que conservar el signo negativo del exponente.</p>
+        <strong>❌ Error de signo en el 2,5.</strong>
+        <p>Al dividir por 2,5 hay que conservar el signo negativo del exponente.</p>
       `
     },
     {
@@ -740,7 +741,7 @@ function generarLeyWien() {
       valor: lambda_error_parentesis,
       explicacion: `
         <strong>❌ Error de paréntesis al dividir dos notaciones científicas.</strong>
-        <p>Si tipeás <span class="paso" style="display:inline">2.898*10^-3 / ${formato(T.mantisa, 3)}*10^${T.exponente}</span> sin agrupar, el exponente de T termina multiplicando en vez de dividiendo.</p>
+        <p>Si tipeás <span class="paso" style="display:inline">2,898*10^-3 / ${formato(T.mantisa, 3)}*10^${T.exponente}</span> sin agrupar, el exponente de T termina multiplicando en vez de dividiendo.</p>
       `
     },
     {
@@ -748,7 +749,7 @@ function generarLeyWien() {
       valor: lambda_error_b,
       explicacion: `
         <strong>❌ Error: te olvidaste del ×10⁻³ en la constante b.</strong>
-        <p>b = 2.898 × 10⁻³ m·K, no 2898 m·K.</p>
+        <p>b = 2,898 × 10⁻³ m·K, no 2898 m·K.</p>
       `
     }
   ];
@@ -758,7 +759,7 @@ function generarLeyWien() {
     enunciado: `
       Una estrella tiene temperatura
       <span class="dato">T = ${textoCientifico(T.mantisa, T.exponente)} K</span>.<br><br>
-      Dato: <span class="dato">b = 2.898 × 10⁻³ m·K</span><br><br>
+      Dato: <span class="dato">b = 2,898 × 10⁻³ m·K</span><br><br>
       ¿A qué <strong>longitud de onda λ_max</strong> emite su máximo de radiación?
     `,
     unidad: "m",
