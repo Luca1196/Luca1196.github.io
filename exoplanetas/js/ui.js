@@ -857,15 +857,16 @@ async function mostrarFinal() {
 }
 function mostrarReglas() {
   return ventana({ titulo: "Cómo se juega", color: "var(--est)", botones: [{ txt: "¡A jugar!", valor: true }], cuerpo: `
-    <p>Diriges un equipo de astrónomos. Gana quien junte más <b>reputación</b> en ${K.RONDAS[3]} rondas (con 3 jugadores). La computadora hace de Director: guarda los planetas y su Verdad.</p>
+    <p>Diriges un equipo de astrónomos. <b>Objetivo:</b> juntar más puntos (reputación) que los rivales en ${K.RONDAS[3]} rondas (con 3 jugadores). La computadora hace de Director: guarda los planetas y su Verdad.</p>
+    <p><b>El camino:</b> <b>Técnica</b> → descubres un planeta · <b>Marcador</b> → averiguas de qué está hecho · <b>Publicar</b> → ganas los puntos. Publicar el planeta da +${K.CAND}; lo que averiguaste de él, mucho más (tabla de Puntos).</p>
     <h3>Tu turno: una acción</h3>
     <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Cada estrella dice qué técnicas se pueden usar en ella (✓). No hay dado: el azar está en los <b>falsos positivos</b>, señales que imitan un planeta. Se delatan con una segunda técnica o una Densidad.</p>
-    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto. Cada Marcador tiene un requisito: si el planeta lo cumple, funciona.</p>
+    <p><b>Marcador + planeta:</b> investígalo y lee en secreto su densidad, atmósfera, gases o contexto. Esa lectura es la que te <b>permite publicar</b> Habitable o Biofirma (y te dice si es cierto). Cada Marcador tiene un requisito: si el planeta lo cumple, funciona.</p>
     <p><b>Telescopio:</b> gastas tu turno, cambias las cartas que quieras y completas tu mano hasta ${K.MANO_MAX}.</p>
     <p>Al final de tu turno, <b>publica</b>. ${K.ROBO ? `Al final robas ${K.ROBO} (máximo ${K.MANO_MAX} en mano).` : "No se roba al final del turno: las cartas nuevas llegan con el <b>Telescopio</b>."}</p>
     <h3>Puntos</h3>
     <table class="tabla"><tr><td>Planeta</td><td>+${K.CAND} (+${K.CONF - K.CAND} al confirmarlo)</td></tr>
-    ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")}${c === "atmosfera" && K.DENS_ATM ? " (o Densidad, en Gigantes y Neptunianos)" : ""} exitoso tuyo ahí</td></tr>`).join("")}
+    ${CATS.map(c => `<tr><td>${CAT_NOMBRE[c]}</td><td>+${K.PUNTOS[c]} · necesitas ${Object.keys(SIRVE).filter(m => SIRVE[m].includes(c)).map(m => MAR[m].nombre).join(" o ")}${c === "atmosfera" && K.DENS_ATM ? " (o Densidad, en Neptunianos)" : ""} exitoso tuyo ahí${c === "atmosfera" && K.ATM_GIG ? "; en un Gigante no hace falta" : ""}</td></tr>`).join("")}
     <tr><td>Masa real</td><td>+${K.MASA} · tu planeta tiene Astrometría y Tránsito o Densidad</td></tr>
     <tr><td>Hallazgo inesperado</td><td>+${K.HALL}</td></tr></table>
     <h3>Refutar</h3><p>Cuando alguien publica, un rival puede cuestionarlo con un Marcador, aunque sea del mismo tipo que usó el autor: si mintió, repetir la observación lo delata. Si lo que ve contradice lo publicado, se lleva los puntos.</p>
@@ -986,13 +987,14 @@ async function empezar(pref, guardada = null) {
 // Cada paso señala una parte de la pantalla. «hasta» = el paso avanza solo cuando el jugador lo hace;
 // «turno» = el paso espera a que sea tu turno de jugar.
 const GUIA = [
+  { sel: "#tablero", txt: `<b>Objetivo:</b> terminar las rondas con más puntos que los rivales. Los puntos salen de <b>publicar</b>: un planeta vale +${K.CAND}, pero lo que averigües de él vale más: <b>Atmósfera</b> +${K.PUNTOS.atmosfera}, <b>Habitable</b> +${K.PUNTOS.habitable} y una señal de vida (<b>Biofirma</b>) +${K.PUNTOS.biofirma}.` },
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano", turno: true, txt: "Esta es tu <b>mano</b>. Toca una carta de <b>TÉCNICA</b>.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
   { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> se puede usar tu carta. Busca en el cielo una estrella así." },
   { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta y si tu técnica sirve ahí. Si no te convence, elige otra antes de jugar.",
     hasta: () => ui.tiradas > 0 },
   { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques. Ojo: puede ser un <b>falso positivo</b> (una señal que imita un planeta). Otra técnica o una Densidad lo confirman." },
-  { sel: "#mano", txt: "Las cartas violetas son <b>MARCADORES</b>. Se juegan sobre un planeta tuyo o publicado para <b>leer en secreto</b> qué tiene: roca o gas, atmósfera, gases. Con esa lectura puedes publicar <b>Atmósfera, Habitable o Biofirma</b>, que dan muchos más puntos que el planeta." },
+  { sel: "#mano", txt: "Para saber qué publicar necesitas <b>MARCADORES</b> (cartas violetas). Se juegan sobre un planeta ya descubierto y te dicen en secreto de qué está hecho: roca o gas, si tiene atmósfera, qué gases. <b>Sin Marcador no puedes publicar Habitable ni Biofirma.</b> El camino: <b>Técnica</b> → descubres · <b>Marcador</b> → averiguas · <b>Publicar</b> → puntos. En tu próximo turno, toca un Marcador y después tu planeta." },
   { sel: "#acciones", turnoFin: true, txt: "Final del turno: <b>Publicar</b> te da los puntos enseguida. Pero si publicas algo que <b>no es cierto</b>, un rival con el Marcador adecuado puede <b>refutarte</b> y se lleva esos puntos; y si tu planeta era falso, pierdes lo ganado. Publica lo que tu lectura respalda. Si no, <b>Terminar turno</b>.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
   { sel: "#b-tel", txt: "Cuando te falten cartas, usa el <b>Telescopio</b>: gastas tu turno, cambias las que no te sirven y completas tu mano." },
   { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
@@ -1039,7 +1041,8 @@ addEventListener("resize", () => { if (guia.paso >= 0) actualizarGuia(); });
 function abrirPreparacion() {
   let sel = preferencias.cient;
   const p = ventana({ titulo: "Sistemas Exoplanetas", color: "linear-gradient(90deg,#3b2bb0,#1b8fb0)", cerrable: !!g && g.turnos > 0, cuerpo: `
-    <p>Compite contra equipos de la computadora para descubrir exoplanetas y buscar señales de vida. Elige tu científico: su ventaja define tu mejor jugada.</p>
+    <p><b>Objetivo:</b> terminar con más puntos que los equipos rivales. <b>Descubres</b> planetas con cartas de Técnica, los <b>investigas</b> con Marcadores y <b>publicas</b> lo que encontraste: el planeta da pocos puntos; su atmósfera, si es habitable o si tiene vida, muchos más.</p>
+    <p class="tenue">Elige tu científico: su ventaja define tu mejor jugada.</p>
     <div class="cient-lista">${D.cientificos.map(c => `<button type="button" class="cient ${c.id === sel ? "sel" : ""}" data-c="${c.id}"><span class="est">${esc(c.pais || "")}</span><b>${esc(c.nombre)}</b><span class="e">${habilidades(c.id).map(esc).join(" · ")}</span></button>`).join("")}</div>
     <div class="campos">
       <label class="campo" for="p-nombre">Nombre de tu equipo<input id="p-nombre" maxlength="18" value="${esc(preferencias.nombre)}" placeholder="Tu equipo"></label>
