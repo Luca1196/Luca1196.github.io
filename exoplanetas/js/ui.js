@@ -11,6 +11,7 @@ const CAMPO = { o: "Órbita", R: "Radio", M: "Masa", dens: "Densidad", atm: "Atm
 const DIST_CORTA = { cercana: "Cercana", media: "Media", lejana: "Lejana" };
 const CANCELADO = new Error("partida cancelada");
 const ICO = {
+  ayuda: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>',
   libro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 7h6"/></svg>',
   lista: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="4" cy="18" r="1.2"/></svg>',
   reloj: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
@@ -580,10 +581,11 @@ function renderRivales() {
   const ronda = g.terminado ? `<span class="r-lbl">Partida</span><b>Terminada</b>`
     : `<span class="r-lbl">${ultima ? "¡Última ronda!" : "Ronda"}</span><b>${r} <small>de ${g.maxRondas}</small></b><span class="r-barra"><i style="width:${(100 * r / g.maxRondas).toFixed(0)}%"></i></span>`;
   $("#rivales").innerHTML = rivs + `<div class="top-dcha"><div class="chip-ronda num ${ultima ? "ultima" : ""}" title="Ronda ${r} de ${g.maxRondas}: todos juegan una vez por ronda">${ronda}</div>
-    <div class="fila-iconos"><button type="button" class="icono-btn" id="b-registro" aria-label="Registro público" title="Registro público">${ICO.lista}</button>
+    <div class="fila-iconos"><button type="button" class="icono-btn" id="b-tuto" aria-label="Tutorial" title="Tutorial">${ICO.ayuda}</button><button type="button" class="icono-btn" id="b-registro" aria-label="Registro público" title="Registro público">${ICO.lista}</button>
     <button type="button" class="icono-btn" id="b-menu" aria-label="Menú" title="Menú">${ICO.menu}</button></div></div>`;
   $("#b-registro").onclick = verRegistro;
   $("#b-menu").onclick = menu;
+  $("#b-tuto").onclick = mostrarTutorial;
 }
 function renderTablero() {
   const activo = ui.fase === "accion" && !ui.ocupado && ui.sel;
@@ -987,13 +989,15 @@ const GUIA = [
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano", turno: true, txt: "Esta es tu <b>mano</b>. Toca una carta de <b>TÉCNICA</b>.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
   { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> se puede usar tu carta. Busca en el cielo una estrella así." },
-  { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta. Si no te convence, puedes elegir otra antes de jugar el dado.",
+  { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta y si tu técnica sirve ahí. Si no te convence, elige otra antes de jugar.",
     hasta: () => ui.tiradas > 0 },
-  { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques." },
-  { sel: "#acciones", turnoFin: true, txt: "Final del turno: <b>Publicar</b> cuenta lo que descubriste y te da puntos (si mientes, un rival puede refutarte). Si no, <b>Terminar turno</b>.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
+  { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques. Ojo: puede ser un <b>falso positivo</b> (una señal que imita un planeta). Otra técnica o una Densidad lo confirman." },
+  { sel: "#mano", txt: "Las cartas violetas son <b>MARCADORES</b>. Se juegan sobre un planeta tuyo o publicado para <b>leer en secreto</b> qué tiene: roca o gas, atmósfera, gases. Con esa lectura puedes publicar <b>Atmósfera, Habitable o Biofirma</b>, que dan muchos más puntos que el planeta." },
+  { sel: "#acciones", turnoFin: true, txt: "Final del turno: <b>Publicar</b> te da los puntos enseguida. Pero si publicas algo que <b>no es cierto</b>, un rival con el Marcador adecuado puede <b>refutarte</b> y se lleva esos puntos; y si tu planeta era falso, pierdes lo ganado. Publica lo que tu lectura respalda. Si no, <b>Terminar turno</b>.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
   { sel: "#b-tel", txt: "Cuando te falten cartas, usa el <b>Telescopio</b>: gastas tu turno, cambias las que no te sirven y completas tu mano." },
   { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
-  { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos. ¡Suerte!", fin: true },
+  { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos." },
+  { sel: "#b-tuto", txt: "Si te pierdes, toca <b>?</b> para repetir esta guía cuando quieras. ¡Suerte!", fin: true },
 ];
 const guia = { paso: -1 };
 function iniciarGuia() { guia.paso = 0; ui.tiradas = 0; actualizarGuia(); }
