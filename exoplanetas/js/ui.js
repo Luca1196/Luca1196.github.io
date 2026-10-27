@@ -429,7 +429,8 @@ function publicables() {
     if (pl.desc === YO && pl.pubPlaneta === null) out.push({ pl, cat: "planeta", txt: `Planeta ${pl.nombre}`, pts: pl.confirmado ? K.CONF : K.CAND });
     const cs = CATS.filter(c => g.puedePublicar(jg, pl, c));
     for (const c of cs) out.push({ pl, cat: c, txt: `${CAT_NOMBRE[c]} en ${pl.nombre}`, pts: K.PUNTOS[c], p: g.prob(jg, pl, c),
-      nota: c === "atmosfera" && K.ATM_GIG && pl.rasgosPub.includes("Gigante") ? "todo gigante gaseoso tiene atmósfera" : "" });
+      nota: c === "atmosfera" && K.ATM_GIG && pl.rasgosPub.includes("Gigante") ? "todo gigante gaseoso tiene atmósfera"
+        : c === "biofirma" ? "afirmas que sus gases delatan vida; puede ser una imitación sin vida" : "" });
     if (cs.length > 1) out.push({ pl, cat: "articulo", cats: cs, txt: `Artículo en ${pl.nombre}: ${cs.map(c => CAT_NOMBRE[c]).join(" + ")}`,
       pts: cs.reduce((s, c) => s + K.PUNTOS[c], 0) + (K.BONO_ART || 0) * (cs.length - 1), art: true });
   }
@@ -858,6 +859,7 @@ async function mostrarFinal() {
 function mostrarReglas() {
   return ventana({ titulo: "Cómo se juega", color: "var(--est)", botones: [{ txt: "¡A jugar!", valor: true }], cuerpo: `
     <p>Diriges un equipo de astrónomos. <b>Objetivo:</b> juntar más puntos (reputación) que los rivales en ${K.RONDAS[3]} rondas (con 3 jugadores). La computadora hace de Director: guarda los planetas y su Verdad.</p>
+    <p>Una <b>biofirma</b> es un gas (o una mezcla de gases) en la atmósfera de un planeta que en la Tierra produce la vida, como oxígeno junto con metano. Ojo: algunos procesos sin vida pueden imitarla. Por eso vale tanto y es lo más discutido: el Contexto estelar ayuda a descartar las imitaciones.</p>
     <p><b>El camino:</b> <b>Técnica</b> → descubres un planeta · <b>Marcador</b> → averiguas de qué está hecho · <b>Publicar</b> → ganas los puntos. Publicar el planeta da +${K.CAND}; lo que averiguaste de él, mucho más (tabla de Puntos).</p>
     <h3>Tu turno: una acción</h3>
     <p><b>Técnica + estrella:</b> busca un planeta nuevo, o mide uno tuyo o publicado. Cada estrella dice qué técnicas se pueden usar en ella (✓). No hay dado: el azar está en los <b>falsos positivos</b>, señales que imitan un planeta. Se delatan con una segunda técnica o una Densidad.</p>
@@ -987,7 +989,7 @@ async function empezar(pref, guardada = null) {
 // Cada paso señala una parte de la pantalla. «hasta» = el paso avanza solo cuando el jugador lo hace;
 // «turno» = el paso espera a que sea tu turno de jugar.
 const GUIA = [
-  { sel: "#tablero", txt: `<b>Objetivo:</b> terminar las rondas con más puntos que los rivales. Los puntos salen de <b>publicar</b>: un planeta vale +${K.CAND}, pero lo que averigües de él vale más: <b>Atmósfera</b> +${K.PUNTOS.atmosfera}, <b>Habitable</b> +${K.PUNTOS.habitable} y una señal de vida (<b>Biofirma</b>) +${K.PUNTOS.biofirma}.` },
+  { sel: "#tablero", txt: `<b>Objetivo:</b> terminar las rondas con más puntos que los rivales. Los puntos salen de <b>publicar</b>: un planeta vale +${K.CAND}, pero lo que averigües de él vale más: <b>Atmósfera</b> +${K.PUNTOS.atmosfera}, <b>Habitable</b> +${K.PUNTOS.habitable} y una señal de vida (<b>Biofirma</b>) +${K.PUNTOS.biofirma}.<br><small>Una <b>biofirma</b> es un gas (o una mezcla de gases) en la atmósfera de un planeta que en la Tierra produce la vida, como oxígeno junto con metano.</small>` },
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano", turno: true, txt: "Esta es tu <b>mano</b>. Toca una carta de <b>TÉCNICA</b>.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
   { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> se puede usar tu carta. Busca en el cielo una estrella así." },
