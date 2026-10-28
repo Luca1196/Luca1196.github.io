@@ -14,6 +14,7 @@ const FAROL = (typeof process !== "undefined" && process.env && process.env.FARO
 const CARACTER = {
   mentiroso: { nombre: "audaz", certeza: 0.35, umbralRef: 0.1, farol: FAROL },
   conservador: { nombre: "prudente", certeza: 0.7, umbralRef: 1.2 },
+  ingenuo: { nombre: "novato", certeza: 0.9, umbralRef: 3, azar: 0.7, tarde: true, duda: 0.35 },   // modo tutorial: juega casi al azar y refuta poco
 };
 
 class Bot {
@@ -67,7 +68,7 @@ class Bot {
         await g.publicarArticulo(jg, pl, articulo);
       }
       if (mio && pl.pubPlaneta === null && pl.vivo) {
-        if (this.e.publicaYa || fin || pl.confirmado || g.rondasRestantes() <= 3 || !this.pendiente(g, jg, pl)) {
+        if (this.c.tarde ? (fin || pl.confirmado) : (this.e.publicaYa || fin || pl.confirmado || g.rondasRestantes() <= 3 || !this.pendiente(g, jg, pl))) {
           await this.pausa("publica");
           g.publicarPlaneta(jg, pl);
         }
@@ -170,10 +171,11 @@ class Bot {
   }
   mejorAccion(g, jg) {
     const ops = this.opciones(g, jg).filter(o => o.v > 0.3);
-    if (!ops.length) return null;
+    if (!ops.length || (this.c.duda && g.rnd() < this.c.duda)) return null;   // novato: a veces pide telescopio sin necesidad
     // un poco de variedad entre opciones casi iguales
     ops.forEach(o => o.v *= 1 + 0.08 * (g.rnd() - 0.5));
-    const mejor = ops.reduce((a, b) => (b.v > a.v ? b : a));
+    // novato (modo tutorial): muchas veces juega cualquier jugada válida, sin estrategia
+    const mejor = this.c.azar && g.rnd() < this.c.azar ? ops[Math.floor(g.rnd() * ops.length)] : ops.reduce((a, b) => (b.v > a.v ? b : a));
     if (!_G.K.ROBO) {   // sin robo: el telescopio compite con jugar (mano corta, o planetas propios sin Marcadores)
       const mano = jg.tec.length + jg.mar.length;
       const propios = g.planetas.some(p => p.vivo && p.desc === jg.idx && p.pubPlaneta === null);

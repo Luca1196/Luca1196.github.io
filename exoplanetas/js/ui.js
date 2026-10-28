@@ -26,7 +26,8 @@ let g = null;
 const ui = { fase: "espera", sel: null, esperando: {}, ocupado: false, velocidad: 650, ayudas: false, log: [], hitosPend: [] };
 const YO = 0;
 const J = () => g.j[YO];
-let preferencias = { nombre: "", cient: "seager", rivales: 2, velocidad: 650, ayudas: false, v: 2 };
+let preferencias = { nombre: "", cient: "seager", rivales: 2, velocidad: 650, ayudas: false, v: 2, modo: "tutorial" };
+const RONDAS_TUTORIAL = 6;
 try { Object.assign(preferencias, JSON.parse(localStorage.getItem("exo-pref") || "{}")); } catch (e) {}
 if (preferencias.v !== 2) Object.assign(preferencias, { ayudas: false, v: 2 });   // ahora se elige por los datos, no por el %
 
@@ -604,7 +605,7 @@ function renderTablero() {
         <span class="bola" style="background:${COLOR[dueño]}">${pl.pubPlaneta === null ? "?" : pl.confirmado ? "✓" : ""}</span><span class="pl-nom">${esc(pl.nombre)}</span>${tecsCortas(pl)}${op && ui.ayudas ? `<span class="pct">${pct(op.p)}</span>` : ""}</span>`;
     }).join("");
     const extra = pls.length > MAXP ? `<span class="pl-dot mas" title="Toca la estrella para ver todos">+${pls.length - visibles.length}</span>` : "";
-    return `<div class="est ${activo ? (ui.ayudas ? (ops.length ? "objetivo" : "apagada") : "elegible") : ""}" data-est="${i}" role="button" tabindex="0" aria-label="Estrella ${esc(e.cl)}">
+    return `<div class="est ${activo ? (ui.ayudas || ui.tutorial ? (ops.length ? "objetivo" : "apagada") : "elegible") : ""}" data-est="${i}" role="button" tabindex="0" aria-label="Estrella ${esc(e.cl)}">
       <div class="est-cab"><span class="sol" style="background:${LUZ[e.cl[0]]};color:${LUZ[e.cl[0]]}"></span><span class="est-cl">${esc(e.cl)}</span>
         <span class="prop tam">${tamEstrella(e.m)}</span></div>
       <div class="props">${props}</div>
@@ -651,6 +652,40 @@ const USO = {
   imagen: "solo estrellas jóvenes",
   micro: "solo estrellas lejanas, una vez por estrella",
 };
+// ---------------------------------------------------------- modo tutorial: qué conviene hacer ahora (una frase)
+function consejo() {
+  const jg = J();
+  const mios = g.planetas.filter(p => p.vivo && p.desc === YO), abiertos = g.planetas.filter(p => p.vivo && p.desc !== YO && p.abierto);
+  for (const pl of [...mios, ...abiertos]) for (const mid of new Set(jg.mar)) {
+    if (!g.puedeInvestigar(jg, mid, pl)) continue;
+    if (!sirveLista(mid, pl).some(c => !(c in pl.publicado)) && mid !== "densidad") continue;
+    return `Tienes un <b>Marcador</b> que sirve en <b>${esc(pl.nombre)}</b>: toca <b>${esc(MAR[mid].nombre)}</b> y después el planeta, para averiguar de qué está hecho.`;
+  }
+  for (const pl of mios) if (!pl.confirmado) for (const t of new Set(jg.tec)) if (g.puedeMedir(jg, t, pl))
+    return `Mide <b>${esc(pl.nombre)}</b> con <b>${esc(TEC[t].nombre)}</b>: una segunda técnica lo confirma (+${K.CONF - K.CAND}) o delata si era un falso positivo.`;
+  const tecs = [...new Set(jg.tec)].map(t => [t, g.estrellas.filter(e => g.puedeDescubrir(jg, t, e)).length]).filter(([, n]) => n).sort((a, b) => b[1] - a[1]);
+  if (tecs.length) { const t = tecs[0][0];
+    return `Busca un planeta: toca <b>${esc(TEC[t].nombre)}</b> y después una estrella que brille. Se usa en: ${esc(USO[t])}.`; }
+  return "Ninguna de tus cartas sirve ahora: toca el <b>Telescopio</b> para cambiarlas por otras.";
+}
+function consejoPublicar() {
+  const ops = publicables();
+  if (!ops.length) return "Nada para publicar todavía: toca <b>Terminar turno</b>.";
+  const cats = ops.filter(o => CATS.includes(o.cat));
+  if (cats.length) {
+    // en el tutorial se interpreta la lectura en palabras (sin porcentajes): cuál conviene y cuál no
+    const jg = J(), val = o => g.prob(jg, o.pl, o.cat);
+    const o = cats.slice().sort((a, b) => val(b) * b.pts - val(a) * a.pts)[0], p = val(o);
+    const que = `<b>${esc(CAT_NOMBRE[o.cat])}</b> en ${esc(o.pl.nombre)} (+${o.pts})`;
+    if (o.cat === "atmosfera" && o.nota) return `Todo gigante gaseoso tiene atmósfera: puedes publicar ${que}. Solo pierdes si el planeta era un falso positivo.`;
+    if (p >= 0.99) return `Tu lectura confirma ${que}: <b>publícalo</b>. Nadie podrá refutarlo.`;
+    if (p <= 0.01) return `Puedes publicar ${que}, pero tu lectura <b>no lo respalda</b>: si lo haces, un rival puede refutarte y llevarse los puntos. Mejor <b>Terminar turno</b>.`;
+    return `Puedes publicar ${que}, pero tu lectura <b>no alcanza para estar seguro</b>: podría ser una imitación. Arriesgas que un rival te refute; otro Marcador (como el Contexto) te sacaría la duda.`;
+  }
+  const pl = ops.find(o => o.cat === "planeta").pl;
+  return pl.confirmado ? `<b>${esc(pl.nombre)}</b> está confirmado: <b>publícalo</b> sin miedo (+${K.CONF}).`
+    : `Puedes <b>publicar</b> ${esc(pl.nombre)} (+${K.CAND}), pero si resulta un falso positivo pierdes esos puntos. Confirmarlo antes con otra técnica es más seguro.`;
+}
 const NOMBRE_CARTA = { densidad: "Densidad", esp_imagen: "Espectro de imagen" };   // nombres cortos para la cara de la carta
 function cartaHTML(tipo, id, attrs = "", clase = "", extra = "") {
   const c = { ...(tipo === "tec" ? TEC[id] : MAR[id]) };
@@ -713,10 +748,11 @@ function renderAcciones() {
     if (ui.sel) {
       const n = g.estrellas.reduce((s, e) => s + opcionesEstrella(e).length, 0);
       msg = resumenCarta(ui.sel, `<span class="paso">Ahora toca una estrella o un planeta</span>`);
-    } else msg = "<b>Tu turno:</b> toca una carta, o pide Telescopio";
+    } else msg = ui.tutorial ? `<span class="consejo">${consejo()}</span>` : "<b>Tu turno:</b> toca una carta, o pide Telescopio";
   } else if (ui.fase === "post" && !K.ROBO) {
     const n = publicables().length;
-    msg = n ? "Final del turno: <b>publica</b> lo que descubriste, o termina" : "Final del turno: no tienes nada para publicar";
+    msg = ui.tutorial ? `<span class="consejo">${consejoPublicar()}</span>`
+      : n ? "Final del turno: <b>publica</b> lo que descubriste, o termina" : "Final del turno: no tienes nada para publicar";
     btns = `<button type="button" class="btn-pub" id="b-pub" ${n ? "" : "disabled"}>Publicar${n ? `<span class="insignia">${n}</span>` : ""}</button>
       <button type="button" class="btn-juego ${n ? "gris" : ""}" id="b-fin">Terminar turno</button>`;
   }
@@ -925,15 +961,16 @@ function crearJuego(pref, fijos = null) {
   const usados = new Set([pref.cient]);
   const jugadores = [{ nombre: pref.nombre || "Tu equipo", humano: true, cient: pref.cient, ctrl: new Humano() }];
   const estilos = Object.keys(ESTILOS).sort(() => Math.random() - 0.5);
+  const tuto = pref.modo === "tutorial";
   if (fijos) for (const r of fijos) jugadores.push({ nombre: r.nombre, estilo: r.estilo, cient: r.cient, ctrl: new Bot(r.estilo, r.car) });
-  else for (let i = 0; i < pref.rivales; i++) {
+  else for (let i = 0; i < (tuto ? 1 : pref.rivales); i++) {
     const est = estilos[i % estilos.length];
-    const car = est === "verificador" ? "mentiroso" : (Math.random() < 0.5 ? "mentiroso" : "conservador");
+    const car = tuto ? "ingenuo" : est === "verificador" ? "mentiroso" : (Math.random() < 0.5 ? "mentiroso" : "conservador");
     const cid = ESTILO_CIENT[est].find(c => !usados.has(c)) || D.cientificos.find(c => !usados.has(c.id)).id;
     usados.add(cid);
     jugadores.push({ nombre: `Equipo ${CIEN[cid].nombre.split(" y ")[0].split(" ").pop()}`, estilo: est, cient: cid, ctrl: new Bot(est, car) });
   }
-  const juego = new Juego({ jugadores });
+  const juego = new Juego({ jugadores, rondas: tuto ? RONDAS_TUTORIAL : undefined });
   juego.alGuardar = fase => { if (juego === g) guardarPartida(fase); };
   ui.hitosPend = [];
   for (const jg of juego.j) if (jg.ctrl instanceof Bot) {
@@ -963,7 +1000,8 @@ function crearJuego(pref, fijos = null) {
 async function empezar(pref, guardada = null) {
   for (const k of Object.keys(ui.esperando)) delete ui.esperando[k];
   document.querySelectorAll("#capa .velo").forEach(v => v.remove());
-  Object.assign(ui, { fase: "espera", sel: null, ocupado: false, log: [], velocidad: +pref.velocidad, ayudas: false, reanudarPost: false });   // nunca se muestran porcentajes: se elige por los datos
+  Object.assign(ui, { fase: "espera", sel: null, ocupado: false, log: [], velocidad: +pref.velocidad, ayudas: false, reanudarPost: false,
+    tutorial: pref.modo === "tutorial" });   // nunca se muestran porcentajes: se elige por los datos
   if (guardada) {
     g = crearJuego(pref, guardada.rivales);
     g.restaurar(guardada.estado);
@@ -974,7 +1012,7 @@ async function empezar(pref, guardada = null) {
     g = crearJuego(pref);
   }
   guia.paso = -1; render();
-  if (!guardada && !preferencias.tutorialVisto) iniciarGuia();
+  if (!guardada && ui.tutorial) iniciarGuia();   // modo tutorial: la guía arranca siempre; en normal, solo con el botón ?
   if (guardada) aviso(`Partida recuperada: ronda ${g.ronda} de ${g.maxRondas}`);
   const esta = g;
   try {
@@ -1044,6 +1082,9 @@ function abrirPreparacion() {
   let sel = preferencias.cient;
   const p = ventana({ titulo: "Sistemas Exoplanetas", color: "linear-gradient(90deg,#3b2bb0,#1b8fb0)", cerrable: !!g && g.turnos > 0, cuerpo: `
     <p><b>Objetivo:</b> terminar con más puntos que los equipos rivales. <b>Descubres</b> planetas con cartas de Técnica, los <b>investigas</b> con Marcadores y <b>publicas</b> lo que encontraste: el planeta da pocos puntos; su atmósfera, si es habitable o si tiene vida, muchos más.</p>
+    <div class="modos">${[["tutorial", "Tutorial", `Aprende jugando: te indica qué hacer en cada turno, contra 1 rival novato, en ${RONDAS_TUTORIAL} rondas.`],
+      ["normal", "Normal", "Sin ayudas, contra equipos que juegan según su científico."]].map(([v, t, d]) =>
+      `<button type="button" class="modo ${preferencias.modo === v ? "sel" : ""}" data-modo="${v}"><b>${t}</b><span>${d}</span></button>`).join("")}</div>
     <p class="tenue">Elige tu científico: su ventaja define tu mejor jugada.</p>
     <div class="cient-lista">${D.cientificos.map(c => `<button type="button" class="cient ${c.id === sel ? "sel" : ""}" data-c="${c.id}"><span class="est">${esc(c.pais || "")}</span><b>${esc(c.nombre)}</b><span class="e">${habilidades(c.id).map(esc).join(" · ")}</span></button>`).join("")}</div>
     <div class="campos">
@@ -1054,6 +1095,10 @@ function abrirPreparacion() {
     botones: [{ txt: "Reglas", valor: "reglas", clase: "gris" }, { txt: "¡Jugar!", valor: "ok" }],
     alAbrir: capa => {
       capa.querySelectorAll(".cient").forEach(b => b.onclick = () => { sel = b.dataset.c; capa.querySelectorAll(".cient").forEach(x => x.classList.toggle("sel", x === b)); });
+      const ponerModo = m => { preferencias.modo = m; capa.querySelectorAll(".modo").forEach(x => x.classList.toggle("sel", x.dataset.modo === m));
+        capa.querySelectorAll("#p-rivales, #p-vel").forEach(x => { x.disabled = m === "tutorial"; x.closest(".campo").classList.toggle("apagado", m === "tutorial"); }); };
+      capa.querySelectorAll(".modo").forEach(b => b.onclick = () => ponerModo(b.dataset.modo));
+      ponerModo(preferencias.modo || "tutorial");
       capa.querySelectorAll(".acciones .btn-juego").forEach(b => b.addEventListener("click", () => {
         preferencias.nombre = capa.querySelector("#p-nombre").value.trim();
         preferencias.rivales = +capa.querySelector("#p-rivales").value;
