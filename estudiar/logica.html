@@ -240,6 +240,7 @@ const nw=i=>{const e=E[i],S={G:[],lab:0,log:[]},o=mk(S,null,e.GA,e.PA.map(f=>({f
 const drf=()=>DS[ex]||(DS[ex]=nw(ex));
 const lf=S=>{const r=[],w=o=>o.subs.length?o.subs.forEach(i=>w(S.G[i])):o.s=="o"&&r.push(o);w(S.G[0]);return r},curG=D=>lf(D.S).find(x=>x.id==D.cur)||lf(D.S)[0];
 function go(D,r,a){const S1=structuredClone(D.S),res=mv(S1,S1.G[curG(D).id],r,a);if(res&&res.blocked)return res;D.H.push(D.S);D.S=S1;return res||{}}
+const LGL=(rs,r,h,w)=>{try{const P=parent;if(P===window||!P.logA)return;const d=document.createElement("div");d.innerHTML=h;const[pp,aa]=[...d.querySelectorAll("pre")].map(x=>x.textContent.trim()),e=E[ex];rs.forEach(x=>P.logA("ej","lg",x.t+" · "+rn(r),false,{q:e.t+" ("+(e.P&&e.P.length?e.P.join(", ")+" ⊢ ":"⊢ ")+e.g+") · "+w,x:x.m||"",a:aa||"",p:pp||x.m||""}))}catch(e){}};
 const recE=(t,r)=>{const er=ld("ern",{}),k=t+" · "+rn(r);er[k]=(er[k]||0)+1;sv("ern",er)};
 const errH=(res,r)=>`<details class="err" open><summary class="bad">• ${esc(res.m)}</summary><div>${TT[res.t]||""}${thR(rr(r))}</div></details>${res.warn?'<p class="mut">El movimiento se aplicó: podés deshacerlo.</p>':""}`;
 function cl(n){return{f:n.f,r:n.r,l:n.l,s:n.s,c:n.c.map(cl)}}
@@ -288,8 +289,8 @@ else if(a=="bs"){if(AC=="r")SL={};else delete SL[AC]}
 else if(a=="clr")rst();else if(a=="rev")adv();else if(a=="rs"){pg[ex]=0;rst()}
 else if(a=="chk"){const miss=slots(SL.r||"").filter(([k])=>SL[k]===undefined);
 if(miss.length)F3=`<p class="bad">Falta completar: ${miss.map(x=>x[1]).join(", ")}.</p>`;
-else{const r=vf(n,SL);if(r.length){r.forEach(x=>recE(x.t,n.r));F3=cmp(n)+r.map(x=>`<details class="err"><summary class="bad">• ${esc(x.m)}</summary><div>${TT[x.t]}${thR(n.r)}</div></details>`).join("")}else adv()}}}
-else{const D=drf(),o=curG(D),M=D.MV,ex1=()=>{const r=M.r,a2=M.a;D.MV={r:null,a:[]};const res=go(D,r,a2);D.FB=res.blocked||res.warn?(recE(res.t,rr(r)),errH(res,r)):""};
+else{const r=vf(n,SL);if(r.length){r.forEach(x=>recE(x.t,n.r));LGL(r,n.r,cmp(n),"en limpio");F3=cmp(n)+r.map(x=>`<details class="err"><summary class="bad">• ${esc(x.m)}</summary><div>${TT[x.t]}${thR(n.r)}</div></details>`).join("")}else adv()}}}
+else{const D=drf(),o=curG(D),M=D.MV,ex1=()=>{const r=M.r,a2=M.a;D.MV={r:null,a:[]};const res=go(D,r,a2);D.FB=res.blocked||res.warn?(recE(res.t,rr(r)),LGL([res],rr(r),"","borrador"),errH(res,r)):""};
 if(a=="g"){D.cur=i;D.MV={r:null,a:[]}}
 else if(a=="r"){D.MV={r:b.dataset.t,a:[]};D.FB="";if(!PM(D.MV.r,o).length)ex1()}
 else if(a=="pf"){const k=PM(M.r,o)[M.a.length];M.a.push(k=="f"||k=="s"?+b.dataset.v:b.dataset.v);if(M.a.length>=PM(M.r,o).length)ex1()}
@@ -333,4 +334,11 @@ v.onclick=ev=>{const b=ev.target.closest("button");if(b&&b.dataset.a=="sup"){del
 v.innerHTML=ks.length?`<p class="mut">Tipos de error que más cometés (por tipo y regla, no por ejercicio).</p>`+ks.map(k=>{const[t,r]=k.split(" · ");return `<details class="card"><summary><b>${esc(k)}</b> · ${er[k]} ${er[k]==1?"vez":"veces"}</summary>${TT[t]}${thR(r=="Hipótesis"?"hip":r)}<button data-a="sup" data-t="${esc(k)}">Lo superé</button></details>`}).join(""):`<p class="mut">Todavía no registraste errores. Van apareciendo acá a medida que verificás en Practicar.</p>`}
 function tab(i){[0,1,2,3].forEach(j=>$("t"+j).className=j==i?"on":"");[()=>{v.innerHTML=R.map(r=>`<div class="card"><h3>${r[0]}</h3>${r[1]}</div>`).join("")},quiz,build,errs][i]()}
 [0,1,2,3].forEach(i=>$("t"+i).onclick=()=>tab(i));tab(0);
-</script></body></html>
+</script><script>
+/* INCRUSTADA en /estudiar (index.html): sin título, sin Quiz ni Mis errores (los errores van al registro global de la pestaña Errores vía parent.logA), colores y tema del padre, abre en Practicar. Abierta sola funciona como antes. */
+(()=>{const P=window.parent;let ok=0;try{ok=P!==window&&!!P.logA}catch(e){}if(!ok)return;
+const st=document.createElement("style");st.textContent="h1,#t1,#t3{display:none!important}html,body{background:transparent!important}main{padding:4px 0!important}";document.head.appendChild(st);
+const sync=()=>{try{const c=P.getComputedStyle(P.document.querySelector(".s-lg")||P.document.documentElement),r=document.documentElement.style;["--fg","--mut","--card","--bd","--ok","--bad"].forEach(k=>r.setProperty(k,c.getPropertyValue(k)));r.setProperty("--bg",c.getPropertyValue("--bg"));r.setProperty("--ac",c.getPropertyValue("--lg"));r.colorScheme=c.colorScheme||P.getComputedStyle(P.document.documentElement).colorScheme}catch(e){}};
+sync();setInterval(sync,2000);tab(2)})();
+</script>
+</body></html>

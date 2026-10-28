@@ -314,7 +314,7 @@ else if(a=="bs"){if(AC=="n")SL.n=SL.n.slice(0,-1);else if(AC=="s")SL.s="";else S
 else if(a=="clr"){SL=SL0();AC="n";F3=""}
 else if(a=="rst"){pg[ex]=0;sv("pg2",pg);SL=SL0();AC="n";F3=""}
 else if(a=="rev")adv();
-else if(a=="chk"){const sl=parse(E[ex].sol).L,c=pg[ex]||0,r=vf2(sl[c],sl,c);if(r.length){rec(r);F3=cmp(sl[c],sl,c)+r.map(th).join("")}else adv()}
+else if(a=="chk"){const sl=parse(E[ex].sol).L,c=pg[ex]||0,r=vf2(sl[c],sl,c);if(r.length){rec(r);F3=cmp(sl[c],sl,c)+r.map(th).join("");LG(r,cmp(sl[c],sl,c),"línea "+(c+1))}else adv()}
 draw3()};draw3()}
 function draw3(){const sl=parse(E[ex].sol).L,c=Math.min(pg[ex]||0,sl.length),done=sl.slice(0,c),x=sl[c];
 let h=`<div id="bd"><div class="row">${E.map((y,i)=>`<button class="${i==ex?"on":""}" data-a="ex" data-i="${i}">${y.t}</button>`).join("")}</div>
@@ -359,9 +359,17 @@ function vf2(x,sl,c){let r=vf(x,sl,c);const CS=new Set(pal().cs),bare=t=>t&&!t.i
 if(bare(o)){r=r.filter(e=>e.indexOf("Origen:")!=0);r.unshift("Origen: falta el : delante de la clase (:Clase).")}
 if(bare(d)){r=r.filter(e=>e.indexOf("Destino:")!=0);r.push("Destino: falta el : delante de la clase (:Clase).");if(x.m&&!d.endsWith(" *"))r.push("Destino: es una colección, falta marcarlo como multiobjeto (*).")}
 return r}
+const LG=(r,h,w)=>{try{const P=parent;if(P===window||!P.logA)return;const d=document.createElement("div");d.innerHTML=h;const[pp,aa]=[...d.querySelectorAll("pre")].map(x=>x.textContent.trim()),seen=new Set();r.forEach(x=>{const e=TH.find(t=>t[0].some(n=>x.includes(n))),k=e?e[1]:"Otros";if(seen.has(k))return;seen.add(k);P.logA("ej","p4",k,false,{q:E[ex].t+" · "+w,x:r.join(" / "),a:aa||"",p:pp||""})})}catch(e){}};
 const rec=r=>{const er=ld("er",{}),seen=new Set();r.forEach(x=>{const e=TH.find(t=>t[0].some(n=>x.includes(n))),k=e?e[1]:"Otros";if(seen.has(k))return;seen.add(k);const o=er[k]||{n:0};o.n++;er[k]=o});sv("er",er)};
 function errs(){const er=ld("er",{}),ks=Object.keys(er).sort((a,b)=>er[b].n-er[a].n);
 v.onclick=ev=>{const b=ev.target.closest("button");if(b&&b.dataset.a=="sup"){delete er[b.dataset.t];sv("er",er);errs()}};
 v.innerHTML=ks.length?`<p class="mut">Tipos de error que más cometes (se cuentan por tipo, no por ejercicio).</p>`+ks.map(k=>{const e=TH.find(t=>t[1]==k);return `<details class="card"><summary><b>${esc(k)}</b> · ${er[k].n} ${er[k].n==1?"vez":"veces"}</summary>${e?e[2]:""}<button data-a="sup" data-t="${esc(k)}">Lo superé</button></details>`}).join(""):`<p class="mut">Todavía no registraste errores. Van apareciendo acá a medida que verificás en Practicar.</p>`}
 [0,1,2,3].forEach(i=>$("t"+i).onclick=()=>tab(i));tab(0);
-</script></body></html>
+</script><script>
+/* INCRUSTADA en /estudiar (index.html): sin título, sin Quiz ni Mis errores (los errores van al registro global de la pestaña Errores vía parent.logA), colores y tema del padre, abre en Practicar. Abierta sola funciona como antes. */
+(()=>{const P=window.parent;let ok=0;try{ok=P!==window&&!!P.logA}catch(e){}if(!ok)return;
+const st=document.createElement("style");st.textContent="h1,#t1,#t3{display:none!important}html,body{background:transparent!important}main{padding:4px 0!important}";document.head.appendChild(st);
+const sync=()=>{try{const c=P.getComputedStyle(P.document.querySelector(".s-p4")||P.document.documentElement),r=document.documentElement.style;["--fg","--mut","--card","--bd","--ok","--bad"].forEach(k=>r.setProperty(k,c.getPropertyValue(k)));r.setProperty("--bg",c.getPropertyValue("--bg"));r.setProperty("--ac",c.getPropertyValue("--p4"));r.colorScheme=c.colorScheme||P.getComputedStyle(P.document.documentElement).colorScheme}catch(e){}};
+sync();setInterval(sync,2000);tab(2)})();
+</script>
+</body></html>
