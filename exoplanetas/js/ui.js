@@ -124,7 +124,7 @@ function ventana({ titulo, cuerpo, botones = [{ txt: "Continuar", valor: true, c
     $("#capa").appendChild(capa);
     Sfx.abrir();
     if (alAbrir) alAbrir(capa, cerrar);
-    const f = capa.querySelector(".acciones .btn-juego:not(.gris)") || capa.querySelector(".h-cerrar"); if (f) f.focus();
+    const f = capa.querySelector(".acciones .btn-juego:not(.gris)") || capa.querySelector(".h-cerrar"); if (f) f.focus({ preventScroll: true });   // la hoja siempre empieza arriba (en teléfonos se leía desde el final)
   });
 }
 document.addEventListener("keydown", e => {
@@ -1093,15 +1093,31 @@ function abrirModo() {
   d.querySelectorAll(".modo").forEach(b => b.onclick = () => {
     preferencias.modo = b.dataset.modo;
     try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {}
-    d.remove(); Sfx.elegir(); abrirPreparacion();
+    d.remove(); Sfx.elegir(); preferencias.modo === "tutorial" ? abrirIntroTutorial() : abrirPreparacion();
   });
   d.querySelector(".inicio-reglas").onclick = () => mostrarReglas();
+}
+// Tutorial, paso 1: el objetivo y el camino, antes de elegir científico (poca información por pantalla)
+async function abrirIntroTutorial() {
+  const v = await ventana({ titulo: "Cómo se gana", color: "linear-gradient(90deg,#3b2bb0,#1b8fb0)", cerrable: false, cuerpo: `
+    <p class="intro-grande"><b>Objetivo:</b> terminar las ${RONDAS_TUTORIAL} rondas con más puntos que tu rival.</p>
+    <ol class="camino">
+      <li><span class="paso-n tec">1</span><span><b>Descubre</b> un planeta: juega una carta de <b>Técnica</b> en una estrella donde funcione.</span></li>
+      <li><span class="paso-n mar">2</span><span><b>Averigua</b> de qué está hecho: juega un <b>Marcador</b> sobre tu planeta.</span></li>
+      <li><span class="paso-n pub">3</span><span><b>Publica</b> lo que encontraste y gana los puntos.</span></li>
+    </ol>
+    <table class="tabla"><tr><td>Planeta</td><td><b>+${K.CAND}</b></td></tr><tr><td>Atmósfera</td><td><b>+${K.PUNTOS.atmosfera}</b></td></tr>
+      <tr><td>Habitable</td><td><b>+${K.PUNTOS.habitable}</b></td></tr><tr><td>Biofirma (gases que delatan vida)</td><td><b>+${K.PUNTOS.biofirma}</b></td></tr></table>
+    <p class="tenue">Ojo: si publicas algo que no es cierto, tu rival puede refutarte y quedarse con esos puntos. Durante la partida, el juego te va a decir qué conviene hacer.</p>`,
+    botones: [{ txt: "Cambiar modo", valor: "modo", clase: "gris" }, { txt: "Elegir científico", valor: "ok" }] });
+  if (v === "modo") return abrirModo();
+  if (v === "ok") abrirPreparacion();
 }
 function abrirPreparacion() {
   let sel = preferencias.cient;
   const tuto = preferencias.modo === "tutorial";
   const p = ventana({ titulo: tuto ? "Tutorial · nueva partida" : "Partida normal", color: "linear-gradient(90deg,#3b2bb0,#1b8fb0)", cerrable: !!g && g.turnos > 0, cuerpo: `
-    <p><b>Objetivo:</b> terminar con más puntos que los equipos rivales. <b>Descubres</b> planetas con cartas de Técnica, los <b>investigas</b> con Marcadores y <b>publicas</b> lo que encontraste: el planeta da pocos puntos; su atmósfera, si es habitable o si tiene vida, muchos más.</p>
+    ${tuto ? "" : `<p><b>Objetivo:</b> terminar con más puntos que los equipos rivales. <b>Descubres</b> planetas con cartas de Técnica, los <b>investigas</b> con Marcadores y <b>publicas</b> lo que encontraste: el planeta da pocos puntos; su atmósfera, si es habitable o si tiene vida, muchos más.</p>`}
     ${tuto ? `<div class="sec privado"><h3>Elige tu científico</h3>
       <p>Tu equipo representa a un científico real que buscó exoplanetas o estudió el Sistema Solar. Su <b>ventaja</b> te da puntos extra cada vez que logras el tipo de resultado por el que es conocido.</p>
       <p>Por ejemplo, con <b>Lisa Kaltenegger</b> cada <b>Habitable</b> que publiques suma +5 además de sus +3: te conviene buscar planetas pequeños y templados y averiguar si tienen agua y aire. Elige uno y juega para aprovechar su ventaja.</p></div>`
