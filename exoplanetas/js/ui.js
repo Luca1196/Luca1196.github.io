@@ -945,7 +945,7 @@ async function nuevaPartida() {
       }
     } catch (e) { /* sin conexión: se juega con la versión que hay */ }
   }
-  abrirPreparacion();
+  abrirModo();
 }
 
 // ---------------------------------------------------------- partida
@@ -1078,35 +1078,52 @@ async function mostrarTutorial() { if (g && !g.terminado) iniciarGuia(); }
 new MutationObserver(() => { if (guia.paso >= 0) requestAnimationFrame(actualizarGuia); }).observe(document.getElementById("capa"), { childList: true });
 addEventListener("resize", () => { if (guia.paso >= 0) actualizarGuia(); });
 
+// Pantalla de inicio: solo elegir el modo de juego; después, la preparación de la partida
+function abrirModo() {
+  document.querySelectorAll(".inicio").forEach(x => x.remove());
+  const d = document.createElement("div");
+  d.className = "inicio";
+  d.innerHTML = `<div class="inicio-caja"><h1>Sistemas Exoplanetas</h1>
+    <p class="inicio-sub">Descubre planetas en otras estrellas y busca señales de vida.</p>
+    <button type="button" class="modo" data-modo="tutorial"><b>Tutorial</b><span>Aprende jugando: el juego te dice qué hacer en cada turno. Una partida corta (${RONDAS_TUTORIAL} rondas) contra un rival novato.</span></button>
+    <button type="button" class="modo" data-modo="normal"><b>Normal</b><span>Sin ayudas, contra 1 a 3 equipos que juegan según su científico.</span></button>
+    <button type="button" class="inicio-reglas">Cómo se juega</button>
+    ${CREDITO}</div>`;
+  document.body.appendChild(d);
+  d.querySelectorAll(".modo").forEach(b => b.onclick = () => {
+    preferencias.modo = b.dataset.modo;
+    try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {}
+    d.remove(); Sfx.elegir(); abrirPreparacion();
+  });
+  d.querySelector(".inicio-reglas").onclick = () => mostrarReglas();
+}
 function abrirPreparacion() {
   let sel = preferencias.cient;
-  const p = ventana({ titulo: "Sistemas Exoplanetas", color: "linear-gradient(90deg,#3b2bb0,#1b8fb0)", cerrable: !!g && g.turnos > 0, cuerpo: `
+  const tuto = preferencias.modo === "tutorial";
+  const p = ventana({ titulo: tuto ? "Tutorial · nueva partida" : "Partida normal", color: "linear-gradient(90deg,#3b2bb0,#1b8fb0)", cerrable: !!g && g.turnos > 0, cuerpo: `
     <p><b>Objetivo:</b> terminar con más puntos que los equipos rivales. <b>Descubres</b> planetas con cartas de Técnica, los <b>investigas</b> con Marcadores y <b>publicas</b> lo que encontraste: el planeta da pocos puntos; su atmósfera, si es habitable o si tiene vida, muchos más.</p>
-    <div class="modos">${[["tutorial", "Tutorial", `Aprende jugando: te indica qué hacer en cada turno, contra 1 rival novato, en ${RONDAS_TUTORIAL} rondas.`],
-      ["normal", "Normal", "Sin ayudas, contra equipos que juegan según su científico."]].map(([v, t, d]) =>
-      `<button type="button" class="modo ${preferencias.modo === v ? "sel" : ""}" data-modo="${v}"><b>${t}</b><span>${d}</span></button>`).join("")}</div>
-    <p class="tenue">Elige tu científico: su ventaja define tu mejor jugada.</p>
-    <div class="cient-lista">${D.cientificos.map(c => `<button type="button" class="cient ${c.id === sel ? "sel" : ""}" data-c="${c.id}"><span class="est">${esc(c.pais || "")}</span><b>${esc(c.nombre)}</b><span class="e">${habilidades(c.id).map(esc).join(" · ")}</span></button>`).join("")}</div>
+    ${tuto ? `<div class="sec privado"><h3>Elige tu científico</h3>
+      <p>Tu equipo representa a un científico real que buscó exoplanetas o estudió el Sistema Solar. Su <b>ventaja</b> te da puntos extra cada vez que logras el tipo de resultado por el que es conocido.</p>
+      <p>Por ejemplo, con <b>Lisa Kaltenegger</b> cada <b>Habitable</b> que publiques suma +5 además de sus +3: te conviene buscar planetas pequeños y templados y averiguar si tienen agua y aire. Elige uno y juega para aprovechar su ventaja.</p></div>`
+      : `<p class="tenue">Elige tu científico: su ventaja define tu mejor jugada.</p>`}
+    <div class="cient-lista">${D.cientificos.map(c => `<button type="button" class="cient ${c.id === sel ? "sel" : ""}" data-c="${c.id}"><span class="pais">${esc(c.pais || "")}</span><b>${esc(c.nombre)}</b>${tuto
+      ? `<span class="e"><b>Ventaja:</b> ${esc(c.efecto)}</span><span class="h">${esc(c.hecho)}</span>`
+      : `<span class="e">${habilidades(c.id).map(esc).join(" · ")}</span>`}</button>`).join("")}</div>
     <div class="campos">
       <label class="campo" for="p-nombre">Nombre de tu equipo<input id="p-nombre" maxlength="18" value="${esc(preferencias.nombre)}" placeholder="Tu equipo"></label>
-      <label class="campo" for="p-rivales">Rivales<select id="p-rivales">${[1, 2, 3].map(n => `<option value="${n}" ${+preferencias.rivales === n ? "selected" : ""}>${n} (${K.RONDAS[n + 1]} rondas)</option>`).join("")}</select></label>
-      <label class="campo" for="p-vel">Velocidad rivales<select id="p-vel">${[["1100", "Lenta"], ["650", "Normal"], ["250", "Rápida"]].map(([v, t]) => `<option value="${v}" ${String(preferencias.velocidad) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      ${tuto ? "" : `<label class="campo" for="p-rivales">Rivales<select id="p-rivales">${[1, 2, 3].map(n => `<option value="${n}" ${+preferencias.rivales === n ? "selected" : ""}>${n} (${K.RONDAS[n + 1]} rondas)</option>`).join("")}</select></label>
+      <label class="campo" for="p-vel">Velocidad rivales<select id="p-vel">${[["1100", "Lenta"], ["650", "Normal"], ["250", "Rápida"]].map(([v, t]) => `<option value="${v}" ${String(preferencias.velocidad) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>`}
     </div>${CREDITO}`,
-    botones: [{ txt: "Reglas", valor: "reglas", clase: "gris" }, { txt: "¡Jugar!", valor: "ok" }],
+    botones: [{ txt: "Cambiar modo", valor: "modo", clase: "gris" }, { txt: "¡Jugar!", valor: "ok" }],
     alAbrir: capa => {
       capa.querySelectorAll(".cient").forEach(b => b.onclick = () => { sel = b.dataset.c; capa.querySelectorAll(".cient").forEach(x => x.classList.toggle("sel", x === b)); });
-      const ponerModo = m => { preferencias.modo = m; capa.querySelectorAll(".modo").forEach(x => x.classList.toggle("sel", x.dataset.modo === m));
-        capa.querySelectorAll("#p-rivales, #p-vel").forEach(x => { x.disabled = m === "tutorial"; x.closest(".campo").classList.toggle("apagado", m === "tutorial"); }); };
-      capa.querySelectorAll(".modo").forEach(b => b.onclick = () => ponerModo(b.dataset.modo));
-      ponerModo(preferencias.modo || "tutorial");
       capa.querySelectorAll(".acciones .btn-juego").forEach(b => b.addEventListener("click", () => {
         preferencias.nombre = capa.querySelector("#p-nombre").value.trim();
-        preferencias.rivales = +capa.querySelector("#p-rivales").value;
-        preferencias.velocidad = +capa.querySelector("#p-vel").value;
+        if (!tuto) { preferencias.rivales = +capa.querySelector("#p-rivales").value; preferencias.velocidad = +capa.querySelector("#p-vel").value; }
       }, { capture: true }));
     } });
   p.then(v => {
-    if (v === "reglas") { mostrarReglas().then(abrirPreparacion); return; }
+    if (v === "modo") { abrirModo(); return; }
     if (v !== "ok") return;
     preferencias.cient = sel;
     try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {}
@@ -1121,5 +1138,5 @@ render();
 (() => {
   const s = leerPartida();
   if (s) { try { empezar(s.pref, s); return; } catch (e) { console.error(e); borrarPartida(); } }
-  abrirPreparacion();
+  abrirModo();
 })();
