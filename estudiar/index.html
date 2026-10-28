@@ -49,7 +49,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   En mc: acierto a la primera = Bien, error = Otra vez. Las falladas se reencolan 4 lugares mas adelante hasta acertarlas (no cambian el calendario de nuevo).
   Dominada = caja >= 3 (intervalo de 7 dias o mas). Las nuevas se intercalan entre materias (ilv) para mezclar Prog4 y Logica.
   Las apps embebidas guardan su progreso aparte (claves lv, pg2, er en Prog4; lvn, ern en Logica): no hay choque con "est2".
-  ERRORES (pestaña 5, estado 'err1'): logA(w,s,g,ok,info) cuenta intentos por pestaña|materia|tag (st) y guarda cada fallo en log (tope 4000): t, w (rep/sw/mu), s, g, q, x (contexto), a (correcta), p (elegida), ms (tiempo hasta responder), rp (era reintento), b (caja previa en Repaso). Lo llaman pick (Repaso), swChoose (Deslizar) y muTap (Música). 'Copiar para Claude' arma un texto compacto: tasas por tag, confusiones correcta→elegida y fallos agrupados por pregunta (desde la última exportación o todo), más los conteos 'er'/'ern' de las apps embebidas. Sirve para que Claude ajuste el algoritmo y las tarjetas según lo que más cuesta.
+  ERRORES (pestaña 5, estado 'err1'): logA(w,s,g,ok,info) cuenta intentos por pestaña|materia|tag (st) y guarda cada fallo en log (tope 4000): t, w (rep/sw/mu), s, g, q, x (contexto), a (correcta), p (elegida), ms (tiempo hasta responder), rp (era reintento), b (caja previa en Repaso), ns (en Deslizar tocó 'No sé': cuenta como error, flecha ↓). Lo llaman pick (Repaso), swChoose (Deslizar) y muTap (Música). 'Copiar para Claude' arma un texto compacto: tasas por tag, confusiones correcta→elegida y fallos agrupados por pregunta (desde la última exportación o todo), más los conteos 'er'/'ern' de las apps embebidas. Sirve para que Claude ajuste el algoritmo y las tarjetas según lo que más cuesta.
 LIMITES: el iframe se ajusta a la altura del contenido cada 500 ms (solo funciona porque es el mismo origen). Las apps embebidas no siguen el
   selector de tema del visor, solo el modo claro/oscuro del sistema.
 -->
@@ -894,15 +894,15 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
  ((s.x||c.ctx)?`<div class="sn">${esc(s.x||c.ctx)}</div>`:"")+swDg(c,u.i,0)+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.join(" · "))} …</div>`:"")+
- `<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+
- (u.ans=="no"?`<div class="fb no"><b>Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div></div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
+ `<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+(u.ans?"":`<button class="btn ghost" data-w="NS" style="display:block;margin:10px auto 0">No sé <span class="mut">(↓)</span></button>`)+
+ (u.ans=="no"?`<div class="fb no"><b>${u.pick=="NS"?"No sabías. ":""}Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div></div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
  V.innerHTML=h;swBind()}
 function swBind(){const el=$("swc");if(!el||SW.ans)return;
- el.onpointerdown=e=>{SDRAG={x:e.clientX,dx:0};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition="none"};
+ el.onpointerdown=e=>{SDRAG={x:e.clientX,dx:0,t:e.target.closest("[data-w]")};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition="none"};
  el.onpointermove=e=>{if(!SDRAG)return;SDRAG.dx=e.clientX-SDRAG.x;el.style.transform=`translateX(${SDRAG.dx}px) rotate(${SDRAG.dx/30}deg)`;el.classList.toggle("tl",SDRAG.dx<-30);el.classList.toggle("tr",SDRAG.dx>30)};
- el.onpointerup=el.onpointercancel=()=>{if(!SDRAG)return;const dx=SDRAG.dx;SDRAG=null;el.style.transition="";if(Math.abs(dx)>80)swChoose(dx<0?"L":"R");else{el.style.transform="";el.classList.remove("tl","tr")}}}
-function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=(side=="L")==u.cl,k=c.id+":"+u.i;
- u.ans=ok?"ok":"no";u.pick=side;logA("sw",c.s,c.g,ok,{q:s.q,x:s.x||c.ctx||"",a:s.a,p:s.b,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:u.i+1});S2.box[k]=ok?Math.min(4,(S2.box[k]||0)+1):0;S2.n++;SUN++;
+ el.onpointerup=el.onpointercancel=()=>{if(!SDRAG)return;const dx=SDRAG.dx,t=SDRAG.t;SDRAG=null;el.style.transition="";if(Math.abs(dx)>80)swChoose(dx<0?"L":"R");else if(Math.abs(dx)<8&&t&&/^(L|R|NS)$/.test(t.dataset.w)){el.style.transform="";el.classList.remove("tl","tr");swChoose(t.dataset.w)}else{el.style.transform="";el.classList.remove("tl","tr")}}}
+function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=side!="NS"&&(side=="L")==u.cl,k=c.id+":"+u.i;
+ u.ans=ok?"ok":"no";u.pick=side;logA("sw",c.s,c.g,ok,{q:s.q,x:s.x||c.ctx||"",a:s.a,p:side=="NS"?"No sé ("+s.b+")":s.b,ns:side=="NS"?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:u.i+1});S2.box[k]=ok?Math.min(4,(S2.box[k]||0)+1):0;S2.n++;SUN++;
  if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
  else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+3});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
  SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
@@ -913,9 +913,10 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  swStep()}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if(TAB!=3)return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
- if(w=="L"||w=="R")swChoose(w);else if(w=="go")swAdvance();else if(w=="sf"){SF=b.dataset.v;swNew()}});
+ if(w=="L"||w=="R"||w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="sf"){SF=b.dataset.v;swNew()}});
 document.addEventListener("keydown",e=>{if(TAB!=3||!SW||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
- if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
+ if(k=="ArrowDown"&&SW.ans==null&&!SW.recap){e.preventDefault();swChoose("NS")}
+ else if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
  else if((k=="Enter"||k==" ")&&e.target.tagName!="BUTTON"){e.preventDefault();if(SW.recap||SW.ans=="no")swAdvance()}});
 
 /* ===== Música (pestaña 4): estilo Simon con un bajo de 6 cuerdas BEADGC; la secuencia son las tónicas de cada parte ===== */
@@ -982,7 +983,7 @@ const fd=t=>new Date(t).toLocaleString("es-UY",{day:"2-digit",month:"2-digit",ho
 const ld2=k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")}catch(e){return{}}};
 function erTxt(all){const L=E1.log.filter(e=>all||e.t>E1.exp);let o=`ERRORES DE ESTUDIO (${all?"todo el historial":"desde la última exportación"}) · ${L.length} fallos`+(L.length?` · ${fd(L[0].t)} a ${fd(L[L.length-1].t)}`:"")+"\n\n## Tasa por tag (fallos/intentos, histórico)\n";
  Object.entries(E1.st).map(([k,[ok,n]])=>[k,n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]).forEach(([k,f,n])=>{const[w,s,g]=k.split("|");o+=`- ${WN[w]}/${SN[s]}/${g}: ${f}/${n} (${Math.round(f/n*100)}%)\n`});
- const cf={};L.forEach(e=>{const k=SN[e.s]+" · "+e.a+"  →  "+e.p;cf[k]=(cf[k]||0)+1});const cfs=Object.entries(cf).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,25);
+ const nsN=L.filter(e=>e.ns).length;if(nsN)o+=`\n(${nsN} de estos fallos fueron "No sé": figuran como Elegí: No sé.)\n`;const cf={};L.forEach(e=>{const k=SN[e.s]+" · "+e.a+"  →  "+e.p;cf[k]=(cf[k]||0)+1});const cfs=Object.entries(cf).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,25);
  if(cfs.length){o+="\n## Confusiones repetidas (correcta → elegí)\n";cfs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}
  const G={};L.forEach(e=>{const k=e.w+"|"+e.g+"|"+e.q+"|"+e.p;const x=G[k]||(G[k]={e,n:0,ms:0,rp:0});x.n++;x.ms+=e.ms||0;x.rp+=e.rp?1:0;x.last=e.t});
  o+="\n## Fallos agrupados (más repetidos primero)\n";Object.values(G).sort((a,b)=>b.n-a.n||b.last-a.last).forEach(({e,n,ms,rp})=>{o+=`\n[${WN[e.w]}/${SN[e.s]}/${e.g}${e.n?" paso "+e.n:""}] ${n}×${rp?" ("+rp+" en reintento)":""} · ${Math.round(ms/n/1000)} s promedio${e.b>=0&&e.b!==undefined?" · caja "+e.b:""}\n`+(e.x?"  Contexto: "+e.x.replace(/\n/g," / ")+"\n":"")+`  P: ${e.q.replace(/\n/g," / ")}\n  Correcta: ${e.a}\n  Elegí: ${e.p}\n`});
