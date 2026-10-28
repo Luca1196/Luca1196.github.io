@@ -35,6 +35,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   PRACTICOS: las tarjetas de Lógica reflejan los prácticos 4 (proposicional) y 8 (predicados e igualdad): se cita 'Práctico N · ej' en la primera línea. Tags: Primer paso (teoremas), Detectar error (ej. 5 / ej. 2), Leer derivación (Γ y ρ), Igualdad (I=, E=). Notacion del curso: φ ψ σ; ⊥ se obtiene con E¬; hojas sin corchetes = Γ.
   QUIZ: las preguntas 'Quiz ejercicios' se copiaron de const Q de prog4.html y logica.html (tag 'Quiz ejercicios'). Si se agregan preguntas a esos Q, agregarlas tambien aca como mc(...). Sus opciones no tienen motivo por opcion (se muestra solo la explicacion).
   ETIQUETA: las opciones son el MENSAJE completo con cada estereotipo (no etiquetas sueltas); el estereotipo es del receptor.
+  REPASO OCULTO (oct 2026): el botón t0 tiene hidden y la página abre en Deslizar; Repaso sigue accesible con #repaso. Los tags de Repaso sin serie propia se portan a Deslizar con PORT.
   DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso. Las de Lógica muestran su árbol creciendo si tienen entrada en TRS (mismo título).
   MUSICA (pestaña 4, estado 'mu1'): estilo Simon en un bajo de 6 cuerdas BEADGC (25 trastes (0-24)). MSEC = [cancion,artista,parte,'tónicas separadas por espacio']; cada tónica ilumina todas sus posiciones (trastes 0-24) y vale cualquiera (misma nota). Dos modos (S3.mo): "ap" aprendizaje Simon y "pr" práctica (sin demostración, toda la parte; al primer error termina, ilumina la correcta y guarda el récord aparte con clave "|pr"); al acertar se guarda {s,f} en MU.seq[k] y en las demostraciones siguientes suena esa posición (si no hay, mLow). La secuencia crece de a una desde 2. En acordes con bajo (ej. D/F#) la tónica es la nota del bajo (F#). Agregar partes al final de MSEC. Las tónicas vienen de cifrados de internet (verificar con el disco).
   PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS. Cada tarjeta de línea muestra el diagrama (swDg/dgm, copia de dg de prog4.html) con las líneas ya dibujadas en gris y la flecha actual en trazo discontinuo que se completa según los pasos respondidos (cada paso lleva .k: n, op, pa, to, cond, q, st).
@@ -118,7 +119,7 @@ a{color:var(--ac)}
 </style>
 <div class="wrap">
 <header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
-<nav class="tabs"><button id="t0" class="btn tab">Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button><button id="t5" class="btn tab">Errores</button></nav>
+<nav class="tabs"><button id="t0" class="btn tab" hidden>Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button><button id="t5" class="btn tab">Errores</button></nav>
 <div id="v"></div>
 </div>
 <script>
@@ -806,6 +807,11 @@ const LGX={
 "Combinar 3a → (casos y contradicción)":[0,"Supuesto: α∨(β∧¬γ)\nMeta: ¬α→¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α\nMeta: ¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta: ⊥","Abro E∨ sobre α∨(β∧¬γ)\nSupuestos: ¬α, β→γ\nMeta: ⊥","Rama α. Supuestos: α, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Supuestos: β∧¬γ, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: β, ¬γ, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: γ, ¬γ\nMeta: ⊥","Las dos ramas llegaron a ⊥ (E∨ sobre α∨(β∧¬γ))\nCierro E∨","Llegué a ⊥ con supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta original: ⊢ (α∨(β∧¬γ))→(¬α→¬(β→γ))"],
 "Combinar 3a ← (cuando no sé qué disyunto)":[0,"Supuesto: ¬α→¬(β→γ)\nMeta: α∨(β∧¬γ)","Supuesto: ¬α→¬(β→γ)\nMeta: α∨(β∧¬γ)","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ)) (de RAA)\nMeta: ⊥","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: ¬α (para usar E→ con la hipótesis)","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ)), α (de I¬)\nMeta: ⊥","Tengo: ¬α→¬(β→γ), ¬α\nMeta: ⊥ (¬α ya probado)","Tengo: ¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: ⊥","Tengo: ¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: β→γ (para E¬ con ¬(β→γ))","Supuestos: …, ¬(β→γ), β (de I→)\nMeta: γ","Supuestos: …, β, ¬γ (de RAA)\nMeta: ⊥","Probé ⊥ bajo el supuesto ¬γ\nMeta del bloque: γ","Probé ⊥ bajo el supuesto ¬(α∨(β∧¬γ))\nMeta del bloque: α∨(β∧¬γ)","Derivé α∨(β∧¬γ) bajo ¬α→¬(β→γ)\nMeta original: ⊢ (¬α→¬(β→γ))→(α∨(β∧¬γ))"]
 };
+/* Tarjetas de Repaso sin serie equivalente en Deslizar: se convierten en series de hasta 6 pasos (correcta vs. primer distractor; el escenario va como contexto del paso). */
+const PORT=["p4|Destino","p4|Mensaje","p4|Decisión","p4|Quiz ejercicios","lg|Primer paso","lg|Leer derivación","lg|Fórmulas","lg|Quiz ejercicios"];
+PORT.forEach(k=>{const[sj,g]=k.split("|"),cs=CARDS.filter(c=>c.k=="mc"&&c.s==sj&&c.g==g&&c.d&&c.d.length);
+ for(let j=0;j<cs.length;j+=6){const ch=cs.slice(j,j+6),n=Math.ceil(cs.length/6);
+  SWC.push(sw(sj,g+(n>1?" "+(j/6+1)+"/"+n:""),null,ch.map(c=>{const L=c.q.split("\n"),q=L.pop(),[b,why]=String(c.d[0]).split("||");return Object.assign(st(q,c.a,b,c.w||why||""),L.length?{x:L.join("\n")}:{})})))}});
 SWC.forEach(c=>{const m=c.s=="lg"&&LGX[c.g];if(m)c.steps.forEach((s,i)=>{if(m[i])s.x=m[i]})});
 SWC.push(
 sw("p4","Condición [ ]","Operación: aceptarPostulacion(ci, rut, codOferta)\nYa dibujado: 3: :Controlador → emp:Empresa : cd := cuposDisponibles(codOferta)  «local»\nQuiero que 4 (aceptarPostulacion en est) ocurra solo si hay cupos.",[
@@ -1004,6 +1010,6 @@ V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[dat
  else if(a=="dl"){const u=URL.createObjectURL(new Blob([erTxt(1)],{type:"text/plain"})),l=document.createElement("a");l.href=u;l.download="errores-"+TD()+".txt";l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
  else if(a=="clr"){if(ERR){E1={log:[],st:{},exp:0};SVE();ERR=0}else ERR=1;erOpen()}});
 [0,1,2,3,4,5].forEach(i=>$("t"+i).onclick=()=>tab(i));
-tab({repaso:0,prog4:1,logica:2,musica:4,errores:5}[location.hash.slice(1)]||0);
+{const hm={repaso:0,prog4:1,logica:2,deslizar:3,musica:4,errores:5},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
 </script>
 </html>
