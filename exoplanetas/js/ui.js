@@ -708,6 +708,8 @@ function renderMano() {
   $("#mano").querySelectorAll(".carta").forEach(b => b.onclick = () => {
     const i = +b.dataset.i, c = cartas[i];
     if (ui.fase === "descartar" && ui.esperando.descarte) { resolver("descarte", { tipo: c.tipo, id: c.id }); return; }
+    if (ui.fase === "accion" && !ui.ocupado && guia.paso >= 0 && GUIA[guia.paso] && GUIA[guia.paso].soloTec && c.tipo !== "tec") {
+      Sfx.fallo(); aviso("Esa es un <b>Marcador</b>. Ahora toca una carta de <b>Técnica</b> (las celestes)."); return; }
     if (ui.fase === "accion" && !ui.ocupado) { ui.sel = ui.sel && ui.sel.i === i ? null : { ...c, i }; ui.sel ? Sfx.elegir() : Sfx.toque(); render(); return; }
     detalleCarta(c);
   });
@@ -1029,12 +1031,12 @@ async function empezar(pref, guardada = null) {
 const GUIA = [
   { sel: "#tablero", txt: `<b>Objetivo:</b> terminar las rondas con más puntos que los rivales. Los puntos salen de <b>publicar</b>: un planeta vale +${K.CAND}, pero lo que averigües de él vale más: <b>Atmósfera</b> +${K.PUNTOS.atmosfera}, <b>Habitable</b> +${K.PUNTOS.habitable} y una señal de vida (<b>Biofirma</b>) +${K.PUNTOS.biofirma}.<br><small>Una <b>biofirma</b> es un gas (o una mezcla de gases) en la atmósfera de un planeta que en la Tierra produce la vida, como oxígeno junto con metano.</small>` },
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
-  { sel: "#mano", turno: true, txt: "Esta es tu <b>mano</b>. Toca una carta de <b>TÉCNICA</b>.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
+  { sel: "#mano .carta.tec", alt: "#mano", soloTec: true, turno: true, txt: "Estas son tus cartas de <b>TÉCNICA</b> (las celestes). Toca una.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
   { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> se puede usar tu carta. Busca en el cielo una estrella así." },
   { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta y si tu técnica sirve ahí. Si no te convence, elige otra antes de jugar.",
     hasta: () => ui.tiradas > 0 },
   { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques. Ojo: puede ser un <b>falso positivo</b> (una señal que imita un planeta). Otra técnica o una Densidad lo confirman." },
-  { sel: "#mano", txt: "Para saber qué publicar necesitas <b>MARCADORES</b> (cartas violetas). Se juegan sobre un planeta ya descubierto y te dicen en secreto de qué está hecho: roca o gas, si tiene atmósfera, qué gases. <b>Sin Marcador no puedes publicar Habitable ni Biofirma.</b> El camino: <b>Técnica</b> → descubres · <b>Marcador</b> → averiguas · <b>Publicar</b> → puntos. En tu próximo turno, toca un Marcador y después tu planeta." },
+  { sel: "#mano .carta.mar", alt: "#mano", txt: "Para saber qué publicar necesitas <b>MARCADORES</b> (cartas violetas). Se juegan sobre un planeta ya descubierto y te dicen en secreto de qué está hecho: roca o gas, si tiene atmósfera, qué gases. <b>Sin Marcador no puedes publicar Habitable ni Biofirma.</b> El camino: <b>Técnica</b> → descubres · <b>Marcador</b> → averiguas · <b>Publicar</b> → puntos. En tu próximo turno, toca un Marcador y después tu planeta." },
   { sel: "#acciones", turnoFin: true, txt: "Final del turno: <b>Publicar</b> te da los puntos enseguida. Pero si publicas algo que <b>no es cierto</b>, un rival con el Marcador adecuado puede <b>refutarte</b> y se lleva esos puntos; y si tu planeta era falso, pierdes lo ganado. Publica lo que tu lectura respalda. Si no, <b>Terminar turno</b>.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
   { sel: "#b-tel", txt: "Cuando te falten cartas, usa el <b>Telescopio</b>: gastas tu turno, cambias las que no te sirven y completas tu mano." },
   { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
@@ -1052,7 +1054,11 @@ function actualizarGuia() {
   let capa = document.getElementById("guia");
   const p = GUIA[guia.paso];
   if (p && p.hasta && p.hasta()) { guia.paso++; return actualizarGuia(); }
-  const el = p && document.querySelector(p.sel);
+  document.body.classList.toggle("guia-solo-tec", !!(p && p.soloTec));   // apaga los Marcadores mientras se pide una Técnica
+  // el foco puede abarcar varias cartas (p. ej. solo las de Técnica); si no hay ninguna, usa «alt»
+  let els = p ? [...document.querySelectorAll(p.sel)].filter(x => x.getClientRects().length) : [];
+  if (p && !els.length && p.alt) els = [...document.querySelectorAll(p.alt)];
+  const el = els[0];
   const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado));
   if (!p || !el || tapado || !el.getClientRects().length) { if (capa) capa.hidden = true; if (!p && capa) capa.remove(); return; }
   if (!capa) {
@@ -1061,7 +1067,10 @@ function actualizarGuia() {
     document.body.appendChild(capa);
   }
   capa.hidden = false;
-  const r = el.getBoundingClientRect(), foco = capa.querySelector(".guia-foco"), globo = capa.querySelector(".guia-globo");
+  const rs = els.map(x => x.getBoundingClientRect());
+  const r = { left: Math.min(...rs.map(q => q.left)), top: Math.min(...rs.map(q => q.top)), right: Math.max(...rs.map(q => q.right)), bottom: Math.max(...rs.map(q => q.bottom)) };
+  r.width = r.right - r.left; r.height = r.bottom - r.top;
+  const foco = capa.querySelector(".guia-foco"), globo = capa.querySelector(".guia-globo");
   Object.assign(foco.style, { left: `${r.left - 4}px`, top: `${r.top - 4}px`, width: `${r.width + 8}px`, height: `${r.height + 8}px` });
   globo.querySelector("p").innerHTML = `${p.txt}<span class="guia-n">${guia.paso + 1}/${GUIA.length}</span>`;
   globo.querySelector(".guia-btns").innerHTML = `<button type="button" class="btn-juego gris" data-g="saltar">Saltar guía</button>`
