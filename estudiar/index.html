@@ -795,6 +795,31 @@ sw("lg","Patrones: qué hago cuando…",null,[
 ])
 );
 
+/* ===== Lógica: examen febrero 2026, ejercicio 3 ===== */
+SWC.push(
+sw("lg","Febrero 3a (RAA dentro de I→)","Examen feb 2026 · 3a\nMeta: ⊢ ((p→q)∧(¬r→p))→(¬q→r)",[
+ Object.assign(st("Meta A→B: ¿qué hago?","I→, supongo (p→q)∧(¬r→p)","I→, supongo ¬q→r","I→ supone el antecedente de la meta.","I→ ·"),{x:"Tengo: nada\nMeta: ((p→q)∧(¬r→p))→(¬q→r)"}),
+ Object.assign(st("Nueva meta ¬q→r. ¿Qué hago?","I→, supongo ¬q","I¬, supongo q","Es una implicación: otro I→.","I→ ·"),{x:"Supuesto: (p→q)∧(¬r→p)\nMeta: ¬q→r"}),
+ Object.assign(st("Meta r: atómica. ¿Sale eliminando hipótesis?","No: r no es consecuente de nada; uso RAA","Sí: E→ sobre ¬r→p","¬r→p da p, no r. Sin camino directo: RAA.","RAA ·"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q\nMeta: r"}),
+ Object.assign(st("¿Qué supongo para RAA?","¬r","r","RAA supone la negación de la meta.","supongo ¬r"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q\nMeta: r (con RAA)"}),
+ Object.assign(st("Meta ⊥. ¿Qué par fórmula/negación busco?","q y ¬q: ¬q ya lo tengo","r y ¬r","q sale de las hipótesis; r no.","busco q"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q, ¬r\nMeta: ⊥"}),
+ Object.assign(st("¿Cómo saco p?","E∧ da ¬r→p; E→ con ¬r","E∧ da p→q; E→ con q","¬r está supuesto: es justo el antecedente.","E∧, E→ ·"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q, ¬r\nMeta: q (para chocar con ¬q)"}),
+ Object.assign(st("Tengo p. ¿Cómo saco q?","E∧ da p→q; E→ con p","I→ con p","Modus ponens con la otra mitad de la conjunción.","E∧, E→ ·"),{x:"Tengo: p, ¬q, (p→q)∧(¬r→p)\nMeta: q"}),
+ Object.assign(st("Tengo q y ¬q.","E¬ da ⊥","E⊥ da ⊥","E¬ junta fórmula y negación; E⊥ parte de ⊥.","E¬"),{x:"Tengo: q, ¬q\nMeta: ⊥"}),
+ Object.assign(st("Orden de cierre, de adentro hacia afuera","RAA cancela ¬r; I→ cancela ¬q; I→ cancela la conjunción","I→ cancela la conjunción primero","Cada regla cancela su propia suposición, de la más reciente a la más vieja.",""),{x:"Llegué a ⊥ con supuestos: (p→q)∧(¬r→p), ¬q, ¬r"})
+],"I→(1), I→(2), RAA(3): q por E∧+E→ (con p de E∧+E→ y [¬r]), E¬ con [¬q]"),
+sw("lg","Febrero 3b (∃ con igualdad)","Examen feb 2026 · 3b\nTengo: φ1 = (∀x)f(g(x)) =′ g(f(x)), φ2 = (∀y)(P(y)→h(y) =′ g(y)), φ3 = (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))",[
+ Object.assign(st("¿Puedo hacer I∃ directo?","No: no tengo f(h(t)) =′ g(f(t)) para ningún t","Sí, con t = z","I∃ pide ya tener probada la instancia.",""),{x:"Tengo: φ1 = (∀x)f(g(x)) =′ g(f(x)), φ2 = (∀y)(P(y)→h(y) =′ g(y)), φ3 = (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("¿Qué desarmo primero?","φ3 = (∃z)P(z), con E∃","φ1, con E∀","El ∃ da el testigo z con el que instancio φ1 y φ2.","E∃ ·"),{x:"Tengo: φ1 = (∀x)f(g(x)) =′ g(f(x)), φ2 = (∀y)(P(y)→h(y) =′ g(y)), φ3 = (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("¿Qué supongo?","P(z), con z que no esté libre en φ1, φ2 ni en la meta","P(a), con a constante","E∃ supone la fórmula con una variable nueva.","supongo P(z)"),{x:"Abro E∃ sobre (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("¿Cómo uso φ2?","E∀ con z, y E→ con [P(z)]","E→ directo sobre φ2","φ2 empieza con ∀: primero se instancia.","E∀, E→ ·"),{x:"Supuesto: P(z)\nTengo: φ2 = (∀y)(P(y)→h(y) =′ g(y))\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("Quiero cambiar g(z) por h(z) dentro de f(g(z)). Tengo h(z) =′ g(z).","RI2: la doy vuelta a g(z) =′ h(z)","RI4 directo con h(z) =′ g(z)","RI4 reemplaza el término de la izquierda por el de la derecha: g(z) tiene que quedar a la izquierda.","RI2 ·"),{x:"Tengo: h(z) =′ g(z)\nMeta: f(h(z)) =′ g(f(z))"}),
+ Object.assign(st("¿De dónde saco f(g(z)) =′ g(f(z))?","E∀ en φ1 con x := z","E∀ en φ1 con x := h(z)","Con h(z) saldría f(g(h(z))), que no sirve.","E∀ z ·"),{x:"Tengo: g(z) =′ h(z), φ1 = (∀x)f(g(x)) =′ g(f(x))\nMeta: f(h(z)) =′ g(f(z))"}),
+ Object.assign(st("RI4 con g(z) =′ h(z) sobre f(u) =′ g(f(z)) da…","f(h(z)) =′ g(f(z))","f(h(z)) =′ h(f(z))","Solo se reemplaza el lugar marcado con u; g(f(z)) no es g(z).","RI4 ·"),{x:"Tengo: g(z) =′ h(z), f(g(z)) =′ g(f(z))\nMeta: f(h(z)) =′ g(f(z))"}),
+ Object.assign(st("¿Cómo llego a (∃w)f(h(w)) =′ g(f(w))?","I∃ con t = z","I∀","La meta es un ∃ y z es su testigo.","I∃ ·"),{x:"Tengo: f(h(z)) =′ g(f(z))\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("Al cerrar E∃, ¿qué hipótesis queda entre corchetes [ ]ⁿ?","P(z), la suposición","(∃z)P(z), la premisa","φ3 sigue abierta en Γ; se cancela la suposición del testigo.","cancelo P(z)"),{x:"Derivé (∃w)f(h(w)) =′ g(f(w)) bajo el supuesto P(z)"}),
+ Object.assign(st("Condición (∗) de E∃","z ∉ FV de la meta, ni de φ1 ni de φ2","z libre para w","La z supuesta no puede escapar a la conclusión ni estar en otra hipótesis abierta.",""),{x:"Cierro E∃ sobre (∃z)P(z)\nHipótesis abiertas: φ1, φ2"})
+],"E∃ sobre φ3 con [P(z)]: E∀+E→ en φ2, RI2, E∀ en φ1, RI4, I∃"));
 /* Contexto propio de cada paso (Tengo / Meta en ese punto): cada tarjeta se entiende sola */
 const LGX={
 "Meta →":[0,0,"Tengo: φ→σ, σ→ψ y el supuesto φ (de I→)\nMeta original: φ→ψ","Tengo: φ→σ, σ→ψ, supuesto φ\nMeta: ψ","Derivé ψ bajo el supuesto φ\nMeta original: φ→ψ (con I→)"],
@@ -870,6 +895,8 @@ const TRS={
 "Usar →":N("ψ",0,"E→",1,[N("φ→ψ",1),N("φ",2,0,0,0,{open:1})]),
 "Usar ∨":N("χ",0,"E∨",1,[N("φ∨ψ",1),N("χ",3,"E→",3,[N("φ",3,0,0,0,{c:1,ca:4}),N("φ→χ",3)]),N("χ",3,"E→",3,[N("ψ",3,0,0,0,{c:2,ca:4}),N("ψ→χ",3)])],{c:"1,2",ca:4}),
 "Usar ∃":N("∃xQ(x)",0,"E∃",1,[N("∃xP(x)",1),N("∃xQ(x)",1,"I∃",3,[N("Q(x)",2,"E→",2,[N("P(x)",1,0,0,0,{c:1,ca:4}),N("P(x)→Q(x)",2,"E∀",2,[N("∀x(P(x)→Q(x))",2)])])])],{c:1,ca:4}),
+"Febrero 3a (RAA dentro de I→)":N("((p→q)∧(¬r→p))→(¬q→r)",0,"I→",1,[N("¬q→r",1,"I→",2,[N("r",2,"RAA",3,[N("⊥",4,"E¬",8,[N("q",5,"E→",7,[N("p→q",7,"E∧",7,[N("(p→q)∧(¬r→p)",7,0,0,0,{c:1,ca:9})]),N("p",6,"E→",6,[N("¬r→p",6,"E∧",6,[N("(p→q)∧(¬r→p)",6,0,0,0,{c:1,ca:9})]),N("¬r",6,0,0,0,{c:3,ca:9})])]),N("¬q",5,0,0,0,{c:2,ca:9})])],{c:3,ca:9})],{c:2,ca:9})],{c:1,ca:9}),
+"Febrero 3b (∃ con igualdad)":N("(∃w)f(h(w)) =′ g(f(w))",0,"E∃",2,[N("(∃z)P(z)",2),N("(∃w)f(h(w)) =′ g(f(w))",2,"I∃",8,[N("f(h(z)) =′ g(f(z))",4,"RI4",7,[N("g(z) =′ h(z)",5,"RI2",5,[N("h(z) =′ g(z)",4,"E→",4,[N("P(z)→h(z) =′ g(z)",4,"E∀",4,[N("(∀y)(P(y)→h(y) =′ g(y))",4)]),N("P(z)",4,0,0,0,{c:1,ca:9})])]),N("f(g(z)) =′ g(f(z))",6,"E∀",6,[N("(∀x)f(g(x)) =′ g(f(x))",6)])],{fa:7})])],{c:1,ca:9}),
 "Combinar 2c (∀ desde contradicción)":N("(∀x)Q(x)",0,"I∀",1,[N("Q(x)",2,"E⊥",4,[N("⊥",4,"E¬",5,[N("P(f(x))",5,"E∀",7,[N("(∀x)P(f(x))",6,"E∧",6,[N("(∀x)P(f(x))∧(∃z)¬P(z)",6)])]),N("¬P(f(x))",7,"E∀",8,[N("(∀x)¬P(x)",7)],{fa:8})])])]),
 "Combinar 3b (∃ en hipótesis y en meta)":N("(∃x)P(x,x)",0,"E∃",2,[N("(∃x)R(x,x)",2),N("(∃x)P(x,x)",4,"I∃",9,[N("P(x,x)",6,"E→",8,[N("R(x,x)∧R(x,x)",7,"I∧",7,[N("R(x,x)",7,0,0,0,{c:1,ca:10}),N("R(x,x)",7,0,0,0,{c:1,ca:10})]),N("R(x,x)∧R(x,x)→P(x,x)",6,"E∀",6,[N("(∀z)(R(x,x)∧R(x,z)→P(x,z))",6,"E∀",6,[N("(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))",6,"E∀",6,[N("(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))",6)])])])])])],{c:1,ca:10}),
 "Combinar 3a → (casos y contradicción)":N("(α∨(β∧¬γ))→(¬α→¬(β→γ))",0,"I→",1,[N("¬α→¬(β→γ)",1,"I→",2,[N("¬(β→γ)",2,"I¬",3,[N("⊥",3,"E∨",4,[N("α∨(β∧¬γ)",4,0,0,0,{c:3,ca:11}),N("⊥",5,"E¬",6,[N("α",6,0,0,0,{c:4,ca:10}),N("¬α",6,0,0,0,{c:2,ca:11})]),N("⊥",5,"E¬",9,[N("γ",8,"E→",8,[N("β",7,"E∧",7,[N("β∧¬γ",7,0,0,0,{c:5,ca:10})]),N("β→γ",8,0,0,0,{c:1,ca:11})]),N("¬γ",7,"E∧",7,[N("β∧¬γ",7,0,0,0,{c:5,ca:10})])])],{c:"4,5",ca:10})],{c:1,ca:11})],{c:2,ca:11})],{c:3,ca:11}),
