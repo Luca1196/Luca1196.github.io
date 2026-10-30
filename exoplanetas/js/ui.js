@@ -834,6 +834,8 @@ function verRegistro() {
 function verBitacora() {
   ventana({ titulo: "Bitácora", color: "var(--est)", botones: [], cuerpo: `<div class="bitacora">${ui.log.slice(-120).reverse().map(l => `<p class="${l.tipo || ""}" style="border-color:${l.jg !== undefined ? COLOR[l.jg] : "transparent"}">${esc(l.txt)}</p>`).join("") || '<p>La partida empieza.</p>'}</div>` });
 }
+const ENCUESTA = "https://forms.gle/pgQcx6WgMZ1TdTi26";   // comentarios y sugerencias
+const BOTON_ENCUESTA = `<a class="opcion encuesta" href="${ENCUESTA}" target="_blank" rel="noopener"><span>Comentarios y sugerencias</span><b>↗</b></a>`;
 const MENU_SITIO = (document.querySelector('meta[name="sitio-menu"]') || {}).content || "";
 const CREDITO = `<p class="credito">Desarrollado por <b>Luca Sallé</b><br>en el Observatorio Astronómico de Montevideo</p>`;
 async function menu() {
@@ -842,7 +844,7 @@ async function menu() {
     <button type="button" class="opcion" data-v="tutorial"><span>Tutorial</span></button>
     <button type="button" class="opcion" data-v="reglas"><span>Cómo se juega</span></button>
     <button type="button" class="opcion" data-v="sonido"><span>Sonido</span><b>${Sfx.activo ? "Activado" : "Apagado"}</b></button>
-    <button type="button" class="opcion" data-v="nueva"><span>Nueva partida</span></button>${MENU_SITIO ? `<a class="opcion" href="${MENU_SITIO}"><span>Volver a los juegos</span></a>` : ""}</div>${CREDITO}`,
+    <button type="button" class="opcion" data-v="nueva"><span>Nueva partida</span></button>${BOTON_ENCUESTA}${MENU_SITIO ? `<a class="opcion" href="${MENU_SITIO}"><span>Volver a los juegos</span></a>` : ""}</div>${CREDITO}`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll("[data-v]").forEach(b => b.onclick = () => cerrar(b.dataset.v)) });
   if (v === "bitacora") verBitacora();
   if (v === "reglas") mostrarReglas();
@@ -890,6 +892,7 @@ async function mostrarFinal() {
   if (gan.idx === YO) { banner("¡VICTORIA!", "tu equipo tiene la mayor reputación"); Sfx.victoria(); } else Sfx.derrota();
   const v = await ventana({ titulo: gan.idx === YO ? "¡Ganaste!" : `Gana ${esc(gan.nombre)}`, color: "var(--hito)", cuerpo: `
     <table class="tabla">${filas}</table>
+    <p class="tenue">¿Qué te pareció el juego? Tu opinión ayuda a mejorarlo.</p><div class="lista">${BOTON_ENCUESTA}</div>
     <h3>La Verdad de cada planeta</h3><div style="overflow-x:auto"><table class="tabla"><tr><th>Planeta</th><th>Era</th><th>Verdad</th></tr>${planetas || '<tr><td colspan="3">No se descubrieron planetas.</td></tr>'}</table></div>`,
     botones: [{ txt: "Cerrar", valor: null, clase: "gris" }, { txt: "Jugar otra", valor: "nueva" }] });
   if (v === "nueva") nuevaPartida();
@@ -1097,6 +1100,7 @@ function abrirModo() {
     <button type="button" class="modo" data-modo="tutorial"><b>Tutorial</b><span>Aprende jugando: el juego te dice qué hacer en cada turno. Una partida corta (${RONDAS_TUTORIAL} rondas) contra un rival novato.</span></button>
     <button type="button" class="modo" data-modo="normal"><b>Normal</b><span>Sin ayudas, contra 1 a 3 equipos que juegan según su científico.</span></button>
     <button type="button" class="inicio-reglas">Cómo se juega</button>
+    ${BOTON_ENCUESTA}
     ${CREDITO}</div>`;
   document.body.appendChild(d);
   d.querySelectorAll(".modo").forEach(b => b.onclick = () => {
