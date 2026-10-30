@@ -11,6 +11,7 @@ const CAMPO = { o: "Órbita", R: "Radio", M: "Masa", dens: "Densidad", atm: "Atm
 const DIST_CORTA = { cercana: "Cercana", media: "Media", lejana: "Lejana" };
 const CANCELADO = new Error("partida cancelada");
 const ICO = {
+  opinion: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/></svg>',
   ayuda: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>',
   libro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 7h6"/></svg>',
   lista: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="4" cy="18" r="1.2"/></svg>',
@@ -583,7 +584,7 @@ function renderRivales() {
   const ronda = g.terminado ? `<span class="r-lbl">Partida</span><b>Terminada</b>`
     : `<span class="r-lbl">${ultima ? "¡Última ronda!" : "Ronda"}</span><b>${r} <small>de ${g.maxRondas}</small></b><span class="r-barra"><i style="width:${(100 * r / g.maxRondas).toFixed(0)}%"></i></span>`;
   $("#rivales").innerHTML = rivs + `<div class="top-dcha"><div class="chip-ronda num ${ultima ? "ultima" : ""}" title="Ronda ${r} de ${g.maxRondas}: todos juegan una vez por ronda">${ronda}</div>
-    <div class="fila-iconos"><button type="button" class="icono-btn" id="b-tuto" aria-label="Tutorial" title="Tutorial">${ICO.ayuda}</button><button type="button" class="icono-btn" id="b-registro" aria-label="Registro público" title="Registro público">${ICO.lista}</button>
+    <div class="fila-iconos"><a class="icono-btn" id="b-opinion" href="${ENCUESTA}" target="_blank" rel="noopener" aria-label="Comentarios y sugerencias" title="Comentarios y sugerencias">${ICO.opinion}</a><button type="button" class="icono-btn" id="b-tuto" aria-label="Tutorial" title="Tutorial">${ICO.ayuda}</button><button type="button" class="icono-btn" id="b-registro" aria-label="Registro público" title="Registro público">${ICO.lista}</button>
     <button type="button" class="icono-btn" id="b-menu" aria-label="Menú" title="Menú">${ICO.menu}</button></div></div>`;
   $("#b-registro").onclick = verRegistro;
   $("#b-menu").onclick = menu;
@@ -844,7 +845,7 @@ async function menu() {
     <button type="button" class="opcion" data-v="tutorial"><span>Tutorial</span></button>
     <button type="button" class="opcion" data-v="reglas"><span>Cómo se juega</span></button>
     <button type="button" class="opcion" data-v="sonido"><span>Sonido</span><b>${Sfx.activo ? "Activado" : "Apagado"}</b></button>
-    <button type="button" class="opcion" data-v="nueva"><span>Nueva partida</span></button>${BOTON_ENCUESTA}${MENU_SITIO ? `<a class="opcion" href="${MENU_SITIO}"><span>Volver a los juegos</span></a>` : ""}</div>${CREDITO}`,
+    <button type="button" class="opcion" data-v="nueva"><span>Nueva partida</span></button>${MENU_SITIO ? `<a class="opcion" href="${MENU_SITIO}"><span>Volver a los juegos</span></a>` : ""}</div>${CREDITO}`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll("[data-v]").forEach(b => b.onclick = () => cerrar(b.dataset.v)) });
   if (v === "bitacora") verBitacora();
   if (v === "reglas") mostrarReglas();
@@ -1044,7 +1045,8 @@ const GUIA = [
   { sel: "#b-tel", txt: "Cuando te falten cartas, usa el <b>Telescopio</b>: gastas tu turno, cambias las que no te sirven y completas tu mano." },
   { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
   { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos." },
-  { sel: "#b-tuto", txt: "Si te pierdes, toca <b>?</b> para repetir esta guía cuando quieras. ¡Suerte!", fin: true },
+  { sel: "#b-tuto", txt: "Si te pierdes, toca <b>?</b> para repetir esta guía cuando quieras." },
+  { sel: "#b-opinion", txt: "Y con este botón nos cuentas <b>qué te pareció</b> el juego y qué mejorarías: tus comentarios nos ayudan a mejorarlo. ¡Suerte!", fin: true },
 ];
 const guia = { paso: -1 };
 function iniciarGuia() { guia.paso = 0; ui.tiradas = 0; actualizarGuia(); }
