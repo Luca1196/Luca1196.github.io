@@ -669,8 +669,31 @@ function consejo() {
     return `Busca un planeta: toca <b>${esc(TEC[t].nombre)}</b> y después una estrella que brille. Se usa en: ${esc(USO[t])}.`; }
   return "Ninguna de tus cartas sirve ahora: toca el <b>Telescopio</b> para cambiarlas por otras.";
 }
+// Modo tutorial: todas las opciones de este turno, la recomendada primero
+function opcionesTurno() {
+  // cada opción: [texto largo (si es la recomendada), texto corto]
+  const jg = J(), inv = [], med = [];
+  const mios = g.planetas.filter(p => p.vivo && p.desc === YO), abiertos = g.planetas.filter(p => p.vivo && p.desc !== YO && p.abierto);
+  for (const pl of [...mios, ...abiertos]) for (const mid of new Set(jg.mar))
+    if (g.puedeInvestigar(jg, mid, pl) && (mid === "densidad" || sirveLista(mid, pl).some(c => !(c in pl.publicado))) && !inv.some(x => x.pl === pl))
+      inv.push({ pl, largo: `<b>Investigar</b> ${esc(pl.nombre)}: toca el Marcador <b>${esc(MAR[mid].nombre)}</b> y después el planeta, para averiguar de qué está hecho.`,
+        corto: `<b>Investigar</b> ${esc(pl.nombre)} (${esc(MAR[mid].nombre)})` });
+  for (const pl of mios) if (!pl.confirmado && !med.length) for (const t of new Set(jg.tec)) if (g.puedeMedir(jg, t, pl) && !med.length)
+    med.push({ largo: `<b>Medir</b> ${esc(pl.nombre)}: toca <b>${esc(TEC[t].nombre)}</b> y después el planeta; una segunda técnica lo confirma (+${K.CONF - K.CAND}).`,
+      corto: `<b>Medir</b> ${esc(pl.nombre)} (${esc(TEC[t].nombre)}) para confirmarlo` });
+  const tecs = [...new Set(jg.tec)].filter(t => g.estrellas.some(e => g.puedeDescubrir(jg, t, e)));
+  const desc = tecs.length ? [{ largo: `<b>Buscar un planeta nuevo</b>: toca <b>${esc(TEC[tecs[0]].nombre)}</b> y después una estrella que brille.`,
+    corto: `<b>Buscar planeta</b> (${tecs.map(t => esc(TEC[t].nombre)).join(", ")})` }] : [];
+  const tel = { largo: "Ninguna carta sirve ahora: toca el <b>Telescopio</b> para cambiarlas (usa tu turno).", corto: "<b>Telescopio</b>: cambiar cartas" };
+  const todas = [...inv.slice(0, 2), ...med, ...desc].slice(0, 3);
+  return (todas.length ? [...todas, tel] : [tel]).map((o, k) => k === 0 ? o.largo : o.corto);
+}
+function listaOpciones(titulo, items) {
+  return `<span class="opciones-t"><b class="ot-tit">${titulo}</b>${items.map((x, k) => `<span class="ot-op ${k === 0 ? "rec" : ""}">${k === 0 ? "★ " : "· "}${x}</span>`).join("")}</span>`;
+}
 function consejoPublicar() {
   const ops = publicables();
+  ui.pubConviene = false;
   if (!ops.length) return "Nada para publicar todavía: toca <b>Terminar turno</b>.";
   const cats = ops.filter(o => CATS.includes(o.cat));
   if (cats.length) {
@@ -678,12 +701,14 @@ function consejoPublicar() {
     const jg = J(), val = o => g.prob(jg, o.pl, o.cat);
     const o = cats.slice().sort((a, b) => val(b) * b.pts - val(a) * a.pts)[0], p = val(o);
     const que = `<b>${esc(CAT_NOMBRE[o.cat])}</b> en ${esc(o.pl.nombre)} (+${o.pts})`;
+    if ((o.cat === "atmosfera" && o.nota) || p >= 0.99) ui.pubConviene = true;
     if (o.cat === "atmosfera" && o.nota) return `Todo gigante gaseoso tiene atmósfera: puedes publicar ${que}. Solo pierdes si el planeta era un falso positivo.`;
     if (p >= 0.99) return `Tu lectura confirma ${que}: <b>publícalo</b>. Nadie podrá refutarlo.`;
     if (p <= 0.01) return `Puedes publicar ${que}, pero tu lectura <b>no lo respalda</b>: si lo haces, un rival puede refutarte y llevarse los puntos. Mejor <b>Terminar turno</b>.`;
     return `Puedes publicar ${que}, pero tu lectura <b>no alcanza para estar seguro</b>: podría ser una imitación. Arriesgas que un rival te refute; otro Marcador (como el Contexto) te sacaría la duda.`;
   }
   const pl = ops.find(o => o.cat === "planeta").pl;
+  ui.pubConviene = true;
   return pl.confirmado ? `<b>${esc(pl.nombre)}</b> está confirmado: <b>publícalo</b> sin miedo (+${K.CONF}).`
     : `Puedes <b>publicar</b> ${esc(pl.nombre)} (+${K.CAND}), pero si resulta un falso positivo pierdes esos puntos. Confirmarlo antes con otra técnica es más seguro.`;
 }
@@ -704,7 +729,8 @@ function renderMano() {
   const cartas = manoCartas(), n = cartas.length;
   const chances = ui.fase === "accion" && !ui.ocupado && ui.ayudas;
   $("#mano").innerHTML = cartas.map((c, i) => cartaHTML(c.tipo, c.id, `data-i="${i}" style="--rot:${((i - (n - 1) / 2) * 3.5).toFixed(1)}deg"`,
-    (ui.sel && ui.sel.i === i ? "sel " : "") + (ui.fase === "descartar" ? "descartar" : ""),
+    (ui.sel && ui.sel.i === i ? "sel " : "") + (ui.fase === "descartar" ? "descartar" : "")
+      + (ui.tutorial && ui.fase === "accion" && !ui.ocupado && !ui.sel ? (mejorUso(c) ? " util" : " inutil") : ""),
     chances ? (u => u ? `<span class="chance ${u.p >= .7 ? "alta" : u.p >= .45 ? "media" : "baja"}" title="Chance ahora">${pct(u.p)}</span>` : `<span class="chance no" title="Ahora no tiene dónde usarse">—</span>`)(mejorUso(c)) : "")).join("");
   $("#mano").querySelectorAll(".carta").forEach(b => b.onclick = () => {
     const i = +b.dataset.i, c = cartas[i];
@@ -750,11 +776,16 @@ function renderAcciones() {
   else if (ui.fase === "accion") {
     if (ui.sel) {
       const n = g.estrellas.reduce((s, e) => s + opcionesEstrella(e).length, 0);
-      msg = resumenCarta(ui.sel, `<span class="paso">Ahora toca una estrella o un planeta</span>`);
-    } else msg = ui.tutorial ? `<span class="consejo">${consejo()}</span>` : "<b>Tu turno:</b> toca una carta, o pide Telescopio";
+      msg = resumenCarta(ui.sel, `<span class="paso">${!ui.tutorial ? "Ahora toca una estrella o un planeta"
+        : n ? `Toca una de las estrellas que brillan (${n === 1 ? "hay 1 jugada posible" : `hay ${n} jugadas posibles`}), o toca la carta otra vez para soltarla`
+        : "Esta carta no sirve ahora en ninguna estrella: tócala otra vez y elige otra, o usa el Telescopio"}</span>`);
+    } else msg = ui.tutorial ? listaOpciones("Tu turno: elige UNA de estas opciones", opcionesTurno()) : "<b>Tu turno:</b> toca una carta, o pide Telescopio";
   } else if (ui.fase === "post" && !K.ROBO) {
     const n = publicables().length;
-    msg = ui.tutorial ? `<span class="consejo">${consejoPublicar()}</span>`
+    msg = ui.tutorial ? (() => { const c = consejoPublicar();
+        if (!n) return listaOpciones("Final del turno", [c]);
+        return ui.pubConviene ? listaOpciones("Final del turno", [c, "<b>Terminar turno</b> sin publicar"])
+          : listaOpciones("Final del turno", ["<b>Terminar turno</b>: le toca al rival.", c]); })()
       : n ? "Final del turno: <b>publica</b> lo que descubriste, o termina" : "Final del turno: no tienes nada para publicar";
     btns = `<button type="button" class="btn-pub" id="b-pub" ${n ? "" : "disabled"}>Publicar${n ? `<span class="insignia">${n}</span>` : ""}</button>
       <button type="button" class="btn-juego ${n ? "gris" : ""}" id="b-fin">Terminar turno</button>`;
@@ -762,7 +793,7 @@ function renderAcciones() {
   else if (ui.fase === "post") { msg = `Publica si quieres. Después <b>roba ${K.ROBO === 1 ? "1 carta" : K.ROBO}</b>`; btns = robar; }
   else if (ui.fase === "robar") { msg = "Roba <b>1 más</b>"; btns = robar; }
   else if (ui.fase === "descartar") msg = `Tienes ${jg.tec.length + jg.mar.length} cartas: <b>toca una para descartar</b>`;
-  else msg = `Juega <b>${esc(nombreJ(g.turnoDe))}</b>…`;
+  else msg = ui.tutorial ? `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…` : `Juega <b>${esc(nombreJ(g.turnoDe))}</b>…`;
   $("#msg").innerHTML = msg;
   $("#msg").classList.toggle("con-carta", !!$("#carta-grande"));
   const cg = $("#carta-grande"); if (cg) cg.onclick = () => ui.sel && detalleCarta(ui.sel);
