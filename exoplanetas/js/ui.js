@@ -443,10 +443,11 @@ async function abrirPublicar() {
   const puede = !ui.ocupado && ui.fase === "post";
   const v = await ventana({ titulo: "Publicar", color: "var(--pla)", botones: [], cuerpo: `
     ${puede ? "" : '<p class="tenue">Se publica al final de tu turno, después de jugar.</p>'}
+    ${ui.tutorial ? `<div class="sec privado"><p><b>Publicar te da los puntos ya.</b> Pero si después se demuestra que era falso: un planeta te deja en <b>−1</b>; una Atmósfera, Habitable o Biofirma la puede refutar un rival, que <b>se lleva esos puntos</b>.</p></div>` : ""}
     ${ops.length ? `<div class="lista">${ops.map((o, k) => `<button type="button" class="pub-btn" data-k="${k}" ${puede ? "" : "disabled"}>
-      <span>${esc(o.txt)}${o.nota ? `<br><small class="tenue">${esc(o.nota)}</small>` : ""}${o.art ? `<br><small class="tenue">todo junto: +${K.BONO_ART} por cada extra, pero si lo refutan, el rival se lleva todo</small>` : ""}${o.p !== undefined && ui.ayudas ? `<br><small class="tenue">cierto con probabilidad ${pct(o.p)}</small>` : ""}</span><b>+${o.pts}</b></button>`).join("")}</div>`
+      <span>${esc(o.txt)}${o.nota ? `<br><small class="tenue">${esc(o.nota)}</small>` : ""}${ui.tutorial ? evaluarPublicacion(o) : ""}${o.art ? `<br><small class="tenue">todo junto: +${K.BONO_ART} por cada extra, pero si lo refutan, el rival se lleva todo</small>` : ""}${o.p !== undefined && ui.ayudas ? `<br><small class="tenue">cierto con probabilidad ${pct(o.p)}</small>` : ""}</span><b>+${o.pts}</b></button>`).join("")}</div>`
       : '<p>Todavía no tienes nada para publicar. Descubre un planeta, o investígalo con un Marcador que sirva para eso.</p>'}
-    <p class="tenue">Al publicar Atmósfera, Habitable o Biofirma, un rival puede refutarte en el acto con un Marcador que tú no usaste.</p>`,
+    <p class="tenue">Al publicar Atmósfera, Habitable o Biofirma, un rival puede refutarte en el acto repitiendo la observación con un Marcador, aunque sea del mismo tipo que usaste.</p>`,
     alAbrir: (capa, cerrar) => capa.querySelectorAll(".pub-btn").forEach(b => b.onclick = () => cerrar(ops[+b.dataset.k])) });
   if (v) publicarHumano(v.pl, v.cat, v.cats);
 }
@@ -690,6 +691,15 @@ function opcionesTurno() {
 }
 function listaOpciones(titulo, items) {
   return `<span class="opciones-t"><b class="ot-tit">${titulo}</b>${items.map((x, k) => `<span class="ot-op ${k === 0 ? "rec" : ""}">${k === 0 ? "★ " : "· "}${x}</span>`).join("")}</span>`;
+}
+// tutorial: qué dice tu lectura de cada publicación posible (en palabras, sin porcentajes)
+function evaluarPublicacion(o) {
+  if (o.art) return "";
+  if (o.cat === "planeta") return o.pl.confirmado ? `<br><small class="ev si">✓ Confirmado: es un planeta real.</small>` : `<br><small class="ev duda">? Sin confirmar: podría ser un falso positivo.</small>`;
+  const p = g.prob(J(), o.pl, o.cat);
+  return p >= 0.99 ? `<br><small class="ev si">✓ Tu lectura lo confirma: nadie podrá refutarlo.</small>`
+    : p <= 0.01 ? `<br><small class="ev no">✕ Tu lectura no lo respalda: te refutarían.</small>`
+    : `<br><small class="ev duda">? Tu lectura no alcanza para estar seguro.</small>`;
 }
 function consejoPublicar() {
   const ops = publicables();
@@ -1063,16 +1073,25 @@ async function empezar(pref, guardada = null) {
 // ---------------------------------------------------------- tutorial guiado (sobre la pantalla real)
 // Cada paso señala una parte de la pantalla. «hasta» = el paso avanza solo cuando el jugador lo hace;
 // «turno» = el paso espera a que sea tu turno de jugar.
+// el planeta que acabas de descubrir (para señalarlo en la guía)
+function miUltimoPlaneta() { const ps = g.planetas.filter(p => p.desc === YO && p.vivo); return ps[ps.length - 1]; }
+const selMiPlaneta = () => { const pl = miUltimoPlaneta(); return pl ? `.pl-dot[data-pl="${pl.id}"]` : "#tablero"; };
 const GUIA = [
-  { sel: "#tablero", txt: `<b>Objetivo:</b> terminar las rondas con más puntos que los rivales. Los puntos salen de <b>publicar</b>: un planeta vale +${K.CAND}, pero lo que averigües de él vale más: <b>Atmósfera</b> +${K.PUNTOS.atmosfera}, <b>Habitable</b> +${K.PUNTOS.habitable} y una señal de vida (<b>Biofirma</b>) +${K.PUNTOS.biofirma}.<br><small>Una <b>biofirma</b> es un gas (o una mezcla de gases) en la atmósfera de un planeta que en la Tierra produce la vida, como oxígeno junto con metano.</small>` },
+  // en el modo tutorial el objetivo ya se explicó en «Cómo se gana»
+  { si: () => !ui.tutorial, sel: "#heroe .mis-pts", txt: `<b>Objetivo:</b> terminar las rondas con más puntos que los rivales. Los puntos salen de <b>publicar</b>: un planeta vale +${K.CAND}; lo que averigües de él, más: <b>Atmósfera</b> +${K.PUNTOS.atmosfera}, <b>Habitable</b> +${K.PUNTOS.habitable} y <b>Biofirma</b> +${K.PUNTOS.biofirma} (gases que en la Tierra produce la vida).` },
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano .carta.tec", alt: "#mano", soloTec: true, turno: true, txt: "Estas son tus cartas de <b>TÉCNICA</b> (las celestes). Toca una.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
   { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> se puede usar tu carta. Busca en el cielo una estrella así." },
   { sel: "#tablero", txt: "Toca la <b>estrella</b> que elegiste: verás sus datos junto a tu carta y si tu técnica sirve ahí. Si no te convence, elige otra antes de jugar.",
     hasta: () => ui.tiradas > 0 },
-  { sel: "#tablero", txt: "Si encontraste un planeta, aparece en la estrella con <b>?</b>: es <b>secreto</b> hasta que lo publiques. Ojo: puede ser un <b>falso positivo</b> (una señal que imita un planeta). Otra técnica o una Densidad lo confirman." },
-  { sel: "#mano .carta.mar", alt: "#mano", txt: "Para saber qué publicar necesitas <b>MARCADORES</b> (cartas violetas). Se juegan sobre un planeta ya descubierto y te dicen en secreto de qué está hecho: roca o gas, si tiene atmósfera, qué gases. <b>Sin Marcador no puedes publicar Habitable ni Biofirma.</b> El camino: <b>Técnica</b> → descubres · <b>Marcador</b> → averiguas · <b>Publicar</b> → puntos. En tu próximo turno, toca un Marcador y después tu planeta." },
-  { sel: "#acciones", turnoFin: true, txt: "Final del turno: <b>Publicar</b> te da los puntos enseguida. Pero si publicas algo que <b>no es cierto</b>, un rival con el Marcador adecuado puede <b>refutarte</b> y se lleva esos puntos; y si tu planeta era falso, pierdes lo ganado. Publica lo que tu lectura respalda. Si no, <b>Terminar turno</b>.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
+  { sel: selMiPlaneta, txt: () => miUltimoPlaneta()
+      ? "Este es <b>tu planeta</b>. El <b>?</b> indica que es <b>secreto</b>: solo tú sabes qué es hasta que lo publiques. Las letras celestes (<b>Tr</b>, <b>VR</b>, <b>As</b>…) dicen con qué <b>técnica</b> se descubrió: algunos Marcadores la exigen (el Espectro de transmisión necesita Tránsito). Tócalo cuando quieras para ver sus datos."
+      : "Esta vez no apareció un planeta: pasa a veces. Cuando descubras uno, aparecerá en su estrella con un <b>?</b>." },
+  { sel: selMiPlaneta, si: () => !!miUltimoPlaneta(), txt: "Ojo: puede ser un <b>falso positivo</b>, una señal que imita un planeta. Para saberlo, <b>mídelo con otra técnica</b> o una Densidad: si es real, queda <b>confirmado</b>." },
+  { sel: "#mano .carta.mar", alt: "#mano", txt: "Para saber qué publicar necesitas <b>MARCADORES</b> (cartas violetas). Se juegan sobre un planeta ya descubierto y te dicen en secreto de qué está hecho: roca o gas, si tiene atmósfera, qué gases. <b>Sin Marcador no puedes publicar Habitable ni Biofirma.</b>" },
+  { sel: "#b-pub", alt: "#acciones", turnoFin: true, txt: "Esto es <b>PUBLICAR</b>, y es la <b>única forma de sumar puntos</b>: lo que descubres o averiguas vale 0 hasta que lo publicas. Y lo que averigües de un planeta (Atmósfera, Habitable, Biofirma) es del <b>primero</b> que lo publica: si esperas mucho, un rival puede ganarte." },
+  { sel: "#b-pub", alt: "#acciones", turnoFin: true, txt: "El <b>riesgo</b>: si publicas algo <b>falso</b>, pierdes. Un planeta que era falso te deja en <b>−1</b>. Y si publicas una Atmósfera, Habitable o Biofirma que no es cierta, un rival puede <b>refutarte</b>: repite la observación y <b>se lleva tus puntos</b>. Regla de oro: publica lo que tu lectura <b>confirma</b>." },
+  { sel: "#b-fin", alt: "#acciones", turnoFin: true, txt: "¿No estás seguro? Toca <b>Terminar turno</b>: lo que no publicas no se pierde y puedes publicarlo más adelante, cuando tengas más pruebas.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
   { sel: "#b-tel", txt: "Cuando te falten cartas, usa el <b>Telescopio</b>: gastas tu turno, cambias las que no te sirven y completas tu mano." },
   { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
   { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos." },
@@ -1089,10 +1108,11 @@ function terminarGuia() {
 function actualizarGuia() {
   let capa = document.getElementById("guia");
   const p = GUIA[guia.paso];
-  if (p && p.hasta && p.hasta()) { guia.paso++; return actualizarGuia(); }
+  if (p && ((p.hasta && p.hasta()) || (p.si && !p.si()))) { guia.paso++; return actualizarGuia(); }
   document.body.classList.toggle("guia-solo-tec", !!(p && p.soloTec));   // apaga los Marcadores mientras se pide una Técnica
   // el foco puede abarcar varias cartas (p. ej. solo las de Técnica); si no hay ninguna, usa «alt»
-  let els = p ? [...document.querySelectorAll(p.sel)].filter(x => x.getClientRects().length) : [];
+  const selector = p && (typeof p.sel === "function" ? p.sel() : p.sel);
+  let els = p ? [...document.querySelectorAll(selector)].filter(x => x.getClientRects().length) : [];
   if (p && !els.length && p.alt) els = [...document.querySelectorAll(p.alt)];
   const el = els[0];
   const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado));
@@ -1108,7 +1128,7 @@ function actualizarGuia() {
   r.width = r.right - r.left; r.height = r.bottom - r.top;
   const foco = capa.querySelector(".guia-foco"), globo = capa.querySelector(".guia-globo");
   Object.assign(foco.style, { left: `${r.left - 4}px`, top: `${r.top - 4}px`, width: `${r.width + 8}px`, height: `${r.height + 8}px` });
-  globo.querySelector("p").innerHTML = `${p.txt}<span class="guia-n">${guia.paso + 1}/${GUIA.length}</span>`;
+  globo.querySelector("p").innerHTML = `${typeof p.txt === "function" ? p.txt() : p.txt}<span class="guia-n">${(v => `${v.indexOf(p) + 1}/${v.length}`)(GUIA.filter(x => !x.si || x.si() || x === p))}</span>`;
   globo.querySelector(".guia-btns").innerHTML = `<button type="button" class="btn-juego gris" data-g="saltar">Saltar guía</button>`
     + (p.hasta ? "" : `<button type="button" class="btn-juego" data-g="sig">${p.fin ? "¡A jugar!" : "Siguiente"}</button>`);
   globo.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
