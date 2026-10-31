@@ -61,7 +61,7 @@ LIMITES: el iframe se ajusta a la altura del contenido cada 500 ms (solo funcion
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--f);padding-block:14px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:640px;margin:0 auto}
 .s-p4{--ac:var(--p4)}.s-lg{--ac:var(--lg)}.s-mu{--ac:var(--mu)}
-.fbd{min-width:980px;position:relative}.mtr{position:absolute;left:0;top:0;pointer-events:none}.fbr{display:grid;grid-template-columns:26px repeat(25,1fr);align-items:center}.fbh span{font-size:11px;color:var(--mut);text-align:center}.fbs{font-size:12px;color:var(--mut);text-align:center}
+.hl{background:color-mix(in srgb,var(--bad) 16%,transparent);outline:2px solid var(--bad);border-radius:6px;padding:2px 4px}.fbd{min-width:980px;position:relative}.mtr{position:absolute;left:0;top:0;pointer-events:none}.fbr{display:grid;grid-template-columns:26px repeat(25,1fr);align-items:center}.fbh span{font-size:11px;color:var(--mut);text-align:center}.fbs{font-size:12px;color:var(--mut);text-align:center}
 .fc{font:11px var(--m,monospace);height:34px;border:0;border-bottom:2px solid var(--mut);border-right:1px solid var(--bd);background:var(--card);color:var(--mut);cursor:pointer;padding:0}.fc.nut{border-right:3px solid var(--fg)}.fc:active{background:var(--bd)}
 .fc.lit{background:var(--ac);color:var(--onac)}.fc.ok{background:var(--ok);color:#fff}.fc.no{background:var(--bad);color:#fff}
 
@@ -664,7 +664,7 @@ function lineSteps(L){const a=[],r=L.to.split(":")[0];
   st("Estereotipo del receptor","«local»","«association»","Lo devolvió "+L.ref+" (así figura en «Tengo»): variable local. La flecha de «Clases» solo sirve si todavía no lo tengo.","«local»"));
  else a.push(st("¿"+r+" ya está en «Tengo»?","Sí","No","Llegó antes.",""),
   st("Estereotipo del receptor","«parameter»","«local»","Figura como «firma:» en «Tengo» ("+L.sig+"): no salió de ningún find/create/next.","«parameter»"));
- const ks=["n","op"].concat(L.pa!="()"?["pa"]:[]).concat(["to"]).concat(L.cond?["cond"]:[]).concat(["q","st"]);a.forEach((x,i)=>x.k=ks[i]);
+ const ks=["n","op"].concat(L.pa!="()"?["pa"]:[]).concat(["to"]).concat(L.cond?["cond"]:[]).concat(["q","st"]);const SRC={n:["dg","Tengo"],op:["▶"],pa:["Tengo"],to:["Tengo","▶"],cond:["▶"],q:["Tengo"],st:[L.t=="A"?"Clases":"Tengo"]};a.forEach((x,i)=>{x.k=ks[i];x.src=SRC[ks[i]]});
  return a}
 const EXS=[
 {g:"postularse",op:"postularse(ci, rut, codOferta)",L:[
@@ -933,6 +933,8 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  return{c:pool[k],i:0,only:false,built:[],err:0}}
 function swNew(){SW=swPick();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»"};
+function ctxH(t,src){return t.split("\n").map(l=>{const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
@@ -941,9 +943,9 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
- ((s.x||c.ctx)?`<div class="sn">${esc(s.x||c.ctx)}</div>`:"")+swDg(c,u.i,0)+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.join(" · "))} …</div>`:"")+
+ ((s.x||c.ctx)?`<div class="sn">${ctxH(s.x||c.ctx,u.ans=="no"?s.src:null)}</div>`:"")+(u.ans=="no"&&s.src&&s.src.includes("dg")?`<div class="hl">${swDg(c,u.i,0)}</div>`:swDg(c,u.i,0))+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.join(" · "))} …</div>`:"")+
  `<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+
- (u.ans=="no"?`<div class="fb no"><b>Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div></div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
+ (u.ans=="no"?`<div class="fb no"><b>Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div>${s.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${s.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
  V.innerHTML=h;swBind()}
 function swBind(){const el=$("swc");if(!el||SW.ans)return;
  el.onpointerdown=e=>{SDRAG={x:e.clientX,dx:0};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition="none"};
