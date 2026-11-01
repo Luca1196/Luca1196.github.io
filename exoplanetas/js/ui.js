@@ -1021,7 +1021,8 @@ function crearJuego(pref, fijos = null) {
   juego.alGuardar = fase => { if (juego === g) guardarPartida(fase); };
   ui.hitosPend = [];
   for (const jg of juego.j) if (jg.ctrl instanceof Bot) {
-    jg.ctrl.pausa = async () => { if (juego !== g) throw CANCELADO; render(); await mostrarHitos(true); await sleep(ui.velocidad); };
+    jg.ctrl.pausa = async () => { if (juego !== g) throw CANCELADO; render(); await mostrarHitos(true); await sleep(ui.velocidad);
+      while (guiaVisible()) { await sleep(250); if (juego !== g) throw CANCELADO; } };
     const turnoBot = jg.ctrl.turno.bind(jg.ctrl);       // los hitos del rival, al terminar su turno y con una pausa
     jg.ctrl.turno = async (jj, jgb) => { await turnoBot(jj, jgb); if (juego !== g) throw CANCELADO; render();
       if (ui.hitosPend.some(x => x.jg !== YO)) { await sleep(ui.velocidad * 1.5); await mostrarHitos(); } };
@@ -1075,10 +1076,17 @@ async function empezar(pref, guardada = null) {
 // «turno» = el paso espera a que sea tu turno de jugar.
 // el planeta que acabas de descubrir (para señalarlo en la guía)
 function miUltimoPlaneta() { const ps = g.planetas.filter(p => p.desc === YO && p.vivo); return ps[ps.length - 1]; }
+function planetaRival() { const ps = g.planetas.filter(p => p.desc !== YO && p.vivo); return ps[ps.length - 1]; }
+const selPlanetaRival = () => { const pl = planetaRival(); return pl ? `.pl-dot[data-pl="${pl.id}"]` : "#nada-todavia"; };
 const selMiPlaneta = () => { const pl = miUltimoPlaneta(); return pl ? `.pl-dot[data-pl="${pl.id}"]` : "#tablero"; };
 const GUIA = [
   // en el modo tutorial el objetivo ya se explicó en «Cómo se gana»
   { si: () => !ui.tutorial, sel: "#heroe .mis-pts", txt: `<b>Objetivo:</b> terminar las rondas con más puntos que los rivales. Los puntos salen de <b>publicar</b>: un planeta vale +${K.CAND}; lo que averigües de él, más: <b>Atmósfera</b> +${K.PUNTOS.atmosfera}, <b>Habitable</b> +${K.PUNTOS.habitable} y <b>Biofirma</b> +${K.PUNTOS.biofirma} (gases que en la Tierra produce la vida).` },
+  { sel: "#heroe .mis-pts", txt: "Aquí ves <b>tus puntos</b> y tu puesto." },
+  { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos al final." },
+  { sel: "#b-tel", txt: "El <b>Telescopio</b>: si tus cartas no te sirven, lo tocas para cambiarlas. Usa tu turno." },
+  { sel: "#b-tuto", txt: "Si te pierdes, toca <b>?</b> para repetir esta guía cuando quieras." },
+  { sel: "#b-opinion", txt: "Y con este botón nos cuentas <b>qué te pareció</b> el juego y qué mejorarías." },
   { sel: "#tablero", txt: "Este es el <b>cielo</b>. Cada estrella muestra cómo es: su <b>tamaño</b>, su <b>distancia</b>, su <b>edad</b> y si está <b>activa</b>. De eso depende qué técnica funciona." },
   { sel: "#mano .carta.tec", alt: "#mano", soloTec: true, turno: true, txt: "Estas son tus cartas de <b>TÉCNICA</b> (las celestes). Toca una.", hasta: () => ui.sel && ui.sel.tipo === "tec" },
   { sel: "#msg", txt: "Aquí ves <b>en qué estrellas</b> se puede usar tu carta. Busca en el cielo una estrella así." },
@@ -1092,14 +1100,13 @@ const GUIA = [
   { sel: "#b-pub", alt: "#acciones", turnoFin: true, txt: "Esto es <b>PUBLICAR</b>, y es la <b>única forma de sumar puntos</b>: lo que descubres o averiguas vale 0 hasta que lo publicas. Y lo que averigües de un planeta (Atmósfera, Habitable, Biofirma) es del <b>primero</b> que lo publica: si esperas mucho, un rival puede ganarte." },
   { sel: "#b-pub", alt: "#acciones", turnoFin: true, txt: "El <b>riesgo</b>: si publicas algo <b>falso</b>, pierdes. Un planeta que era falso te deja en <b>−1</b>. Y si publicas una Atmósfera, Habitable o Biofirma que no es cierta, un rival puede <b>refutarte</b>: repite la observación y <b>se lleva tus puntos</b>. Regla de oro: publica lo que tu lectura <b>confirma</b>." },
   { sel: "#b-fin", alt: "#acciones", turnoFin: true, txt: "¿No estás seguro? Toca <b>Terminar turno</b>: lo que no publicas no se pierde y puedes publicarlo más adelante, cuando tengas más pruebas.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
-  { sel: "#b-tel", txt: "Cuando te falten cartas, usa el <b>Telescopio</b>: gastas tu turno, cambias las que no te sirven y completas tu mano." },
-  { sel: "#heroe .mis-pts", txt: "Tus <b>puntos</b> y tu puesto." },
-  { sel: ".chip-ronda", txt: "La partida dura estas <b>rondas</b>. Gana quien tenga más puntos." },
-  { sel: "#b-tuto", txt: "Si te pierdes, toca <b>?</b> para repetir esta guía cuando quieras." },
-  { sel: "#b-opinion", txt: "Y con este botón nos cuentas <b>qué te pareció</b> el juego y qué mejorarías: tus comentarios nos ayudan a mejorarlo. ¡Suerte!", fin: true },
+  { sel: selPlanetaRival, alt: ".rival", cuando: p => !!planetaRival() || g.turnos > p.t0 + 1, txt: () => planetaRival()
+      ? "Tu rival también busca planetas: su candidato aparece en la estrella con <b>su color</b> y un <b>?</b> (secreto). Las letras celestes dicen con qué <b>técnica</b> lo encontró. Si lo publica, podrás investigarlo y medirlo tú también. ¡A jugar!"
+      : "Ahora juega <b>tu rival</b>. Cuando descubra un candidato, aparecerá en una estrella con <b>su color</b> y un <b>?</b>; las letras celestes dirán con qué técnica lo encontró. ¡A jugar!", fin: true },
 ];
 const guia = { paso: -1 };
-function iniciarGuia() { guia.paso = 0; ui.tiradas = 0; actualizarGuia(); }
+function guiaVisible() { const c = document.getElementById("guia"); return guia.paso >= 0 && !!c && !c.hidden; }
+function iniciarGuia() { GUIA.forEach(x => delete x.t0); guia.paso = 0; ui.tiradas = 0; actualizarGuia(); }
 function terminarGuia() {
   guia.paso = -1; actualizarGuia();
   preferencias.tutorialVisto = true;
@@ -1109,13 +1116,14 @@ function actualizarGuia() {
   let capa = document.getElementById("guia");
   const p = GUIA[guia.paso];
   if (p && ((p.hasta && p.hasta()) || (p.si && !p.si()))) { guia.paso++; return actualizarGuia(); }
+  if (p && p.cuando && p.t0 == null) p.t0 = g.turnos;   // espera a que el rival juegue (descubra algo o termine su turno)
   document.body.classList.toggle("guia-solo-tec", !!(p && p.soloTec));   // apaga los Marcadores mientras se pide una Técnica
   // el foco puede abarcar varias cartas (p. ej. solo las de Técnica); si no hay ninguna, usa «alt»
   const selector = p && (typeof p.sel === "function" ? p.sel() : p.sel);
   let els = p ? [...document.querySelectorAll(selector)].filter(x => x.getClientRects().length) : [];
   if (p && !els.length && p.alt) els = [...document.querySelectorAll(p.alt)];
   const el = els[0];
-  const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado));
+  const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado)) || (p && p.cuando && !p.cuando(p));
   if (!p || !el || tapado || !el.getClientRects().length) { if (capa) capa.hidden = true; if (!p && capa) capa.remove(); return; }
   if (!capa) {
     capa = document.createElement("div"); capa.id = "guia";

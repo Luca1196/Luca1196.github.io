@@ -469,3 +469,13 @@ body.guia-solo-tec #mano .carta.mar { opacity: .3; filter: grayscale(1); }
 .velo { align-items: center; padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px)); }
 .hoja { border-radius: 22px; border-bottom: 2px solid var(--borde); max-height: min(88%, 88dvh); padding-bottom: 0; }
 .h-cab { border-radius: 20px 20px 0 0; }
+/* PC y pantallas anchas: el cielo a la izquierda, a toda la altura; rivales, mano y tu equipo a la derecha
+   (en pantallas anchas y bajas las estrellas quedaban tan chatas que no se veían sus planetas) */
+@media (min-width: 900px) and (min-aspect-ratio: 3/2) {
+  .app { max-width: 1500px; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: "tab riv" "tab mano" "tab her"; column-gap: 14px; }
+  #rivales { grid-area: riv; } #tablero { grid-area: tab; } #heroe { grid-area: her; } .zona-mano { grid-area: mano; align-self: end; }
+  .zona-mano { grid-template-columns: minmax(0, 1fr); }
+  .acciones-turno { flex-direction: row; justify-content: center; order: -1; padding-bottom: 0; }
+  .msg { order: -2; }
+}
