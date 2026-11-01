@@ -1147,6 +1147,18 @@ function actualizarGuia() {
   // si lo señalado está en el cielo y el cielo es alto (PC), el globo va al costado del cielo, sin tapar estrellas
   const tab = document.getElementById("tablero").getBoundingClientRect();
   const enCielo = els.every(x => x.closest && x.closest("#tablero")) && tab.height > innerHeight * 0.45;
+  // algo chico dentro del cielo (un planeta): el globo pegado a su lado, para que se vea a qué apunta
+  if (enCielo && r.width < tab.width * 0.6 && r.height < tab.height * 0.6) {
+    const derL = innerWidth - r.right - 12 - 8 >= gw, izqL = r.left - 12 - 8 >= gw;
+    if (derL || izqL) {
+      Object.assign(globo.style, { left: `${derL ? r.right + 12 : r.left - 12 - gw}px`, transform: "none", bottom: "",
+        top: `${Math.max(8, Math.min(innerHeight - gh - 8, r.top + r.height / 2 - gh / 2))}px` });
+      globo.dataset.flecha = derL ? "izq" : "der";
+      globo.style.setProperty("--fy", `${Math.max(14, Math.min(gh - 14, r.top + r.height / 2 - parseFloat(globo.style.top)))}px`);
+      return;
+    }
+  }
+  delete globo.dataset.flecha;
   const ref = enCielo ? tab : r;
   const der = innerWidth - ref.right - 16, izq = ref.left - 16;
   if ((enCielo || r.height > innerHeight * 0.45) && Math.max(der, izq) >= gw) {

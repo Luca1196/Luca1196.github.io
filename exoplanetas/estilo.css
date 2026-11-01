@@ -479,3 +479,8 @@ body.guia-solo-tec #mano .carta.mar { opacity: .3; filter: grayscale(1); }
   .acciones-turno { flex-direction: row; justify-content: center; order: -1; padding-bottom: 0; }
   .msg { order: -2; }
 }
+/* flecha del globo de la guía hacia lo que señala (cuando va al costado) */
+.guia-globo[data-flecha]::before { content: ""; position: absolute; top: var(--fy, 50%); width: 0; height: 0; transform: translateY(-50%);
+  border: 10px solid transparent; }
+.guia-globo[data-flecha="izq"]::before { left: -20px; border-right-color: var(--oro); }
+.guia-globo[data-flecha="der"]::before { right: -20px; border-left-color: var(--oro); }
