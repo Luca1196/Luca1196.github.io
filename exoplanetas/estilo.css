@@ -465,3 +465,7 @@ body.guia-solo-tec #mano .carta.mar { opacity: .3; filter: grayscale(1); }
 .carta.util { box-shadow: 0 0 0 3px rgba(92,240,160,.75), 0 5px 0 rgba(0,0,0,.45); }
 .carta.inutil { opacity: .45; filter: grayscale(.6); }
 .ev { font-weight: 800; } .ev.si { color: #9affc8; } .ev.no { color: #ff9aa3; } .ev.duda { color: var(--oro-2); }
+/* Carteles centrados en la pantalla (antes salían pegados abajo, como hoja inferior) */
+.velo { align-items: center; padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px)); }
+.hoja { border-radius: 22px; border-bottom: 2px solid var(--borde); max-height: min(88%, 88dvh); padding-bottom: 0; }
+.h-cab { border-radius: 20px 20px 0 0; }
