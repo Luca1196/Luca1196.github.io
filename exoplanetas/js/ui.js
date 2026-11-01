@@ -1142,10 +1142,24 @@ function actualizarGuia() {
   globo.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
     if (b.dataset.g === "saltar" || p.fin) terminarGuia(); else { guia.paso++; actualizarGuia(); }
   });
-  // globo arriba o abajo del elemento, según dónde haya más lugar
+  // globo al costado del elemento si es alto y hay lugar (PC: el cielo ocupa toda la altura); si no, arriba o abajo
+  const gw = globo.offsetWidth, gh = globo.offsetHeight;
+  // si lo señalado está en el cielo y el cielo es alto (PC), el globo va al costado del cielo, sin tapar estrellas
+  const tab = document.getElementById("tablero").getBoundingClientRect();
+  const enCielo = els.every(x => x.closest && x.closest("#tablero")) && tab.height > innerHeight * 0.45;
+  const ref = enCielo ? tab : r;
+  const der = innerWidth - ref.right - 16, izq = ref.left - 16;
+  if ((enCielo || r.height > innerHeight * 0.45) && Math.max(der, izq) >= gw) {
+    const x = der >= gw ? ref.right + 12 : ref.left - 12 - gw;
+    Object.assign(globo.style, { left: `${x}px`, transform: "none", bottom: "",
+      top: `${Math.max(8, Math.min(innerHeight - gh - 8, r.top + r.height / 2 - gh / 2))}px` });
+    return;
+  }
+  // arriba o abajo, centrado sobre lo señalado (en PC queda en la columna derecha, sin tapar el cielo)
+  Object.assign(globo.style, { left: `${Math.max(8, Math.min(innerWidth - gw - 8, r.left + r.width / 2 - gw / 2))}px`, transform: "none" });
   const abajo = r.top + r.height / 2 < innerHeight / 2;
-  globo.style.top = abajo ? `${Math.min(innerHeight - globo.offsetHeight - 8, r.bottom + 10)}px` : "";
-  globo.style.bottom = abajo ? "" : `${Math.min(innerHeight - globo.offsetHeight - 8, innerHeight - r.top + 10)}px`;
+  globo.style.top = abajo ? `${Math.min(innerHeight - gh - 8, r.bottom + 10)}px` : "";
+  globo.style.bottom = abajo ? "" : `${Math.min(innerHeight - gh - 8, innerHeight - r.top + 10)}px`;
 }
 async function mostrarTutorial() { if (g && !g.terminado) iniciarGuia(); }
 new MutationObserver(() => { if (guia.paso >= 0) requestAnimationFrame(actualizarGuia); }).observe(document.getElementById("capa"), { childList: true });
