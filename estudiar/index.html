@@ -6,7 +6,7 @@ INSTRUCTIVO PARA SEGUIR TRABAJANDO (leer esto en vez de analizar todo el codigo)
 =====================================================================
 QUE ES: app de estudio de Luca (UdelaR) que junta Prog4 (diagramas de comunicacion) y Logica (deduccion natural).
 Pestana Repaso = tarjetas con repaso espaciado (tipo Anki) y preguntas de opcion multiple (tipo Duolingo) para asegurar las BASES.
-Pestanas Ejercicios Prog4 / Ejercicios Logica = las apps de ejercicios completos, cargadas en un iframe desde archivos publicados junto a esta pagina.
+Pestanas Ejercicios Prog4 / Ejercicios Logica = las apps de ejercicios completos, cargadas en un iframe; incrustadas ocultan su titulo, Quiz y Mis errores, toman los colores del padre y abren en Practicar.
 PREFERENCIAS DE LUCA: todo en espanol; gastar pocos tokens; nada de vistas previas ni redisenos; minima friccion para empezar a estudiar.
 
 ARCHIVOS DEL ARTEFACTO (se publican con Artifact, url + file_path + files):
@@ -35,8 +35,9 @@ CODIGO DE ESTA PAGINA (un solo script):
   PRACTICOS: las tarjetas de Lógica reflejan los prácticos 4 (proposicional) y 8 (predicados e igualdad): se cita 'Práctico N · ej' en la primera línea. Tags: Primer paso (teoremas), Detectar error (ej. 5 / ej. 2), Leer derivación (Γ y ρ), Igualdad (I=, E=). Notacion del curso: φ ψ σ; ⊥ se obtiene con E¬; hojas sin corchetes = Γ.
   QUIZ: las preguntas 'Quiz ejercicios' se copiaron de const Q de prog4.html y logica.html (tag 'Quiz ejercicios'). Si se agregan preguntas a esos Q, agregarlas tambien aca como mc(...). Sus opciones no tienen motivo por opcion (se muestra solo la explicacion).
   ETIQUETA: las opciones son el MENSAJE completo con cada estereotipo (no etiquetas sueltas); el estereotipo es del receptor.
-  DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso.
-  MUSICA (pestaña 4, estado 'mu1'): estilo Simon en un bajo de 6 cuerdas BEADGC (25 trastes (0-24)). MSEC = [cancion,artista,parte,'tónicas separadas por espacio']; cada tónica ilumina todas sus posiciones (trastes 0-24) y vale cualquiera (misma nota). La secuencia crece de a una desde 2. En acordes con bajo (ej. D/F#) la tónica es la nota del bajo (F#). Agregar partes al final de MSEC. Las tónicas vienen de cifrados de internet (verificar con el disco).
+  REPASO OCULTO (oct 2026): el botón t0 tiene hidden y la página abre en Deslizar; Repaso sigue accesible con #repaso. Los tags de Repaso sin serie propia se portan a Deslizar con PORT.
+  DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso. Las de Lógica muestran su árbol creciendo si tienen entrada en TRS (mismo título).
+  MUSICA (pestaña 4, estado 'mu1'): estilo Simon en un bajo de 6 cuerdas BEADGC (25 trastes (0-24)). MSEC = [cancion,artista,parte,'tónicas separadas por espacio']; cada tónica ilumina todas sus posiciones (trastes 0-24) y vale cualquiera (misma nota). Dos modos (S3.mo): "ap" aprendizaje Simon y "pr" práctica (sin demostración, toda la parte; al primer error termina, ilumina la correcta y guarda el récord aparte con clave "|pr"); al acertar se guarda {s,f} en MU.seq[k] y en las demostraciones siguientes suena esa posición (si no hay, mLow). La secuencia crece de a una desde 2. En acordes con bajo (ej. D/F#) la tónica es la nota del bajo (F#). Agregar partes al final de MSEC. Las tónicas vienen de cifrados de internet (verificar con el disco).
   PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS. Cada tarjeta de línea muestra el diagrama (swDg/dgm, copia de dg de prog4.html) con las líneas ya dibujadas en gris y la flecha actual en trazo discontinuo que se completa según los pasos respondidos (cada paso lleva .k: n, op, pa, to, cond, q, st).
   OPCIONES: en d (distractores) cada opcion puede llevar motivo: "texto||por que no". Los distractores deben ser TENTADORES (errores reales: regla invertida, eliminacion sin la premisa que pide, regla de otro conector), nunca absurdos. El motivo se muestra al elegirla.
   DOMINIO: boton 'Ver dominio' (DOM) en tarjetas Prog4 de Etiqueta/Destino/Mensaje/Decision (DOMT). Cada tarjeta Prog4 debe ser consistente con DOM (viene de CL y M en prog4.html). Lógica: toda tarjeta muestra 'Tengo:' y 'Meta:' completos. mc(...,w,h): h = pista propia de la tarjeta (si no, HINT del tag).
@@ -49,6 +50,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   En mc: acierto a la primera = Bien, error = Otra vez. Las falladas se reencolan 4 lugares mas adelante hasta acertarlas (no cambian el calendario de nuevo).
   Dominada = caja >= 3 (intervalo de 7 dias o mas). Las nuevas se intercalan entre materias (ilv) para mezclar Prog4 y Logica.
   Las apps embebidas guardan su progreso aparte (claves lv, pg2, er en Prog4; lvn, ern en Logica): no hay choque con "est2".
+  ERRORES (pestaña 5, estado 'err1'): logA(w,s,g,ok,info) cuenta intentos por pestaña|materia|tag (st) y guarda cada fallo en log (tope 4000): t, w (rep/sw/mu), s, g, q, x (contexto), a (correcta), p (elegida), ms (tiempo hasta responder), rp (era reintento), b (caja previa en Repaso), ns (en Deslizar tocó 'No sé': cuenta como error, flecha ↓). Lo llaman pick (Repaso), swChoose (Deslizar), muTap (Música) y las apps incrustadas prog4.html/logica.html (w='ej', solo fallos: por eso se muestran como conteo, no %; ver el <script> INCRUSTADA al final de cada una). 'Copiar para Claude' arma un texto compacto: tasas por tag, confusiones correcta→elegida y fallos agrupados por pregunta (desde la última exportación o todo), más los conteos 'er'/'ern' de las apps embebidas. Sirve para que Claude ajuste el algoritmo y las tarjetas según lo que más cuesta.
 LIMITES: el iframe se ajusta a la altura del contenido cada 500 ms (solo funciona porque es el mismo origen). Las apps embebidas no siguen el
   selector de tema del visor, solo el modo claro/oscuro del sistema.
 -->
@@ -88,6 +90,7 @@ h1{font-size:19px;margin:0}h2{font-size:20px;margin:0 0 8px}
 .lbl{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .qt{font-size:18px;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:6px}
 .sn{font-family:var(--m);font-size:15px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pft{white-space:normal;overflow-x:auto;text-align:center;padding:10px 40px 10px 12px}.pft>*{margin:auto}.pt{display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom}.pk{display:flex;gap:18px;align-items:flex-end}.pr{align-self:stretch;border-top:1.5px solid var(--fg);position:relative;margin:2px -4px;min-width:30px}.pn{position:absolute;left:100%;top:-9px;padding-left:4px;font-size:12px;white-space:nowrap;color:var(--mut)}.pr.nw{border-color:var(--ac)}.pr.nw .pn{color:var(--ac);font-weight:700}.pf{white-space:nowrap;padding:0 2px}.pf.nw{color:var(--ac);font-weight:700}.pf.ph{color:var(--mut);border:1px dashed var(--mut);border-radius:6px;padding:0 8px}.pd{color:var(--mut);line-height:1}
 .swc{touch-action:pan-y;user-select:none;-webkit-user-select:none;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px 16px;margin-top:12px;transition:transform .2s,border-color .2s;cursor:grab}
 .swopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .swo{border:1px solid var(--bd);border-bottom-width:4px;border-radius:12px;padding:12px 8px;text-align:center;font-weight:600;font-size:15px;overflow-wrap:anywhere;cursor:pointer;min-height:68px;display:flex;align-items:center;justify-content:center;background:var(--card)}
@@ -116,7 +119,7 @@ a{color:var(--ac)}
 </style>
 <div class="wrap">
 <header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
-<nav class="tabs"><button id="t0" class="btn tab">Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button></nav>
+<nav class="tabs"><button id="t0" class="btn tab" hidden>Repaso</button><button id="t3" class="btn tab">Deslizar</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab">Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button><button id="t5" class="btn tab">Errores</button></nav>
 <div id="v"></div>
 </div>
 <script>
@@ -353,6 +356,11 @@ const wy=(c,t)=>(c.why&&c.why[t]?`<div>Elegiste ${esc(t)}. ${esc(c.why[t])}</div
 let S={c:{},day:"",nw:0,xp:0,xpd:0,last:"",stk:0,nm:10,debt:0};
 try{Object.assign(S,JSON.parse(localStorage.getItem("est2")||"{}"))}catch(e){}
 const SV=()=>{try{localStorage.setItem("est2",JSON.stringify(S))}catch(e){}};
+/* ---- Registro de errores (pestaña Errores, localStorage "err1") ---- */
+let E1={log:[],st:{},exp:0};
+try{Object.assign(E1,JSON.parse(localStorage.getItem("err1")||"{}"))}catch(e){}
+const SVE=()=>{try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}};
+function logA(w,s,g,ok,info){const k=w+"|"+s+"|"+g,v=E1.st[k]||(E1.st[k]=[0,0]);v[1]++;if(ok)v[0]++;else{E1.log.push(Object.assign({t:Date.now(),w,s,g},info));if(E1.log.length>4000)E1.log.splice(0,E1.log.length-4000)}SVE()}
 const D0=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
 const TD=()=>new Date().toLocaleDateString("en-CA");
 const roll=()=>{const t=TD();if(S.day!=t){if(S.day){const gap=Math.max(0,Math.round((new Date(t)-new Date(S.day))/864e5)-1);S.debt=Math.max(0,S.nm+S.debt-S.nw)+gap*S.nm}S.day=t;S.nw=0;S.xpd=0;SV()}};
@@ -374,8 +382,8 @@ return ilv(dd).concat(ilv(nn).slice(0,mode=="todo"?nn.length:remain()))}
 const hdr=()=>{$("hd").textContent=(S.stk?"Racha "+S.stk+(S.stk==1?" día":" días")+" · ":"")+"XP hoy "+S.xpd};
 
 /* ---- Pestañas ---- */
-function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==0)home();else if(i==3)swOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
-function frame(src,t){V.innerHTML=`<div class="row between" style="margin-top:4px"><span class="mut">Ejercicios completos, paso a paso.</span><a class="mut" href="${src}" target="_blank" rel="noopener">Abrir aparte</a></div><iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
+function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==0)home();else if(i==5)erOpen();else if(i==3)swOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
+function frame(src,t){V.innerHTML=`<iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
 
 /* ---- Inicio ---- */
 function blk(s){const a=CARDS.filter(c=>c.s==s),st=stats(s),pc=Math.round(st.m/a.length*100);
@@ -395,9 +403,9 @@ h+=`<button class="btn ghost" data-a="rst">${RS?"Tocá otra vez para borrar todo
 
 /* ---- Sesión ---- */
 function go(mode){roll();const q=mkQ(F,mode);if(!q.length){home();return}Q={q,i:0,n:q.length,dn:0,first:{},ok:0,tot:0,xp:0,per:{p4:[0,0],lg:[0,0]},ans:null,sh:false,o:null,cram:mode=="libre",rn:1,rt:0,res:RES0,rs:0,rsd:{},out:0,back:0,r:{ok:0,tot:0,out:0,bonus:0}};deal()}
-function deal(){const c=Q.q[Q.i];Q.back=0;Q.ans=null;Q.sh=false;Q.hint=false;Q.o=c&&c.k=="mc"?sh([c.a].concat(c.d)):null;draw()}
+function deal(){const c=Q.q[Q.i];Q.ts=Date.now();Q.back=0;Q.ans=null;Q.sh=false;Q.hint=false;Q.o=c&&c.k=="mc"?sh([c.a].concat(c.d)):null;draw()}
 function mark(c,rt){if(!Q.first[c.id]){Q.first[c.id]=1;if(!Q.cram){touch();apply(c,rt)}Q.tot++;Q.r.tot++;Q.per[c.s][1]++;if(rt>=1){Q.ok++;Q.r.ok++;Q.per[c.s][0]++}if(rt>=2)Q.res=Math.min(RMAX,Q.res+ACI);const x=rt>=2?10:rt==1?5:0;Q.xp+=x;S.xp+=x;S.xpd+=x;hdr()}SV()}
-function pick(i){const c=Q.q[Q.i];if(Q.ans!=null)return;Q.ans=i;mark(c,Q.o[i]==c.a?2:0);draw()}
+function pick(i){const c=Q.q[Q.i];if(Q.ans!=null)return;Q.ans=i;const ok=Q.o[i]==c.a,cs=S.c[c.id];logA("rep",c.s,c.g||"",ok,{q:c.q,a:c.a,p:String(Q.o[i]).split("||")[0],ms:Date.now()-(Q.ts||Date.now()),rp:Q.first[c.id]?1:0,b:cs?cs.b:-1,id:c.id});mark(c,ok?2:0);draw()}
 function endR(){const r=Q.r;r.t=Q.rt;r.bonus=Q.res>0?10:0;r.res=Math.round(Q.res);Q.xp+=r.bonus;S.xp+=r.bonus;S.xpd+=r.bonus;SV();hdr();Q.rs=1}
 function nr(){Q.rs=0;Q.rn++;Q.rt=0;Q.res=RES0;Q.r={ok:0,tot:0,out:0,bonus:0};draw()}
 const chk=()=>{if(Q.dn>0&&Q.dn%RN==0&&Q.dn<Q.n&&!Q.rsd[Q.dn]){Q.rsd[Q.dn]=1;endR()}};
@@ -645,7 +653,15 @@ s+=`<line x1="${f[0]}" y1="${f[1]}" x2="${g[0]}" y2="${g[1]}" stroke="${col}" st
 return s+"</svg>"}
 const STN={A:"association",L:"local",P:"parameter",G:"global"};
 const tobj=(L,u,dr)=>({n:L.n.replace("*",""),it:L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa,st:STN[L.t],u,dr});
-function swDg(c,idx,done){const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
+/* Árbol de deducción natural que crece en Deslizar: N(fórmula, aparece en el paso, regla, regla en el paso, [premisas], {c: n° de cancelación, ca: paso en que se corchetea, open: subobjetivo pendiente, fa: paso en que se revela la fórmula si el nodo aparece antes}). "Paso" = cantidad de pasos ya respondidos de la cadena. */
+function pfT(n,i,done){const v=x=>done||i>=x,nw=x=>!done&&x>0&&i==x;
+ if(!v(n.at))return'<span class="pf ph">?</span>';
+ const c=n.o.c&&v(n.o.ca),fv=!n.o.fa||v(n.o.fa),f=!fv?'<span class="pf ph">?</span>':`<span class="pf${nw(n.at)||nw(n.o.fa)||(c&&!n.k.length&&nw(n.o.ca))?" nw":""}">${c&&!n.k.length?"["+esc(n.f)+"]<sup>"+n.o.c+"</sup>":esc(n.f)}</span>`;
+ if(!n.k.length&&!n.o.open)return f;
+ const rk=n.r&&v(n.ra),kv=n.k.some(x=>v(x.at));
+ if(!rk&&!kv)return`<div class="pt"><span class="pd">⋮</span>${f}</div>`;
+ return`<div class="pt"><div class="pk">${n.k.map(x=>pfT(x,i,done)).join("")}</div><div class="pr${rk&&(nw(n.ra)||(c&&nw(n.o.ca)))?" nw":""}"><span class="pn">${rk?esc(n.r)+(c?"<sup>"+n.o.c+"</sup>":""):"?"}</span></div>${f}</div>`}
+function swDg(c,idx,done){if(c.tr)return`<div class="sn pft">${pfT(c.tr,idx,done)}</div>`;const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
  if(kn("to")){d={n:kn("n")?L.n.replace("*",""):"?",it:kn("n")&&L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond&&kn("cond")?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+(kn("pa")||L.pa=="()"?L.pa:"(…)"),st:kn("st")?STN[L.t]:"…",u:1,dr:!kn("st")}}
  return `<div class="sn" style="overflow-x:auto;padding:4px">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig,g.ent)}</div>`}
 function lineSteps(L){const a=[],r=L.to.split(":")[0];
@@ -865,6 +881,31 @@ sw("lg","Patrones: qué hago cuando…",null,[
 ])
 );
 
+/* ===== Lógica: examen febrero 2026, ejercicio 3 ===== */
+SWC.push(
+sw("lg","Febrero 3a (RAA dentro de I→)","Examen feb 2026 · 3a\nMeta: ⊢ ((p→q)∧(¬r→p))→(¬q→r)",[
+ Object.assign(st("Meta A→B: ¿qué hago?","I→, supongo (p→q)∧(¬r→p)","I→, supongo ¬q→r","I→ supone el antecedente de la meta.","I→ ·"),{x:"Tengo: nada\nMeta: ((p→q)∧(¬r→p))→(¬q→r)"}),
+ Object.assign(st("Nueva meta ¬q→r. ¿Qué hago?","I→, supongo ¬q","I¬, supongo q","Es una implicación: otro I→.","I→ ·"),{x:"Supuesto: (p→q)∧(¬r→p)\nMeta: ¬q→r"}),
+ Object.assign(st("Meta r: atómica. ¿Sale eliminando hipótesis?","No: r no es consecuente de nada; uso RAA","Sí: E→ sobre ¬r→p","¬r→p da p, no r. Sin camino directo: RAA.","RAA ·"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q\nMeta: r"}),
+ Object.assign(st("¿Qué supongo para RAA?","¬r","r","RAA supone la negación de la meta.","supongo ¬r"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q\nMeta: r (con RAA)"}),
+ Object.assign(st("Meta ⊥. ¿Qué par fórmula/negación busco?","q y ¬q: ¬q ya lo tengo","r y ¬r","q sale de las hipótesis; r no.","busco q"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q, ¬r\nMeta: ⊥"}),
+ Object.assign(st("¿Cómo saco p?","E∧ da ¬r→p; E→ con ¬r","E∧ da p→q; E→ con q","¬r está supuesto: es justo el antecedente.","E∧, E→ ·"),{x:"Supuestos: (p→q)∧(¬r→p), ¬q, ¬r\nMeta: q (para chocar con ¬q)"}),
+ Object.assign(st("Tengo p. ¿Cómo saco q?","E∧ da p→q; E→ con p","I→ con p","Modus ponens con la otra mitad de la conjunción.","E∧, E→ ·"),{x:"Tengo: p, ¬q, (p→q)∧(¬r→p)\nMeta: q"}),
+ Object.assign(st("Tengo q y ¬q.","E¬ da ⊥","E⊥ da ⊥","E¬ junta fórmula y negación; E⊥ parte de ⊥.","E¬"),{x:"Tengo: q, ¬q\nMeta: ⊥"}),
+ Object.assign(st("Orden de cierre, de adentro hacia afuera","RAA cancela ¬r; I→ cancela ¬q; I→ cancela la conjunción","I→ cancela la conjunción primero","Cada regla cancela su propia suposición, de la más reciente a la más vieja.",""),{x:"Llegué a ⊥ con supuestos: (p→q)∧(¬r→p), ¬q, ¬r"})
+],"I→(1), I→(2), RAA(3): q por E∧+E→ (con p de E∧+E→ y [¬r]), E¬ con [¬q]"),
+sw("lg","Febrero 3b (∃ con igualdad)","Examen feb 2026 · 3b\nTengo: φ1 = (∀x)f(g(x)) =′ g(f(x)), φ2 = (∀y)(P(y)→h(y) =′ g(y)), φ3 = (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))",[
+ Object.assign(st("¿Puedo hacer I∃ directo?","No: no tengo f(h(t)) =′ g(f(t)) para ningún t","Sí, con t = z","I∃ pide ya tener probada la instancia.",""),{x:"Tengo: φ1 = (∀x)f(g(x)) =′ g(f(x)), φ2 = (∀y)(P(y)→h(y) =′ g(y)), φ3 = (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("¿Qué desarmo primero?","φ3 = (∃z)P(z), con E∃","φ1, con E∀","El ∃ da el testigo z con el que instancio φ1 y φ2.","E∃ ·"),{x:"Tengo: φ1 = (∀x)f(g(x)) =′ g(f(x)), φ2 = (∀y)(P(y)→h(y) =′ g(y)), φ3 = (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("¿Qué supongo?","P(z), con z que no esté libre en φ1, φ2 ni en la meta","P(a), con a constante","E∃ supone la fórmula con una variable nueva.","supongo P(z)"),{x:"Abro E∃ sobre (∃z)P(z)\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("¿Cómo uso φ2?","E∀ con z, y E→ con [P(z)]","E→ directo sobre φ2","φ2 empieza con ∀: primero se instancia.","E∀, E→ ·"),{x:"Supuesto: P(z)\nTengo: φ2 = (∀y)(P(y)→h(y) =′ g(y))\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("Quiero cambiar g(z) por h(z) dentro de f(g(z)). Tengo h(z) =′ g(z).","RI2: la doy vuelta a g(z) =′ h(z)","RI4 directo con h(z) =′ g(z)","RI4 reemplaza el término de la izquierda por el de la derecha: g(z) tiene que quedar a la izquierda.","RI2 ·"),{x:"Tengo: h(z) =′ g(z)\nMeta: f(h(z)) =′ g(f(z))"}),
+ Object.assign(st("¿De dónde saco f(g(z)) =′ g(f(z))?","E∀ en φ1 con x := z","E∀ en φ1 con x := h(z)","Con h(z) saldría f(g(h(z))), que no sirve.","E∀ z ·"),{x:"Tengo: g(z) =′ h(z), φ1 = (∀x)f(g(x)) =′ g(f(x))\nMeta: f(h(z)) =′ g(f(z))"}),
+ Object.assign(st("RI4 con g(z) =′ h(z) sobre f(u) =′ g(f(z)) da…","f(h(z)) =′ g(f(z))","f(h(z)) =′ h(f(z))","Solo se reemplaza el lugar marcado con u; g(f(z)) no es g(z).","RI4 ·"),{x:"Tengo: g(z) =′ h(z), f(g(z)) =′ g(f(z))\nMeta: f(h(z)) =′ g(f(z))"}),
+ Object.assign(st("¿Cómo llego a (∃w)f(h(w)) =′ g(f(w))?","I∃ con t = z","I∀","La meta es un ∃ y z es su testigo.","I∃ ·"),{x:"Tengo: f(h(z)) =′ g(f(z))\nMeta: (∃w)f(h(w)) =′ g(f(w))"}),
+ Object.assign(st("Al cerrar E∃, ¿qué hipótesis queda entre corchetes [ ]ⁿ?","P(z), la suposición","(∃z)P(z), la premisa","φ3 sigue abierta en Γ; se cancela la suposición del testigo.","cancelo P(z)"),{x:"Derivé (∃w)f(h(w)) =′ g(f(w)) bajo el supuesto P(z)"}),
+ Object.assign(st("Condición (∗) de E∃","z ∉ FV de la meta, ni de φ1 ni de φ2","z libre para w","La z supuesta no puede escapar a la conclusión ni estar en otra hipótesis abierta.",""),{x:"Cierro E∃ sobre (∃z)P(z)\nHipótesis abiertas: φ1, φ2"})
+],"E∃ sobre φ3 con [P(z)]: E∀+E→ en φ2, RI2, E∀ en φ1, RI4, I∃"));
 /* Contexto propio de cada paso (Tengo / Meta en ese punto): cada tarjeta se entiende sola */
 const LGX={
 "Meta →":[0,0,"Tengo: φ→σ, σ→ψ y el supuesto φ (de I→)\nMeta original: φ→ψ","Tengo: φ→σ, σ→ψ, supuesto φ\nMeta: ψ","Derivé ψ bajo el supuesto φ\nMeta original: φ→ψ (con I→)"],
@@ -877,6 +918,11 @@ const LGX={
 "Combinar 3a → (casos y contradicción)":[0,"Supuesto: α∨(β∧¬γ)\nMeta: ¬α→¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α\nMeta: ¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta: ⊥","Abro E∨ sobre α∨(β∧¬γ)\nSupuestos: ¬α, β→γ\nMeta: ⊥","Rama α. Supuestos: α, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Supuestos: β∧¬γ, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: β, ¬γ, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: γ, ¬γ\nMeta: ⊥","Las dos ramas llegaron a ⊥ (E∨ sobre α∨(β∧¬γ))\nCierro E∨","Llegué a ⊥ con supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta original: ⊢ (α∨(β∧¬γ))→(¬α→¬(β→γ))"],
 "Combinar 3a ← (cuando no sé qué disyunto)":[0,"Supuesto: ¬α→¬(β→γ)\nMeta: α∨(β∧¬γ)","Supuesto: ¬α→¬(β→γ)\nMeta: α∨(β∧¬γ)","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ)) (de RAA)\nMeta: ⊥","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: ¬α (para usar E→ con la hipótesis)","Supuestos: ¬α→¬(β→γ), ¬(α∨(β∧¬γ)), α (de I¬)\nMeta: ⊥","Tengo: ¬α→¬(β→γ), ¬α\nMeta: ⊥ (¬α ya probado)","Tengo: ¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: ⊥","Tengo: ¬(β→γ), ¬(α∨(β∧¬γ))\nMeta: β→γ (para E¬ con ¬(β→γ))","Supuestos: …, ¬(β→γ), β (de I→)\nMeta: γ","Supuestos: …, β, ¬γ (de RAA)\nMeta: ⊥","Probé ⊥ bajo el supuesto ¬γ\nMeta del bloque: γ","Probé ⊥ bajo el supuesto ¬(α∨(β∧¬γ))\nMeta del bloque: α∨(β∧¬γ)","Derivé α∨(β∧¬γ) bajo ¬α→¬(β→γ)\nMeta original: ⊢ (¬α→¬(β→γ))→(α∨(β∧¬γ))"]
 };
+/* Tarjetas de Repaso sin serie equivalente en Deslizar: se convierten en series de hasta 6 pasos (correcta vs. primer distractor; el escenario va como contexto del paso). */
+const PORT=["p4|Destino","p4|Mensaje","p4|Decisión","p4|Quiz ejercicios","lg|Primer paso","lg|Leer derivación","lg|Fórmulas","lg|Quiz ejercicios"];
+PORT.forEach(k=>{const[sj,g]=k.split("|"),cs=CARDS.filter(c=>c.k=="mc"&&c.s==sj&&c.g==g&&c.d&&c.d.length);
+ for(let j=0;j<cs.length;j+=6){const ch=cs.slice(j,j+6),n=Math.ceil(cs.length/6);
+  SWC.push(sw(sj,g+(n>1?" "+(j/6+1)+"/"+n:""),null,ch.map(c=>{const L=c.q.split("\n"),q=L.pop(),[b,why]=String(c.d[0]).split("||");return Object.assign(st(q,c.a,b,c.w||why||""),L.length?{x:L.join("\n")}:{})})))}});
 SWC.forEach(c=>{const m=c.s=="lg"&&LGX[c.g];if(m)c.steps.forEach((s,i)=>{if(m[i])s.x=m[i]})});
 SWC.push(
 sw("p4","Condición [ ]","Operación: aceptarPostulacion(ci, rut, codOferta)\nYa dibujado: 3: :Controlador → emp:Empresa : cd := cuposDisponibles(codOferta)  «local»\nQuiero que 4 (aceptarPostulacion en est) ocurra solo si hay cupos.",[
@@ -918,6 +964,31 @@ sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: acept
 );
 
 
+/* ---- Árboles de las cadenas de Lógica (se asignan por título) ---- */
+const N=(f,at,r,ra,k,o)=>({f,at,r,ra,k:k||[],o:o||{}});
+const TRS={
+"Meta ∧":N("φ∧ψ",0,"I∧",2,[N("φ",3),N("ψ",3)]),
+"Meta →":N("φ→ψ",0,"I→",1,[N("ψ",3,"E→",4,[N("σ",4,"E→",4,[N("φ",4,0,0,0,{c:1,ca:5}),N("φ→σ",4)]),N("σ→ψ",4)])],{c:1,ca:5}),
+"Meta ¬":N("¬φ",0,"I¬",1,[N("⊥",3,"E¬",4,[N("ψ",4,"E→",4,[N("φ",4,0,0,0,{c:1,ca:5}),N("φ→ψ",4)]),N("¬ψ",4)])],{c:1,ca:5}),
+"Meta atómica (RAA)":N("φ",0,"RAA",3,[N("⊥",4,"E¬",5,[N("¬φ",5,0,0,0,{c:1,ca:5}),N("¬¬φ",5)])],{c:1,ca:5}),
+"Meta ∨":N("φ∨ψ",0,"I∨",1,[N("φ",2)]),
+"Meta ∨ sin hipótesis":N("φ∨¬φ",0,"RAA",3,[N("⊥",4,0,0,0,{open:1})]),
+"Meta ∀":N("∀xP(x)",0,"I∀",1,[N("P(x)",3,"E∧",3,[N("P(x)∧Q(x)",3,"E∀",3,[N("∀x(P(x)∧Q(x))",3)])])]),
+"Meta ∃":N("∃xP(x)",0,"I∃",1,[N("P(a)",2)]),
+"Meta ↔":N("φ↔ψ",0,"I↔",1,[N("φ→ψ",2),N("ψ→φ",2)]),
+"Meta ⊥":N("⊥",0,"E¬",1,[N("φ",2),N("¬φ",2)]),
+"Usar ∧":N("ψ",0,"E∧",2,[N("φ∧ψ",2)]),
+"Usar →":N("ψ",0,"E→",1,[N("φ→ψ",1),N("φ",2,0,0,0,{open:1})]),
+"Usar ∨":N("χ",0,"E∨",1,[N("φ∨ψ",1),N("χ",3,"E→",3,[N("φ",3,0,0,0,{c:1,ca:4}),N("φ→χ",3)]),N("χ",3,"E→",3,[N("ψ",3,0,0,0,{c:2,ca:4}),N("ψ→χ",3)])],{c:"1,2",ca:4}),
+"Usar ∃":N("∃xQ(x)",0,"E∃",1,[N("∃xP(x)",1),N("∃xQ(x)",1,"I∃",3,[N("Q(x)",2,"E→",2,[N("P(x)",1,0,0,0,{c:1,ca:4}),N("P(x)→Q(x)",2,"E∀",2,[N("∀x(P(x)→Q(x))",2)])])])],{c:1,ca:4}),
+"Febrero 3a (RAA dentro de I→)":N("((p→q)∧(¬r→p))→(¬q→r)",0,"I→",1,[N("¬q→r",1,"I→",2,[N("r",2,"RAA",3,[N("⊥",4,"E¬",8,[N("q",5,"E→",7,[N("p→q",7,"E∧",7,[N("(p→q)∧(¬r→p)",7,0,0,0,{c:1,ca:9})]),N("p",6,"E→",6,[N("¬r→p",6,"E∧",6,[N("(p→q)∧(¬r→p)",6,0,0,0,{c:1,ca:9})]),N("¬r",6,0,0,0,{c:3,ca:9})])]),N("¬q",5,0,0,0,{c:2,ca:9})])],{c:3,ca:9})],{c:2,ca:9})],{c:1,ca:9}),
+"Febrero 3b (∃ con igualdad)":N("(∃w)f(h(w)) =′ g(f(w))",0,"E∃",2,[N("(∃z)P(z)",2),N("(∃w)f(h(w)) =′ g(f(w))",2,"I∃",8,[N("f(h(z)) =′ g(f(z))",4,"RI4",7,[N("g(z) =′ h(z)",5,"RI2",5,[N("h(z) =′ g(z)",4,"E→",4,[N("P(z)→h(z) =′ g(z)",4,"E∀",4,[N("(∀y)(P(y)→h(y) =′ g(y))",4)]),N("P(z)",4,0,0,0,{c:1,ca:9})])]),N("f(g(z)) =′ g(f(z))",6,"E∀",6,[N("(∀x)f(g(x)) =′ g(f(x))",6)])],{fa:7})])],{c:1,ca:9}),
+"Combinar 2c (∀ desde contradicción)":N("(∀x)Q(x)",0,"I∀",1,[N("Q(x)",2,"E⊥",4,[N("⊥",4,"E¬",5,[N("P(f(x))",5,"E∀",7,[N("(∀x)P(f(x))",6,"E∧",6,[N("(∀x)P(f(x))∧(∃z)¬P(z)",6)])]),N("¬P(f(x))",7,"E∀",8,[N("(∀x)¬P(x)",7)],{fa:8})])])]),
+"Combinar 3b (∃ en hipótesis y en meta)":N("(∃x)P(x,x)",0,"E∃",2,[N("(∃x)R(x,x)",2),N("(∃x)P(x,x)",4,"I∃",9,[N("P(x,x)",6,"E→",8,[N("R(x,x)∧R(x,x)",7,"I∧",7,[N("R(x,x)",7,0,0,0,{c:1,ca:10}),N("R(x,x)",7,0,0,0,{c:1,ca:10})]),N("R(x,x)∧R(x,x)→P(x,x)",6,"E∀",6,[N("(∀z)(R(x,x)∧R(x,z)→P(x,z))",6,"E∀",6,[N("(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))",6,"E∀",6,[N("(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))",6)])])])])])],{c:1,ca:10}),
+"Combinar 3a → (casos y contradicción)":N("(α∨(β∧¬γ))→(¬α→¬(β→γ))",0,"I→",1,[N("¬α→¬(β→γ)",1,"I→",2,[N("¬(β→γ)",2,"I¬",3,[N("⊥",3,"E∨",4,[N("α∨(β∧¬γ)",4,0,0,0,{c:3,ca:11}),N("⊥",5,"E¬",6,[N("α",6,0,0,0,{c:4,ca:10}),N("¬α",6,0,0,0,{c:2,ca:11})]),N("⊥",5,"E¬",9,[N("γ",8,"E→",8,[N("β",7,"E∧",7,[N("β∧¬γ",7,0,0,0,{c:5,ca:10})]),N("β→γ",8,0,0,0,{c:1,ca:11})]),N("¬γ",7,"E∧",7,[N("β∧¬γ",7,0,0,0,{c:5,ca:10})])])],{c:"4,5",ca:10})],{c:1,ca:11})],{c:2,ca:11})],{c:3,ca:11}),
+"Combinar 3a ← (cuando no sé qué disyunto)":N("(¬α→¬(β→γ))→(α∨(β∧¬γ))",0,"I→",1,[N("α∨(β∧¬γ)",1,"RAA",3,[N("⊥",3,"E¬",8,[N("β→γ",8,"I→",9,[N("γ",9,"RAA",10,[N("⊥",10,"E¬",11,[N("α∨(β∧¬γ)",11,"I∨",11,[N("β∧¬γ",11,"I∧",11,[N("β",11,0,0,0,{c:4,ca:14}),N("¬γ",11,0,0,0,{c:5,ca:12})])]),N("¬(α∨(β∧¬γ))",11,0,0,0,{c:2,ca:13})])],{c:5,ca:12})],{c:4,ca:14}),N("¬(β→γ)",4,"E→",7,[N("¬α",4,"I¬",5,[N("⊥",5,"E¬",6,[N("α∨(β∧¬γ)",6,"I∨",6,[N("α",6,0,0,0,{c:3,ca:14})]),N("¬(α∨(β∧¬γ))",6,0,0,0,{c:2,ca:13})])],{c:3,ca:14}),N("¬α→¬(β→γ)",4,0,0,0,{c:1,ca:14})],{fa:7})])],{c:2,ca:13})],{c:1,ca:14})};
+SWC.forEach(c=>{if(c.s=="lg"&&TRS[c.g])c.tr=TRS[c.g]});
+
 /* ---- Pestaña Deslizar: decisiones binarias (estado propio en localStorage "sw1") ---- */
 let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
 try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}
@@ -931,8 +1002,8 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  const w=pool.map(c=>1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i)),0));let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;
  while(r>w[k]&&k<pool.length-1){r-=w[k];k++}
  return{c:pool[k],i:0,only:false,built:[],err:0}}
-function swNew(){SW=swPick();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
-function swStep(){SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swNew(){SW=swPick();SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swStep(){SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»"};
 function ctxH(t,src){return t.split("\n").map(l=>{const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
@@ -944,15 +1015,15 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
  ((s.x||c.ctx)?`<div class="sn">${ctxH(s.x||c.ctx,u.ans=="no"?s.src:null)}</div>`:"")+(u.ans=="no"&&s.src&&s.src.includes("dg")?`<div class="hl">${swDg(c,u.i,0)}</div>`:swDg(c,u.i,0))+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.filter(Boolean).join(" · "))} …</div>`:"")+
- `<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+
- (u.ans=="no"?`<div class="fb no"><b>Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div>${s.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${s.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
+ `<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+(u.ans?"":`<button class="btn ghost" data-w="NS" style="display:block;margin:10px auto 0">No sé <span class="mut">(↓)</span></button>`)+
+ (u.ans=="no"?`<div class="fb no"><b>${u.pick=="NS"?"No sabías. ":""}Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div>${s.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${s.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
  V.innerHTML=h;swBind()}
 function swBind(){const el=$("swc");if(!el||SW.ans)return;
- el.onpointerdown=e=>{SDRAG={x:e.clientX,dx:0};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition="none"};
+ el.onpointerdown=e=>{SDRAG={x:e.clientX,dx:0,t:e.target.closest("[data-w]")};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition="none"};
  el.onpointermove=e=>{if(!SDRAG)return;SDRAG.dx=e.clientX-SDRAG.x;el.style.transform=`translateX(${SDRAG.dx}px) rotate(${SDRAG.dx/30}deg)`;el.classList.toggle("tl",SDRAG.dx<-30);el.classList.toggle("tr",SDRAG.dx>30)};
- el.onpointerup=el.onpointercancel=()=>{if(!SDRAG)return;const dx=SDRAG.dx;SDRAG=null;el.style.transition="";if(Math.abs(dx)>80)swChoose(dx<0?"L":"R");else{el.style.transform="";el.classList.remove("tl","tr")}}}
-function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=(side=="L")==u.cl,k=c.id+":"+u.i;
- u.ans=ok?"ok":"no";u.pick=side;S2.box[k]=ok?Math.min(4,(S2.box[k]||0)+1):0;S2.n++;SUN++;
+ el.onpointerup=el.onpointercancel=()=>{if(!SDRAG)return;const dx=SDRAG.dx,t=SDRAG.t;SDRAG=null;el.style.transition="";if(Math.abs(dx)>80)swChoose(dx<0?"L":"R");else if(Math.abs(dx)<8&&t&&/^(L|R|NS)$/.test(t.dataset.w)){el.style.transform="";el.classList.remove("tl","tr");swChoose(t.dataset.w)}else{el.style.transform="";el.classList.remove("tl","tr")}}}
+function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=side!="NS"&&(side=="L")==u.cl,k=c.id+":"+u.i;
+ u.ans=ok?"ok":"no";u.pick=side;logA("sw",c.s,c.g,ok,{q:s.q,x:s.x||c.ctx||"",a:s.a,p:side=="NS"?"No sé ("+s.b+")":s.b,ns:side=="NS"?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:u.i+1});S2.box[k]=ok?Math.min(4,(S2.box[k]||0)+1):0;S2.n++;SUN++;
  if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
  else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+3});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
  SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
@@ -963,20 +1034,22 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  swStep()}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if(TAB!=3)return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
- if(w=="L"||w=="R")swChoose(w);else if(w=="go")swAdvance();else if(w=="sf"){SF=b.dataset.v;swNew()}});
+ if(w=="L"||w=="R"||w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="sf"){SF=b.dataset.v;swNew()}});
 document.addEventListener("keydown",e=>{if(TAB!=3||!SW||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
- if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
+ if(k=="ArrowDown"&&SW.ans==null&&!SW.recap){e.preventDefault();swChoose("NS")}
+ else if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
  else if((k=="Enter"||k==" ")&&e.target.tagName!="BUTTON"){e.preventDefault();if(SW.recap||SW.ans=="no")swAdvance()}});
 
 /* ===== Música (pestaña 4): estilo Simon con un bajo de 6 cuerdas BEADGC; la secuencia son las tónicas de cada parte ===== */
 const MSEC=[
-["Mi país","Rubén Rada","Estrofa 1 (Hoy puedo ver)","G D E E C B A D"],["Mi país","Rubén Rada","Estrofa 2 (Como uruguayo)","G D E E C B A F#"],["Mi país","Rubén Rada","Puente (Tomarme un mate)","E E E E C B A D"],["Mi país","Rubén Rada","Hoy puedo amar","G D E E C B A F# E E E E C D G"],["Mi país","Rubén Rada","Estribillo (Gracias a vos)","C D G C D G C D G C D G"],["Mi país","Rubén Rada","Final (Y el tamboril)","C D G C D G"],
-["Ciudad mágica","Tan Biónica","Estrofa","A C G F A C G F"],["Ciudad mágica","Tan Biónica","Coro","F C F C F C E F E A C G A"],
+["Mi país","Rubén Rada","Estrofa (0:10, se toca 2 veces)","G F# E F C B A D"],["Mi país","Rubén Rada","Transición (0:33)","D D# E E D C C B B E B A"],["Mi país","Rubén Rada","Segundo bloque (0:43)","G F# G D C D# E D G C B E A D# E E D C B C# C B A G B"],["Mi país","Rubén Rada","Estribillo (1:11)","C B A D G F G C B A D G F G C B E A D G"],
+["Ciudad mágica","Tan Biónica","Estrofa (se toca 2 veces)","A C G F"],["Ciudad mágica","Tan Biónica","Pre-coro","F C F C F C E"],["Ciudad mágica","Tan Biónica","Coro","F E A C G A"],
 ["Cae el sol","Airbag","Intro","C# A E E"],["Cae el sol","Airbag","Estrofa","C# A E C# A E B C# B C# A B"],["Cae el sol","Airbag","Estribillo","C# A E B C# A E B C# A E B C# A E"],
 ["Ai se eu te pego","Michel Teló","Toda la canción","G D E C G D E C"],
-["Hoy","Gloria Estefan","Estrofa","E D C D G E D C B E"],["Hoy","Gloria Estefan","Pre-estribillo","C D G E C D G B E"],["Hoy","Gloria Estefan","Estribillo","C D G B E C D G B E"],
+["Hoy","Gloria Estefan","Estrofa (Tengo marcado en el pecho)","G# F# E F# B A# G# F# E D# G#"],["Hoy","Gloria Estefan","Pre-estribillo (Tengo una mañana constante)","E F# B A# G# E F# B D# G#"],["Hoy","Gloria Estefan","Estribillo (Hoy voy a verte de nuevo)","E F# B D# G# E F# B D# G#"],
 ["I Want to Break Free","Queen","Estrofa","E A E B A E"],["I Want to Break Free","Queen","Solo","E A E B A E B A E"],["I Want to Break Free","Queen","Puente","B A B A C# F# F# A B C# B A B C# B A B E"],
-["Cielo de un solo color","No Te Va Gustar","Estrofa","A E F A E F"],["Cielo de un solo color","No Te Va Gustar","Segundo bloque","A E F A E F G F"],["Cielo de un solo color","No Te Va Gustar","Tercer bloque","G F A G F A G F A G F"]];
+["Cielo de un solo color","No Te Va Gustar","Estrofa","A E F A E F"],["Cielo de un solo color","No Te Va Gustar","Segundo bloque","A E F A E F G F"],["Cielo de un solo color","No Te Va Gustar","Tercer bloque","G F A G F A G F A G F"],
+["Like a Prayer","Madonna","Intro (Life is a mystery)","D C D C D E A# A A# C C D"],["Like a Prayer","Madonna","Estrofa (I hear your voice / Like a child)","F C D A# F C A# F C D A# F C"],["Like a Prayer","Madonna","Estribillo (When you call my name)","F C A# A D F C A# A D A#"],["Like a Prayer","Madonna","Estribillo 2 (Your voice can take me there)","D E A# A A# C C F"],["Like a Prayer","Madonna","Puente (se toca 4 veces)","F C A# A D"]];
 const NPC={C:0,"C#":1,D:2,"D#":3,E:4,F:5,"F#":6,G:7,"G#":8,A:9,"A#":10,B:11},NN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const MSTR=[["C",0,130.81],["G",7,98],["D",2,73.42],["A",9,55],["E",4,41.2],["B",11,30.87]],MF=25;
 let S3=(()=>{try{return JSON.parse(localStorage.getItem("mu1")||"{}")}catch(e){return{}}})();
@@ -986,18 +1059,23 @@ const mPc=(s,f)=>(MSTR[s][1]+f)%12,mNm=(s,f)=>NN[mPc(s,f)];
 function muStop(){MT.forEach(clearTimeout);MT=[]}
 function mTone(s,f){if(S3.snd===0)return;try{MAU=MAU||new(window.AudioContext||window.webkitAudioContext)();const a=MAU,fr=MSTR[s][2]*Math.pow(2,f/12),t=a.currentTime,g=a.createGain(),lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+.7);lp.connect(g);g.connect(a.destination);[[1,"sawtooth",.6],[2,"triangle",.5],[3,"sine",.25]].forEach(([m,ty,v])=>{const o=a.createOscillator(),h=a.createGain();o.type=ty;o.frequency.value=fr*m;h.gain.value=v;o.connect(h);h.connect(lp);o.start(t);o.stop(t+.75)})}catch(e){}}
 function muOpen(){muStop();if(!MU)MU={path:[],i:0,seq:[],lvl:0,inp:0,mode:"idle",err:0,msg:"Elegí una parte y tocá Empezar.",lit:null,rev:0};muDraw()}
-function muKey(){return MSEC[MU.i][0]+"|"+MSEC[MU.i][2]}
+const muPr=()=>S3.mo=="pr";
+function muKey(){return MSEC[MU.i][0]+"|"+MSEC[MU.i][2]+(muPr()?"|pr":"")}
 let MFR=null;const mLow=pc=>{let b=null,bd=0;for(let s=0;s<6;s++)for(let f=0;f<MF;f++)if(mPc(s,f)==pc){const q=MSTR[s][2]*Math.pow(2,f/12),d=MFR?Math.abs(Math.log2(q/MFR)):q;if(!b||d<bd){b=[s,f,q];bd=d}}return b};
 function muStart(){muStop();const r=MSEC[MU.i][3].split(" ");
- MU.seq=r.map(n=>({n}));MU.lvl=Math.min(2,MU.seq.length);MU.err=0;MU.rev=0;muShow()}
+ MU.seq=r.map(n=>({n}));MU.err=0;MU.rev=0;
+ if(muPr()){MU.lvl=MU.seq.length;MU.path=[];MU.inp=0;MU.lit=null;MU.mode="in";MU.msg="Práctica: tocá la parte entera, sin ayuda.";muDraw();return}
+ MU.lvl=Math.min(2,MU.seq.length);muShow()}
 function muShow(){muStop();MU.path=[];MU.mode="show";MU.inp=0;MU.lit=null;MU.msg="Mirá la secuencia…";muDraw();
- for(let k=0;k<MU.lvl;k++){const q=MU.seq[k];MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n]};const b=mLow(NPC[q.n]);mTone(b[0],b[1]);muPaint()},500+k*750));MT.push(setTimeout(()=>{MU.lit=null;muPaint()},500+k*750+520))}
+ for(let k=0;k<MU.lvl;k++){const q=MU.seq[k];MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n]};const b=q.s!=null?[q.s,q.f]:mLow(NPC[q.n]);mTone(b[0],b[1]);muPaint()},500+k*750));MT.push(setTimeout(()=>{MU.lit=null;muPaint()},500+k*750+520))}
  MT.push(setTimeout(()=>{MU.mode="in";MU.msg="Tu turno: tónica 1 de "+MU.lvl;muDraw()},500+MU.lvl*750))}
 function muTap(s,f){if(!MU||MU.mode!="in")return;MFR=MSTR[s][2]*Math.pow(2,f/12);mTone(s,f);const q=MU.seq[MU.inp];
- if(mPc(s,f)==NPC[q.n]){MU.path.push([s,f,"ok"]);MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
-  if(MU.lvl==N){MU.mode="done";MU.msg="¡Parte completa!"+(MU.err?" Errores: "+MU.err+".":" Sin errores.");MU.rev=1;muDraw();return}
+ const mOk=mPc(s,f)==NPC[q.n];logA("mu","mu",MSEC[MU.i][0]+" · "+MSEC[MU.i][2],mOk,{q:"tónica "+(MU.inp+1)+" de "+MU.lvl,a:q.n,p:mNm(s,f)});
+ if(mOk){q.s=s;q.f=f;MU.path.push([s,f,"ok"]);MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
+  if(MU.lvl==N){MU.mode="done";MU.msg=(muPr()?"¡Parte entera sin ayuda!":"¡Parte completa!")+(MU.err?" Errores: "+MU.err+".":" Sin errores.");MU.rev=1;muDraw();return}
   MU.mode="wait";MU.msg="¡Bien! Sube a "+(MU.lvl+1)+" tónicas.";muDraw();MT.push(setTimeout(()=>{MU.lvl++;muShow()},900));return}
-  MU.msg="Tónica "+(MU.inp+1)+" de "+MU.lvl;muDraw()}
+  MU.msg=muPr()?"Nota "+(MU.inp+1)+" de "+MU.lvl:"Tónica "+(MU.inp+1)+" de "+MU.lvl;muDraw()}
+ else if(muPr()){MU.path.push([s,f,"no"]);MU.err++;const k=muKey();S3.best=S3.best||{};if(MU.inp>(S3.best[k]||0)){S3.best[k]=MU.inp;mSave()}MU.mode="done";MU.lit={tap:[s,f],c:"no"};MU.msg="Llegaste a "+MU.inp+" de "+MU.lvl+". Era "+q.n+" (se ilumina dónde suena). Tocá Empezar para reintentar.";muDraw();MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n],c:"ok"};muPaint()},500))}
  else{MU.path.push([s,f,"no"]);MU.err++;MU.mode="wait";MU.lit={tap:[s,f],c:"no"};MU.msg="Era "+q.n+": se ilumina en todas las posiciones donde suena. Se repite la secuencia.";muDraw();MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n],c:"ok"};muPaint()},500));MT.push(setTimeout(muShow,2200))}}
 let MSC=null;
 function muScr(){const sc=$("fbs");if(!sc)return;if(MSC===null){const c=sc.querySelector('.fc[data-f="5"]');if(!c||!c.offsetLeft)return;MSC=Math.max(0,c.offsetLeft-34)}sc.scrollLeft=MSC;sc.onscroll=()=>{MSC=sc.scrollLeft}}
@@ -1009,17 +1087,45 @@ function muPaint(){const el=$("fb");if(el){el.innerHTML=muBoard();muTrace()}}
 function muBoard(){const nm=S3.nm,L=MU.lit;let h=`<div class="fbr fbh"><span></span>${Array.from({length:MF},(_,f)=>`<span>${f}</span>`).join("")}</div>`;
  for(let s=0;s<6;s++){h+=`<div class="fbr"><b class="fbs">${MSTR[s][0]}</b>`;for(let f=0;f<MF;f++){const c=!L?"":L.tap?(L.tap[0]==s&&L.tap[1]==f?L.c:""):(mPc(s,f)==L.pc?(L.c||"lit"):"");h+=`<button class="fc${f==0?" nut":""}${c?" "+c:""}" data-m="t" data-s="${s}" data-f="${f}" aria-label="Cuerda ${MSTR[s][0]}, traste ${f}">${nm?mNm(s,f):(f==3||f==5||f==7||f==9||f==12||f==15||f==17||f==19||f==21||f==24)&&s==5?"·":""}</button>`}h+=`</div>`}return h}
 function muDraw(){const m=MU,s=MSEC[m.i],N=s[3].split(" ").length,best=(S3.best||{})[muKey()]||0;let opts="",g="";MSEC.forEach((x,i)=>{if(x[0]!=g){if(g)opts+="</optgroup>";opts+=`<optgroup label="${esc(x[0]+" · "+x[1])}">`;g=x[0]}opts+=`<option value="${i}"${i==m.i?" selected":""}>${esc(x[2])} (${x[3].split(" ").length})</option>`});opts+="</optgroup>";
- const shown=m.rev?s[3]:m.seq.slice(0,m.mode=="in"||m.mode=="wait"?Math.max(0,m.inp):0).map(x=>x.n).join(" ");
- V.innerHTML=`<div class="s-mu"><div class="row between"><b class="sj">Tónicas</b><span class="mut">Mejor ${best}/${N}${m.lvl?" · Nivel "+m.lvl+"/"+N:""} · Errores ${m.err}</span></div>
+ const shown=m.rev?s[3]:m.seq.slice(0,m.mode=="idle"?0:m.inp).map(x=>x.n).join(" ");
+ V.innerHTML=`<div class="s-mu"><div class="row between"><b class="sj">Tónicas</b><span class="mut">Mejor ${best}/${N}${m.lvl&&!muPr()?" · Nivel "+m.lvl+"/"+N:""} · Errores ${m.err}</span></div>
  <select id="msel" style="margin:8px 0;width:100%;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg)">${opts}</select>
+ <div class="row" style="gap:6px;margin-bottom:8px"><button class="btn chip${muPr()?"":" sel"}" data-m="mo" data-v="ap">Aprendizaje</button><button class="btn chip${muPr()?" sel":""}" data-m="mo" data-v="pr">Práctica</button></div>
  <div class="sn" id="mmsg">${esc(m.msg)}</div><div id="fbs" style="overflow-x:auto;padding-bottom:6px"><div id="fb" class="fbd">${muBoard()}</div></div>
- <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" data-m="go">${m.mode=="idle"||m.mode=="done"?"Empezar":"Reiniciar"}</button><button class="btn" data-m="rep"${m.mode=="in"?"":" disabled"}>Repetir secuencia</button><button class="btn chip${S3.nm?" sel":""}" data-m="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-m="snd">Sonido</button></div>
+ <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn pri" data-m="go">${m.mode=="idle"||m.mode=="done"?"Empezar":"Reiniciar"}</button><button class="btn" data-m="rep"${m.mode=="in"&&!muPr()?"":" disabled"}>Repetir secuencia</button><button class="btn chip${S3.nm?" sel":""}" data-m="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-m="snd">Sonido</button></div>
  ${shown?`<div class="mut" style="margin-top:8px">Tónicas hasta ahora: <b>${esc(shown)}</b></div>`:""}
- <p class="mut" style="margin-top:10px;font-size:13px">Se ilumina la nota en todas las octavas y posiciones (trastes 0 a 24): todas valen, tocá la que prefieras. Las tónicas salen de cifrados de internet; verifícalas con el disco.</p></div>`;
- muTrace();muScr();const sel=$("msel");sel.onchange=()=>{muStop();MU.path=[];MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
+ <p class="mut" style="margin-top:10px;font-size:13px">Se ilumina la nota en todas las octavas y posiciones (trastes 0 a 24): todas valen, tocá la que prefieras. Al repetir la secuencia suena la posición que tocaste la última vez. Las tónicas salen de cifrados de internet; verifícalas con el disco.</p></div>`;
+ muTrace();muScr();const sel=$("msel");sel.onchange=()=>{muStop();MU.path=[];MU.i=+sel.value;MU.seq=[];MU.lvl=0;MU.inp=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg="Elegí una parte y tocá Empezar.";muDraw()}}
 V.addEventListener("click",ev=>{if(TAB!=4||!MU)return;const b=ev.target.closest("[data-m]");if(!b)return;const a=b.dataset.m;
- if(a=="t")muTap(+b.dataset.s,+b.dataset.f);else if(a=="go")muStart();else if(a=="rep"&&MU.mode=="in")muShow();else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();muDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();muDraw()}});
-[0,1,2,3,4].forEach(i=>$("t"+i).onclick=()=>tab(i));
-tab({repaso:0,prog4:1,logica:2,musica:4}[location.hash.slice(1)]||0);
+ if(a=="t")muTap(+b.dataset.s,+b.dataset.f);else if(a=="go")muStart();else if(a=="rep"&&MU.mode=="in"&&!muPr())muShow();else if(a=="mo"){muStop();S3.mo=b.dataset.v;mSave();MU.path=[];MU.seq=[];MU.lvl=0;MU.inp=0;MU.mode="idle";MU.lit=null;MU.rev=0;MU.msg=muPr()?"Práctica: tocá Empezar y poné la parte entera sin ayuda.":"Elegí una parte y tocá Empezar.";muDraw()}else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();muDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();muDraw()}});
+/* ===== Errores (pestaña 5): resumen, lista y exportación para Claude ===== */
+const WN={rep:"Repaso",sw:"Deslizar",mu:"Música",ej:"Ejercicios"},SN={p4:"Prog4",lg:"Lógica",mu:"Música"};
+let ERW="all",ERR=0,ERT="";
+const fd=t=>new Date(t).toLocaleString("es-UY",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+const ld2=k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")}catch(e){return{}}};
+function erTxt(all){const L=E1.log.filter(e=>all||e.t>E1.exp);let o=`ERRORES DE ESTUDIO (${all?"todo el historial":"desde la última exportación"}) · ${L.length} fallos`+(L.length?` · ${fd(L[0].t)} a ${fd(L[L.length-1].t)}`:"")+"\n\n## Tasa por tag (fallos/intentos, histórico)\n";
+ Object.entries(E1.st).map(([k,[ok,n]])=>[k,n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]).forEach(([k,f,n])=>{const[w,s,g]=k.split("|");o+=w=="ej"?`- ${WN[w]}/${SN[s]}/${g}: ${f} ${f==1?"fallo":"fallos"}\n`:`- ${WN[w]}/${SN[s]}/${g}: ${f}/${n} (${Math.round(f/n*100)}%)\n`});
+ const nsN=L.filter(e=>e.ns).length;if(nsN)o+=`\n(${nsN} de estos fallos fueron "No sé": figuran como Elegí: No sé.)\n`;const cf={};L.forEach(e=>{const k=SN[e.s]+" · "+e.a+"  →  "+e.p;cf[k]=(cf[k]||0)+1});const cfs=Object.entries(cf).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,25);
+ if(cfs.length){o+="\n## Confusiones repetidas (correcta → elegí)\n";cfs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}
+ const G={};L.forEach(e=>{const k=e.w+"|"+e.g+"|"+e.q+"|"+e.p;const x=G[k]||(G[k]={e,n:0,ms:0,rp:0});x.n++;x.ms+=e.ms||0;x.rp+=e.rp?1:0;x.last=e.t});
+ o+="\n## Fallos agrupados (más repetidos primero)\n";Object.values(G).sort((a,b)=>b.n-a.n||b.last-a.last).forEach(({e,n,ms,rp})=>{o+=`\n[${WN[e.w]}/${SN[e.s]}/${e.g}${e.n?" paso "+e.n:""}] ${n}×${rp?" ("+rp+" en reintento)":""} ${ms?"· "+Math.round(ms/n/1000)+" s promedio":""}${e.b>=0&&e.b!==undefined?" · caja "+e.b:""}\n`+(e.x?"  Contexto: "+e.x.replace(/\n/g," / ")+"\n":"")+`  P: ${e.q.replace(/\n/g," / ")}\n  Correcta: ${e.a}\n  Elegí: ${e.p}\n`});
+ const a=ld2("er"),b=ld2("ern");if(Object.keys(a).length||Object.keys(b).length){o+="\n## Apps de ejercicios: conteo viejo por tipo (antes del registro detallado)\n";Object.entries(a).forEach(([k,v])=>o+=`- Prog4: ${k}: ${v.n}\n`);Object.entries(b).forEach(([k,v])=>o+=`- Lógica: ${k}: ${v}\n`)}
+ return o}
+function erOpen(){const L=E1.log.filter(e=>ERW=="all"||e.w==ERW),nw=E1.log.filter(e=>e.t>E1.exp).length,st=Object.entries(E1.st).filter(([k])=>ERW=="all"||k.startsWith(ERW+"|")).map(([k,[ok,n]])=>[k.split("|"),n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]);
+ let h=`<div class="row between"><b>${E1.log.length} errores guardados</b><span class="mut">${nw} nuevos desde la última exportación${E1.exp?" ("+fd(E1.exp)+")":""}</span></div>
+ <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px"><button class="btn pri" data-e="cp">Copiar para Claude (nuevos)</button><button class="btn" data-e="cpa">Copiar todo</button><button class="btn" data-e="dl">Descargar .txt</button></div>
+ ${ERT?`<p class="mut" style="margin:8px 0 4px">Si no se copió solo, seleccioná el texto y copialo:</p><textarea id="ert" style="width:100%;height:140px;font:12px var(--m);background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:8px">${esc(ERT)}</textarea>`:""}
+ <div class="row" style="margin-top:12px;gap:6px;flex-wrap:wrap">${[["all","Todo"],["sw","Deslizar"],["ej","Ejercicios"],["rep","Repaso"],["mu","Música"]].map(([k,t])=>`<button class="btn chip${ERW==k?" sel":""}" data-e="w" data-v="${k}">${t}</button>`).join("")}</div>
+ <div class="card"><h2>Dónde fallo más</h2>${st.length?st.slice(0,15).map(([[w,s,g],f,n])=>`<div class="row between" style="gap:8px;margin:4px 0"><span>${esc(SN[s]+" · "+g)} <span class="mut">(${WN[w]})</span></span><span class="mut" style="white-space:nowrap">${w=="ej"?`<b>${f}</b> ${f==1?"fallo":"fallos"}`:`${f}/${n} · <b>${Math.round(f/n*100)}%</b>`}</span></div>`).join(""):'<p class="mut" style="margin:0">Todavía no hay errores. Se guardan solos al estudiar en Repaso, Deslizar y Música.</p>'}</div>
+ <div class="card"><h2>Últimos errores</h2>${L.slice(-40).reverse().map(e=>`<div style="border-top:1px solid var(--bd);padding:8px 0"><div class="mut" style="font-size:12px">${fd(e.t)} · ${WN[e.w]} · ${esc(SN[e.s]+" · "+e.g)}${e.ms?" · "+Math.round(e.ms/1000)+" s":""}</div><div>${esc(e.q.split("\n").pop())}</div><div style="font-size:14px"><span style="color:var(--bad)">✗ ${esc(e.p)}</span> · <span style="color:var(--ok)">✓ ${esc(e.a)}</span></div></div>`).join("")||'<p class="mut" style="margin:0">Nada por acá.</p>'}</div>
+ <button class="btn ghost" data-e="clr">${ERR?"Tocá otra vez para borrar todos los errores":"Borrar registro de errores"}</button>`;
+ V.innerHTML=h}
+function erCopy(all){ERT=erTxt(all);const done=()=>{if(!all){E1.exp=Date.now();SVE()}};try{navigator.clipboard.writeText(ERT).then(()=>{done();ERT="";erOpen();const b=V.querySelector('[data-e="'+(all?"cpa":"cp")+'"]');if(b)b.textContent="Copiado ✓"},()=>{done();erOpen()})}catch(e){done();erOpen()}}
+V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[data-e]");if(!b)return;const a=b.dataset.e;
+ if(a=="cp")erCopy(0);else if(a=="cpa")erCopy(1);else if(a=="w"){ERW=b.dataset.v;erOpen()}
+ else if(a=="dl"){const u=URL.createObjectURL(new Blob([erTxt(1)],{type:"text/plain"})),l=document.createElement("a");l.href=u;l.download="errores-"+TD()+".txt";l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+ else if(a=="clr"){if(ERR){E1={log:[],st:{},exp:0};SVE();ERR=0}else ERR=1;erOpen()}});
+[0,1,2,3,4,5].forEach(i=>$("t"+i).onclick=()=>tab(i));
+{const hm={repaso:0,prog4:1,logica:2,deslizar:3,musica:4,errores:5},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
 </script>
 </html>
