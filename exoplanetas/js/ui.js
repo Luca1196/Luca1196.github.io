@@ -570,6 +570,7 @@ async function vista(tipo, d) {
 // ---------------------------------------------------------- render
 function render() {
   if (!g) return;
+  calcularSugerencia();
   renderRivales(); renderTablero(); renderHeroe(); renderMano(); renderAcciones();
   if (guia.paso >= 0) requestAnimationFrame(actualizarGuia);
 }
@@ -603,7 +604,7 @@ function renderTablero() {
     const dots = visibles.map(pl => {
       const dueño = pl.pubPlaneta !== null ? pl.pubPlaneta : pl.desc;
       const op = activo ? ops.find(o => o.pl === pl) : null;
-      return `<span class="pl-dot ${pl.vivo ? "" : "muerto"} ${pl.pubPlaneta === null && pl.desc !== YO ? "priv-rival" : ""} ${op ? "objetivo" : ""}" data-pl="${pl.id}" role="button" tabindex="0">
+      return `<span class="pl-dot ${ui.sug && ui.sug.pl === pl ? "sugerida" : ""} ${pl.vivo ? "" : "muerto"} ${pl.pubPlaneta === null && pl.desc !== YO ? "priv-rival" : ""} ${op ? "objetivo" : ""}" data-pl="${pl.id}" role="button" tabindex="0">
         <span class="bola" style="background:${COLOR[dueño]}">${pl.pubPlaneta === null ? "?" : pl.confirmado ? "✓" : ""}</span><span class="pl-nom">${esc(pl.nombre)}</span>${tecsCortas(pl)}${op && ui.ayudas ? `<span class="pct">${pct(op.p)}</span>` : ""}</span>`;
     }).join("");
     const extra = pls.length > MAXP ? `<span class="pl-dot mas" title="Toca la estrella para ver todos">+${pls.length - visibles.length}</span>` : "";
@@ -677,17 +678,26 @@ function opcionesTurno() {
   const mios = g.planetas.filter(p => p.vivo && p.desc === YO), abiertos = g.planetas.filter(p => p.vivo && p.desc !== YO && p.abierto);
   for (const pl of [...mios, ...abiertos]) for (const mid of new Set(jg.mar))
     if (g.puedeInvestigar(jg, mid, pl) && (mid === "densidad" || sirveLista(mid, pl).some(c => !(c in pl.publicado))) && !inv.some(x => x.pl === pl))
-      inv.push({ pl, largo: `<b>Investigar</b> ${esc(pl.nombre)}: toca el Marcador <b>${esc(MAR[mid].nombre)}</b> y después el planeta, para averiguar de qué está hecho.`,
+      inv.push({ pl, carta: { tipo: "mar", id: mid }, largo: `<b>Investigar</b> ${esc(pl.nombre)}: toca el Marcador <b>${esc(MAR[mid].nombre)}</b> y después el planeta, para averiguar de qué está hecho.`,
         corto: `<b>Investigar</b> ${esc(pl.nombre)} (${esc(MAR[mid].nombre)})` });
   for (const pl of mios) if (!pl.confirmado && !med.length) for (const t of new Set(jg.tec)) if (g.puedeMedir(jg, t, pl) && !med.length)
-    med.push({ largo: `<b>Medir</b> ${esc(pl.nombre)}: toca <b>${esc(TEC[t].nombre)}</b> y después el planeta; una segunda técnica lo confirma (+${K.CONF - K.CAND}).`,
+    med.push({ pl, carta: { tipo: "tec", id: t }, largo: `<b>Medir</b> ${esc(pl.nombre)}: toca <b>${esc(TEC[t].nombre)}</b> y después el planeta; una segunda técnica lo confirma (+${K.CONF - K.CAND}).`,
       corto: `<b>Medir</b> ${esc(pl.nombre)} (${esc(TEC[t].nombre)}) para confirmarlo` });
   const tecs = [...new Set(jg.tec)].filter(t => g.estrellas.some(e => g.puedeDescubrir(jg, t, e)));
-  const desc = tecs.length ? [{ largo: `<b>Buscar un planeta nuevo</b>: toca <b>${esc(TEC[tecs[0]].nombre)}</b> y después una estrella que brille.`,
+  const desc = tecs.length ? [{ carta: { tipo: "tec", id: tecs[0] }, largo: `<b>Buscar un planeta nuevo</b>: toca <b>${esc(TEC[tecs[0]].nombre)}</b> y después una estrella que brille.`,
     corto: `<b>Buscar planeta</b> (${tecs.map(t => esc(TEC[t].nombre)).join(", ")})` }] : [];
-  const tel = { largo: "Ninguna carta sirve ahora: toca el <b>Telescopio</b> para cambiarlas (usa tu turno).", corto: "<b>Telescopio</b>: cambiar cartas" };
+  const tel = { tel: true, largo: "Ninguna carta sirve ahora: toca el <b>Telescopio</b> para cambiarlas (usa tu turno).", corto: "<b>Telescopio</b>: cambiar cartas" };
   const todas = [...inv.slice(0, 2), ...med, ...desc].slice(0, 3);
-  return (todas.length ? [...todas, tel] : [tel]).map((o, k) => k === 0 ? o.largo : o.corto);
+  const lista = todas.length ? [...todas, tel] : [tel];
+  ui.sug = lista[0];                 // la recomendada: se señala en la pantalla (carta, planeta o telescopio)
+  return lista.map((o, k) => k === 0 ? o.largo : o.corto);
+}
+// Modo tutorial: calcula qué señalar antes de dibujar (cartas, planetas y botones con brillo dorado)
+function calcularSugerencia() {
+  ui.sug = null; ui.sugPub = null;
+  if (!ui.tutorial || !g || g.terminado || ui.ocupado || guia.paso >= 0) return;
+  if (ui.fase === "accion") { opcionesTurno(); if (ui.sel && ui.sug && ui.sug.carta && (ui.sel.tipo !== ui.sug.carta.tipo || ui.sel.id !== ui.sug.carta.id)) ui.sug = { pl: null }; }
+  else if (ui.fase === "post") { const n = publicables().length; consejoPublicar(); ui.sugPub = n && ui.pubConviene ? "pub" : "fin"; }
 }
 function listaOpciones(titulo, items) {
   return `<span class="opciones-t"><b class="ot-tit">${titulo}</b>${items.map((x, k) => `<span class="ot-op ${k === 0 ? "rec" : ""}">${k === 0 ? "★ " : "· "}${x}</span>`).join("")}</span>`;
@@ -740,7 +750,8 @@ function renderMano() {
   const chances = ui.fase === "accion" && !ui.ocupado && ui.ayudas;
   $("#mano").innerHTML = cartas.map((c, i) => cartaHTML(c.tipo, c.id, `data-i="${i}" style="--rot:${((i - (n - 1) / 2) * 3.5).toFixed(1)}deg"`,
     (ui.sel && ui.sel.i === i ? "sel " : "") + (ui.fase === "descartar" ? "descartar" : "")
-      + (ui.tutorial && ui.fase === "accion" && !ui.ocupado && !ui.sel ? (mejorUso(c) ? " util" : " inutil") : ""),
+      + (ui.tutorial && ui.fase === "accion" && !ui.ocupado && !ui.sel ? (mejorUso(c) ? " util" : " inutil") : "")
+      + (ui.sug && ui.sug.carta && !ui.sel && ui.sug.carta.tipo === c.tipo && ui.sug.carta.id === c.id && cartas.findIndex(x => x.tipo === c.tipo && x.id === c.id) === i ? " sugerida" : ""),
     chances ? (u => u ? `<span class="chance ${u.p >= .7 ? "alta" : u.p >= .45 ? "media" : "baja"}" title="Chance ahora">${pct(u.p)}</span>` : `<span class="chance no" title="Ahora no tiene dónde usarse">—</span>`)(mejorUso(c)) : "")).join("");
   $("#mano").querySelectorAll(".carta").forEach(b => b.onclick = () => {
     const i = +b.dataset.i, c = cartas[i];
@@ -806,12 +817,16 @@ function renderAcciones() {
   else msg = ui.tutorial ? `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…` : `Juega <b>${esc(nombreJ(g.turnoDe))}</b>…`;
   $("#msg").innerHTML = msg;
   $("#msg").classList.toggle("con-carta", !!$("#carta-grande"));
+  // tutorial: las sugerencias tienen el mismo aspecto que la guía (son la misma ayuda)
+  $("#msg").classList.toggle("tutor", !!ui.tutorial && guia.paso < 0 && !g.terminado && !$("#carta-grande"));
   const cg = $("#carta-grande"); if (cg) cg.onclick = () => ui.sel && detalleCarta(ui.sel);
   const bt = $("#b-tel"); bt.disabled = !(ui.fase === "accion" && !ui.ocupado && !g.terminado);
   if (!bt.querySelector("svg")) bt.querySelector(".mt-ico").innerHTML = ICO.tele;
   $("#app").classList.toggle("eligiendo", ui.fase === "accion" && !!ui.sel && !ui.ocupado);
   $("#msg").classList.toggle("mio", !g.terminado && !ui.ocupado && ["accion", "post", "robar", "descartar"].includes(ui.fase));
   $("#acciones").innerHTML = btns;
+  $("#b-tel").classList.toggle("sugerida", !!(ui.sug && ui.sug.tel));
+  if (ui.sugPub) { const b = $(ui.sugPub === "pub" ? "#b-pub" : "#b-fin"); if (b) b.classList.add("sugerida"); }
   $("#b-tel").onclick = hacerTelescopio;
   const fin = $("#b-fin"); if (fin) fin.onclick = () => { if (!ui.ocupado) resolver("fin"); };
   const pb = $("#b-pub"); if (pb) pb.onclick = abrirPublicar;
@@ -1108,7 +1123,7 @@ const guia = { paso: -1 };
 function guiaVisible() { const c = document.getElementById("guia"); return guia.paso >= 0 && !!c && !c.hidden; }
 function iniciarGuia() { GUIA.forEach(x => delete x.t0); guia.paso = 0; ui.tiradas = 0; actualizarGuia(); }
 function terminarGuia() {
-  guia.paso = -1; actualizarGuia();
+  guia.paso = -1; actualizarGuia(); render();   // al terminar la guía, aparecen las sugerencias del tutorial
   preferencias.tutorialVisto = true;
   try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {}
 }
