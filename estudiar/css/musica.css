@@ -1,0 +1,10 @@
+/* SECCIÓN MÚSICA: estilos del diapasón */
+.fbd{min-width:980px;position:relative}
+.mtr{position:absolute;left:0;top:0;pointer-events:none}
+.fbr{display:grid;grid-template-columns:26px repeat(25,1fr);align-items:center}
+.fc{font:11px var(--m,monospace);height:34px;border:0;border-bottom:2px solid var(--mut);border-right:1px solid var(--bd);background:var(--card);color:var(--mut);cursor:pointer;padding:0}
+.fc.nut{border-right:3px solid var(--fg)}
+.fc:active{background:var(--bd)}
+.fc.lit{background:var(--ac);color:var(--onac)}
+.fc.ok{background:var(--ok);color:#fff}
+.fc.no{background:var(--bad);color:#fff}

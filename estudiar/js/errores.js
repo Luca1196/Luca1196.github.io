@@ -1,0 +1,28 @@
+/* SECCIÓN ERRORES: resumen, lista y exportación. */
+/* ===== Errores (pestaña 5): resumen, lista y exportación para Claude ===== */
+const WN={rep:"Repaso",sw:"Deslizar",mu:"Música",ej:"Ejercicios"},SN={p4:"Prog4",lg:"Lógica",mu:"Música"};
+let ERW="all",ERR=0,ERT="";
+const fd=t=>new Date(t).toLocaleString("es-UY",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+const ld2=k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")}catch(e){return{}}};
+function erTxt(all){const L=E1.log.filter(e=>all||e.t>E1.exp);let o=`ERRORES DE ESTUDIO (${all?"todo el historial":"desde la última exportación"}) · ${L.length} fallos`+(L.length?` · ${fd(L[0].t)} a ${fd(L[L.length-1].t)}`:"")+"\n\n## Tasa por tag (fallos/intentos, histórico)\n";
+ Object.entries(E1.st).map(([k,[ok,n]])=>[k,n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]).forEach(([k,f,n])=>{const[w,s,g]=k.split("|");o+=w=="ej"?`- ${WN[w]}/${SN[s]}/${g}: ${f} ${f==1?"fallo":"fallos"}\n`:`- ${WN[w]}/${SN[s]}/${g}: ${f}/${n} (${Math.round(f/n*100)}%)\n`});
+ const nsN=L.filter(e=>e.ns).length;if(nsN)o+=`\n(${nsN} de estos fallos fueron "No sé": figuran como Elegí: No sé.)\n`;const cf={};L.forEach(e=>{const k=SN[e.s]+" · "+e.a+"  →  "+e.p;cf[k]=(cf[k]||0)+1});const cfs=Object.entries(cf).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,25);
+ if(cfs.length){o+="\n## Confusiones repetidas (correcta → elegí)\n";cfs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}
+ const G={};L.forEach(e=>{const k=e.w+"|"+e.g+"|"+e.q+"|"+e.p;const x=G[k]||(G[k]={e,n:0,ms:0,rp:0});x.n++;x.ms+=e.ms||0;x.rp+=e.rp?1:0;x.last=e.t});
+ o+="\n## Fallos agrupados (más repetidos primero)\n";Object.values(G).sort((a,b)=>b.n-a.n||b.last-a.last).forEach(({e,n,ms,rp})=>{o+=`\n[${WN[e.w]}/${SN[e.s]}/${e.g}${e.n?" paso "+e.n:""}] ${n}×${rp?" ("+rp+" en reintento)":""} ${ms?"· "+Math.round(ms/n/1000)+" s promedio":""}${e.b>=0&&e.b!==undefined?" · caja "+e.b:""}\n`+(e.x?"  Contexto: "+e.x.replace(/\n/g," / ")+"\n":"")+`  P: ${e.q.replace(/\n/g," / ")}\n  Correcta: ${e.a}\n  Elegí: ${e.p}\n`});
+ const a=ld2("er"),b=ld2("ern");if(Object.keys(a).length||Object.keys(b).length){o+="\n## Apps de ejercicios: conteo viejo por tipo (antes del registro detallado)\n";Object.entries(a).forEach(([k,v])=>o+=`- Prog4: ${k}: ${v.n}\n`);Object.entries(b).forEach(([k,v])=>o+=`- Lógica: ${k}: ${v}\n`)}
+ return o}
+function erOpen(){const L=E1.log.filter(e=>ERW=="all"||e.w==ERW),nw=E1.log.filter(e=>e.t>E1.exp).length,st=Object.entries(E1.st).filter(([k])=>ERW=="all"||k.startsWith(ERW+"|")).map(([k,[ok,n]])=>[k.split("|"),n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]);
+ let h=`<div class="row between"><b>${E1.log.length} errores guardados</b><span class="mut">${nw} nuevos desde la última exportación${E1.exp?" ("+fd(E1.exp)+")":""}</span></div>
+ <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px"><button class="btn pri" data-e="cp">Copiar para Claude (nuevos)</button><button class="btn" data-e="cpa">Copiar todo</button><button class="btn" data-e="dl">Descargar .txt</button></div>
+ ${ERT?`<p class="mut" style="margin:8px 0 4px">Si no se copió solo, seleccioná el texto y copialo:</p><textarea id="ert" style="width:100%;height:140px;font:12px var(--m);background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:8px">${esc(ERT)}</textarea>`:""}
+ <div class="row" style="margin-top:12px;gap:6px;flex-wrap:wrap">${[["all","Todo"],["sw","Deslizar"],["ej","Ejercicios"],["rep","Repaso"],["mu","Música"]].map(([k,t])=>`<button class="btn chip${ERW==k?" sel":""}" data-e="w" data-v="${k}">${t}</button>`).join("")}</div>
+ <div class="card"><h2>Dónde fallo más</h2>${st.length?st.slice(0,15).map(([[w,s,g],f,n])=>`<div class="row between" style="gap:8px;margin:4px 0"><span>${esc(SN[s]+" · "+g)} <span class="mut">(${WN[w]})</span></span><span class="mut" style="white-space:nowrap">${w=="ej"?`<b>${f}</b> ${f==1?"fallo":"fallos"}`:`${f}/${n} · <b>${Math.round(f/n*100)}%</b>`}</span></div>`).join(""):'<p class="mut" style="margin:0">Todavía no hay errores. Se guardan solos al estudiar en Repaso, Deslizar y Música.</p>'}</div>
+ <div class="card"><h2>Últimos errores</h2>${L.slice(-40).reverse().map(e=>`<div style="border-top:1px solid var(--bd);padding:8px 0"><div class="mut" style="font-size:12px">${fd(e.t)} · ${WN[e.w]} · ${esc(SN[e.s]+" · "+e.g)}${e.ms?" · "+Math.round(e.ms/1000)+" s":""}</div><div>${esc(e.q.split("\n").pop())}</div><div style="font-size:14px"><span style="color:var(--bad)">✗ ${esc(e.p)}</span> · <span style="color:var(--ok)">✓ ${esc(e.a)}</span></div></div>`).join("")||'<p class="mut" style="margin:0">Nada por acá.</p>'}</div>
+ <button class="btn ghost" data-e="clr">${ERR?"Tocá otra vez para borrar todos los errores":"Borrar registro de errores"}</button>`;
+ V.innerHTML=h}
+function erCopy(all){ERT=erTxt(all);const done=()=>{if(!all){E1.exp=Date.now();SVE()}};try{navigator.clipboard.writeText(ERT).then(()=>{done();ERT="";erOpen();const b=V.querySelector('[data-e="'+(all?"cpa":"cp")+'"]');if(b)b.textContent="Copiado ✓"},()=>{done();erOpen()})}catch(e){done();erOpen()}}
+V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[data-e]");if(!b)return;const a=b.dataset.e;
+ if(a=="cp")erCopy(0);else if(a=="cpa")erCopy(1);else if(a=="w"){ERW=b.dataset.v;erOpen()}
+ else if(a=="dl"){const u=URL.createObjectURL(new Blob([erTxt(1)],{type:"text/plain"})),l=document.createElement("a");l.href=u;l.download="errores-"+TD()+".txt";l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+ else if(a=="clr"){if(ERR){E1={log:[],st:{},exp:0};SVE();ERR=0}else ERR=1;erOpen()}});

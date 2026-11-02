@@ -1,0 +1,361 @@
+/* SECCIÓN PROG4: tarjetas de Repaso, cadenas de Deslizar (mensaje a mensaje), ejercicios línea por línea y de exámenes. */
+/* ---- Tarjetas (cortas): Prog4 ---- */
+const P4A=[
+mc("p4","Etiqueta","est ejecuta generarPostulacion(opc)\nDiagrama de clases:  Estudiante ──> Postulacion *   (sin flecha hacia OfertaPasantia)\n¿Cómo dibujo el envío de agregarPostulacion(p) a opc?","est → opc : agregarPostulacion(p)  «parameter»",["est → opc : agregarPostulacion(p)  «local»||opc no salió de un find/create/next dentro de esta operación: llegó por la firma.","est → opc : agregarPostulacion(p)  «association»||No hay flecha Estudiante → OfertaPasantia en el diagrama de clases.","est → opc : agregarPostulacion(p)||Todo mensaje lleva estereotipo: hay que decir cómo conoce est a opc."],"opc está en la firma de generarPostulacion(opc)."),
+mc("p4","Etiqueta","1: Controlador → :Estudiante * : est := find(ci)\n¿Cómo dibujo el mensaje 2 a est?","2: Controlador → est : generarPostulacion(opc)  «local»",["2: Controlador → est : generarPostulacion(opc)  «association»||est salió del find del mensaje 1, no de una flecha del diagrama de clases.","2: Controlador → est : generarPostulacion(opc)  «parameter»||est no está en la firma de la operación: lo obtuvo con el find.","2: Controlador → :Estudiante * : generarPostulacion(opc)  «association»||generarPostulacion es de un estudiante concreto, no de la colección."],"est es el resultado del find 1: queda en una variable local."),
+mc("p4","Etiqueta","Diagrama de clases:  Controlador ──> Estudiante *\n¿Cómo dibujo el find hacia la colección?","Controlador → :Estudiante * : est := find(ci)  «association»",["Controlador → :Estudiante * : est := find(ci)  «local»||La colección no salió de un find: el Controlador llega a ella por la flecha del diagrama.","Controlador → :Estudiante * : est := find(ci)  «parameter»||La colección no está en la firma de la operación.","Controlador → est : find(ci)  «association»||find va a la colección (:Estudiante *), no a un estudiante concreto."],"La flecha Controlador → Estudiante del diagrama de clases es la asociación."),
+mc("p4","Etiqueta","3.1: emp → :OfertaPasantia * : opc := find(cod)\n¿Cómo dibujo el 3.2 hacia opc?","3.2: emp → opc : hayCupos()  «local»",["3.2: emp → opc : hayCupos()  «association»||La flecha Empresa → OfertaPasantia llega a la colección; el objeto opc lo obtuve con el find 3.1.","3.2: emp → opc : hayCupos()  «parameter»||opc no está en la firma de la operación.","3.2: emp → :OfertaPasantia * : hayCupos()  «association»||hayCupos() la responde una oferta concreta, no la colección."],"opc salió del find 3.1."),
+mc("p4","Etiqueta","Diagrama de clases:  Empresa ──> OfertaPasantia *\n¿Cómo dibujo el find de emp hacia las ofertas?","emp → :OfertaPasantia * : opc := find(cod)  «association»",["emp → :OfertaPasantia * : opc := find(cod)  «local»||La colección no salió de un find: emp llega a ella por la asociación.","emp → :OfertaPasantia * : opc := find(cod)  «parameter»||La colección no viene en la firma de la operación.","emp → opc : find(cod)  «association»||find va al multiobjeto, no a una oferta concreta."],"La flecha Empresa → OfertaPasantia del diagrama de clases."),
+mc("p4","Etiqueta","1: Controlador → :Empresa * : emp := find(rut)\n¿Cómo dibujo el mensaje 3 a emp?","3: Controlador → emp : cuposDisponibles(cod)  «local»",["3: Controlador → emp : cuposDisponibles(cod)  «association»||emp salió del find del mensaje 1; la asociación del Controlador es con la colección.","3: Controlador → emp : cuposDisponibles(cod)  «parameter»||emp no está en la firma de la operación.","3: Controlador → :Empresa * : cuposDisponibles(cod)  «association»||cuposDisponibles(cod) es de una empresa concreta, no de la colección."],"emp es el resultado del find 1: variable local."),
+mc("p4","Etiqueta","est ejecuta generarPostulacion(opc)\n¿Cómo dibujo la creación de la postulación?","est → p:Postulacion : p := create(est, opc)  «local»",["est → p:Postulacion : p := create(est, opc)  «association»||p todavía no existe: el create lo construye y queda en una variable local.","est → p:Postulacion : p := create(est, opc)  «parameter»||p no viene en la firma: lo crea est.","est → :Postulacion * : p := create(est, opc)  «association»||create va al objeto nuevo, no a la colección."],"El create deja al objeto nuevo en una variable local."),
+mc("p4","Etiqueta","4.1*: est → :Postulacion * : pe := next()\n¿Cómo dibujo el 4.2* hacia pe?","4.2*: est → pe : getOfertaPasantiaCodigo()  «local»",["4.2*: est → pe : getOfertaPasantiaCodigo()  «association»||pe salió del next 4.1*, no de una flecha del diagrama de clases.","4.2*: est → pe : getOfertaPasantiaCodigo()  «parameter»||pe no viene en la firma: lo obtuvo con next.","4.2: est → pe : getOfertaPasantiaCodigo()||Está dentro del recorrido: el número lleva el * (4.2*)."],"pe es el resultado del next: variable local, dentro de la iteración."),
+mc("p4","Etiqueta","Diagrama de clases:  Estudiante ──> Postulacion *\n¿Cómo dibujo el next de est hacia sus postulaciones?","est → :Postulacion * : pe := next()  «association»",["est → :Postulacion * : pe := next()  «local»||La colección no salió de un find/create/next: est llega a ella por la asociación.","est → :Postulacion * : pe := next()  «parameter»||La colección no viene en la firma de la operación.","est → pe : next()  «association»||next va al multiobjeto, no a una postulación concreta."],"La flecha Estudiante → Postulacion del diagrama de clases."),
+mc("p4","Etiqueta","Diagrama de clases:  Postulacion ──> OfertaPasantia\n¿Cómo dibujo el envío de calcularBeneficio() a la oferta de pec?","pec → :OfertaPasantia : calcularBeneficio()  «association»",["pec → :OfertaPasantia : calcularBeneficio()  «local»||No salió de un find/create/next: pec conoce a su oferta por la asociación.","pec → :OfertaPasantia : calcularBeneficio()  «parameter»||La oferta no viene en la firma de la operación.","pec → :OfertaPasantia * : calcularBeneficio()  «association»||Una postulación tiene una sola oferta (1): no es un multiobjeto."],"La flecha Postulacion → OfertaPasantia del diagrama de clases."),
+mc("p4","Etiqueta","opc ejecuta agregarPostulacion(p)\nDiagrama de clases:  OfertaPasantia ──> Postulacion *\n¿Cómo dibujo el add de p?","opc → :Postulacion * : add(p)  «association»",["opc → :Postulacion * : add(p)  «parameter»||El estereotipo es del receptor (la colección), no de p, que sí viene por parámetro.","opc → :Postulacion * : add(p)  «local»||La colección no salió de un find/create/next.","opc → p : add(p)  «association»||add va a la colección, no a la postulación."],"La colección de postulaciones se alcanza por la flecha OfertaPasantia → Postulacion."),
+mc("p4","Etiqueta","Necesito cuposDisponibles(cod) de una Empresa; est no llega a ella.\nDiagrama de clases:  Controlador ──> Empresa *   Estudiante ──> Postulacion *   (sin flecha Estudiante → Empresa)\n¿Qué dibujo?","Controlador → :Empresa * : emp := find(rut)  «association»  y después  Controlador → emp : cd := cuposDisponibles(cod)  «local»",["est → :Empresa * : emp := find(rut)  «association»||Sin flecha Estudiante → Empresa no hay asociación: el estereotipo no la crea.","est → emp : cd := cuposDisponibles(cod)  «global»||«global» no reemplaza un camino de navegabilidad.","Controlador → emp : cd := cuposDisponibles(cod)  «association»||Falta el find: el Controlador llega a la colección por asociación, y a emp por «local» tras el find."],"Si el emisor no tiene camino, lo hace el objeto que sí conoce a la clase (acá el Controlador)."),
+mc("p4","Destino","Tengo opc y quiero saber si hay cupos.\n¿A quién envío hayCupos()?","A opc (OfertaPasantia)",["Al Controlador","Al estudiante"],"hayCupos() es una operación de OfertaPasantia."),
+mc("p4","Destino","Tengo p y quiero saber su estado.\n¿A quién envío getEstado()?","A p (Postulacion)",["Al estudiante","A la oferta"],"getEstado() es una operación de Postulacion."),
+mc("p4","Destino","Necesito calcularBeneficio().\n¿A quién se lo envío?","A opc (OfertaPasantia, según su subclase)",["Al estudiante","Al Controlador"],"La define la oferta: es abstracta y se dibuja un diagrama por subclase."),
+mc("p4","Destino","Tengo pe y quiero el código de su oferta.\n¿A quién envío getOfertaPasantiaCodigo()?","A pe (Postulacion)",["A la empresa","Al Controlador"],"Esa operación es de Postulacion, que conoce a su oferta."),
+mc("p4","Destino","El Controlador necesita cuposDisponibles(cod).\n¿A quién se lo envía?","A emp (Empresa)",["A :OfertaPasantia *","A est"],"cuposDisponibles(cod) es una operación de Empresa."),
+mc("p4","Destino","emp busca una oferta por código.\n¿Destino del find?",":OfertaPasantia *",["opc:OfertaPasantia","El Controlador"],"find va al multiobjeto de la clase."),
+mc("p4","Destino","El Controlador busca un estudiante por ci.\n¿Destino del find?",":Estudiante *",["est:Estudiante","emp"],"find va al multiobjeto, no a un objeto concreto."),
+mc("p4","Destino","Ya tengo est.\n¿A quién envío aceptarPostulacion(cod)?","A est (Estudiante)",[":Estudiante *","Al Controlador"],"Es una operación de Estudiante, ya tengo el objeto."),
+mc("p4","Destino","¿Puedo enviarle find a est:Estudiante?","No: find va a :Estudiante *",["Sí, es un método de est","Sí, si est es local"],"find es de colección."),
+mc("p4","Mensaje","¿Cuál está bien escrito?","cd := cuposDisponibles(codOferta)",["cd = cuposDisponibles(codOferta)||El resultado se asigna con :=, no con =.","cuposDisponibles(codOferta) → cd||La variable va a la izquierda: var := operación(parámetros)."],"variable := operación(parámetros)."),
+mc("p4","Mensaje","No uso el resultado después.\n¿Cómo lo escribo?","agregarPostulacion(p)",["x := agregarPostulacion(p)||Una variable que nunca uso sobra.","[p] agregarPostulacion||Los corchetes son para condiciones, no para parámetros."],"Sin resultado útil, sin variable."),
+mc("p4","Mensaje","Paso dos datos.\n¿Cómo lo escribo?","create(est, opc)",["create(est opc)||Los parámetros se separan con coma.","create[est, opc]||Los parámetros van entre paréntesis."],"Entre paréntesis y separados por coma."),
+mc("p4","Mensaje","Devuelve algo y recibe un parámetro.\n¿Cómo lo escribo?","opc := find(codOferta)",["find(codOferta) → opc||La variable va a la izquierda del mensaje.","opc = find||Falta el := y el parámetro."],"Variable, :=, operación y parámetro."),
+mc("p4","Mensaje","Creo la postulación entre est y opc.\n¿Cómo escribo el mensaje?","p := create(est, opc)",["create(p)","p := find(est, opc)"],"Variable, create y los dos objetos que necesita para enlazarse."),
+mc("p4","Mensaje","¿Cuándo guardo el resultado en una variable?","Cuando lo uso después",["Siempre||Si no lo uso, la variable sobra.","Solo si el mensaje es un find||Cualquier resultado que uso después necesita variable (create, método, find)."],"Si lo uso, necesita nombre."),
+mc("p4","Decisión","Tengo ci y quiero al estudiante.\n¿Qué envío?","find(ci) a :Estudiante *",["getEstudiante(ci) a Sistema","obtenerEstudiante() a est"],"Buscar por clave es find sobre la colección."),
+mc("p4","Decisión","Soy el Controlador, tengo emp y quiero una oferta por código.\n¿Qué hago?","obtenerOferta(cod) a emp",["find directo a :OfertaPasantia *","find a emp"],"El Controlador no conoce las ofertas: se lo pide a emp, que hace el find sobre su colección."),
+mc("p4","Decisión","Tengo est y opc y quiero registrar una postulación nueva.\n¿Qué mensaje uso?","create(est, opc)",["find(est, opc)","add(est, opc)"],"Hay que crear un objeto nuevo."),
+mc("p4","Decisión","Quiero revisar todas las postulaciones de est.\n¿Qué hago?","next() con * en el número",["find() a est","add() a la colección"],"Recorrer es next con iteración."),
+mc("p4","Decisión","Quiero guardar p en la colección de la oferta.\n¿Qué hago?","add(p) a :Postulacion *",["find(p)","next(p)"],"Agregar a una colección es add."),
+mc("p4","Decisión","Ya tengo el objeto y quiero un dato suyo.\n¿Qué hago?","Un método suyo",["find a la colección","create"],"Lo que sabe un objeto se le pide a él."),
+mc("p4","Decisión","Solo se acepta si hay cupos.\n¿Cómo lo marco?","[cd] antes del mensaje",["* en el número","«local»"],"La condición va entre corchetes."),
+mc("p4","Decisión","La operación devuelve algo que uso después.\n¿Cómo lo escribo?","var := op(…)",["op(…) *","[var] op(…)"],"El resultado se guarda en una variable."),
+mc("p4","Decisión","calcularBeneficio() es abstracta en OfertaPasantia.\n¿Cómo lo dibujo?","Mensaje a la abstracta y un diagrama por subclase",["Dibujo solo una subclase","Lo resuelvo con un if"],"Cada subclase implementa su versión."),
+mc("p4","Notación","Primera aparición de emp.\n¿Cómo lo escribo?","emp:Empresa",["emp","Empresa"],"Primera vez: nombre:Clase."),
+mc("p4","Notación","emp ya apareció antes.\n¿Cómo lo escribo?","emp",["emp:Empresa",":Empresa"],"Después alcanza con el nombre."),
+mc("p4","Notación","Colección de estudiantes, sin nombre.\n¿Cómo la escribo?",":Estudiante *",[":Estudiante","Estudiante *"],"Con : y con * (el recuadro doble)."),
+mc("p4","Notación","Un objeto de Empresa, sin nombre.\n¿Cómo lo escribo?",":Empresa",["Empresa||Sin los dos puntos sería la clase, no un objeto.","Empresa:||Los dos puntos van antes de la clase."],"Sin nombre igual lleva los dos puntos."),
+mc("p4","Notación","Mensaje dentro de un recorrido.\n¿Cómo lo numero?","Con * pegado: 4.1*",["4.1||Sin * no indica iteración.","*4.1||El * va pegado al final del número."],"El * del número marca iteración."),
+mc("p4","Notación","emp recibió el 3.\n¿Cómo numero su primer mensaje?","3.1",["4","3.0"],"Lo que dispara el 3 cuelga de él."),
+mc("p4","Notación","El Controlador envía su cuarto mensaje.\n¿Qué número lleva?","4",["1.4","3.4"],"Los de primer nivel van 1, 2, 3, 4…"),
+mc("p4","Notación","¿Quién envía los mensajes 1, 2, 3, 4?",":Controlador",["Sistema","El actor"],"La operación del sistema entra al Controlador."),
+mc("p4","Notación","¿Hay una caja «Sistema» en comunicación?","No: la operación entra al Controlador",["Sí, origen del 1","Sí, solo para find"],"El Sistema aparece en la secuencia, no acá."),
+mc("p4","Notación","est ejecuta el 4.\n¿Cómo numero su segundo mensaje?","4.2",["5","4.1.2"],"Es hijo del 4, el segundo."),
+mc("p4","Notación","opc recibió el 4.2.\n¿Cómo numero su primer mensaje?","4.2.1",["4.3","4.1"],"Cuelga del 4.2."),
+mc("p4","Notación","Dos mensajes seguidos del Controlador: 3 y…","4",["3.1||3.1 sería un mensaje que cuelga del 3, no uno del mismo nivel.","3.2||Los 3.x cuelgan del 3; el Controlador sigue con el 4."],"Mismo nivel, siguiente número."),
+mc("p4","Notación","est:Estudiante  y  :Estudiante *\n¿Cuál es la colección?",":Estudiante *",["est:Estudiante","Las dos"],"El * marca la colección."),
+mc("p4","Notación","Voy a usar p después, como parámetro.\n¿Cómo lo escribo?","p:Postulacion",[":Postulacion","Postulacion"],"Si lo voy a nombrar, lleva nombre."),
+mc("p4","Notación","Solo le envío un mensaje a la colección.\n¿Necesita nombre?","No: :Clase * alcanza",["Sí, siempre","Sí, con *"],"Sin nombre alcanza."),
+mc("p4","Notación","Escribo un objeto con nombre.\n¿Qué separa el nombre de la clase?","Los dos puntos: emp:Empresa",["Un punto: emp.Empresa||El punto no se usa en esta notación.","Un guion: emp-Empresa||El separador es :"],"nombre:Clase."),
+mc("p4","Notación","Escribo «Controlador» sin los dos puntos.\n¿Qué estoy nombrando?","La clase, no un objeto",["Un objeto sin nombre","Una colección"],"El objeto es :Controlador."),
+/* Practico 4 (Prog4): enlaces, borrado e iteracion. Ojo: las soluciones del practico dibujan el origen como :Sistema y escriben 1*[foreach]; en el parcial se corrigio :Controlador. */
+mc("p4","Enlaces","Práctico 4 · 2a\nEl link va de A hacia B: A guarda la referencia a la B nueva.\n:A hizo b := create(id).\n¿Qué mensaje sigue?","add(b), de :A a :B * (la colección)",["setA(a), de :B a sí mismo||Eso guarda la referencia de B hacia A; acá la referencia va de A hacia B.","find(id) a :B *||El objeto ya existe y lo tengo en b: no hay nada que buscar.","destroy() a b||destroy elimina la instancia, no la enlaza."],"A mantiene una colección de B: después de crear b, lo agrega con add."),
+mc("p4","Enlaces","Práctico 4 · 2b\nEl link va de B hacia A: B guarda la referencia a su única A.\n:B hizo a := create(id).\n¿Qué mensaje sigue?","setA(a), de :B a sí mismo",["add(a) a :A *||add es para colecciones; B guarda una sola A.","add(b), de :A a :B *||Eso corresponde al link de A hacia B.","setB(b) a :A||Eso guardaría la referencia en A, no en B."],"B guarda su A con setA, un mensaje que se envía a sí misma."),
+mc("p4","Enlaces","Práctico 4 · 2c\nLink en los dos sentidos. a:A hace b := create(id, a).\n¿Para qué se pasa a como parámetro?","Para que b guarde su referencia con setA(a)",["Para que A pueda hacer add(b)||add(b) usa b, que ya devolvió el create.","Para identificar la instancia en la colección||Identificar es el id, no el objeto a.","Es opcional: no cambia el diagrama||Sin a, B no tendría qué guardar en setA."],"Se pasa a sí misma para que la instancia nueva pueda guardar la referencia de vuelta."),
+mc("p4","Enlaces","Práctico 4 · 2c\na:A hace 1: b := create(id, a) y 2: add(b).\n¿Cómo se numera el setA(a) que b se envía a sí mismo?","1.1, porque lo dispara el create",["1.2||Es el primer (y único) mensaje que dispara el create.","2.1||Cuelga del add, que no lo dispara.","3||Ocurre dentro del create, no después del add."],"Lo que dispara el 1 cuelga de él: 1.1."),
+mc("p4","Borrado","Práctico 4 · 2d\nA creó b y quiero eliminar solo el link (A guarda una colección de B).\n¿Qué envía A?","remove(id) a :B *",["destroy() a b||destroy elimina la instancia; acá solo hay que desengancharla.","setA(NULL) a b||Eso corresponde al link de B hacia A.","find(id) y nada más||find solo busca, no desengancha."],"Para sacar el link de la colección: remove(id)."),
+mc("p4","Borrado","Práctico 4 · 2d\nQuiero eliminar el link y también la instancia b de B (la creó A).\n¿Qué secuencia envía A?","b := find(id), remove(id) a :B *, destroy() a b",["remove(id) y listo||Eso solo elimina el link: la instancia sigue existiendo.","destroy() a :B *, sin find||destroy va a la instancia concreta b, no a la colección.","destroy() a b y después remove(id)||Quedaría en la colección una referencia a un objeto ya destruido."],"Primero la busco, saco el link y por último destruyo la instancia."),
+mc("p4","Borrado","Práctico 4 · 2d\nEl link va de B hacia A y quiero eliminar solo el link.\n¿Qué hace :B?","setA(NULL), a sí mismo",["remove(id) a :A *||B guarda una sola referencia, no una colección.","destroy() a :A||Eso destruye la instancia; acá solo se desengancha."],"B borra su referencia a A poniéndola en NULL."),
+mc("p4","Borrado","Práctico 4 · 2d\n¿Destruir un link equivale a destruir la instancia?","No: se desengancha el objeto y puede seguir existiendo",["Sí: sin link el objeto queda inútil||Puede tener otros links o seguir en otra colección.","Sí, siempre||Son operaciones distintas: remove o setX(NULL) contra destroy()."],"En general, quien crea la instancia es responsable de destruirla; el link es otra cosa."),
+mc("p4","Iteración","Práctico 4 · 3a\nRecorro todas las instancias de A.\n¿Cómo escribo el mensaje que obtiene cada una?","1*[foreach]: a := next() a :A *",["1: a := find() a :A *||find busca por clave; para recorrer todas se usa next con iteración.","1*: a := create() a :A *||create construye un objeto nuevo.","1: next() a a:A||next va a la colección, no a una instancia."],"Iteración: * pegado al número y next() sobre el multiobjeto. El práctico además escribe [foreach]."),
+mc("p4","Iteración","Práctico 4 · 3a\n¿Qué indica [foreach] en «1*[foreach]: a := next()»?","Que el mensaje se repite para cada instancia de la colección",["Que a es un parámetro||Un parámetro va entre paréntesis.","Que hay una condición de corte||La condición de corte es otra cosa: se anota aparte."],"Es la marca del recorrido sobre todos los elementos."),
+mc("p4","Iteración","Práctico 4 · 3a\nCada a:A debe decir si tiene algún R con val > v.\n¿Quién compara val con v?","a:A, que recorre sus R",["El Controlador, pidiendo todos los val||Se acopla con extraños y se expone la estructura interna de A.","r:R, comparando con los otros R||R no conoce a los demás R."],"La condición se resuelve adentro: a recorre sus R y pide val a cada uno."),
+mc("p4","Iteración","Práctico 4 · 3b\nLa asociación se navega de B hacia A: cada b devuelve las A que cumplen.\n¿Qué hago con los resultados de cada b?","Los uno (unión de conjuntos) para eliminar repetidos",["Los concateno||Una misma A puede aparecer por varias B y quedaría repetida.","Me quedo con los de la primera b||Perdería las A que cumplen a través de otras B.","Los ordeno por id||Ordenar no elimina los repetidos."],"Una misma A puede aparecer en varias B: resultado = resultado unión aa."),
+mc("p4","Iteración","Práctico 4 · 3a y 7a\nBusco si algún elemento cumple una condición (por ejemplo val > v).\n¿Cuándo corto la iteración?","Apenas encuentro uno que cumple, y retorno true",["Cuando termina la colección||Eso sirve para acumular; para «existe alguno» basta con el primero.","Nunca: siempre recorro todo||Seguir recorriendo no cambia el resultado y desperdicia mensajes."],"Para un «existe alguno»: se detiene y retorna true en cuanto se cumple."),
+/* Quiz de la pestaña Ejercicios Prog4 (viene de prog4.html: const Q) */
+mc("p4","Quiz ejercicios","¿A quién llega la operación del sistema (ej. postularse)?",":Controlador",["Sistema",":Estudiante","El actor"],"El Controlador recibe la operación y delega. En el parcial arrancaste desde «Sistema»."),
+mc("p4","Quiz ejercicios","El Controlador quiere la Empresa por su rut. ¿Qué mensaje y estereotipo?","find(rut) a :Empresa * con <<association>>",["obtenerEmpresa(rut) a Sistema con <<local>>","find(rut) a emp con <<local>>","create(rut) a :Empresa con <<association>>"],"find va al multiobjeto (la colección), y el Controlador llega a ella por asociación."),
+mc("p4","Quiz ejercicios","cd := cuposDisponibles(codOferta), enviado del Controlador a emp (ya obtenida con find). ¿Estereotipo?","<<local>>",["<<association>>","<<parameter>>","<<global>>"],"emp quedó en una variable local del Controlador."),
+mc("p4","Quiz ejercicios","est ejecuta generarPostulacion(opc) y luego envía agregarPostulacion(p) a opc. ¿Estereotipo de ese envío?","<<parameter>>",["<<local>>","<<association>>","<<global>>"],"opc llegó como parámetro de generarPostulacion."),
+mc("p4","Quiz ejercicios","Al mensaje 3 (a emp) le sigue un find de emp a :OfertaPasantia *. ¿Numeración?","3.1",["4","3.0","1.3"],"Lo disparado por un mensaje se anida: 3 → 3.1."),
+mc("p4","Quiz ejercicios","En postularse, ¿cuándo se crea la Postulacion?","Después de obtener est y opc, porque create(est, opc) los necesita",["Primero de todo, y después se buscan","Al final, desde Sistema","Cuando la empresa lo pide"],"El create necesita a ambos como parámetros. En el parcial lo hiciste primero."),
+mc("p4","Quiz ejercicios","¿Cómo se recorren todas las postulaciones de un estudiante?","Numeración con * y next() sobre :Postulacion *",["find(todas) a una Postulacion","getPostulaciones() a Sistema","Numerando 4.1, 4.2, 4.3"],"Iteración: 4.1*: next() sobre el multiobjeto."),
+mc("p4","Quiz ejercicios","En aceptarPostulacion, ¿quién cambia el estado a «aceptada» y guarda el beneficio?","La propia Postulacion",["OfertaPasantia con setEstado","El Controlador con setBeneficio","La Empresa"],"Cada objeto modifica su propio estado. En el parcial setEstado iba a la Oferta."),
+mc("p4","Quiz ejercicios","calcularBeneficio() es abstracta en OfertaPasantia. En el diagrama de comunicación…","Se envía a :OfertaPasantia y se dibuja un diagrama por subclase",["Se dibuja solo Remunerada","Se envía directo a Capacitacion","Se resuelve con un if en el Controlador"],"Polimorfismo: el mensaje va a la clase abstracta y cada implementación se muestra aparte."),
+mc("p4","Quiz ejercicios","El Controlador necesita un objeto al que no llega por asociación, ni es local ni parámetro. ¿Qué indica?","Falta navegabilidad: hay que llegar por otro objeto",["Se usa <<global>> igual","Se dibuja sin estereotipo","Se manda a Sistema"],"Todo emisor debe poder navegar hasta el receptor. Revisá el diagrama de clases primero."),
+mc("p4","Quiz ejercicios","¿Cómo se marca que un mensaje solo ocurre si cd es verdadero?","Condición entre corchetes: 4: [cd] aceptarPostulacion(...)",["Con * en el número","Con <<local>>","No se puede"],"La condición va entre corchetes antes del mensaje.")
+];
+SWC.push(
+/* ===== Prog4: armar un mensaje de a una decisión ===== */
+sw("p4","Estereotipo (parámetro)","est ejecuta generarPostulacion(opc)\nest le envía agregarPostulacion(p) a opc.\nDiagrama de clases:  Estudiante ──> Postulacion *   (sin flecha hacia OfertaPasantia)",[
+ st("¿opc está en la firma de la operación?","Sí","No","generarPostulacion(opc): opc llega por parámetro.",""),
+ st("Entonces el estereotipo es…","«parameter»","«local»","Llegó por la firma, no salió de un find/create/next.","«parameter»")
+],"est → opc : agregarPostulacion(p)  «parameter»"),
+sw("p4","Estereotipo (asociación)","est necesita recorrer sus postulaciones.\nDiagrama de clases:  Estudiante ──> Postulacion *",[
+ st("¿Está la colección en la firma de la operación?","No","Sí","No viene por parámetro.",""),
+ st("¿Salió de un find, create o next de esta operación?","No","Sí","Todavía no la obtuve con ningún mensaje.",""),
+ st("¿Hay flecha en el diagrama de clases?","Sí: Estudiante ──> Postulacion *","No","Esa flecha es la asociación.",""),
+ st("Entonces el estereotipo es…","«association»","«local»","Sin firma ni find, pero con flecha: asociación.","«association»"),
+ st("¿Cómo recorro la colección?","pe := next() con * en el número","pe := find(ci)","Recorrer todas es next con iteración.","next()")
+],"4.1*: est → :Postulacion * : pe := next()  «association»"),
+sw("p4","Estereotipo (local)","4.1*: est → :Postulacion * : pe := next()\nQuiero 4.2*: pe.getOfertaPasantiaCodigo()",[
+ st("¿pe está en la firma?","No","Sí","Es el resultado del next 4.1*.",""),
+ st("¿pe salió de un find, create o next?","Sí: del next","No","Eso es lo que lo vuelve local.",""),
+ st("Entonces el estereotipo es…","«local»","«association»","Resultado de un mensaje: variable local.","«local»"),
+ st("¿Lleva * el número?","Sí: 4.2*, está dentro del recorrido","No: 4.2","El * se mantiene mientras sea parte de la iteración.","4.2*")
+],"4.2*: est → pe : getOfertaPasantiaCodigo()  «local»"),
+sw("p4","Falta camino","Necesito cuposDisponibles(cod) de una Empresa.\nDiagrama de clases:  Controlador ──> Empresa *   Estudiante ──> Postulacion *   (sin flecha Estudiante → Empresa)",[
+ st("¿Puede est llegar a la Empresa?","No: no hay flecha, firma ni find","Sí: con «global»","«global» no reemplaza un camino de navegabilidad.",""),
+ st("¿Quién la conoce?","El Controlador (tiene flecha a Empresa *)","est","El Controlador llega a la colección por asociación.","Controlador"),
+ st("Primero el Controlador…","busca la empresa: emp := find(rut)","le pide el dato a la colección","find devuelve la empresa concreta.","find(rut)"),
+ st("Después le envía cuposDisponibles a…","emp (la empresa concreta)",":Empresa * (la colección)","La operación es de una empresa, no de la colección.","emp")
+],"Controlador → :Empresa * : emp := find(rut)  «association»   y   Controlador → emp : cd := cuposDisponibles(cod)  «local»"),
+/* Decisiones sueltas */
+sw("p4","Notación",null,[
+ st("emp aparece por primera vez.","emp:Empresa","emp","Primera vez: nombre:Clase."),
+ st("emp ya apareció antes.","emp","emp:Empresa","Después alcanza con el nombre."),
+ st("Colección de estudiantes sin nombre.",":Estudiante *",":Estudiante","El * marca la colección (recuadro doble)."),
+ st("Un objeto de Empresa sin nombre.",":Empresa","Empresa","Sin nombre igual lleva los dos puntos."),
+ st("Mensaje dentro de un recorrido.","4.1*","4.1","El * pegado marca iteración."),
+ st("emp recibió el 3: su primer mensaje.","3.1","4","Lo que dispara el 3 cuelga de él."),
+ st("El Controlador envía su cuarto mensaje.","4","1.4","Los de primer nivel van 1, 2, 3, 4…"),
+ st("est ejecuta el 4: su segundo mensaje.","4.2","5","Es el segundo hijo del 4.")
+]),
+/* Prog4: práctico 4 */
+sw("p4","Enlace A → B","Link de A hacia B (A guarda una colección de B).\n:A hace b := create(id)",[
+ st("¿Cómo guarda A la referencia?","add(b)","setA(a)","A guarda una colección: add."),
+ st("¿A quién va el add?",":B * (la colección)","b (el objeto nuevo)","add va a la colección.")
+],"1: :A → :B : b := create(id)\n2: :A → :B * : add(b)"),
+sw("p4","Enlace B → A","Link de B hacia A (B guarda su única A).\n:B hace a := create(id)",[
+ st("B guarda una sola A. ¿Qué usa?","setA(a)","add(a)","Una referencia única: setX."),
+ st("¿Quién envía setA(a)?","b, a sí mismo",":A","Es b quien guarda la referencia.")
+],"1: :B → :A : a := create(id)\n2: :B → :B : setA(a)"),
+sw("p4","Enlace en los dos sentidos",null,[
+ st("a:A hace b := create(id, a).\n¿Para qué se pasa a?","Para que b guarde su referencia con setA(a)","Para identificar el objeto","Sin a, B no tendría qué guardar."),
+ st("¿Quién envía el setA(a)?","b, a sí mismo","a:A","B guarda su propia referencia."),
+ st("¿Cómo se numera ese setA?","1.1: lo dispara el create","2: después del add","Cuelga del create."),
+ st("¿Y el add(b)?","2: a:A → :B * : add(b)","1.2","Es otro mensaje del mismo nivel que el create.")
+]),
+sw("p4","Borrado",null,[
+ st("¿Destruir un link es destruir la instancia?","No","Sí","El link se desengancha y la instancia puede seguir."),
+ st("Sacar el link de una colección.","remove(id)","destroy()","remove desengancha."),
+ st("Eliminar la instancia.","destroy() a b","remove(id)","destroy elimina el objeto."),
+ st("Quito el link y destruyo la instancia.","remove antes que destroy","destroy antes que remove","Si no, la colección queda apuntando a un objeto destruido."),
+ st("Link de B hacia A (referencia única).","setA(NULL)","remove(id)","Se pone la referencia en NULL."),
+ st("¿Quién suele destruir una instancia?","Quien la creó","Cualquier objeto","Quien crea, destruye.")
+]),
+sw("p4","Iteración",null,[
+ st("Recorrer todas las instancias de A.","1*[foreach]: a := next()","1: a := find()","Recorrer es next con iteración."),
+ st("¿Qué marca [foreach]?","Que se repite para cada elemento","Una condición de corte","Es el recorrido sobre la colección."),
+ st("Busco si existe alguno que cumpla.\n¿Cuándo corto?","Al encontrar el primero","Al final de la colección","Basta con uno: retorno true."),
+ st("Navego de B hacia A.\n¿Qué hago con los resultados de cada b?","Los uno, sin repetidos","Los concateno","Una misma A puede salir de varias B."),
+ Object.assign(st("¿Quién compara val con v?","a:A, adentro","El Controlador","No expongo la estructura de A."),{x:"Recorro las instancias de A y quiero las que tengan algún R con val > v.\nEl Controlador ya hizo el next sobre :A *."})
+]),
+);
+/* ===== Prog4: los dos ejercicios de la app, línea por línea (cada línea = decisiones atómicas) ===== */
+const CLS="Clases: Controlador→Estudiante*, Empresa* · Empresa→OfertaPasantia* · Estudiante↔Postulacion* · Postulacion↔OfertaPasantia (1)";
+const OPS="Operaciones: Estudiante: generarPostulacion(opc), aceptarPostulacion(cod) · Empresa: obtenerOferta(cod), cuposDisponibles(cod) · OfertaPasantia: agregarPostulacion(p), hayCupos(), calcularBeneficio() · Postulacion: getOfertaPasantiaCodigo(), aceptarPostulacion(), getEstado()";
+const CLC="Controlador→Estudiante*, Empresa* · Empresa→Oferta* · Estudiante↔Postulacion* · Postulacion↔Oferta";
+const DOMS=CLS+"\n"+OPS;
+const SS={A:"«association»",L:"«local»",P:"«parameter»",G:"«global»"};
+const lineStr=L=>L.n+": "+L.from+" → "+L.to+" : "+(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa+"  "+SS[L.t];
+const key=t=>{const[a,b]=t.split(":");return b===undefined?a:(a||":"+b)};
+function dgm(G,D,sig,ent){ent=ent||":Controlador";const ek=key(ent),Ls=G.concat(D?[D]:[]),C={},dep={[ek]:0},lab={[ek]:ent},oid=x=>key(x.o),did=x=>key(x.d)+(x.m?"*":""),cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
+
+Ls.forEach(x=>{cl(x.o);cl(x.d);const o=oid(x),d=did(x);[[o,x.o,0],[d,x.d,x.m]].forEach(([k,t,s])=>{if(!(k in lab))lab[k]=(t.includes(":")?t:(C[t]?t+":"+C[t]:t))+(s?" *":"")});if(!(o in dep))dep[o]=0;if(!(d in dep))dep[d]=dep[o]+1});
+const ids=Object.keys(lab),cc={},Q={},W=140,H=34,cnt={};
+ids.forEach(k=>{const c=dep[k]||0;(cc[c]=cc[c]||[]).push(k);Q[k]={x:210+c*190,y:10+(cc[c].length-1)*64}});
+const mx=Math.max(...ids.map(k=>Q[k].x))+160,my=Math.max(...ids.map(k=>Q[k].y))+54;
+let s=`<svg width="${mx}" height="${my}" role="img" aria-label="Diagrama de comunicación" style="font:11px system-ui;color:var(--fg)"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>`;
+ids.forEach(k=>{const p=Q[k];s+=(k.endsWith("*")?`<rect x="${p.x+5}" y="${p.y-5}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--mut)"/>`:"")+`<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--fg)"/><text x="${p.x+W/2}" y="${p.y+21}" text-anchor="middle" fill="var(--fg)" text-decoration="underline">${esc(lab[k])}</text>`});
+const q0=Q[ek];s+=`<line x1="10" y1="${q0.y+H/2}" x2="${q0.x}" y2="${q0.y+H/2}" stroke="var(--fg)" stroke-width="1.5" marker-end="url(#ar)"/><text x="110" y="${q0.y+H/2-6}" text-anchor="middle" fill="var(--fg)" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(sig)}</text><text x="110" y="${q0.y+H/2+14}" text-anchor="middle" fill="var(--mut)" style="font-size:10px">operación del sistema</text>`;
+const cp=(cx,cy,tx,ty)=>{const u=tx-cx,w=ty-cy,t=Math.min(u?W/2/Math.abs(u):1e9,w?H/2/Math.abs(w):1e9);return[cx+u*t,cy+w*t]};
+Ls.forEach(x=>{const a=Q[oid(x)],b=Q[did(x)];if(!a||!b||a===b)return;
+const pk=[oid(x),did(x)].sort().join(">"),i=cnt[pk]=(cnt[pk]||0)+1,ax=a.x+W/2,ay=a.y+H/2,bx=b.x+W/2,by=b.y+H/2,dx=bx-ax,dy=by-ay,l=Math.hypot(dx,dy)||1,nx=-dy/l*(i-1)*14,ny=dx/l*(i-1)*14,f=cp(ax+nx,ay+ny,bx+nx,by+ny),g=cp(bx+nx,by+ny,ax+nx,ay+ny),col=x.u?"var(--ac)":"var(--mut)",t=`${x.n}${x.it?"*":""}: ${x.msg}`;
+s+=`<line x1="${f[0]}" y1="${f[1]}" x2="${g[0]}" y2="${g[1]}" stroke="${col}" stroke-width="1.5"${x.dr?' stroke-dasharray="5 3"':''} marker-end="url(#ar)"/><text x="${(f[0]+g[0])/2}" y="${(f[1]+g[1])/2-3}" text-anchor="middle" fill="${col}" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(t.length>40?t.slice(0,39)+"…":t)}<tspan x="${(f[0]+g[0])/2}" dy="12">«${x.st}»</tspan></text>`});
+return s+"</svg>"}
+const STN={A:"association",L:"local",P:"parameter",G:"global"};
+const tobj=(L,u,dr)=>({n:L.n.replace("*",""),it:L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa,st:STN[L.t],u,dr});
+/* Árbol de deducción natural que crece en Deslizar: N(fórmula, aparece en el paso, regla, regla en el paso, [premisas], {c: n° de cancelación, ca: paso en que se corchetea, open: subobjetivo pendiente, fa: paso en que se revela la fórmula si el nodo aparece antes}). "Paso" = cantidad de pasos ya respondidos de la cadena. */
+function pfT(n,i,done){const v=x=>done||i>=x,nw=x=>!done&&x>0&&i==x;
+ if(!v(n.at))return'<span class="pf ph">?</span>';
+ const c=n.o.c&&v(n.o.ca),fv=!n.o.fa||v(n.o.fa),f=!fv?'<span class="pf ph">?</span>':`<span class="pf${nw(n.at)||nw(n.o.fa)||(c&&!n.k.length&&nw(n.o.ca))?" nw":""}">${c&&!n.k.length?"["+esc(n.f)+"]<sup>"+n.o.c+"</sup>":esc(n.f)}</span>`;
+ if(!n.k.length&&!n.o.open)return f;
+ const rk=n.r&&v(n.ra),kv=n.k.some(x=>v(x.at));
+ if(!rk&&!kv)return`<div class="pt"><span class="pd">⋮</span>${f}</div>`;
+ return`<div class="pt"><div class="pk">${n.k.map(x=>pfT(x,i,done)).join("")}</div><div class="pr${rk&&(nw(n.ra)||(c&&nw(n.o.ca)))?" nw":""}"><span class="pn">${rk?esc(n.r)+(c?"<sup>"+n.o.c+"</sup>":""):"?"}</span></div>${f}</div>`}
+function swDg(c,idx,done){if(c.tr)return`<div class="sn pft">${pfT(c.tr,idx,done)}</div>`;const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
+ if(kn("to")){d={n:kn("n")?L.n.replace("*",""):"?",it:kn("n")&&L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond&&kn("cond")?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+(kn("pa")||L.pa=="()"?L.pa:"(…)"),st:kn("st")?STN[L.t]:"…",u:1,dr:!kn("st")}}
+ return `<div class="sn" style="overflow-x:auto;padding:4px">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig,g.ent)}</div>`}
+function lineSteps(L){const a=[],r=L.to.split(":")[0];
+ a.push(st("¿Qué número lleva?",L.n,L.nd,L.nw,L.n+":"));
+ a.push(st("¿Qué operación?",L.op,L.od,L.ow,(L.res?L.res+" := ":"")+L.op));
+ if(L.pa!="()")a.push(st("¿Con qué parámetros?",L.pa,L.pd,L.pw,L.pa));
+ a.push(st("¿A qué objeto va?",L.to,L.td,L.tw,"→ "+L.to));
+ if(L.cond)a.push(st("¿Lleva condición?",L.cond+" antes del mensaje","Ninguna",L.cw,L.cond));
+ if(L.t=="A")a.push(st("¿El receptor ya está en «Tengo»?","No","Sí","Es una colección u objeto que todavía no tengo.",""),
+  st("Estereotipo del receptor","«association»","«local»","Hay flecha en «Clases»: "+L.arrow+". «local» exigiría tenerlo ya en «Tengo».","«association»"));
+ else if(L.t=="G")a.push(st("¿El Controlador ya está en «Tengo»?","No: no tengo referencia a él","Sí","El Controlador es un singleton: no llegó por firma ni por un mensaje anterior.",""),
+  st("Estereotipo del receptor","«global»","«association»","Es un singleton: se obtiene con getInstance() sin referencia previa. «association» exigiría una flecha-colección.","«global»"));
+ else if(L.new)a.push(st("¿El receptor existe antes del mensaje?","No: lo crea este create","Sí","create produce el objeto nuevo.",""),
+  st("Estereotipo del receptor","«local»","«association»","Lo que devuelve un create queda en variable local; «association» necesita una flecha.","«local»"));
+ else if(L.t=="L")a.push(st("¿"+r+" ya está en «Tengo»?","Sí","No","Es un objeto concreto que ya obtuve.",""),
+  st("Estereotipo del receptor","«local»","«association»","Lo devolvió "+L.ref+" (así figura en «Tengo»): variable local. La flecha de «Clases» solo sirve si todavía no lo tengo.","«local»"));
+ else a.push(st("¿"+r+" ya está en «Tengo»?","Sí","No","Llegó antes.",""),
+  st("Estereotipo del receptor","«parameter»","«local»","Figura como «firma:» en «Tengo» ("+L.sig+"): no salió de ningún find/create/next.","«parameter»"));
+ const ks=["n","op"].concat(L.pa!="()"?["pa"]:[]).concat(["to"]).concat(L.cond?["cond"]:[]).concat(["q","st"]);const SRC={n:["dg","Tengo"],op:["▶"],pa:["Tengo"],to:["Tengo","▶"],cond:["▶"],q:["Tengo"],st:[L.t=="A"?"Clases":"Tengo"]};a.forEach((x,i)=>{x.k=ks[i];x.src=SRC[ks[i]]});
+ return a}
+const EXS=[
+{g:"postularse",op:"postularse(ci, rut, codOferta)",L:[
+{n:"1",nd:"1.1",nw:"Primer mensaje de la operación: nivel 1.",from:":Controlador",fd:"Sistema",fw:"La operación del sistema entra al Controlador; no hay caja «Sistema» en comunicación.",goal:"Necesito al estudiante a partir de su cédula.",op:"find",od:"next",ow:"Buscar por clave es find; next recorre todos.",pa:"(ci)",pd:"(ci, rut)",pw:"La clave de búsqueda es ci, que viene de la operación.",to:":Estudiante *",td:"est:Estudiante",tw:"find va a la colección.",res:"est",rw:"Voy a usar al estudiante después.",t:"A",arrow:"Controlador ──> Estudiante *"},
+{n:"2",nd:"1.2",nw:"Otro mensaje del Controlador: mismo nivel, siguiente número.",from:":Controlador",fd:"est",fw:"La flecha hacia Empresa * la tiene el Controlador: est no llega a ella.",goal:"Necesito a la empresa a partir de su rut.",op:"find",od:"obtenerEmpresa",ow:"obtenerEmpresa no existe en las operaciones: se busca con find sobre la colección.",pa:"(rut)",pd:"(ci, rut)",pw:"La empresa se busca por su clave rut.",to:":Empresa *",td:"emp:Empresa",tw:"find va a la colección.",res:"emp",rw:"Voy a pedirle la oferta a esta empresa.",t:"A",arrow:"Controlador ──> Empresa *"},
+{n:"3",nd:"2.1",nw:"Vuelve a ser un mensaje del Controlador: nivel 1.",from:":Controlador",fd:"est",fw:"Es el Controlador quien ya tiene a emp y la operación de la empresa.",goal:"Necesito la oferta, que cuelga de la empresa.",op:"obtenerOferta",od:"find",ow:"El Controlador no tiene flecha a OfertaPasantia: se la pide a emp, que sí la tiene (error del parcial: saltar la Empresa).",pa:"(codOferta)",pd:"(rut, codOferta)",pw:"La oferta se identifica por su código.",to:"emp:Empresa",td:"emp",tw:"Primera aparición de emp como objeto: lleva nombre:Clase.",res:"opc",rw:"La oferta se pasa a otros mensajes.",t:"L",ref:"el find del mensaje 2"},
+{n:"3.1",nd:"4",nw:"Lo dispara el 3: cuelga de él.",from:"emp",fd:":Controlador",fw:"El mensaje 3.k lo envía quien recibió el 3: emp.",goal:"emp busca la oferta entre las suyas.",op:"find",od:"next",ow:"Busca por código: find.",pa:"(codOferta)",pd:"(codOferta, rut)",pw:"Busca por el código de la oferta.",to:":OfertaPasantia *",td:"opc:OfertaPasantia",tw:"find va a la colección.",res:"op",rw:"Es lo que retorna obtenerOferta.",t:"A",arrow:"Empresa ──> OfertaPasantia *"},
+{n:"4",nd:"3.2",nw:"El Controlador sigue con su siguiente mensaje de primer nivel.",from:":Controlador",fd:"emp",fw:"Con est y opc ya obtenidos, el Controlador delega.",goal:"Con est y opc ya obtenidos, pido generar la postulación.",op:"generarPostulacion",od:"create",ow:"El Controlador no crea: delega en el estudiante (4.1).",pa:"(opc)",pd:"(est, opc)",pw:"La operación del estudiante recibe la oferta.",to:"est:Estudiante",td:":Estudiante *",tw:"Es de un estudiante concreto: primera aparición de est como objeto.",res:null,rw:"No uso el resultado.",t:"L",ref:"el find del mensaje 1"},
+{n:"4.1",nd:"5",nw:"Lo dispara el 4: cuelga de él.",from:"est",fd:":Controlador",fw:"Lo envía quien recibió el 4: est.",goal:"est crea la postulación.",op:"create",od:"find",ow:"Hay que crear un objeto nuevo (parcial: no crearla antes de tener est y opc).",pa:"(est, opc)",pd:"(opc)",pw:"La postulación se enlaza a sus dos extremos: se pasan est y opc (no hay otra forma de que los conozca).",to:"p:Postulacion",td:":Postulacion *",tw:"create va al objeto nuevo; primera aparición: nombre:Clase.",res:"p",rw:"p se usa para registrarla.",t:"L",new:1},
+{n:"4.2",nd:"4.1.1",nw:"Segundo mensaje que dispara el 4: hermano del 4.1, no hijo.",from:"est",fd:":Controlador",fw:"Lo envía est, que ejecuta generarPostulacion.",goal:"est le informa la postulación nueva a la oferta.",op:"agregarPostulacion",od:"add",ow:"add va a una colección; opc tiene su operación para registrarla.",pa:"(p)",pd:"(est, p)",pw:"A la oferta se le pasa la postulación creada.",to:"opc:OfertaPasantia",td:":OfertaPasantia *",tw:"Es una oferta concreta: primera aparición como objeto, con nombre:Clase.",res:null,rw:"No uso el resultado.",t:"P",sig:"generarPostulacion(opc)"},
+{n:"4.2.1",nd:"4.3",nw:"Lo dispara el 4.2: cuelga de él.",from:"opc",fd:"est",fw:"Lo envía quien recibió el 4.2: opc.",goal:"opc agrega p a su colección.",op:"add",od:"find",ow:"Agregar a una colección es add.",pa:"(p)",pd:"(opc, p)",pw:"Se agrega la postulación.",to:":Postulacion *",td:"p:Postulacion",tw:"add va a la colección.",res:null,rw:"No uso el resultado.",t:"A",arrow:"OfertaPasantia ──> Postulacion *"},
+{n:"4.3",nd:"4.2.2",nw:"Tercer mensaje que dispara el 4: hermano del 4.1 y del 4.2.",from:"est",fd:"opc",fw:"Lo envía est.",goal:"est también guarda p en su colección (link en los dos sentidos).",op:"add",od:"agregarPostulacion",ow:"Agregar a una colección es add.",pa:"(p)",pd:"(est, p)",pw:"Se agrega la postulación.",to:":Postulacion *",td:"p:Postulacion",tw:"add va a la colección.",res:null,rw:"No uso el resultado.",t:"A",arrow:"Estudiante ──> Postulacion *"}
+]},
+{g:"aceptarPostulacion",op:"aceptarPostulacion(ci, rut, codOferta) — solo si la oferta tiene cupos",L:[
+{n:"3",nd:"2.1",nw:"Nivel 1: lo envía el Controlador.",from:":Controlador",fd:"est",fw:"El Controlador tiene a emp (mensaje 2).",goal:"Pregunto por los cupos disponibles, vía la empresa.",op:"cuposDisponibles",od:"hayCupos",ow:"hayCupos es de la oferta; el Controlador llega a la empresa, que tiene cuposDisponibles.",pa:"(codOferta)",pd:"(ci, codOferta)",pw:"Se pregunta por esa oferta.",to:"emp:Empresa",td:":Empresa *",tw:"Es una empresa concreta ya buscada: primera aparición con nombre:Clase.",res:"cd",rw:"Lo uso como condición del mensaje 4.",t:"L",ref:"el find del mensaje 2"},
+{n:"3.1",nd:"4",nw:"Lo dispara el 3.",from:"emp",fd:":Controlador",fw:"Lo envía quien recibió el 3: emp.",goal:"emp busca la oferta.",op:"find",od:"next",ow:"Busca por código: find.",pa:"(codOferta)",pd:"(rut, codOferta)",pw:"Se busca por el código.",to:":OfertaPasantia *",td:"opc:OfertaPasantia",tw:"find va a la colección.",res:"opc",rw:"La oferta se usa en el 3.2.",t:"A",arrow:"Empresa ──> OfertaPasantia *"},
+{n:"3.2",nd:"3.1.1",nw:"Hermano del 3.1: lo dispara el 3 también.",from:"emp",fd:":Controlador",fw:"Lo envía emp.",goal:"emp le pregunta a la oferta si tiene cupos.",op:"hayCupos",od:"cuposDisponibles",ow:"hayCupos es la operación de la oferta.",pa:"()",pd:"(codOferta)",pw:"No necesita datos.",to:"opc:OfertaPasantia",td:":OfertaPasantia *",tw:"Es una oferta concreta, la del find 3.1.",res:"hay",rw:"Es la respuesta de la pregunta.",t:"L",ref:"el find del mensaje 3.1"},
+{n:"3.2.1*",nd:"3.2.1",nw:"Es un recorrido: lleva * pegado al número.",from:"opc",fd:"emp",fw:"Lo envía quien recibió el 3.2: opc.",goal:"opc recorre sus postulaciones.",op:"next",od:"find",ow:"Recorrer todas es next.",pa:"()",pd:"(ci)",pw:"next no lleva datos.",to:":Postulacion *",td:"p:Postulacion",tw:"next va a la colección.",res:"p",rw:"Cada p se usa en el 3.2.2*.",t:"A",arrow:"OfertaPasantia ──> Postulacion *"},
+{n:"3.2.2*",nd:"3.2.2",nw:"Sigue dentro del recorrido: mantiene el *.",from:"opc",fd:":Controlador",fw:"Lo envía opc.",goal:"opc consulta el estado de cada postulación.",op:"getEstado",od:"setEstado",ow:"Solo se consulta: setEstado cambiaría el estado de un objeto ajeno.",pa:"()",pd:"(aceptada)",pw:"Consultar no lleva datos.",to:"p:Postulacion",td:":Postulacion *",tw:"Es una postulación concreta, la del next.",res:"e",rw:"Se usa el estado.",t:"L",ref:"el next del mensaje 3.2.1*"},
+{n:"4",nd:"3.3",nw:"Vuelve el nivel 1: lo envía el Controlador.",from:":Controlador",fd:"emp",fw:"Es el Controlador quien tiene a est.",goal:"Solo si cd (hay cupos): el estudiante acepta su postulación.",op:"aceptarPostulacion",od:"setEstado",ow:"Cada objeto cambia su propio estado: el Controlador no hace setX de objetos ajenos.",pa:"(codOferta)",pd:"(ci, codOferta)",pw:"Se acepta la postulación a esa oferta.",to:"est:Estudiante",td:":Estudiante *",tw:"Es un estudiante concreto, el del find 1.",res:null,rw:"No uso el resultado.",cond:"[cd]",cw:"La condición del cupo se anota antes del mensaje.",t:"L",ref:"el find del mensaje 1"},
+{n:"4.1*",nd:"4.1",nw:"Es un recorrido: lleva *.",from:"est",fd:":Controlador",fw:"Lo envía quien recibió el 4: est.",goal:"est recorre sus postulaciones para hallar la de esta oferta.",op:"next",od:"find",ow:"Recorrer todas es next.",pa:"()",pd:"(cod)",pw:"next no lleva datos.",to:":Postulacion *",td:"pe:Postulacion",tw:"next va a la colección.",res:"pe",rw:"Cada pe se usa en el 4.2*.",t:"A",arrow:"Estudiante ──> Postulacion *"},
+{n:"4.2*",nd:"4.2",nw:"Sigue dentro del recorrido: mantiene el *.",from:"est",fd:"pe",fw:"Lo envía est, que recorre.",goal:"Para cada postulación, est pide el código de su oferta.",op:"getOfertaPasantiaCodigo",od:"getEstado",ow:"Necesito el código de la oferta, no el estado.",pa:"()",pd:"(codOferta)",pw:"Consultar no lleva datos.",to:"pe:Postulacion",td:":Postulacion *",tw:"Es una postulación concreta, la del next 4.1*.",res:"cod",rw:"Se compara con codOferta.",t:"L",ref:"el next del mensaje 4.1*"},
+{n:"4.3*",nd:"4.3",nw:"Sigue dentro del recorrido: mantiene el *.",from:"est",fd:"pe",fw:"Lo envía est.",goal:"Solo si cod == codOferta (es la postulación de esta oferta): la acepta.",op:"aceptarPostulacion",od:"setEstado",ow:"Cada objeto cambia su propio estado.",pa:"()",pd:"(codOferta)",pw:"La postulación ya sabe cuál es.",to:"pe:Postulacion",td:":Postulacion *",tw:"Es una postulación concreta, la de esta vuelta.",res:null,rw:"No uso el resultado.",cond:"[cod == codOferta]",cw:"La condición se evalúa dentro del recorrido: va antes del mensaje.",t:"L",ref:"el next del mensaje 4.1*"},
+{n:"4.3.1",nd:"4.4",nw:"Lo dispara el 4.3: cuelga de él.",from:"pe",fd:"est",fw:"Lo envía quien recibió el 4.3.",goal:"La postulación le pide el beneficio a su oferta (abstracta).",op:"calcularBeneficio",od:"getBeneficio",ow:"Esa operación está en OfertaPasantia (abstracta: un diagrama por subclase).",pa:"()",pd:"(codOferta)",pw:"No necesita datos.",to:":OfertaPasantia",td:":OfertaPasantia *",tw:"Una postulación tiene una sola oferta (1): no es multiobjeto.",res:"b",rw:"El beneficio se guarda.",t:"A",arrow:"Postulacion ──> OfertaPasantia"}
+]}];
+const PRE=["1: :Controlador → :Estudiante * : est := find(ci)  «association»","2: :Controlador → :Empresa * : emp := find(rut)  «association»"];
+const SIG={
+"postularse|3":"Empresa.obtenerOferta(codOferta) → devuelve la oferta de esa empresa",
+"postularse|4":"Estudiante.generarPostulacion(opc) → registra una postulación del estudiante a la oferta opc",
+"postularse|4.1":"nueva Postulacion, enlazada a un estudiante y a una oferta",
+"postularse|4.2":"OfertaPasantia.agregarPostulacion(p) → la oferta registra la postulación p",
+"aceptarPostulacion|3":"Empresa.cuposDisponibles(codOferta) → ¿la oferta tiene cupos?",
+"aceptarPostulacion|3.2":"OfertaPasantia.hayCupos() → ¿quedan cupos?",
+"aceptarPostulacion|3.2.2*":"Postulacion.getEstado() → devuelve su estado",
+"aceptarPostulacion|4":"Estudiante.aceptarPostulacion(codOferta) → acepta su postulación a esa oferta",
+"aceptarPostulacion|4.2*":"Postulacion.getOfertaPasantiaCodigo() → devuelve el código de su oferta",
+"aceptarPostulacion|4.3*":"Postulacion.aceptarPostulacion() → cambia su propio estado",
+"aceptarPostulacion|4.3.1":"OfertaPasantia.calcularBeneficio() → devuelve el beneficio"};
+const HAVE={
+"postularse|1":"firma: ci, rut, codOferta","postularse|2":"firma: ci, rut, codOferta · est (1)","postularse|3":"firma: ci, rut, codOferta · est (1), emp (2)","postularse|3.1":"emp ejecuta obtenerOferta(codOferta) · firma: codOferta","postularse|4":"est (1), emp (2), opc (3)","postularse|4.1":"est ejecuta generarPostulacion(opc) · firma: opc","postularse|4.2":"est ejecuta generarPostulacion(opc) · firma: opc · p (4.1)","postularse|4.2.1":"opc ejecuta agregarPostulacion(p) · firma: p","postularse|4.3":"est ejecuta generarPostulacion(opc) · p (4.1)",
+"aceptarPostulacion|3":"firma: ci, rut, codOferta · est (1), emp (2)","aceptarPostulacion|3.1":"emp ejecuta cuposDisponibles(codOferta) · firma: codOferta","aceptarPostulacion|3.2":"emp · opc (3.1)","aceptarPostulacion|3.2.1*":"opc ejecuta hayCupos()","aceptarPostulacion|3.2.2*":"opc · p (3.2.1*, uno por vuelta)","aceptarPostulacion|4":"est (1), emp (2), cd (3) · firma: codOferta","aceptarPostulacion|4.1*":"est ejecuta aceptarPostulacion(codOferta) · firma: codOferta","aceptarPostulacion|4.2*":"est · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3*":"est · firma: codOferta · cod (4.2*) · pe (4.1*, uno por vuelta)","aceptarPostulacion|4.3.1":"pe ejecuta aceptarPostulacion()"};
+const PREO=[{n:"1",it:0,o:":Controlador",d:":Estudiante",m:true,msg:"est := find(ci)",st:"association"},{n:"2",it:0,o:":Controlador",d:":Empresa",m:true,msg:"emp := find(rut)",st:"association"}];
+EXS.forEach(E=>E.L.forEach((L,i)=>{const prevO=(E.g=="aceptarPostulacion"?PREO:[]).concat(E.L.slice(0,i).map(x=>tobj(x,0,0)));
+ SWC.push(Object.assign(sw("p4",E.g+" · "+L.n,E.op.split(" —")[0]+"\nTengo: "+HAVE[E.g+"|"+L.n]+(SIG[E.g+"|"+L.n]?"\nOperación que llamo: "+SIG[E.g+"|"+L.n]:"")+(L.t=="A"?"\nClases: "+CLC:"")+"\n▶ "+L.goal,lineSteps(L),lineStr(L)),{dg:{sig:E.op.split(" —")[0],prev:prevO,cur:L}}))}));
+
+/* ===== Prog4: ejercicios de exámenes (Feb 2026 y Jul 2026), línea por línea ===== */
+const X=(n,from,to,t,op,pa,res,cond,goal,have,sg,o)=>Object.assign({n,from,to,t,op,pa,res,cond,goal,have,sg},o||{});
+const EXAM=[
+{g:"Jul26 · bajaMascota",op:"bajaMascota(nickname, nombreMascota)",clc:"Controlador→Usuario* (Usuario abstracta: Dueño, Cuidador) · Dueño→Mascota* · Mascota→Reserva* · Reserva→Hospedaje · Hospedaje→Reserva*",L:[
+X("1",":Controlador",":Usuario *","A","find","(nickname)","u",null,"Necesito al usuario a partir de su nickname.","firma: nickname, nombreMascota"),
+X("2",":Controlador","u:Dueño","L","bajaMascota","(nombreMascota)",null,null,"Le pido al dueño que dé de baja la mascota.","u (1) · firma: nombreMascota","Dueño.bajaMascota(nombreMascota) → da de baja esa mascota del dueño"),
+X("2.1","u",":Mascota *","A","find","(nombreMascota)","m",null,"El dueño busca la mascota entre las suyas.","u ejecuta bajaMascota(nombreMascota) · firma: nombreMascota"),
+X("2.2","u","m:Mascota","L","eliminarReservas","()",null,null,"Antes de borrarla, la mascota elimina sus reservas.","u ejecuta bajaMascota · m (2.1)","Mascota.eliminarReservas() → elimina todas las reservas de la mascota"),
+X("2.2.1*","m",":Reserva *","A","next","()","r","[foreach]","Recorro las reservas de la mascota.","m ejecuta eliminarReservas()"),
+X("2.2.2*","m","r:Reserva","L","eliminarLink","()",null,null,"Cada reserva deshace su enlace con la mascota.","m · r (2.2.1*, una por vuelta)","Reserva.eliminarLink() → deshace sus enlaces"),
+X("2.2.2.1*","r",":Hospedaje","A","eliminarReserva","(r)",null,null,"La reserva le pide a su hospedaje que la saque.","r ejecuta eliminarLink()","Hospedaje.eliminarReserva(r) → saca la reserva r de su colección",{one:1}),
+X("2.2.2.1.1*",":Hospedaje",":Reserva *","A","remove","(r)",null,null,"El hospedaje quita la reserva de su colección.","hospedaje ejecuta eliminarReserva(r) · firma: r"),
+X("2.2.3*","m","r:Reserva","L","destroy","()",null,null,"Destruyo cada reserva ya desenlazada.","m · r (2.2.1*)"),
+X("2.3","u",":Mascota *","A","remove","(m)",null,null,"El dueño quita la mascota de su colección.","u ejecuta bajaMascota · m (2.1)"),
+X("2.4","u","m:Mascota","L","destroy","()",null,null,"Destruyo la mascota.","u · m (2.1)")]},
+{g:"Jul26 · reservarHospedaje",op:"reservarHospedaje(nicknameC, codigo, fecha, nicknameD, nombreMascota): bool",clc:"Controlador→Usuario* (abstracta: Dueño, Cuidador) · Dueño→Mascota* · Cuidador→Hospedaje* (abstracta: Hotel, Casa)",L:[
+X("1",":Controlador",":Usuario *","A","find","(nicknameD)","d",null,"Necesito al dueño a partir de su nickname.","firma: nicknameC, codigo, fecha, nicknameD, nombreMascota"),
+X("2",":Controlador","d:Dueño","L","getMascota","(nombreMascota)","m",null,"Le pido la mascota al dueño.","d (1) · firma: nombreMascota","Dueño.getMascota(nombreMascota) → devuelve la mascota del dueño"),
+X("2.1","d",":Mascota *","A","find","(nombreMascota)","m",null,"El dueño busca la mascota entre las suyas.","d ejecuta getMascota(nombreMascota) · firma: nombreMascota"),
+X("3",":Controlador",":Usuario *","A","find","(nicknameC)","cu",null,"Necesito al cuidador a partir de su nickname.","d (1), m (2) · firma: nicknameC, codigo, fecha"),
+X("4",":Controlador","cu:Cuidador","L","reservar","(codigo, m, fecha)",null,null,"Le pido al cuidador que reserve el hospedaje para la mascota.","cu (3), m (2) · firma: codigo, fecha","Cuidador.reservar(codigo, m, fecha) → reserva ese hospedaje para la mascota"),
+X("4.1","cu",":Hospedaje *","A","find","(codigo)","h",null,"El cuidador busca el hospedaje por código.","cu ejecuta reservar(codigo, m, fecha) · firma: codigo, m, fecha"),
+X("4.2","cu","h:Hospedaje","L","reservar","(m, fecha)","exito",null,"El hospedaje decide si puede reservar.","cu · h (4.1) · firma: m, fecha","Hospedaje.reservar(m, fecha): bool → true si pudo reservar (abstracta: Hotel y Casa la redefinen)")]},
+{g:"Jul26 · Hotel.reservar",op:"reservar(m, fecha): bool  (ejecuta h:Hotel)",ent:"h:Hotel",clc:"Hospedaje→Reserva* (Hotel y Casa heredan) · Mascota→Reserva* · Reserva se crea con (m, fecha)",L:[
+X("1","h","m:Mascota","P","getTipo","()","tipo",null,"Necesito saber si la mascota es Perro o Gato.","h ejecuta reservar(m, fecha) · firma: m, fecha","Mascota.getTipo() → devuelve el tipo (Perro o Gato)",{sig:"m, fecha"}),
+X("2*","h",":Reserva *","A","next","()","r","[tipo=Perro][foreach]","Solo si tipo=Perro: recorro las reservas del hotel.","h · firma: m, fecha · tipo (1)"),
+X("3*","h","r:Reserva","L","getFecha","()","f","[tipo=Perro]","Solo si tipo=Perro: de cada reserva necesito la fecha.","h · firma: m, fecha · tipo (1) · r (2*, una por vuelta)","Reserva.getFecha() → devuelve su fecha"),
+X("4","h","h:Hotel","L","getCupos","()","cupos",null,"Necesito los cupos del hotel: me lo pregunto a mí mismo.","h · firma: m, fecha · tipo (1)",null,{self:1}),
+X("5","h","nueva:Reserva","L","create","(m, fecha)","nueva","[tipo=Perro && cupos>ocupadas]","Solo si tipo=Perro y cupos>ocupadas: creo la reserva.","h · firma: m, fecha · tipo (1) · cupos (4)",null,{new:1}),
+X("5.1","nueva","m:Mascota","P","nuevaReserva","(nueva)",null,null,"La reserva nueva se enlaza con la mascota.","nueva ejecuta create(m, fecha) · firma: m · nueva","Mascota.nuevaReserva(r) → la mascota registra la reserva r",{sig:"m, fecha"}),
+X("5.1.1","m",":Reserva *","A","add","(nueva)",null,null,"La mascota agrega la reserva a su colección.","m ejecuta nuevaReserva(nueva) · firma: nueva"),
+X("6","h",":Reserva *","A","add","(nueva)",null,"[tipo=Perro]","Solo si tipo=Perro: el hotel agrega la reserva a las suyas.","h · firma: m, fecha · tipo (1) · nueva (5)",null,{n6:1})]},
+{g:"Feb26 · iniciarMisionAplicacion",op:"iniciarMisionAplicacion(idC, nroP, idR, f): bool",clc:"Controlador→Campo* (singleton) · Campo→Parcela* · Parcela→RobotParcela* · RobotParcela→Robot y →Mision* · Mision (subclases Aplicacion y Mapeo)",L:[
+X("1",":Controlador",":Campo *","A","find","(idC)","c",null,"Necesito el campo a partir de su id.","firma: idC, nroP, idR, f"),
+X("2",":Controlador","c:Campo","L","obtenerParcela","(nroP)","p",null,"Le pido la parcela al campo.","c (1) · firma: nroP, idR, f","Campo.obtenerParcela(nroP) → devuelve la parcela nroP"),
+X("2.1","c",":Parcela *","A","find","(nroP)","p",null,"El campo busca la parcela por número.","c ejecuta obtenerParcela(nroP) · firma: nroP"),
+X("3",":Controlador","p:Parcela","L","buscarMapeoPrevio","(f)","m",null,"Busco un mapeo previo finalizado con fecha ≤ f.","c (1), p (2) · firma: idR, f","Parcela.buscarMapeoPrevio(f) → devuelve un Mapeo finalizado con fecha ≤ f, o null"),
+X("3.1*","p",":RobotParcela *","A","next","()","rp","[foreach]","La parcela recorre sus robots.","p ejecuta buscarMapeoPrevio(f) · firma: f"),
+X("3.2*","p","rp:RobotParcela","L","buscarMapeoPrevio","(f)","m",null,"Cada robot busca entre sus misiones.","p · rp (3.1*, uno por vuelta) · firma: f","RobotParcela.buscarMapeoPrevio(f) → su Mapeo finalizado con fecha ≤ f, o null"),
+X("3.2.1*","rp",":Mision *","A","next","()","m","[foreach]","El robot recorre sus misiones.","rp ejecuta buscarMapeoPrevio(f) · firma: f"),
+X("3.2.2*","rp","m:Mapeo","L","getFecha","()","fecha","[m es Mapeo]","Solo si m es Mapeo: pido su fecha.","rp · m (3.2.1*, una por vuelta) · firma: f","Mision.getFecha() → devuelve la fecha"),
+X("3.2.3*","rp","m:Mapeo","L","getFinalizado","()","finalizado","[m es Mapeo]","Solo si m es Mapeo: pido si está finalizado.","rp · m (3.2.1*) · fecha (3.2.2*)","Mision.getFinalizado() → true si está finalizada",{n3:1}),
+X("4",":Controlador","p:Parcela","L","buscarRobotParcela","(idR)","rp","[res]","Solo si res (hay mapeo previo, m != null): busco el robot idR.","c (1), p (2), m (3) · firma: idR, f","Parcela.buscarRobotParcela(idR) → devuelve el RobotParcela del robot idR"),
+X("4.1*","p",":RobotParcela *","A","next","()","rp","[foreach]","La parcela recorre sus robots.","p ejecuta buscarRobotParcela(idR) · firma: idR"),
+X("4.2*","p","rp:RobotParcela","L","getIdRobot","()","idRobot",null,"De cada uno necesito el id de su robot.","p · rp (4.1*, uno por vuelta) · firma: idR","RobotParcela.getIdRobot() → devuelve el id de su robot"),
+X("4.2.1*","rp",":Robot","A","getId","()","idRobot",null,"El RobotParcela le pide el id a su Robot.","rp ejecuta getIdRobot()",null,{one:1}),
+X("5",":Controlador","rp:RobotParcela","L","iniciarMision","(m, f)",null,null,"Inicio la misión en ese robot.","rp (4), m (3) · firma: f","RobotParcela.iniciarMision(m, f) → crea e inicia la misión de aplicación"),
+X("5.1","rp","ah:AplicacionHerbicida","L","create","(m, f, id, 0, false)","ah",null,"El robot crea la aplicación.","rp ejecuta iniciarMision(m, f) · firma: m, f",null,{new:1}),
+X("5.1.1","ah",":Controlador","G","getInstance","()","cont",null,"La aplicación necesita un id único: llega al Controlador.","ah ejecuta create(m, f, id, 0, false)"),
+X("5.1.2","ah","cont:Controlador","L","getIdUnico","()","id",null,"Le pide el id único.","ah · cont (5.1.1)","Controlador.getIdUnico() → devuelve un id nuevo",{ref:"el mensaje 5.1.1"}),
+X("5.2","rp",":Mision *","A","add","(ah)",null,null,"El robot agrega la aplicación a sus misiones.","rp ejecuta iniciarMision(m, f) · ah (5.1)")]},
+{g:"Feb26 · calcularHerbicidaTotal",op:"calcularHerbicidaTotal(idC, fInicio, fFin): float",clc:"Controlador→Campo* · Campo→Parcela* · Parcela→RobotParcela* · RobotParcela→Mision* (subclases Aplicacion y Mapeo)",L:[
+X("1",":Controlador",":Campo *","A","find","(idC)","c",null,"Necesito el campo a partir de su id.","firma: idC, fInicio, fFin"),
+X("2",":Controlador","c:Campo","L","calcularTotalHerbicida","(fInicio, fFin)","totalC",null,"Le pido el total al campo.","c (1) · firma: fInicio, fFin","Campo.calcularTotalHerbicida(fInicio, fFin) → suma el total de todas sus parcelas"),
+X("2.1*","c",":Parcela *","A","next","()","par","[forEach]","El campo recorre sus parcelas.","c ejecuta calcularTotalHerbicida(fInicio, fFin)"),
+X("2.2*","c","par:Parcela","L","calcularTotalHerbicida","(fInicio, fFin)","totalParcela",null,"Cada parcela calcula su total.","c · par (2.1*, una por vuelta) · firma: fInicio, fFin","Parcela.calcularTotalHerbicida(fInicio, fFin) → suma el total de sus robots"),
+X("2.2.1*","par",":RobotParcela *","A","next","()","rp","[forEach]","La parcela recorre sus robots.","par ejecuta calcularTotalHerbicida(fInicio, fFin)"),
+X("2.2.2*","par","rp:RobotParcela","L","calcularTotalHerbicida","(fInicio, fFin)","totalRobot",null,"Cada robot calcula su total.","par · rp (2.2.1*, uno por vuelta) · firma: fInicio, fFin","RobotParcela.calcularTotalHerbicida(fInicio, fFin) → suma la cantidad de sus aplicaciones"),
+X("2.2.2.1*","rp",":Mision *","A","next","()","ah","[forEach]","El robot recorre sus misiones.","rp ejecuta calcularTotalHerbicida(fInicio, fFin)"),
+X("2.2.2.2*","rp","ah:AplicacionHerbicida","L","getFecha","()","f","[ah es AplicacionHerbicida]","Solo si ah es AplicacionHerbicida: pido su fecha.","rp · ah (2.2.2.1*, una por vuelta) · firma: fInicio, fFin","Mision.getFecha() → devuelve la fecha"),
+X("2.2.2.3*","rp","ah:AplicacionHerbicida","L","getHerbicidaAplicado","()","cant","[fInicio <= f & f <= fFin]","Solo si fInicio <= f <= fFin: pido la cantidad.","rp · ah (2.2.2.1*) · f (2.2.2.2*) · firma: fInicio, fFin","AplicacionHerbicida.getHerbicidaAplicado() → devuelve el herbicida aplicado")]}
+];
+const exNx=n=>{const p=n.replace("*","").split("."),k=+p.pop()+1;return p.concat(k).join(".")};
+EXAM.forEach(E=>{const C={":Controlador":"Controlador"},V={},ops=[...new Set(E.L.map(l=>l.op))],obj=[];
+ if(E.ent){const[a,b]=E.ent.split(":");C[a]=b}
+ const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(C[k]||k)};
+ E.L.forEach((L,i)=>{const p=L.n.replace("*","").split("."),d=p.length,star=L.n.includes("*"),pr=p.slice(0,-1).join("."),tk=L.to.replace(/ \*$/,""),r=tk.split(":")[0],o=L.op,others=ops.filter(x=>x!=o),pl=L.pa.slice(1,-1).split(", ").filter(Boolean);
+  L.nd=star?L.n.replace("*",""):exNx(L.n);
+  L.nw=star?"Está dentro de un recorrido: lo que se repite lleva *.":(d==1?"Mensaje de primer nivel: lo envía quien recibe la operación.":"Lo dispara el "+pr+": cuelga de él.");
+  L.fd=E.L.map(l=>l.from).concat([":Controlador"]).find(x=>x!=L.from&&x!=r);L.fw="Lo envía quien recibió el mensaje que lo dispara ("+(d==1?"la operación del sistema":pr)+").";
+  L.od=L.od||[E.L[i+1],E.L[i-1],E.L[i+2]].filter(Boolean).map(x=>x.op).find(x=>x!=o)||others[i%others.length]||"get";L.ow=L.ow||"La tarea es «"+L.goal+"»: eso es "+o+", no "+L.od+".";
+  L.pd=pl.length>1?"("+pl.slice(0,-1).join(", ")+")":(pl.length?"()":"(x)");L.pw="Los datos que necesita la operación: "+L.pa+" (están en «Tengo»).";
+  L.td=/ \*$/.test(L.to)?tk:(L.one||L.self||L.new||L.t=="G"||L.t=="P"||L.t=="L"?(L.one?tk+" *":obj.find(x=>x!=tk)||":Controlador"):tk+" *");
+  L.tw=/ \*$/.test(L.to)?"find, next y add van a la colección: lleva *.":(L.one?"Es una sola (1) en el diagrama de clases: no es multiobjeto.":(L.self?"Mensaje a sí mismo: el receptor es el propio objeto.":(L.new?"create va al objeto nuevo.":"Es el objeto concreto de «Tengo".replace("Tengo","Tengo")+".")));
+  L.cw="La condición va antes del mensaje.";
+  L.arrow=cls(L.from)+" ──> "+cls(L.to)+(/ \*$/.test(L.to)?" *":"");
+  L.ref=L.ref||(V[r]?"el mensaje "+V[r]:"un mensaje anterior");L.sig=L.sig||"firma de la operación";
+  if(L.t=="P")L.sig="firma: "+L.sig;
+  if(!obj.includes(tk))obj.push(tk);
+  const v=L.to.replace(/ \*$/,"").split(":");if(v[0]&&v[1])C[v[0]]=v[1];if(L.res)V[L.res]=L.n});
+ const PRE=[];
+ E.L.forEach((L,i)=>{const pv=E.L.slice(0,i).map(x=>tobj(x,0,0));
+  const lb=Object.assign(sw("p4",E.g+" · "+L.n,E.op.split(" —")[0]+"\nTengo: "+L.have+(L.sg?"\nOperación que llamo: "+L.sg:"")+(L.t=="A"?"\nClases: "+E.clc:"")+"\n▶ "+L.goal,lineSteps(L),lineStr(L)),{dg:{sig:E.op.split("  (")[0],prev:pv,cur:L,ent:E.ent}});SWC.push(lb)})});
+
+SWC.push(
+sw("p4","Condición [ ]","Operación: aceptarPostulacion(ci, rut, codOferta)\nYa dibujado: 3: :Controlador → emp:Empresa : cd := cuposDisponibles(codOferta)  «local»\nQuiero que 4 (aceptarPostulacion en est) ocurra solo si hay cupos.",[
+ st("¿Cómo expreso «solo si hay cupos»?","Condición [cd]","Otro objeto","Una condición se anota en el propio mensaje."),
+ st("¿Dónde va?","Antes del mensaje: [cd] aceptarPostulacion(…)","Después del mensaje","La guarda precede al mensaje."),
+ st("¿De dónde sale cd?","De un mensaje anterior: cd := …","Aparece sola","La variable de la condición se obtiene antes (el 3)."),
+ st("Dentro de un recorrido, ¿el número del mensaje con condición?","Conserva el * (4.3*)","Pierde el *","Sigue dentro de la iteración.")]),
+sw("p4","Guardar resultado",null,[
+ st("Pido getEstado() y uso el estado después.","e := getEstado()","getEstado()","Si lo uso, lo guardo en una variable."),
+ st("Envío aceptarPostulacion() y no uso nada del retorno.","aceptarPostulacion()","x := aceptarPostulacion()","Sin uso posterior no hay variable."),
+ st("find(ci) devuelve el estudiante que voy a usar.","est := find(ci)","find(ci)","El objeto encontrado se usa en los mensajes siguientes."),
+ st("create(…) crea el objeto nuevo que voy a usar.","p := create(est, opc)","create(est, opc)","El objeto nuevo queda en una variable."),
+ st("next() dentro de un recorrido.","pe := next()","next()","Cada vuelta usa el elemento obtenido.")]),
+);
+SWC.push(
+sw("p4","postularse · orden","Operación del sistema: postularse(ci, rut, codOferta)\n"+CLS,[
+ st("¿Qué hago primero?","Buscar est, emp y la oferta","Crear la postulación","create necesita est y opc: antes hay que tenerlos (error del parcial)."),
+ st("¿Puede el Controlador buscar la oferta directo con find?","No: se la pide a emp","Sí","No tiene flecha a OfertaPasantia (error del parcial: saltar la Empresa)."),
+ st("¿Quién crea la postulación?","est, dentro de generarPostulacion","El Controlador","El Controlador delega; la crea quien se enlaza."),
+ st("¿Cómo se enlaza la postulación nueva?","En los dos lados: opc y est la guardan","Solo en opc","Estudiante ↔ Postulacion y Postulacion ↔ OfertaPasantia: los dos guardan (add)."),
+ st("¿Cuántas veces aparece add(p)?","Dos: en la colección de opc y en la de est","Una","Una por cada lado del link.")
+]),
+sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: aceptarPostulacion(ci, rut, codOferta)\n"+DOMS,[
+ st("¿Quién cambia el estado de la postulación?","La postulación (aceptarPostulacion())","El Controlador con setEstado","Cada objeto modifica su propio estado."),
+ st("Parcial: setEstado(aceptada) iba a la Oferta.\n¿Qué estaba mal?","La oferta no es dueña de ese estado","Faltaba el *","El estado es de la postulación."),
+ st("¿Cuándo se acepta?","Solo si hay cupos: [cd]","Siempre","La condición del cupo va antes del mensaje."),
+ st("¿Quién calcula el beneficio?","La oferta, según su subclase","El estudiante","calcularBeneficio es de OfertaPasantia."),
+ st("calcularBeneficio() es abstracta.\n¿Cuántos diagramas?","Uno por subclase (Remunerada y NoRemunerada)","Uno solo con un if","Cada subclase implementa su versión."),
+ st("El recorrido de postulaciones…","Son varios mensajes: next, consulta y acción con condición","Es un solo mensaje","next, getOfertaPasantiaCodigo y la acción [cod == codOferta].")
+])
+);
