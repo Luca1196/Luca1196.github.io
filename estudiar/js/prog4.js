@@ -359,3 +359,7 @@ sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: acept
  st("El recorrido de postulaciones…","Son varios mensajes: next, consulta y acción con condición","Es un solo mensaje","next, getOfertaPasantiaCodigo y la acción [cod == codOferta].")
 ])
 );
+/* Contexto mínimo por paso en las tarjetas de línea: cada pregunta muestra solo lo que necesita (el id de la tarjeta no cambia). */
+SWC.filter(c=>c.dg).forEach(c=>{const P={};c.ctx.split("\n").forEach(l=>{const k=l.startsWith("Tengo:")?"T":l.startsWith("Operación que llamo:")?"O":l.startsWith("Clases:")?"C":l.startsWith("▶")?"G":"";if(k)P[k]=l});
+ const j=(...k)=>k.map(x=>P[x]).filter(Boolean).join("\n");
+ c.steps.forEach(s=>{s.x=({n:j("T","G"),op:j("O","G"),pa:j("T","G"),to:j("T","G"),cond:j("G"),q:j("T","G"),st:s.src&&s.src[0]=="Clases"?j("C"):j("T")})[s.k]||c.ctx})});
