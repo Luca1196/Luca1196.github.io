@@ -156,11 +156,11 @@ const DOMS=CLS+"\n"+OPS;
 const SS={A:"«association»",L:"«local»",P:"«parameter»",G:"«global»"};
 const lineStr=L=>L.n+": "+L.from+" → "+L.to+" : "+(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa+"  "+SS[L.t];
 const key=t=>{const[a,b]=t.split(":");return b===undefined?a:(a||":"+b)};
-function dgm(G,D,sig,ent){ent=ent||":Controlador";const ek=key(ent),Ls=G.concat(D?[D]:[]),C={},dep={[ek]:0},lab={[ek]:ent},oid=x=>key(x.o),did=x=>key(x.d)+(x.m?"*":""),cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
+function dgm(G,D,sig,ent){ent=ent||":Controlador";const ek=key(ent),Ls=G.concat(D?[D]:[]),C={},dep={[ek]:0},lab={[ek]:ent},oid=x=>key(x.o),did=x=>(x.m?key(x.o)+">":"")+key(x.d)+(x.m?"*":""),cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
 
 Ls.forEach(x=>{cl(x.o);cl(x.d);const o=oid(x),d=did(x);[[o,x.o,0],[d,x.d,x.m]].forEach(([k,t,s])=>{if(!(k in lab))lab[k]=(t.includes(":")?t:(C[t]?t+":"+C[t]:t))+(s?" *":"")});if(!(o in dep))dep[o]=0;if(!(d in dep))dep[d]=dep[o]+1});
 const ids=Object.keys(lab),cc={},Q={},W=140,H=34,cnt={};
-ids.forEach(k=>{const c=dep[k]||0;(cc[c]=cc[c]||[]).push(k);Q[k]={x:210+c*190,y:10+(cc[c].length-1)*64}});
+const occ={};ids.forEach(k=>{const c=dep[k]||0;let r=0;Ls.forEach(x=>{if(did(x)==k&&oid(x)!=k&&Q[oid(x)])r=Math.max(r,Q[oid(x)].r)});occ[c]=occ[c]||{};while(occ[c][r])r++;occ[c][r]=1;Q[k]={x:210+c*190,y:10+r*64,r}});
 const mx=Math.max(...ids.map(k=>Q[k].x))+160,my=Math.max(...ids.map(k=>Q[k].y))+54;
 let s=`<svg width="${mx}" height="${my}" role="img" aria-label="Diagrama de comunicación" style="font:11px system-ui;color:var(--fg)"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>`;
 ids.forEach(k=>{const p=Q[k];s+=(k.endsWith("*")?`<rect x="${p.x+5}" y="${p.y-5}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--mut)"/>`:"")+`<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--fg)"/><text x="${p.x+W/2}" y="${p.y+21}" text-anchor="middle" fill="var(--fg)" text-decoration="underline">${esc(lab[k])}</text>`});
