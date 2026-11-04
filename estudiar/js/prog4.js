@@ -350,7 +350,7 @@ sw("p4","postularse · orden","Operación del sistema: postularse(ci, rut, codOf
  st("¿Cómo se enlaza la postulación nueva?","En los dos lados: opc y est la guardan","Solo en opc","Estudiante ↔ Postulacion y Postulacion ↔ OfertaPasantia: los dos guardan (add)."),
  st("¿Cuántas veces aparece add(p)?","Dos: en la colección de opc y en la de est","Una","Una por cada lado del link.")
 ]),
-sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: aceptarPostulacion(ci, rut, codOferta)\n"+DOMS,[
+sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: aceptarPostulacion(ci, rut, codOferta)\n"+OPS,[
  st("¿Quién cambia el estado de la postulación?","La postulación (aceptarPostulacion())","El Controlador con setEstado","Cada objeto modifica su propio estado."),
  st("Parcial: setEstado(aceptada) iba a la Oferta.\n¿Qué estaba mal?","La oferta no es dueña de ese estado","Faltaba el *","El estado es de la postulación."),
  st("¿Cuándo se acepta?","Solo si hay cupos: [cd]","Siempre","La condición del cupo va antes del mensaje."),
