@@ -783,12 +783,22 @@ function desglosarCientifico(valor) {
 
 const STORAGE_KEY = "astrofisica_progreso_v4";
 const STORAGE_KEY_FLASH = "astrofisica_flashcards_v2";
+const STORAGE_KEY_RACHA = "astrofisica_racha_diaria_v1";
+
+/*
+ * RACHA DIARIA
+ * La racha cuenta DÍAS CONSECUTIVOS en los que se alcanzó la meta diaria
+ * de aciertos. Objetivo: fomentar el hábito de estudiar un poco todos los días
+ * (práctica distribuida). Solo cuentan los aciertos, no los intentos.
+ * Cambiá META_DIARIA para ajustar la exigencia.
+ */
+const META_DIARIA = 5;
 
 let progreso = cargarProgreso();
 let preguntaActual = null;
 let temaFiltro = "todos";
-let racha = 0;
 let modoActual = "practica";
+let rachaDiaria = cargarRachaDiaria();
 
 
 /****************************************************************
@@ -796,6 +806,60 @@ let modoActual = "practica";
  *                    PERSISTENCIA
  *
  ****************************************************************/
+
+/* Fecha local en formato AAAA-MM-DD (no UTC, para que el día cambie a medianoche local) */
+function fechaLocal(desfaseDias = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + desfaseDias);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function cargarRachaDiaria() {
+  let datos = { fecha: fechaLocal(), aciertosHoy: 0, racha: 0, mejorRacha: 0, ultimoDiaCumplido: null };
+  try {
+    const guardado = JSON.parse(localStorage.getItem(STORAGE_KEY_RACHA));
+    if (guardado) datos = { ...datos, ...guardado };
+  } catch (e) { /* sin datos guardados */ }
+
+  const hoy = fechaLocal();
+  const ayer = fechaLocal(-1);
+
+  // Día nuevo: se reinicia el contador de aciertos de hoy
+  if (datos.fecha !== hoy) {
+    datos.fecha = hoy;
+    datos.aciertosHoy = 0;
+  }
+  // Si el último día cumplido no fue hoy ni ayer, la racha se cortó
+  if (datos.ultimoDiaCumplido !== hoy && datos.ultimoDiaCumplido !== ayer) {
+    datos.racha = 0;
+  }
+  return datos;
+}
+
+function guardarRachaDiaria() {
+  try { localStorage.setItem(STORAGE_KEY_RACHA, JSON.stringify(rachaDiaria)); } catch (e) {}
+}
+
+/* Suma un acierto al día. Devuelve true si con este acierto se cumplió la meta de hoy. */
+function registrarAciertoDiario() {
+  // Por si la página quedó abierta pasada la medianoche
+  if (rachaDiaria.fecha !== fechaLocal()) rachaDiaria = cargarRachaDiaria();
+
+  rachaDiaria.aciertosHoy++;
+  let metaCumplidaAhora = false;
+
+  const hoy = fechaLocal();
+  if (rachaDiaria.aciertosHoy >= META_DIARIA && rachaDiaria.ultimoDiaCumplido !== hoy) {
+    rachaDiaria.racha = rachaDiaria.ultimoDiaCumplido === fechaLocal(-1) ? rachaDiaria.racha + 1 : 1;
+    rachaDiaria.ultimoDiaCumplido = hoy;
+    rachaDiaria.mejorRacha = Math.max(rachaDiaria.mejorRacha, rachaDiaria.racha);
+    metaCumplidaAhora = true;
+  }
+  guardarRachaDiaria();
+  return metaCumplidaAhora;
+}
 
 function crearProgresoInicial() {
   const nuevo = {};
@@ -907,7 +971,6 @@ function actualizarDominio(tipo, respuesta) {
   if (respuesta.tipo === "correcta") {
     datos.aciertos++;
     datos.racha++;
-    racha++;
 
     const espacio = 100 - datos.dominio;
     const incremento = Math.max(1, Math.round(espacio * 0.15));
@@ -918,7 +981,6 @@ function actualizarDominio(tipo, respuesta) {
   } else {
     datos.errores++;
     datos.racha = 0;
-    racha = 0;
 
     const perdida = Math.max(5, Math.round(datos.dominio * 0.25));
     datos.dominio -= perdida;
@@ -1055,12 +1117,37 @@ function mostrarDominio(tipo) {
 
 function mostrarRacha() {
   const contenedor = document.getElementById("rachaCard");
+  if (rachaDiaria.fecha !== fechaLocal()) rachaDiaria = cargarRachaDiaria();
 
-  if (racha >= 2) {
-    contenedor.innerHTML = `<span class="racha-fuego">🔥</span> Racha de ${racha} ${racha === 1 ? "acierto" : "aciertos"} seguidos`;
+  const { racha, aciertosHoy, mejorRacha, ultimoDiaCumplido } = rachaDiaria;
+  const cumplidaHoy = ultimoDiaCumplido === fechaLocal();
+  const hechos = Math.min(aciertosHoy, META_DIARIA);
+  const faltan = META_DIARIA - hechos;
+
+  let mensaje;
+  if (cumplidaHoy) {
+    mensaje = aciertosHoy > META_DIARIA
+      ? `¡Meta de hoy cumplida! (+${aciertosHoy - META_DIARIA} extra) Volvé mañana 💪`
+      : "¡Meta de hoy cumplida! Volvé mañana para seguir la racha 💪";
+  } else if (racha > 0) {
+    mensaje = `Te ${faltan === 1 ? "falta 1 acierto" : `faltan ${faltan} aciertos`} para mantener la racha hoy`;
   } else {
-    contenedor.innerHTML = "";
+    mensaje = `Acertá ${META_DIARIA} preguntas hoy para empezar una racha`;
   }
+
+  const unidad = racha === 1 ? "día" : "días";
+  contenedor.innerHTML = `
+    <div class="racha-fila">
+      <span class="racha-fuego ${cumplidaHoy ? "" : "apagado"}">🔥</span>
+      <strong>${racha} ${unidad}</strong>
+      ${mejorRacha > 0 ? `<span class="racha-mejor">· mejor: ${mejorRacha}</span>` : ""}
+    </div>
+    <div class="racha-meta">
+      <div class="racha-puntos">${Array.from({ length: META_DIARIA }, (_, i) =>
+        `<span class="racha-punto ${i < hechos ? "lleno" : ""}"></span>`).join("")}</div>
+      <span>Hoy: ${hechos}/${META_DIARIA}</span>
+    </div>
+    <div class="racha-mensaje">${mensaje}</div>`;
 }
 
 function nuevaPregunta() {
@@ -1137,8 +1224,9 @@ function seleccionarRespuesta(indice, elemento) {
     sonidoCorrecto();
     lanzarConfeti();
 
-    if (racha > 0 && racha % 5 === 0) {
+    if (registrarAciertoDiario()) {
       setTimeout(sonidoRachaEspecial, 300);
+      setTimeout(lanzarConfeti, 400);
     }
   } else {
     elemento.classList.add("incorrect");

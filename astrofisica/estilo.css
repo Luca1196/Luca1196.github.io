@@ -72,15 +72,25 @@ h1 { text-align: center; color: #8ec5ff; margin-bottom: 5px; }
 
 .racha-card {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 20px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 179, 71, 0.08);
   font-size: 1rem;
   color: #ffb347;
-  min-height: 24px;
 }
-.racha-fuego { font-size: 1.3rem; }
+.racha-fila { display: flex; align-items: center; gap: 8px; }
+.racha-fuego { font-size: 1.3rem; transition: filter 0.4s ease; }
+.racha-fuego.apagado { filter: grayscale(1) opacity(0.5); }
+.racha-mejor { color: #b8bcd0; font-size: 0.9rem; }
+.racha-meta { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #d8dbe8; }
+.racha-puntos { display: flex; gap: 5px; }
+.racha-punto { width: 12px; height: 12px; border-radius: 50%; background: #303650; transition: background 0.3s ease, transform 0.3s ease; }
+.racha-punto.lleno { background: #ffb347; transform: scale(1.1); }
+.racha-mensaje { font-size: 0.85rem; color: #b8bcd0; text-align: center; }
 
 /* ================================
    PREGUNTA
