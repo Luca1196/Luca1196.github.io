@@ -800,14 +800,10 @@ function renderAcciones() {
       msg = resumenCarta(ui.sel, `<span class="paso">${!ui.tutorial ? "Ahora toca una estrella o un planeta"
         : n ? `Toca una de las estrellas que brillan (${n === 1 ? "hay 1 jugada posible" : `hay ${n} jugadas posibles`}), o toca la carta otra vez para soltarla`
         : "Esta carta no sirve ahora en ninguna estrella: tócala otra vez y elige otra, o usa el Telescopio"}</span>`);
-    } else msg = ui.tutorial ? listaOpciones("Tu turno: elige UNA de estas opciones", opcionesTurno()) : "<b>Tu turno:</b> toca una carta, o pide Telescopio";
+    } else msg = "<b>Tu turno:</b> toca una carta, o pide Telescopio";
   } else if (ui.fase === "post" && !K.ROBO) {
     const n = publicables().length;
-    msg = ui.tutorial ? (() => { const c = consejoPublicar();
-        if (!n) return listaOpciones("Final del turno", [c]);
-        return ui.pubConviene ? listaOpciones("Final del turno", [c, "<b>Terminar turno</b> sin publicar"])
-          : listaOpciones("Final del turno", ["<b>Terminar turno</b>: le toca al rival.", c]); })()
-      : n ? "Final del turno: <b>publica</b> lo que descubriste, o termina" : "Final del turno: no tienes nada para publicar";
+    msg = n ? "Final del turno: <b>publica</b> lo que descubriste, o termina" : "Final del turno: no tienes nada para publicar";
     btns = `<button type="button" class="btn-pub" id="b-pub" ${n ? "" : "disabled"}>Publicar${n ? `<span class="insignia">${n}</span>` : ""}</button>
       <button type="button" class="btn-juego ${n ? "gris" : ""}" id="b-fin">Terminar turno</button>`;
   }
@@ -818,7 +814,7 @@ function renderAcciones() {
   $("#msg").innerHTML = msg;
   $("#msg").classList.toggle("con-carta", !!$("#carta-grande"));
   // tutorial: las sugerencias tienen el mismo aspecto que la guía (son la misma ayuda)
-  $("#msg").classList.toggle("oculto", !!ui.tutorial && !$("#carta-grande"));   // en el tutorial, el texto lo da el panel de la guía
+
   const cg = $("#carta-grande"); if (cg) cg.onclick = () => ui.sel && detalleCarta(ui.sel);
   const bt = $("#b-tel"); bt.disabled = !(ui.fase === "accion" && !ui.ocupado && !g.terminado);
   if (!bt.querySelector("svg")) bt.querySelector(".mt-ico").innerHTML = ICO.tele;
@@ -1075,7 +1071,6 @@ async function empezar(pref, guardada = null) {
     g = crearJuego(pref);
   }
   guia.paso = -1;
-  if (!ui.tutorial) { document.getElementById("guia-dock")?.remove(); document.getElementById("guia-aros")?.remove(); }
   render();
   if (!guardada && ui.tutorial) iniciarGuia();   // modo tutorial: la guía arranca siempre; en normal, solo con el botón ?
   if (guardada) aviso(`Partida recuperada: ronda ${g.ronda} de ${g.maxRondas}`);
@@ -1122,8 +1117,7 @@ const GUIA = [
       : "Ahora juega <b>tu rival</b>. Cuando descubra un candidato, aparecerá en una estrella con <b>su color</b> y un <b>?</b>; las letras celestes dirán con qué técnica lo encontró. ¡A jugar!", fin: true },
 ];
 const guia = { paso: -1 };
-function guiaVisible() {
-  if (ui.tutorial) return guia.paso >= 0 && !!guia.mostrando;   // el rival espera mientras hay un paso de la guía para leer
+function guiaVisible() {   // el rival espera mientras hay un paso de la guía para leer (no durante las sugerencias)
   const c = document.getElementById("guia"); return guia.paso >= 0 && !!c && !c.hidden;
 }
 function iniciarGuia() { GUIA.forEach(x => delete x.t0); guia.paso = 0; ui.tiradas = 0; actualizarGuia(); }
@@ -1133,15 +1127,16 @@ function terminarGuia() {
   try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {}
 }
 function actualizarGuia() {
-  if (ui.tutorial) return guiaTutorial();
   let capa = document.getElementById("guia");
-  const p = GUIA[guia.paso];
+  let p = GUIA[guia.paso];
   if (p && ((p.hasta && p.hasta()) || (p.si && !p.si()))) { guia.paso++; return actualizarGuia(); }
+  // modo tutorial: terminada la guía, el mismo globo sigue mostrando tus opciones hasta el final de la partida
+  if (!p && ui.tutorial && g && guia.paso < 0) p = pasoContinuo();
   if (p && p.cuando && p.t0 == null) p.t0 = g.turnos;   // espera a que el rival juegue (descubra algo o termine su turno)
   document.body.classList.toggle("guia-solo-tec", !!(p && p.soloTec));   // apaga los Marcadores mientras se pide una Técnica
   // el foco puede abarcar varias cartas (p. ej. solo las de Técnica); si no hay ninguna, usa «alt»
-  const selector = p && (typeof p.sel === "function" ? p.sel() : p.sel);
-  let els = p ? [...document.querySelectorAll(selector)].filter(x => x.getClientRects().length) : [];
+  const selector = p && !p.els && (typeof p.sel === "function" ? p.sel() : p.sel);
+  let els = p ? (p.els || [...document.querySelectorAll(selector)]).filter(x => x && x.getClientRects().length) : [];
   if (p && !els.length && p.alt) els = [...document.querySelectorAll(p.alt)];
   const el = els[0];
   const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado)) || (p && p.cuando && !p.cuando(p));
@@ -1157,9 +1152,16 @@ function actualizarGuia() {
   r.width = r.right - r.left; r.height = r.bottom - r.top;
   const foco = capa.querySelector(".guia-foco"), globo = capa.querySelector(".guia-globo");
   Object.assign(foco.style, { left: `${r.left - 4}px`, top: `${r.top - 4}px`, width: `${r.width + 8}px`, height: `${r.height + 8}px` });
-  globo.querySelector("p").innerHTML = `${typeof p.txt === "function" ? p.txt() : p.txt}<span class="guia-n">${(v => `${v.indexOf(p) + 1}/${v.length}`)(GUIA.filter(x => !x.si || x.si() || x === p))}</span>`;
-  globo.querySelector(".guia-btns").innerHTML = `<button type="button" class="btn-juego gris" data-g="saltar">Saltar guía</button>`
+  globo.querySelector("p").innerHTML = `${typeof p.txt === "function" ? p.txt() : p.txt}${p.continuo ? "" : `<span class="guia-n">${(v => `${v.indexOf(p) + 1}/${v.length}`)(GUIA.filter(x => !x.si || x.si() || x === p))}</span>`}`;
+  globo.querySelector(".guia-btns").innerHTML = p.continuo ? "" : (ui.tutorial ? "" : `<button type="button" class="btn-juego gris" data-g="saltar">Saltar guía</button>`)
     + (p.hasta ? "" : `<button type="button" class="btn-juego" data-g="sig">${p.fin ? "¡A jugar!" : "Siguiente"}</button>`);
+  // aros extra (p. ej. el planeta, además de la carta que hay que tocar)
+  capa.querySelectorAll(".guia-aro").forEach(x => x.remove());
+  for (const x of (p.extra || []).filter(x => x && x.getClientRects().length)) {
+    const q = x.getBoundingClientRect(), a = document.createElement("div"); a.className = "guia-aro";
+    Object.assign(a.style, { left: `${q.left - 4}px`, top: `${q.top - 4}px`, width: `${q.width + 8}px`, height: `${q.height + 8}px` });
+    capa.appendChild(a);
+  }
   globo.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
     if (b.dataset.g === "saltar" || p.fin) terminarGuia(); else { guia.paso++; actualizarGuia(); }
   });
@@ -1198,60 +1200,28 @@ async function mostrarTutorial() { if (g && !g.terminado) iniciarGuia(); }
 new MutationObserver(() => { if (guia.paso >= 0 || ui.tutorial) requestAnimationFrame(actualizarGuia); }).observe(document.getElementById("capa"), { childList: true });
 addEventListener("resize", () => { if (guia.paso >= 0 || ui.tutorial) actualizarGuia(); });
 
-// ---------------------------------------------------------- modo tutorial: una sola guía, de principio a fin
-// Un panel fijo arriba de la mano (no tapa el juego) y aros dorados sobre lo que hay que mirar o tocar.
-// Primero los pasos de la guía; después, en cada momento, tus opciones con la recomendada señalada.
-function guiaTutorial() {
-  let dock = document.getElementById("guia-dock");
-  if (!dock) { dock = document.createElement("div"); dock.id = "guia-dock"; dock.className = "guia-dock"; $("#msg").before(dock); }
-  let aros = document.getElementById("guia-aros");
-  if (!aros) { aros = document.createElement("div"); aros.id = "guia-aros"; document.body.appendChild(aros); }
-  const dialogo = !!document.querySelector("#capa .velo");
-  let txt = "", botones = "", objetivos = [];
-  guia.mostrando = false;
-  let p = guia.paso >= 0 ? GUIA[guia.paso] : null;
-  while (p && ((p.hasta && p.hasta()) || (p.si && !p.si()))) { guia.paso++; p = GUIA[guia.paso]; }
-  if (guia.paso >= GUIA.length) { guia.paso = -1; p = null; }
-  document.body.classList.toggle("guia-solo-tec", !!(p && p.soloTec));
-  if (p) {
-    if (p.cuando && p.t0 == null) p.t0 = g.turnos;
-    const espera = (p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p.turnoFin && (ui.fase !== "post" || ui.ocupado)) || (p.cuando && !p.cuando(p));
-    if (espera) txt = ui.fase === "espera" || g.turnoDe !== YO ? `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…` : "…";
-    else {
-      guia.mostrando = !p.hasta;   // un paso para leer (con «Siguiente») detiene al rival hasta que lo leas
-      txt = typeof p.txt === "function" ? p.txt() : p.txt;
-      const selector = typeof p.sel === "function" ? p.sel() : p.sel;
-      objetivos = [...document.querySelectorAll(selector)].filter(x => x.getClientRects().length);
-      if (!objetivos.length && p.alt) objetivos = [...document.querySelectorAll(p.alt)];
-      if (!p.hasta) botones = `<button type="button" class="btn-juego" data-g="sig">${p.fin ? "¡A jugar!" : "Siguiente"}</button>`;
-    }
-  } else if (g.terminado) txt = "La partida terminó.";
-  else if (ui.ocupado) txt = "…";
-  else if (ui.fase === "accion" && ui.sel) {
+// Tutorial, después de la guía: tus opciones de este momento, con el mismo globo y foco de la guía
+function pasoContinuo() {
+  if (g.terminado || ui.ocupado || document.querySelector("#capa .velo")) return null;
+  const q = s => [...document.querySelectorAll(s)];
+  if (g.turnoDe !== YO || !["accion", "post"].includes(ui.fase))
+    return { continuo: true, els: q(".rival.turno"), txt: `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…` };
+  if (ui.fase === "accion" && ui.sel) {
     const n = g.estrellas.reduce((a, e) => a + opcionesEstrella(e).length, 0);
-    txt = n ? `Toca una de las <b>estrellas que brillan</b> (${n === 1 ? "hay 1 jugada posible" : `hay ${n} jugadas posibles`}), o toca la carta otra vez para soltarla.`
-      : "Esta carta <b>no sirve ahora</b> en ninguna estrella: tócala otra vez y elige otra, o usa el Telescopio.";
-    objetivos = [...document.querySelectorAll(".est.objetivo")];
-    if (ui.sug && ui.sug.pl) objetivos = [...document.querySelectorAll(`.pl-dot[data-pl="${ui.sug.pl.id}"]`)];
-  } else if (ui.fase === "accion") {
-    txt = listaOpciones("Tu turno: elige UNA de estas opciones", opcionesTurno());
-    objetivos = [...document.querySelectorAll(".carta.sugerida, .pl-dot.sugerida")];
-    if (ui.sug && ui.sug.tel) objetivos = [$("#b-tel")];
-  } else if (ui.fase === "post") {
-    const n = publicables().length, c = consejoPublicar();
-    txt = !n ? listaOpciones("Final del turno", [c]) : ui.pubConviene ? listaOpciones("Final del turno", [c, "<b>Terminar turno</b> sin publicar"])
-      : listaOpciones("Final del turno", ["<b>Terminar turno</b>: le toca al rival.", c]);
-    objetivos = [...document.querySelectorAll("#b-pub.sugerida, #b-fin.sugerida")];
-  } else txt = `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…`;
-  const html = `<div class="gd-txt">${txt}</div>${botones ? `<div class="gd-btns">${botones}</div>` : ""}`;
-  if (dock.dataset.html !== html) {
-    dock.dataset.html = html; dock.innerHTML = html;
-    const b = dock.querySelector("[data-g=sig]");
-    if (b) b.onclick = () => { const q = GUIA[guia.paso]; Sfx.toque(); if (q && q.fin) { guia.paso = -1; marcarGuiaVista(); } else guia.paso++; render(); };
+    const pl = ui.sug && ui.sug.pl ? q(`.pl-dot[data-pl="${ui.sug.pl.id}"]`) : [];
+    return { continuo: true, els: pl.length ? pl : n ? q(".est.objetivo") : q("#carta-grande"), txt: n
+      ? `Toca ${pl.length ? "el <b>planeta señalado</b>" : "una de las <b>estrellas que brillan</b>"} (${n === 1 ? "hay 1 jugada posible" : `hay ${n} jugadas posibles`}), o toca la carta otra vez para soltarla.`
+      : "Esta carta <b>no sirve ahora</b> en ninguna estrella: tócala otra vez y elige otra, o usa el Telescopio." };
   }
-  // aros dorados sobre lo señalado (sin oscurecer el resto: el juego queda a la vista)
-  aros.innerHTML = dialogo ? "" : objetivos.slice(0, 9).map(el => { const r = el.getBoundingClientRect();
-    return `<div class="aro" style="left:${r.left - 4}px;top:${r.top - 4}px;width:${r.width + 8}px;height:${r.height + 8}px"></div>`; }).join("");
+  if (ui.fase === "accion") {
+    const txt = listaOpciones("Tu turno: elige UNA de estas opciones", opcionesTurno());
+    const carta = q(".carta.sugerida"), pl = q(".pl-dot.sugerida");
+    return { continuo: true, txt, els: ui.sug && ui.sug.tel ? q("#b-tel") : carta.length ? carta : q("#mano"), extra: pl };
+  }
+  const n = publicables().length, c = consejoPublicar();
+  const txt = !n ? listaOpciones("Final del turno", [c]) : ui.pubConviene ? listaOpciones("Final del turno", [c, "<b>Terminar turno</b> sin publicar"])
+    : listaOpciones("Final del turno", ["<b>Terminar turno</b>: le toca al rival.", c]);
+  return { continuo: true, txt, els: q("#b-pub.sugerida, #b-fin.sugerida").concat(q("#acciones")).slice(0, 1) };
 }
 function marcarGuiaVista() { preferencias.tutorialVisto = true; try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {} }
 
