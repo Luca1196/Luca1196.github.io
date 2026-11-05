@@ -149,9 +149,9 @@ sw("p4","Iteración",null,[
 ]),
 );
 /* ===== Prog4: los dos ejercicios de la app, línea por línea (cada línea = decisiones atómicas) ===== */
-const CLS="Clases: Controlador→Estudiante*, Empresa* · Empresa→OfertaPasantia* · Estudiante↔Postulacion* · Postulacion↔OfertaPasantia (1)";
+const CLS="Clases: Controlador→Estudiante*, Empresa* · Empresa→OfertaPasantia* · Estudiante↔Postulacion* · OfertaPasantia→Postulacion* · Postulacion→OfertaPasantia (1)";
 const OPS="Operaciones: Estudiante: generarPostulacion(opc), aceptarPostulacion(cod) · Empresa: obtenerOferta(cod), cuposDisponibles(cod) · OfertaPasantia: agregarPostulacion(p), hayCupos(), calcularBeneficio() · Postulacion: getOfertaPasantiaCodigo(), aceptarPostulacion(), getEstado()";
-const CLC="Controlador→Estudiante*, Empresa* · Empresa→Oferta* · Estudiante↔Postulacion* · Postulacion↔Oferta";
+const CLC="Controlador→Estudiante*, Empresa* · Empresa→Oferta* · Estudiante↔Postulacion* · Oferta→Postulacion* · Postulacion→Oferta (1)";
 const DOMS=CLS+"\n"+OPS;
 const SS={A:"«association»",L:"«local»",P:"«parameter»",G:"«global»"};
 const lineStr=L=>L.n+": "+L.from+" → "+L.to+" : "+(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa+"  "+SS[L.t];
@@ -191,7 +191,7 @@ function lineSteps0(L){const a=[],r=L.to.split(":")[0];
  if(L.pa!="()")a.push(st("¿Con qué parámetros?",L.pa,L.pd,L.pw,L.pa));
  a.push(st("¿A qué objeto va?",L.to,L.td,L.tw,"→ "+L.to));
  if(L.cond)a.push(st("¿Lleva condición?",L.cond+" antes del mensaje","Ninguna",L.cw,L.cond));
- if(L.t=="A")a.push(st("¿El receptor ya está en «Tengo»?","No","Sí","Es una colección u objeto que todavía no tengo.",""),
+ if(L.t=="A")a.push(st("¿El receptor ya está en «Tengo»?","No","Sí",(/ \*$/.test(L.to)?"El receptor es la colección ("+L.to.replace(/^:/,"")+"): en «Tengo» hay objetos sueltos, no la colección entera.":"Es un objeto que todavía no tengo."),""),
   st("Estereotipo del receptor","«association»","«local»","Hay flecha en «Clases»: "+L.arrow+". «local» exigiría tenerlo ya en «Tengo».","«association»"));
  else if(L.t=="G")a.push(st("¿El Controlador ya está en «Tengo»?","No: no tengo referencia a él","Sí","El Controlador es un singleton: no llegó por firma ni por un mensaje anterior.",""),
   st("Estereotipo del receptor","«global»","«association»","Es un singleton: se obtiene con getInstance() sin referencia previa. «association» exigiría una flecha-colección.","«global»"));
