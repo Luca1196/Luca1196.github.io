@@ -29,7 +29,7 @@ function muShow(){muStop();MU.path=[];MU.mode="show";MU.inp=0;MU.lit=null;MU.msg
  for(let k=0;k<MU.lvl;k++){const q=MU.seq[k];MT.push(setTimeout(()=>{MU.lit={pc:NPC[q.n]};const b=q.s!=null?[q.s,q.f]:mLow(NPC[q.n]);mTone(b[0],b[1]);muPaint()},500+k*750));MT.push(setTimeout(()=>{MU.lit=null;muPaint()},500+k*750+520))}
  MT.push(setTimeout(()=>{MU.mode="in";MU.msg="Tu turno: tónica 1 de "+MU.lvl;muDraw()},500+MU.lvl*750))}
 function muTap(s,f){if(!MU||MU.mode!="in")return;MFR=MSTR[s][2]*Math.pow(2,f/12);mTone(s,f);const q=MU.seq[MU.inp];
- const mOk=mPc(s,f)==NPC[q.n];logA("mu","mu",MSEC[MU.i][0]+" · "+MSEC[MU.i][2],mOk,{q:"tónica "+(MU.inp+1)+" de "+MU.lvl,a:q.n,p:mNm(s,f)});
+ const mOk=mPc(s,f)==NPC[q.n];
  if(mOk){q.s=s;q.f=f;MU.path.push([s,f,"ok"]);MU.inp++;MU.lit={pc:NPC[q.n],c:"ok"};if(MU.inp==MU.lvl){const N=MU.seq.length,k=muKey();S3.best=S3.best||{};if(MU.lvl>(S3.best[k]||0)){S3.best[k]=MU.lvl;mSave()}
   if(MU.lvl==N){MU.mode="done";MU.msg=(muPr()?"¡Parte entera sin ayuda!":"¡Parte completa!")+(MU.err?" Errores: "+MU.err+".":" Sin errores.");MU.rev=1;muDraw();return}
   MU.mode="wait";MU.msg="¡Bien! Sube a "+(MU.lvl+1)+" tónicas.";muDraw();MT.push(setTimeout(()=>{MU.lvl++;muShow()},900));return}

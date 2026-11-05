@@ -38,6 +38,8 @@ const SV=()=>{try{localStorage.setItem("est2",JSON.stringify(S))}catch(e){}};
 /* ---- Registro de errores (pestaña Errores, localStorage "err1") ---- */
 let E1={log:[],st:{},exp:0};
 try{Object.assign(E1,JSON.parse(localStorage.getItem("err1")||"{}"))}catch(e){}
+/* Música no registra errores: se limpian los que hubieran quedado guardados */
+if(E1.log.some(e=>e.w=="mu")||Object.keys(E1.st).some(k=>k.startsWith("mu|"))){E1.log=E1.log.filter(e=>e.w!="mu");Object.keys(E1.st).forEach(k=>{if(k.startsWith("mu|"))delete E1.st[k]});try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}}
 const SVE=()=>{try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}};
 function logA(w,s,g,ok,info){const k=w+"|"+s+"|"+g,v=E1.st[k]||(E1.st[k]=[0,0]);v[1]++;if(ok)v[0]++;else{E1.log.push(Object.assign({t:Date.now(),w,s,g},info));if(E1.log.length>4000)E1.log.splice(0,E1.log.length-4000)}SVE()}
 const D0=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
