@@ -183,7 +183,7 @@ function pfT(n,i,done){const v=x=>done||i>=x,nw=x=>!done&&x>0&&i==x;
 function swDg(c,idx,done){if(c.tr)return`<div class="sn pft">${pfT(c.tr,idx,done)}</div>`;const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
  if(kn("to")){d={n:kn("n")?L.n.replace("*",""):"?",it:kn("n")&&L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond&&kn("cond")?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+(kn("pa")||L.pa=="()"?L.pa:"(…)"),st:kn("st")?STN[L.t]:"…",u:1,dr:!kn("st")}}
  return `<div class="sn" style="overflow-x:auto;padding:4px">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig,g.ent)}</div>`}
-function lineSteps(L){const a=[],r=L.to.split(":")[0];
+function lineSteps0(L){const a=[],r=L.to.split(":")[0];
  a.push(st("¿Qué número lleva?",L.n,L.nd,L.nw,L.n+":"));
  a.push(st("¿Qué operación?",L.op,L.od,L.ow,(L.res?L.res+" := ":"")+L.op));
  if(L.pa!="()")a.push(st("¿Con qué parámetros?",L.pa,L.pd,L.pw,L.pa));
@@ -201,6 +201,17 @@ function lineSteps(L){const a=[],r=L.to.split(":")[0];
   st("Estereotipo del receptor","«parameter»","«local»","Figura como «firma:» en «Tengo» ("+L.sig+"): no salió de ningún find/create/next.","«parameter»"));
  const ks=["n","op"].concat(L.pa!="()"?["pa"]:[]).concat(["to"]).concat(L.cond?["cond"]:[]).concat(["q","st"]);const SRC={n:["dg","Tengo"],op:["▶"],pa:["Tengo"],to:["Tengo","▶"],cond:["▶"],q:["Tengo"],st:[L.t=="A"?"Clases":"Tengo"]};a.forEach((x,i)=>{x.k=ks[i];x.src=SRC[ks[i]]});
  return a}
+/* Cada paso explica EN QUÉ ME FIJO para decidir (la regla que se automatiza en los ejercicios). */
+function lineSteps(L){const a=lineSteps0(L),p=L.n.replace("*","").split("."),pr=p.slice(0,-1).join("."),star=L.n.includes("*"),r=L.to.split(":")[0],cls=(L.to.split(":")[1]||L.to.replace(/ \*$/,"").replace(/^:/,"")).trim(),keep=o=>/parcial/.test(o||"")?" "+o:"";
+ const KIND={find:"buscar UNA por su clave → find",next:"recorrer TODAS → next",create:"objeto nuevo → create",add:"agregar a la colección → add",remove:"sacar de la colección → remove",destroy:"eliminar el objeto → destroy",getInstance:"singleton → getInstance()"};
+ const cue={
+  n:"Me fijo en quién lo envía: "+(p.length==1?"lo envía quien recibe la operación → número de primer nivel":"lo dispara el "+pr+" → el número cuelga de él")+(star?". Se repite en cada vuelta → lleva *":"")+".",
+  op:KIND[L.op]?"Me fijo en el objetivo ▶: "+KIND[L.op]+".":"Me fijo en las operaciones de "+cls+" en el diagrama de clases: "+L.op+" es la que hace lo que necesito.",
+  pa:"Me fijo en la firma de "+L.op+" y en «Tengo»: "+L.pa+".",
+  to:L.t=="A"?"Me fijo en las flechas del diagrama de clases: "+L.arrow+" "+(/ \*$/.test(L.to)?"→ va a la colección (con *)":"→ va a un solo objeto (multiplicidad 1: sin *)")+".":L.new?"Me fijo en que es un create: el receptor es el objeto nuevo.":L.t=="G"?"Me fijo en que es un singleton: se llega sin referencia previa.":(L.self?"Me fijo en que el mensaje es para mí mismo: el receptor es el propio objeto.":"Me fijo en «Tengo»: "+r+" ya está ahí, se le envía directo."),
+  cond:"Me fijo en el objetivo ▶: "+(/foreach|forEach/.test(L.cond)?"«cada»/recorrer → next con [foreach].":"«solo si» → condición antes del mensaje.")};
+ const out=a.filter(x=>L.t=="A"||x.k!="q");
+ out.forEach(x=>{if(cue[x.k])x.w=cue[x.k]+keep(x.w)});return out}
 const EXS=[
 {g:"postularse",op:"postularse(ci, rut, codOferta)",L:[
 {n:"1",nd:"1.1",nw:"Primer mensaje de la operación: nivel 1.",from:":Controlador",fd:"Sistema",fw:"La operación del sistema entra al Controlador; no hay caja «Sistema» en comunicación.",goal:"Necesito al estudiante a partir de su cédula.",op:"find",od:"next",ow:"Buscar por clave es find; next recorre todos.",pa:"(ci)",pd:"(ci, rut)",pw:"La clave de búsqueda es ci, que viene de la operación.",to:":Estudiante *",td:"est:Estudiante",tw:"find va a la colección.",res:"est",rw:"Voy a usar al estudiante después.",t:"A",arrow:"Controlador ──> Estudiante *"},
