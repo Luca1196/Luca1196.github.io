@@ -793,6 +793,8 @@ const STORAGE_KEY_RACHA = "astrofisica_racha_diaria_v1";
  * Cambiá META_DIARIA para ajustar la exigencia.
  */
 const META_DIARIA = 3;
+// Días de racha necesarios para que la llama se encienda a color (como en TikTok)
+const DIAS_LLAMA_COLOR = 3;
 
 let progreso = cargarProgreso();
 let preguntaActual = null;
@@ -1135,10 +1137,15 @@ function mostrarRacha() {
     mensaje = `Acertá ${META_DIARIA} preguntas hoy para empezar una racha`;
   }
 
+  const llamaEncendida = racha >= DIAS_LLAMA_COLOR;
+  const diasParaEncender = DIAS_LLAMA_COLOR - racha;
+  const avisoLlama = llamaEncendida ? "" :
+    `<div class="racha-mensaje">${diasParaEncender === 1 ? "Falta 1 día" : `Faltan ${diasParaEncender} días`} de racha para encender la llama</div>`;
+
   const unidad = racha === 1 ? "día" : "días";
   contenedor.innerHTML = `
     <div class="racha-fila">
-      <span class="racha-fuego ${cumplidaHoy ? "" : "apagado"}">🔥</span>
+      <span class="racha-fuego ${llamaEncendida ? "" : "apagado"}">🔥</span>
       <strong>${racha} ${unidad}</strong>
       ${mejorRacha > 0 ? `<span class="racha-mejor">· mejor: ${mejorRacha}</span>` : ""}
     </div>
@@ -1147,7 +1154,8 @@ function mostrarRacha() {
         `<span class="racha-punto ${i < hechos ? "lleno" : ""}"></span>`).join("")}</div>
       <span>Hoy: ${hechos}/${META_DIARIA}</span>
     </div>
-    <div class="racha-mensaje">${mensaje}</div>`;
+    <div class="racha-mensaje">${mensaje}</div>
+    ${avisoLlama}`;
 }
 
 function nuevaPregunta() {
