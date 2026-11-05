@@ -363,3 +363,65 @@ sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: acept
 SWC.filter(c=>c.dg).forEach(c=>{const P={};c.ctx.split("\n").forEach(l=>{const k=l.startsWith("Tengo:")?"T":l.startsWith("Operación que llamo:")?"O":l.startsWith("Clases:")?"C":l.startsWith("▶")?"G":"";if(k)P[k]=l});
  const j=(...k)=>k.map(x=>P[x]).filter(Boolean).join("\n");
  c.steps.forEach(s=>{s.x=({n:j("T","G"),op:j("O","G"),pa:j("T","G"),to:j("T","G"),cond:j("G"),q:j("T","G"),st:s.src&&s.src[0]=="Clases"?j("C"):j("T")})[s.k]||c.ctx})});
+
+/* ===== Prog4: «Qué miro» — cada tarjeta enseña en qué fijarse para decidir (el algoritmo de resolución) ===== */
+{const Q=(x,q,a,b,w)=>Object.assign(st(q,a,b,"Me fijo en: "+w,""),{x});
+SWC.push(
+sw("p4","Qué miro · find o método",null,[
+ Q("Clases: Campo→Parcela*\nOperaciones de Campo: obtenerParcela(nroP)\nTengo: c (Campo) · firma: nroP\nNecesito la parcela nroP.","¿find o método de búsqueda?","c.obtenerParcela(nroP): la clase ya tiene esa operación","find sobre :Parcela *","la lista de operaciones de la clase. Si ya existe una que hace la búsqueda, la llamo (local); el find queda dentro de ella (2.1)."),
+ Q("Clases: Controlador→Campo*\nOperaciones del Controlador: ninguna de búsqueda\nTengo: firma: idC\nNecesito el campo idC.","¿find o método de búsqueda?","find sobre :Campo * (c := find(idC))","Un método de búsqueda inventado","dos cosas: todavía no tengo ningún Campo (no hay a quién enviarle un método) y hay flecha Controlador→Campo*. Clave + flecha + sin operación existente = find."),
+ Q("Clases: Dueño→Mascota*\nOperaciones de Dueño: getMascota(nombre)\nTengo: d (Dueño) · firma: nombreMascota\nNecesito la mascota.","¿Qué envío?","d.getMascota(nombreMascota)","find directo a :Mascota * desde el Controlador","quién tiene la flecha a la clase. El Controlador no llega a Mascota: se la pido a d, que además tiene la operación."),
+ Q("Ya usé d.getMascota(nombreMascota) (mensaje 2).\nClases: Dueño→Mascota*","¿Quién envía el find (2.1)?","d, que ejecuta getMascota","El Controlador","quién tiene la flecha a la colección. Dentro del método, el find lo envía quien tiene Dueño→Mascota*."),
+ Q("Necesito UNA parcela, identificada por su número.","¿find o next?","find: busco una por su clave","next con *","si busco una concreta por clave o recorro todas. Una por clave: find."),
+ Q("Necesito sumar el herbicida de TODAS las parcelas del campo.","¿find o next?","next con *: recorro todas","find","si busco una concreta por clave o recorro todas. Todas: next dentro de un recorrido.")
+]),
+sw("p4","Qué miro · estereotipo",null,[
+ Q("Operación: reservar(m, fecha)\nEnvío getTipo() a m.","Estereotipo del receptor m","«parameter»","«local»","la firma de la operación del emisor: si el receptor figura ahí, «parameter»."),
+ Q("Tengo: cu (salió de cu := find(…) en el mensaje 3)\nEnvío reservar(codigo, m, fecha) a cu.","Estereotipo del receptor cu","«local»","«association»","«Tengo»: si el receptor salió de un find, create o next anterior, «local»."),
+ Q("Tengo: d (Dueño) · sin nada de Mascota\nClases: Dueño→Mascota*\nEnvío find(nombreMascota) a las mascotas.","Estereotipo de :Mascota *","«association»","«local»","las flechas del diagrama de clases: es una colección que todavía no obtuve y el emisor tiene flecha hacia ella."),
+ Q("AplicacionHerbicida necesita un id único.\nControlador es singleton.\nEnvío getInstance() al Controlador.","Estereotipo del Controlador","«global»","«association»","si la clase es un singleton: se llega a su única instancia sin referencia previa."),
+ Q("Estereotipo: elijo entre «parameter», «local» y «association».","¿Qué miro primero?","Si el receptor está en la firma","Si hay flecha en el diagrama de clases","el orden: 1) firma → «parameter»; 2) lo obtuve antes → «local»; 3) no lo tengo y hay flecha → «association».")
+]),
+sw("p4","Qué miro · parámetros",null,[
+ Q("Tengo: firma: ci, rut, codOferta · emp\nEnvío obtenerOferta(…) a emp. Firma de la operación: obtenerOferta(cod)","¿Qué pongo entre paréntesis?","(codOferta)","(rut)","la firma de la operación llamada: pide un código de oferta, y codOferta está en «Tengo»."),
+ Q("Tengo: p (una Postulacion)\nOfertaPasantia.agregarPostulacion(p)","¿Paso el objeto o su clave?","(p), el objeto","(ci), su clave","la firma: si pide el objeto y ya lo tengo, paso el objeto."),
+ Q("Operación llamada: calcularBeneficio() · sin parámetros en el diagrama de clases","¿Lleva parámetros?","No: ()","Sí: (codOferta)","la firma en el diagrama de clases: si no declara parámetros, va ()."),
+ Q("Tengo: firma: idC, nroP, idR, f\nLlamo buscarMapeoPrevio(fecha) en una Parcela.","¿Qué le paso?","(f), la fecha que ya tengo","(idR)","qué dato pide la firma y cuál de «Tengo» coincide por significado, no por orden.")
+]),
+sw("p4","Qué miro · numeración",null,[
+ Q("El mensaje 3 es obtenerOferta(codOferta) a emp.\nemp ahora envía find a sus ofertas.","¿Qué número lleva el find?","3.1: lo dispara el 3","4","quién envía el mensaje: si lo envía quien recibió el 3, cuelga del 3."),
+ Q("El Controlador ya envió 1, 2 y 3.\nAhora envía otro mensaje.","¿Qué número lleva?","4: el siguiente de primer nivel","3.1","quién lo envía: el Controlador envía los de primer nivel."),
+ Q("3.2.1* es un next dentro de un recorrido.\nEl mensaje que usa el elemento de cada vuelta.","¿Lleva *?","Sí: se repite en cada vuelta","No","si el mensaje se repite en cada vuelta del recorrido: entonces mantiene el *."),
+ Q("El mismo emisor envía dos mensajes seguidos tras el 4.","¿Cómo se numeran?","4.1 y 4.2: hermanos","4.1 y 4.1.1","si el segundo lo dispara el 4 (hermano) o lo dispara el 4.1 (hijo).")
+]),
+sw("p4","Qué miro · condición y recorrido",null,[
+ Q("Enunciado: «solo si es perro, pido la fecha».","¿Qué agrego?","[tipo=Perro] antes del mensaje","Un recorrido con *","las palabras «solo si»: es una condición, no una repetición."),
+ Q("Enunciado: «de cada reserva necesito la fecha».","¿Qué agrego?","next con [foreach] y * en el número","[reserva] antes del mensaje","las palabras «cada» o «todas»: es una repetición, no una condición."),
+ Q("Enunciado: «solo si m es un Mapeo» (m puede ser Mapeo o Aplicacion).","¿Cómo lo escribo?","[m es Mapeo] antes del mensaje","Un diagrama para cada subclase","si es una guarda dentro del mismo recorrido, o una clase abstracta con una operación distinta por subclase."),
+ Q("La condición usa cupos (cupos>ocupadas).","¿De dónde sale cupos?","De un mensaje anterior: cupos := getCupos()","Aparece sola","que toda variable de una condición tiene que haber sido obtenida antes por un mensaje.")
+]),
+sw("p4","Qué miro · create",null,[
+ Q("Clases: Estudiante↔Postulacion*\nTengo: est, opc\nNecesito una Postulacion nueva.","¿Quién la crea?","est: tiene la flecha a Postulacion*","El Controlador","las flechas hacia la clase nueva: quien tiene la flecha es quien la crea y la guarda."),
+ Q("Necesito una Reserva que todavía no existe.","¿find o create?","create: el objeto no existe todavía","find","si el objeto ya existe (find/next) o se construye ahora (create)."),
+ Q("create de una Postulacion entre est y opc.","¿Qué parámetros lleva?","(est, opc): lo que necesita para enlazarse","()","qué otros objetos debe conocer la nueva (sus flechas) y que estén en «Tengo»."),
+ Q("Hice nueva := create(m, fecha).\nClases: Mascota↔Reserva*","¿Qué falta?","Que m guarde la reserva: nuevaReserva(nueva)","Nada","los dos extremos del enlace: si la flecha es de doble sentido, los dos objetos deben guardarse.")
+]),
+sw("p4","Qué miro · a quién envío",null,[
+ Q("Clases: Controlador→Estudiante*, Empresa*\nEmpresa→Oferta*\nNecesito una oferta.","¿A quién se lo pide el Controlador?","A emp: la oferta cuelga de Empresa","Directo a :OfertaPasantia *","las flechas del Controlador: no hay flecha hacia Oferta, hay que pasar por quien la tiene."),
+ Q("Clases: Parcela→RobotParcela*\nOperaciones de Parcela: buscarRobotParcela(idR)\nTengo: p (Parcela) · idR","¿Qué envío?","p.buscarRobotParcela(idR)","find sobre :RobotParcela * desde el Controlador","en qué objeto ya tengo y qué operación suya cubre lo que necesito."),
+ Q("Hospedaje es abstracta (Hotel y Casa) y define reservar(m, fecha).\nTengo: h (Hospedaje)","¿A quién envío reservar?","A h:Hospedaje; cada subclase tiene su propio diagrama","A Hotel","si la clase es abstracta: el mensaje va a la clase abstracta y el comportamiento de cada subclase se dibuja aparte."),
+ Q("Tengo: ah (AplicacionHerbicida). Necesito que ah me dé su fecha.","¿A quién envío getFecha()?","A ah: ya lo tengo","A :Mision *","si el objeto ya está en «Tengo»: se le envía directo, sin find.")
+]),
+sw("p4","Qué miro · multiobjeto *",null,[
+ Q("Clases: Reserva→Hospedaje (multiplicidad 1)\nTengo: r (Reserva)\nr envía eliminarReserva(r) a su hospedaje.","¿:Hospedaje o :Hospedaje *?","Sin *: una sola","Con *","la multiplicidad de la flecha: 1 es un objeto, * es un multiobjeto."),
+ Q("Clases: Hospedaje→Reserva*\nEnvío remove(r) a las reservas del hospedaje.","¿:Reserva o :Reserva *?","Con *: es una colección","Sin *","la multiplicidad de la flecha y la operación: find, next, add y remove van a la colección."),
+ Q("Tengo: m (Mascota) ya obtenida con find.\nEnvío getTipo() a m.","¿m:Mascota o :Mascota *?","m:Mascota: un objeto concreto","Con *","si ya tengo un objeto concreto o aún necesito la colección: find va a la colección; el resultado es un objeto.")
+]),
+sw("p4","Qué miro · algoritmo de cada mensaje",null,[
+ Q("Voy a dibujar un mensaje.","¿Qué defino primero?","Qué necesito y qué objetos ya tengo («Tengo»)","El número","el objetivo y «Tengo»: de ahí salen todos los demás elementos."),
+ Q("Ya sé qué necesito y qué tengo.","¿Qué miro ahora para elegir la operación?","Las operaciones de la clase en el diagrama de clases","El número del mensaje","si hay una operación que ya hace lo que necesito (la llamo) o debo usar find, next o create."),
+ Q("Ya elegí la operación.","¿Qué defino a continuación?","El receptor y su estereotipo (firma, «Tengo», flechas)","La condición","de dónde viene el receptor: firma, obtenido antes o flecha."),
+ Q("Ya tengo operación y receptor.","¿Qué completo?","Parámetros: lo que pide la firma y tengo","El número solamente","la firma de la operación llamada y «Tengo»."),
+ Q("Ya tengo el mensaje casi completo.","¿Qué reviso al final?","Número, condición o * y si guardo el resultado","Nada más","quién lo dispara (número), si es «solo si» o «cada» (condición/*), y si uso el resultado después (var :=).")
+])
+)}
