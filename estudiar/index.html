@@ -11,7 +11,7 @@ ESTRUCTURA POR ARCHIVOS (nov 2026): una sección = un archivo, para que cada cha
   js/base.js     Utilidades compartidas y SWC (idem)
   js/inicio.js   Arranque (carga al final)
   prog4.html / logica.html   Apps de ejercicios completos (iframes)
-DESLIZAR · PENDIENTES (nov 2026): swPend() en nucleo.js lee el registro de Errores; un paso fallado queda pendiente hasta 2 aciertos seguidos (caja ≥ 2), pesa +6 al elegir serie y arma el filtro "Mis errores (N)". Un acierto que tarda más de 25 s no sube de caja.
+DESLIZAR · PENDIENTES (nov 2026): swPend() en nucleo.js lee el registro de Errores; un paso fallado queda pendiente hasta 2 aciertos seguidos (caja ≥ 2), pesa +6 al elegir serie y arma el filtro "Mis errores (N)". Un acierto que tarda más de 25 s no sube de caja. FLUJO: al fallar un paso, la serie se corta y se pasa a otro TEMA (swTop: materia + título sin ' · n', ' n/m' ni '(…)'); nunca se repite el tema recién visto; el paso fallado vuelve como repaso suelto 8 respuestas después.
 REGLAS: nunca reemplazar index.html entero; editar solo el archivo de la propia sección (con Edit, no reescribiendo todo);
 cada sección agrega sus cadenas con SWC.push(...). Orden de carga en index.html: base, prog4, logica, nucleo, musica, errores, inicio.
 El texto de más abajo (INSTRUCTIVO) describe el diseño original en un solo archivo: los nombres de funciones siguen valiendo.

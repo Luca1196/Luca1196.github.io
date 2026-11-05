@@ -127,16 +127,17 @@ lgApply();
 let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
 try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}
 const SV2=()=>{try{localStorage.setItem("sw1",JSON.stringify(S2))}catch(e){}};
+let SLT="",SLK="";const swTop=c=>c.s+"|"+c.g.replace(/ · .*$/,"").replace(/ \d+\/\d+$/,"").replace(/ \(.*\)$/,"");
 let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
 const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 /* Pendientes = pasos que fallaste alguna vez (registro de Errores) y todavía no acertaste 2 veces seguidas. Pesan más al elegir serie y forman el filtro "Mis errores". */
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!="sw"||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
- const ok=c=>SF=="all"||SF=="err"||c.s==SF,PD=swPend(),di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c));
+ const ok=c=>SF=="all"||SF=="err"||c.s==SF,PD=swPend(),di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
- if(SF=="err"){const a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
- let pool=SWC.filter(c=>ok(c)&&c.id!=SLAST);if(!pool.length)pool=SWC.filter(ok);
+ if(SF=="err"){let a=[...PD.values()];if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
+ let pool=SWC.filter(c=>ok(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(ok);
  const w=pool.map(c=>1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0));let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;
  while(r>w[k]&&k<pool.length-1){r-=w[k];k++}
  return{c:pool[k],i:0,only:false,built:[],err:0}}
@@ -163,12 +164,15 @@ function swBind(){const el=$("swc");if(!el||SW.ans)return;
 function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=side!="NS"&&(side=="L")==u.cl,k=c.id+":"+u.i;
  u.ans=ok?"ok":"no";u.pick=side;logA("sw",c.s,c.g,ok,{q:s.q,x:s.x||c.ctx||"",a:s.a,p:side=="NS"?"No sé ("+s.b+")":s.b,ns:side=="NS"?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:u.i+1});S2.box[k]=ok?(Date.now()-(u.ts||0)>25000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1)):0;S2.n++;SUN++;
  if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
- else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+3});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
+ else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+8});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
  SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
 function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.steps[u.i];
- if(u.recap||u.only){swNew();return}
+ SLK=u.c.id+":"+u.i;
+ if(u.recap||u.only){SLT=swTop(u.c);swNew();return}
+ /* Error a mitad de serie: se corta y se pasa a otro tema; el paso fallado vuelve más tarde (SRETRY, +8 respuestas) y la serie entera pesa más (pendientes). */
+ if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);swNew();return}
  if(s&&s.f)u.built.push(s.f);u.i++;
- if(u.i>=u.c.steps.length){u.bonus=u.err==0?5:0;S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
+ if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
  swStep()}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if(TAB!=3)return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
