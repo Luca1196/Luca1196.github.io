@@ -325,8 +325,9 @@ EXAM.forEach(E=>{const C={":Controlador":"Controlador"},V={},ops=[...new Set(E.L
  if(E.ent){const[a,b]=E.ent.split(":");C[a]=b}
  const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(C[k]||k)};
  E.L.forEach((L,i)=>{const p=L.n.replace("*","").split("."),d=p.length,star=L.n.includes("*"),pr=p.slice(0,-1).join("."),tk=L.to.replace(/ \*$/,""),r=tk.split(":")[0],o=L.op,others=ops.filter(x=>x!=o),pl=L.pa.slice(1,-1).split(", ").filter(Boolean);
-  L.nd=star?L.n.replace("*",""):exNx(L.n);
-  L.nw=star?"Está dentro de un recorrido: lo que se repite lleva *.":(d==1?"Mensaje de primer nivel: lo envía quien recibe la operación.":"Lo dispara el "+pr+": cuelga de él.");
+  const pv=i?E.L[i-1].n.replace("*",""):"",pch=pv+".1",bad=!i?exNx(L.n):(pch!=L.n.replace("*","")?pch:exNx(pv));
+  L.nd=star?L.n.replace("*",""):bad;
+  L.nw=star?"Está dentro de un recorrido: lo que se repite lleva *.":(L.nd==pch&&i?"El "+pv+" no dispara este mensaje: sigue en el mismo nivel que él, no cuelga del "+pv+".":(L.nd==pch?"":"")+(d==1?"Mensaje de primer nivel: lo envía quien recibe la operación.":"Lo dispara el "+pr+": cuelga de él."));
   L.fd=E.L.map(l=>l.from).concat([":Controlador"]).find(x=>x!=L.from&&x!=r);L.fw="Lo envía quien recibió el mensaje que lo dispara ("+(d==1?"la operación del sistema":pr)+").";
   L.od=L.od||[E.L[i+1],E.L[i-1],E.L[i+2]].filter(Boolean).map(x=>x.op).find(x=>x!=o)||others[i%others.length]||"get";L.ow=L.ow||"La tarea es «"+L.goal+"»: eso es "+o+", no "+L.od+".";
   L.pd=pl.length>1?"("+pl.slice(0,-1).join(", ")+")":(pl.length?"()":"(x)");L.pw="Los datos que necesita la operación: "+L.pa+" (están en «Tengo»).";
