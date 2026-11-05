@@ -792,7 +792,7 @@ const STORAGE_KEY_RACHA = "astrofisica_racha_diaria_v1";
  * (práctica distribuida). Solo cuentan los aciertos, no los intentos.
  * Cambiá META_DIARIA para ajustar la exigencia.
  */
-const META_DIARIA = 5;
+const META_DIARIA = 3;
 
 let progreso = cargarProgreso();
 let preguntaActual = null;
