@@ -156,18 +156,20 @@ const DOMS=CLS+"\n"+OPS;
 const SS={A:"«association»",L:"«local»",P:"«parameter»",G:"«global»"};
 const lineStr=L=>L.n+": "+L.from+" → "+L.to+" : "+(L.cond?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+L.pa+"  "+SS[L.t];
 const key=t=>{const[a,b]=t.split(":");return b===undefined?a:(a||":"+b)};
-function dgm(G,D,sig,ent){ent=ent||":Controlador";const ek=key(ent),Ls=G.concat(D?[D]:[]),C={},dep={[ek]:0},lab={[ek]:ent},oid=x=>key(x.o),did=x=>(x.m?key(x.o)+">":"")+key(x.d)+(x.m?"*":""),cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
-
-Ls.forEach(x=>{cl(x.o);cl(x.d);const o=oid(x),d=did(x);[[o,x.o,0],[d,x.d,x.m]].forEach(([k,t,s])=>{if(!(k in lab))lab[k]=(t.includes(":")?t:(C[t]?t+":"+C[t]:t))+(s?" *":"")});if(!(o in dep))dep[o]=0;if(!(d in dep))dep[d]=dep[o]+1});
+function dgm(G,D,sig,ent){ent=ent||":Controlador";const ek=key(ent),Ls=G.concat(D?[D]:[]),C={},dep={[ek]:0},lab={[ek]:ent},par={},last={[ek]:ek},OX=[],DX=[],cl=t=>{if(t.includes(":")){const[a,b]=t.split(":");if(a)C[a]=b;return b}return C[t]};
+let bn=0;const mk=(t,s)=>(t.includes(":")?t:(C[t]?t+":"+C[t]:t))+(s?" *":"");
+Ls.forEach((x,i)=>{cl(x.o);cl(x.d);const ko=key(x.o),kd=key(x.d)+(x.m?"*":"");let o=last[ko]||last[ko+"*"];if(!o){o=last[ko]="b"+(++bn);lab[o]=mk(x.o,0);dep[o]=0}
+OX[i]=o;if(ko==key(x.d)&&!x.m){DX[i]=o;return}
+const d="b"+(++bn);lab[d]=mk(x.d,x.m);dep[d]=dep[o]+1;par[d]=o;last[kd]=d;DX[i]=d});
 const ids=Object.keys(lab),cc={},Q={},W=140,H=34,cnt={};
-const occ={};ids.forEach(k=>{const c=dep[k]||0;let r=0;Ls.forEach(x=>{if(did(x)==k&&oid(x)!=k&&Q[oid(x)])r=Math.max(r,Q[oid(x)].r)});occ[c]=occ[c]||{};while(occ[c][r])r++;occ[c][r]=1;Q[k]={x:210+c*190,y:10+r*64,r}});
+const occ={};ids.forEach(k=>{const c=dep[k]||0;let r=par[k]&&Q[par[k]]?Q[par[k]].r:0;occ[c]=occ[c]||{};while(occ[c][r])r++;occ[c][r]=1;Q[k]={x:210+c*190,y:10+r*64,r}});
 const mx=Math.max(...ids.map(k=>Q[k].x))+160,my=Math.max(...ids.map(k=>Q[k].y))+54;
 let s=`<svg width="${mx}" height="${my}" role="img" aria-label="Diagrama de comunicación" style="font:11px system-ui;color:var(--fg)"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>`;
 ids.forEach(k=>{const p=Q[k];s+=(k.endsWith("*")?`<rect x="${p.x+5}" y="${p.y-5}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--mut)"/>`:"")+`<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" rx="4" fill="var(--card)" stroke="var(--fg)"/><text x="${p.x+W/2}" y="${p.y+21}" text-anchor="middle" fill="var(--fg)" text-decoration="underline">${esc(lab[k])}</text>`});
 const q0=Q[ek];s+=`<line x1="10" y1="${q0.y+H/2}" x2="${q0.x}" y2="${q0.y+H/2}" stroke="var(--fg)" stroke-width="1.5" marker-end="url(#ar)"/><text x="110" y="${q0.y+H/2-6}" text-anchor="middle" fill="var(--fg)" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(sig)}</text><text x="110" y="${q0.y+H/2+14}" text-anchor="middle" fill="var(--mut)" style="font-size:10px">operación del sistema</text>`;
 const cp=(cx,cy,tx,ty)=>{const u=tx-cx,w=ty-cy,t=Math.min(u?W/2/Math.abs(u):1e9,w?H/2/Math.abs(w):1e9);return[cx+u*t,cy+w*t]};
-Ls.forEach(x=>{const a=Q[oid(x)],b=Q[did(x)];if(!a||!b||a===b)return;
-const pk=[oid(x),did(x)].sort().join(">"),i=cnt[pk]=(cnt[pk]||0)+1,ax=a.x+W/2,ay=a.y+H/2,bx=b.x+W/2,by=b.y+H/2,dx=bx-ax,dy=by-ay,l=Math.hypot(dx,dy)||1,nx=-dy/l*(i-1)*14,ny=dx/l*(i-1)*14,f=cp(ax+nx,ay+ny,bx+nx,by+ny),g=cp(bx+nx,by+ny,ax+nx,ay+ny),col=x.u?"var(--ac)":"var(--mut)",t=`${x.n}${x.it?"*":""}: ${x.msg}`;
+Ls.forEach((x,j)=>{const a=Q[OX[j]],b=Q[DX[j]];if(!a||!b||a===b)return;
+const pk=[OX[j],DX[j]].sort().join(">"),i=cnt[pk]=(cnt[pk]||0)+1,ax=a.x+W/2,ay=a.y+H/2,bx=b.x+W/2,by=b.y+H/2,dx=bx-ax,dy=by-ay,l=Math.hypot(dx,dy)||1,nx=-dy/l*(i-1)*14,ny=dx/l*(i-1)*14,f=cp(ax+nx,ay+ny,bx+nx,by+ny),g=cp(bx+nx,by+ny,ax+nx,ay+ny),col=x.u?"var(--ac)":"var(--mut)",t=`${x.n}${x.it?"*":""}: ${x.msg}`;
 s+=`<line x1="${f[0]}" y1="${f[1]}" x2="${g[0]}" y2="${g[1]}" stroke="${col}" stroke-width="1.5"${x.dr?' stroke-dasharray="5 3"':''} marker-end="url(#ar)"/><text x="${(f[0]+g[0])/2}" y="${(f[1]+g[1])/2-3}" text-anchor="middle" fill="${col}" style="paint-order:stroke;stroke:var(--bg);stroke-width:3px">${esc(t.length>40?t.slice(0,39)+"…":t)}<tspan x="${(f[0]+g[0])/2}" dy="12">«${x.st}»</tspan></text>`});
 return s+"</svg>"}
 const STN={A:"association",L:"local",P:"parameter",G:"global"};
