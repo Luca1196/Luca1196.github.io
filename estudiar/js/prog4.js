@@ -439,3 +439,20 @@ sw("p4","Qué miro · algoritmo de cada mensaje",null,[
  Q("Ya tengo el mensaje casi completo.","¿Qué reviso al final?","Número, condición o * y si guardo el resultado","Nada más","quién lo dispara (número), si es «solo si» o «cada» (condición/*), y si uso el resultado después (var :=).")
 ])
 )}
+
+/* ===== Series armadas desde la exportación de errores del 5/11 (numeración y destino) ===== */
+SWC.push(
+sw("p4","Numeración: ¿quién envía?",null,[
+ Object.assign(st("¿Qué número lleva?","3: lo envía el Controlador","2.1: emp salió del 2","El número depende de quién ENVÍA y qué mensaje está ejecutando, no de dónde salió el receptor."),{x:"1: :Controlador → :Estudiante * : est := find(ci)\n2: :Controlador → :Empresa * : emp := find(rut)\n▶ El Controlador le envía obtenerOferta(cod) a emp."}),
+ Object.assign(st("¿Qué número lleva?","3.1: lo envía emp mientras ejecuta el 3","4","emp está ejecutando el 3: lo que manda cuelga del 3."),{x:"3: :Controlador → emp : o := obtenerOferta(cod)\n▶ emp busca la oferta en su colección: find(cod) a :OfertaPasantia *."}),
+ Object.assign(st("¿Qué número lleva?","4","3.2","Terminó el 3 y vuelve a mandar el Controlador: siguiente número de primer nivel."),{x:"3: :Controlador → emp : o := obtenerOferta(cod)\n3.1: emp → :OfertaPasantia * : o := find(cod)\n▶ El Controlador le envía generarPostulacion(o) a est."}),
+ Object.assign(st("¿Qué número lleva?","4: lo envía el Controlador","1.1: est salió del 1","Que est venga del find 1 no lo hace hijo del 1."),{x:"1: :Controlador → :Estudiante * : est := find(ci)\n… 2 y 3 ya dibujados\n▶ El Controlador le envía un mensaje a est."}),
+ st("¿Qué mira la numeración?","Quién envía y qué mensaje está ejecutando","De qué mensaje salió el receptor","Un hijo (3.1) lo manda el receptor del 3 mientras lo ejecuta.")
+]),
+sw("p4","Destino: ¿colección u objeto?",null,[
+ Object.assign(st("¿A quién va add(p)?",":Postulacion * (la colección)","p:Postulacion","add, find, next y remove se le envían a la colección; p es el parámetro."),{x:"opc ejecuta agregarPostulacion(p)\n▶ opc agrega p a su colección de postulaciones."}),
+ Object.assign(st("¿A quién va find(cod)?",":OfertaPasantia * (la colección)","o:OfertaPasantia","La oferta todavía no la tengo: la busco en la colección."),{x:"emp ejecuta obtenerOferta(cod)\n▶ emp busca su oferta con ese código."}),
+ Object.assign(st("¿A quién va getEstado()?","p","Postulacion *","Es una operación de la postulación: va al objeto, que ya tengo."),{x:"Tengo p:Postulacion (por parámetro)\n▶ Quiero el estado de p."}),
+ Object.assign(st("¿A quién va next()?",":Postulacion * (la colección)","pe","next recorre la colección; pe es lo que devuelve."),{x:"▶ est recorre sus postulaciones: pe := next()."}),
+ st("Regla","Operaciones de colección (add, find, next, remove) a la colección; operaciones de la clase al objeto","Todo mensaje va al objeto con nombre","El nombre lo lleva lo que devuelve find/next/create, no la colección.")
+]));

@@ -376,3 +376,22 @@ SWC.forEach(c=>{const m=c.s=="lg"&&LGX[c.g];if(m)c.steps.forEach((s,i)=>{if(m[i]
 SWC.forEach(c=>{const m=c.s=="lg"&&LGR[c.g];if(m)c.steps.forEach((s,i)=>{if(m[i])s.x=(s.x||c.ctx)+"\nRegla elegida: "+m[i]})});
 SWC.forEach(c=>{if(c.s=="lg"&&TRS[c.g])c.tr=TRS[c.g]});
 }
+
+/* ===== Series armadas desde la exportación de errores del 5/11 (confusión E→/I→ y condiciones de cuantificadores) ===== */
+SWC.push(
+sw("lg","→: ¿uso o armo?",null,[
+ Object.assign(st("¿Qué regla?","E→","I→","La → está en lo que TENGO: la uso (elimino)."),{x:"Tengo: φ→ψ, φ\nMeta: ψ"}),
+ Object.assign(st("¿Qué regla?","I→, supongo φ","E→","La → está en la META: la armo (introduzco)."),{x:"Tengo: ψ\nMeta: φ→ψ"}),
+ Object.assign(st("¿Qué regla?","E→, obtengo P(x,x)","I→","La → está en lo que tengo y ya probé su antecedente."),{x:"Tengo: R(x,x)∧R(x,x)→P(x,x), R(x,x)∧R(x,x)\nMeta: P(x,x)"}),
+ Object.assign(st("¿Qué regla?","E→","I→","¬r→p está en lo que tengo y ¬r es su antecedente."),{x:"Tengo: ¬r→p, ¬r\nMeta: p"}),
+ Object.assign(st("¿Qué regla?","I→, supongo ¬q","E→ con ¬q","La meta es una implicación: se arma."),{x:"Tengo: (p→q)∧(¬r→p)\nMeta: ¬q→r"}),
+ st("¿Cómo decido entre E→ e I→?","→ en lo que tengo: E→. → en la meta: I→","Si aparece una →, I→","Introducción arma la meta; eliminación usa una hipótesis.")
+]),
+sw("lg","Condiciones: ¿cuál va con qué regla?",null,[
+ st("E∃ (cierro con la suposición [P(x)]). Condición:","x ∉ FV de la conclusión ni de las hipótesis abiertas","t libre para x","E∃ no sustituye ningún término: pide que la x supuesta no escape."),
+ st("I∃ (de P(t) a ∃xP(x)). Condición:","t libre para x","x ∉ FV de las hipótesis abiertas","I∃ pone un término en lugar de x: no tiene que quedar capturado."),
+ st("I∀ (de P(x) a ∀xP(x)). Condición:","x ∉ FV de las hipótesis abiertas","t libre para x","Generalizar exige que x sea arbitraria."),
+ st("E∀ (de ∀xP(x) a P(t)). Condición:","t libre para x","x ∉ FV de las hipótesis abiertas","E∀ sustituye x por t: no tiene que quedar capturado."),
+ st("Regla para acordarse","I∀ y E∃ piden x no libre; E∀ e I∃ piden t libre para x","Todas piden t libre para x","Las que trabajan con una variable genérica piden x no libre; las que meten un término piden t libre."),
+ Object.assign(st("Al cerrar E∃, ¿qué va entre corchetes [ ]ⁿ?","R(x,x), la suposición","(∃x)R(x,x), la premisa","La premisa con ∃ queda abierta; se cancela la suposición del testigo."),{x:"Premisa: (∃x)R(x,x)\nSupuse R(x,x) y llegué a (∃x)P(x,x)"})
+]));
