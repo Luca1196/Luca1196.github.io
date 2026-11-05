@@ -1112,7 +1112,7 @@ const GUIA = [
   { sel: "#b-pub", alt: "#acciones", turnoFin: true, txt: "Esto es <b>PUBLICAR</b>, y es la <b>única forma de sumar puntos</b>: lo que descubres o averiguas vale 0 hasta que lo publicas. Y lo que averigües de un planeta (Atmósfera, Habitable, Biofirma) es del <b>primero</b> que lo publica: si esperas mucho, un rival puede ganarte." },
   { sel: "#b-pub", alt: "#acciones", turnoFin: true, txt: "El <b>riesgo</b>: si publicas algo <b>falso</b>, pierdes. Un planeta que era falso te deja en <b>−1</b>. Y si publicas una Atmósfera, Habitable o Biofirma que no es cierta, un rival puede <b>refutarte</b>: repite la observación y <b>se lleva tus puntos</b>. Regla de oro: publica lo que tu lectura <b>confirma</b>." },
   { sel: "#b-fin", alt: "#acciones", turnoFin: true, txt: "¿No estás seguro? Toca <b>Terminar turno</b>: lo que no publicas no se pierde y puedes publicarlo más adelante, cuando tengas más pruebas.", hasta: () => !["post", "robar", "descartar"].includes(ui.fase) },
-  { sel: selPlanetaRival, alt: ".rival", cuando: p => !!planetaRival() || g.turnos > p.t0 + 1, txt: () => planetaRival()
+  { sel: selPlanetaRival, alt: ".rival", cuando: p => !!planetaRival() || (g.turnoDe === YO && g.turnos > p.t0), txt: () => planetaRival()
       ? "Tu rival también busca planetas: su candidato aparece en la estrella con <b>su color</b> y un <b>?</b> (secreto). Las letras celestes dicen con qué <b>técnica</b> lo encontró. Si lo publica, podrás investigarlo y medirlo tú también. ¡A jugar!"
       : "Ahora juega <b>tu rival</b>. Cuando descubra un candidato, aparecerá en una estrella con <b>su color</b> y un <b>?</b>; las letras celestes dirán con qué técnica lo encontró. ¡A jugar!", fin: true },
 ];
@@ -1152,7 +1152,7 @@ function actualizarGuia() {
   r.width = r.right - r.left; r.height = r.bottom - r.top;
   const foco = capa.querySelector(".guia-foco"), globo = capa.querySelector(".guia-globo");
   Object.assign(foco.style, { left: `${r.left - 4}px`, top: `${r.top - 4}px`, width: `${r.width + 8}px`, height: `${r.height + 8}px` });
-  globo.querySelector("p").innerHTML = `${typeof p.txt === "function" ? p.txt() : p.txt}${p.continuo ? "" : `<span class="guia-n">${(v => `${v.indexOf(p) + 1}/${v.length}`)(GUIA.filter(x => !x.si || x.si() || x === p))}</span>`}`;
+  globo.querySelector("p").innerHTML = `${typeof p.txt === "function" ? p.txt() : p.txt}${p.continuo ? `<span class="guia-n">Ronda ${g.ronda}/${g.maxRondas}</span>` : `<span class="guia-n">${(v => `${v.indexOf(p) + 1}/${v.length}`)(GUIA.filter(x => !x.si || x.si() || x === p))}</span>`}`;
   globo.querySelector(".guia-btns").innerHTML = p.continuo ? "" : (ui.tutorial ? "" : `<button type="button" class="btn-juego gris" data-g="saltar">Saltar guía</button>`)
     + (p.hasta ? "" : `<button type="button" class="btn-juego" data-g="sig">${p.fin ? "¡A jugar!" : "Siguiente"}</button>`);
   // aros extra (p. ej. el planeta, además de la carta que hay que tocar)
@@ -1214,13 +1214,16 @@ function pasoContinuo() {
       : "Esta carta <b>no sirve ahora</b> en ninguna estrella: tócala otra vez y elige otra, o usa el Telescopio." };
   }
   if (ui.fase === "accion") {
-    const txt = listaOpciones("Tu turno: elige UNA de estas opciones", opcionesTurno());
+    // mismo formato que la guía: una indicación en una frase; las alternativas, chicas debajo
+    const [rec, ...otras] = opcionesTurno();
+    const txt = `<b>Tu turno.</b> ${rec}${otras.length ? `<br><small>También puedes: ${otras.join(" · ")}.</small>` : ""}`;
     const carta = q(".carta.sugerida"), pl = q(".pl-dot.sugerida");
     return { continuo: true, txt, els: ui.sug && ui.sug.tel ? q("#b-tel") : carta.length ? carta : q("#mano"), extra: pl };
   }
   const n = publicables().length, c = consejoPublicar();
-  const txt = !n ? listaOpciones("Final del turno", [c]) : ui.pubConviene ? listaOpciones("Final del turno", [c, "<b>Terminar turno</b> sin publicar"])
-    : listaOpciones("Final del turno", ["<b>Terminar turno</b>: le toca al rival.", c]);
+  const txt = !n ? `<b>Final del turno.</b> ${c}`
+    : ui.pubConviene ? `<b>Final del turno.</b> ${c}<br><small>Si prefieres esperar, toca Terminar turno.</small>`
+    : `<b>Final del turno.</b> Toca <b>Terminar turno</b>.<br><small>${c}</small>`;
   return { continuo: true, txt, els: q("#b-pub.sugerida, #b-fin.sugerida").concat(q("#acciones")).slice(0, 1) };
 }
 function marcarGuiaVista() { preferencias.tutorialVisto = true; try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {} }
