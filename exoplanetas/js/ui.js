@@ -572,7 +572,7 @@ function render() {
   if (!g) return;
   calcularSugerencia();
   renderRivales(); renderTablero(); renderHeroe(); renderMano(); renderAcciones();
-  if (guia.paso >= 0) requestAnimationFrame(actualizarGuia);
+  if (guia.paso >= 0 || ui.tutorial) requestAnimationFrame(actualizarGuia);
 }
 function renderRivales() {
   const rivs = g.j.filter(jg => jg.idx !== YO).map(jg => {
@@ -818,7 +818,7 @@ function renderAcciones() {
   $("#msg").innerHTML = msg;
   $("#msg").classList.toggle("con-carta", !!$("#carta-grande"));
   // tutorial: las sugerencias tienen el mismo aspecto que la guía (son la misma ayuda)
-  $("#msg").classList.toggle("tutor", !!ui.tutorial && guia.paso < 0 && !g.terminado && !$("#carta-grande"));
+  $("#msg").classList.toggle("oculto", !!ui.tutorial && !$("#carta-grande"));   // en el tutorial, el texto lo da el panel de la guía
   const cg = $("#carta-grande"); if (cg) cg.onclick = () => ui.sel && detalleCarta(ui.sel);
   const bt = $("#b-tel"); bt.disabled = !(ui.fase === "accion" && !ui.ocupado && !g.terminado);
   if (!bt.querySelector("svg")) bt.querySelector(".mt-ico").innerHTML = ICO.tele;
@@ -1074,7 +1074,9 @@ async function empezar(pref, guardada = null) {
     borrarPartida();
     g = crearJuego(pref);
   }
-  guia.paso = -1; render();
+  guia.paso = -1;
+  if (!ui.tutorial) { document.getElementById("guia-dock")?.remove(); document.getElementById("guia-aros")?.remove(); }
+  render();
   if (!guardada && ui.tutorial) iniciarGuia();   // modo tutorial: la guía arranca siempre; en normal, solo con el botón ?
   if (guardada) aviso(`Partida recuperada: ronda ${g.ronda} de ${g.maxRondas}`);
   const esta = g;
@@ -1120,7 +1122,10 @@ const GUIA = [
       : "Ahora juega <b>tu rival</b>. Cuando descubra un candidato, aparecerá en una estrella con <b>su color</b> y un <b>?</b>; las letras celestes dirán con qué técnica lo encontró. ¡A jugar!", fin: true },
 ];
 const guia = { paso: -1 };
-function guiaVisible() { const c = document.getElementById("guia"); return guia.paso >= 0 && !!c && !c.hidden; }
+function guiaVisible() {
+  if (ui.tutorial) return guia.paso >= 0 && !!guia.mostrando;   // el rival espera mientras hay un paso de la guía para leer
+  const c = document.getElementById("guia"); return guia.paso >= 0 && !!c && !c.hidden;
+}
 function iniciarGuia() { GUIA.forEach(x => delete x.t0); guia.paso = 0; ui.tiradas = 0; actualizarGuia(); }
 function terminarGuia() {
   guia.paso = -1; actualizarGuia(); render();   // al terminar la guía, aparecen las sugerencias del tutorial
@@ -1128,6 +1133,7 @@ function terminarGuia() {
   try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {}
 }
 function actualizarGuia() {
+  if (ui.tutorial) return guiaTutorial();
   let capa = document.getElementById("guia");
   const p = GUIA[guia.paso];
   if (p && ((p.hasta && p.hasta()) || (p.si && !p.si()))) { guia.paso++; return actualizarGuia(); }
@@ -1189,8 +1195,65 @@ function actualizarGuia() {
   globo.style.bottom = abajo ? "" : `${Math.min(innerHeight - gh - 8, innerHeight - r.top + 10)}px`;
 }
 async function mostrarTutorial() { if (g && !g.terminado) iniciarGuia(); }
-new MutationObserver(() => { if (guia.paso >= 0) requestAnimationFrame(actualizarGuia); }).observe(document.getElementById("capa"), { childList: true });
-addEventListener("resize", () => { if (guia.paso >= 0) actualizarGuia(); });
+new MutationObserver(() => { if (guia.paso >= 0 || ui.tutorial) requestAnimationFrame(actualizarGuia); }).observe(document.getElementById("capa"), { childList: true });
+addEventListener("resize", () => { if (guia.paso >= 0 || ui.tutorial) actualizarGuia(); });
+
+// ---------------------------------------------------------- modo tutorial: una sola guía, de principio a fin
+// Un panel fijo arriba de la mano (no tapa el juego) y aros dorados sobre lo que hay que mirar o tocar.
+// Primero los pasos de la guía; después, en cada momento, tus opciones con la recomendada señalada.
+function guiaTutorial() {
+  let dock = document.getElementById("guia-dock");
+  if (!dock) { dock = document.createElement("div"); dock.id = "guia-dock"; dock.className = "guia-dock"; $("#msg").before(dock); }
+  let aros = document.getElementById("guia-aros");
+  if (!aros) { aros = document.createElement("div"); aros.id = "guia-aros"; document.body.appendChild(aros); }
+  const dialogo = !!document.querySelector("#capa .velo");
+  let txt = "", botones = "", objetivos = [];
+  guia.mostrando = false;
+  let p = guia.paso >= 0 ? GUIA[guia.paso] : null;
+  while (p && ((p.hasta && p.hasta()) || (p.si && !p.si()))) { guia.paso++; p = GUIA[guia.paso]; }
+  if (guia.paso >= GUIA.length) { guia.paso = -1; p = null; }
+  document.body.classList.toggle("guia-solo-tec", !!(p && p.soloTec));
+  if (p) {
+    if (p.cuando && p.t0 == null) p.t0 = g.turnos;
+    const espera = (p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p.turnoFin && (ui.fase !== "post" || ui.ocupado)) || (p.cuando && !p.cuando(p));
+    if (espera) txt = ui.fase === "espera" || g.turnoDe !== YO ? `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…` : "…";
+    else {
+      guia.mostrando = !p.hasta;   // un paso para leer (con «Siguiente») detiene al rival hasta que lo leas
+      txt = typeof p.txt === "function" ? p.txt() : p.txt;
+      const selector = typeof p.sel === "function" ? p.sel() : p.sel;
+      objetivos = [...document.querySelectorAll(selector)].filter(x => x.getClientRects().length);
+      if (!objetivos.length && p.alt) objetivos = [...document.querySelectorAll(p.alt)];
+      if (!p.hasta) botones = `<button type="button" class="btn-juego" data-g="sig">${p.fin ? "¡A jugar!" : "Siguiente"}</button>`;
+    }
+  } else if (g.terminado) txt = "La partida terminó.";
+  else if (ui.ocupado) txt = "…";
+  else if (ui.fase === "accion" && ui.sel) {
+    const n = g.estrellas.reduce((a, e) => a + opcionesEstrella(e).length, 0);
+    txt = n ? `Toca una de las <b>estrellas que brillan</b> (${n === 1 ? "hay 1 jugada posible" : `hay ${n} jugadas posibles`}), o toca la carta otra vez para soltarla.`
+      : "Esta carta <b>no sirve ahora</b> en ninguna estrella: tócala otra vez y elige otra, o usa el Telescopio.";
+    objetivos = [...document.querySelectorAll(".est.objetivo")];
+    if (ui.sug && ui.sug.pl) objetivos = [...document.querySelectorAll(`.pl-dot[data-pl="${ui.sug.pl.id}"]`)];
+  } else if (ui.fase === "accion") {
+    txt = listaOpciones("Tu turno: elige UNA de estas opciones", opcionesTurno());
+    objetivos = [...document.querySelectorAll(".carta.sugerida, .pl-dot.sugerida")];
+    if (ui.sug && ui.sug.tel) objetivos = [$("#b-tel")];
+  } else if (ui.fase === "post") {
+    const n = publicables().length, c = consejoPublicar();
+    txt = !n ? listaOpciones("Final del turno", [c]) : ui.pubConviene ? listaOpciones("Final del turno", [c, "<b>Terminar turno</b> sin publicar"])
+      : listaOpciones("Final del turno", ["<b>Terminar turno</b>: le toca al rival.", c]);
+    objetivos = [...document.querySelectorAll("#b-pub.sugerida, #b-fin.sugerida")];
+  } else txt = `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…`;
+  const html = `<div class="gd-txt">${txt}</div>${botones ? `<div class="gd-btns">${botones}</div>` : ""}`;
+  if (dock.dataset.html !== html) {
+    dock.dataset.html = html; dock.innerHTML = html;
+    const b = dock.querySelector("[data-g=sig]");
+    if (b) b.onclick = () => { const q = GUIA[guia.paso]; Sfx.toque(); if (q && q.fin) { guia.paso = -1; marcarGuiaVista(); } else guia.paso++; render(); };
+  }
+  // aros dorados sobre lo señalado (sin oscurecer el resto: el juego queda a la vista)
+  aros.innerHTML = dialogo ? "" : objetivos.slice(0, 9).map(el => { const r = el.getBoundingClientRect();
+    return `<div class="aro" style="left:${r.left - 4}px;top:${r.top - 4}px;width:${r.width + 8}px;height:${r.height + 8}px"></div>`; }).join("");
+}
+function marcarGuiaVista() { preferencias.tutorialVisto = true; try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {} }
 
 // Pantalla de inicio: solo elegir el modo de juego; después, la preparación de la partida
 function abrirModo() {
