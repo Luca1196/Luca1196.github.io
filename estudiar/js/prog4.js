@@ -136,7 +136,7 @@ sw("p4","Borrado",null,[
  st("¿Destruir un link es destruir la instancia?","No","Sí","El link se desengancha y la instancia puede seguir."),
  st("Sacar el link de una colección.","remove(id)","destroy()","remove desengancha."),
  st("Eliminar la instancia.","destroy() a b","remove(id)","destroy elimina el objeto."),
- st("Quito el link y destruyo la instancia.","remove antes que destroy","destroy antes que remove","Si no, la colección queda apuntando a un objeto destruido."),
+ st("Ya hice b := find(id), así que tengo b en una variable local. Quito el link y destruyo la instancia.","remove antes que destroy","destroy antes que remove","Para destruir no necesito el link: necesito b, y ya lo guardé con find. Por eso quito el link y después hago destroy() a b. Si destruyera primero, la colección quedaría un momento apuntando a un objeto destruido."),
  st("Link de B hacia A (referencia única).","setA(NULL)","remove(id)","Se pone la referencia en NULL."),
  st("¿Quién suele destruir una instancia?","Quien la creó","Cualquier objeto","Quien crea, destruye.")
 ]),
