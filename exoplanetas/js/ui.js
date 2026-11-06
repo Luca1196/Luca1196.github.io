@@ -887,6 +887,8 @@ function verRegistro() {
 function verBitacora() {
   ventana({ titulo: "Bitácora", color: "var(--est)", botones: [], cuerpo: `<div class="bitacora">${ui.log.slice(-120).reverse().map(l => `<p class="${l.tipo || ""}" style="border-color:${l.jg !== undefined ? COLOR[l.jg] : "transparent"}">${esc(l.txt)}</p>`).join("") || '<p>La partida empieza.</p>'}</div>` });
 }
+const PDF_CARTAS = "sistemas-exoplanetas-cartas.pdf";   // mazo y reglamento para imprimir (versión de mesa)
+const BOTON_PDF = `<a class="opcion pdf" href="${PDF_CARTAS}" download><span>Descargar cartas para imprimir (PDF)</span><b>⬇</b></a>`;
 const ENCUESTA = "https://forms.gle/pgQcx6WgMZ1TdTi26";   // comentarios y sugerencias
 const BOTON_ENCUESTA = `<a class="opcion encuesta" href="${ENCUESTA}" target="_blank" rel="noopener"><span>Comentarios y sugerencias</span><b>↗</b></a>`;
 const MENU_SITIO = (document.querySelector('meta[name="sitio-menu"]') || {}).content || "";
@@ -895,6 +897,7 @@ async function menu() {
   const v = await ventana({ titulo: "Menú", color: "var(--est)", botones: [], cuerpo: `<div class="lista">
     <button type="button" class="opcion" data-v="bitacora"><span>Bitácora de la partida</span></button>
     <button type="button" class="opcion" data-v="tutorial"><span>Tutorial</span></button>
+    ${BOTON_PDF}
     <button type="button" class="opcion" data-v="reglas"><span>Cómo se juega</span></button>
     <button type="button" class="opcion" data-v="sonido"><span>Sonido</span><b>${Sfx.activo ? "Activado" : "Apagado"}</b></button>
     <button type="button" class="opcion" data-v="nueva"><span>Nueva partida</span></button>${MENU_SITIO ? `<a class="opcion" href="${MENU_SITIO}"><span>Volver a los juegos</span></a>` : ""}</div>${CREDITO}`,
@@ -1238,6 +1241,7 @@ function abrirModo() {
     <button type="button" class="modo" data-modo="tutorial"><b>Tutorial</b><span>Aprende jugando: el juego te dice qué hacer en cada turno. Una partida corta (${RONDAS_TUTORIAL} rondas) contra un rival novato.</span></button>
     <button type="button" class="modo" data-modo="normal"><b>Normal</b><span>Sin ayudas, contra 1 a 3 equipos que juegan según su científico.</span></button>
     <button type="button" class="inicio-reglas">Cómo se juega</button>
+    ${BOTON_PDF}
     ${BOTON_ENCUESTA}
     ${CREDITO}</div>`;
   document.body.appendChild(d);
