@@ -520,3 +520,4 @@ body.guia-solo-tec #mano .carta.mar { opacity: .3; filter: grayscale(1); }
 .guia-globo .ot-op b { color: #fff; } .guia-globo .ot-op.rec { background: rgba(255,200,61,.14); border-radius: 8px; padding: 2px 6px; margin-left: -6px; }
 .guia-globo .ot-op.rec b { color: var(--oro-2); }
 .inicio .pdf { justify-self: center; width: auto; padding: 10px 16px; }
+.inicio .modo.continuar { border-color: var(--pla); background: rgba(63,191,107,.14); } .inicio .modo.continuar b { color: #9affc8; }

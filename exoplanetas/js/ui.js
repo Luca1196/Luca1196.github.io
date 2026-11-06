@@ -993,13 +993,13 @@ function guardarPartida(fase) {
 function leerPartida() { try { return JSON.parse(localStorage.getItem(CLAVE_PARTIDA) || "null"); } catch (e) { return null; } }
 function borrarPartida() { try { localStorage.removeItem(CLAVE_PARTIDA); } catch (e) {} }
 // Nueva partida: antes busca en el servidor si hay una versión nueva del juego; si la hay, recarga la página
-async function nuevaPartida() {
+async function nuevaPartida(borrar = true) {
   if (VERSION && location.protocol.startsWith("http")) {
     try {
       const r = await fetch(location.pathname + "?buscar=" + Date.now(), { cache: "no-store" });
       const nueva = ((await r.text()).match(/ui\.js\?v=([\w.-]+)/) || [])[1];
       if (nueva && nueva !== VERSION) {
-        borrarPartida();
+        if (borrar) borrarPartida();
         aviso("Hay una versión nueva del juego: actualizando…");
         setTimeout(() => location.replace(location.pathname + "?v=" + nueva), 400);
         return;
@@ -1239,6 +1239,7 @@ function abrirModo() {
   d.className = "inicio";
   d.innerHTML = `<div class="inicio-caja"><h1>Sistemas Exoplanetas</h1>
     <p class="inicio-sub">Descubre planetas en otras estrellas y busca señales de vida.</p>
+    ${(s => s ? `<button type="button" class="modo continuar" data-modo="continuar"><b>Continuar partida</b><span>${s.pref && s.pref.modo === "tutorial" ? "Tutorial" : "Normal"} · ronda ${s.estado.ronda} de ${s.estado.maxRondas} · ${esc(s.pref.nombre || "Tu equipo")}</span></button>` : "")(leerPartida())}
     <button type="button" class="modo" data-modo="tutorial"><b>Tutorial</b><span>Aprende jugando: el juego te dice qué hacer en cada turno. Una partida corta (${RONDAS_TUTORIAL} rondas) contra un rival novato.</span></button>
     <button type="button" class="modo" data-modo="normal"><b>Normal</b><span>Sin ayudas, contra 1 a 3 equipos que juegan según su científico.</span></button>
     <button type="button" class="inicio-reglas">Cómo se juega</button>
@@ -1247,6 +1248,11 @@ function abrirModo() {
     ${CREDITO}</div>`;
   document.body.appendChild(d);
   d.querySelectorAll(".modo").forEach(b => b.onclick = () => {
+    if (b.dataset.modo === "continuar") {
+      const s = leerPartida(); d.remove(); Sfx.elegir();
+      try { empezar(s.pref, s); } catch (e) { console.error(e); borrarPartida(); abrirModo(); }
+      return;
+    }
     preferencias.modo = b.dataset.modo;
     try { localStorage.setItem("exo-pref", JSON.stringify(preferencias)); } catch (e) {}
     d.remove(); Sfx.elegir(); preferencias.modo === "tutorial" ? abrirIntroTutorial() : abrirPreparacion();
@@ -1307,8 +1313,6 @@ dibujarFondo();
 addEventListener("resize", () => { dibujarFondo(); });
 g = crearJuego(preferencias);
 render();
-(() => {
-  const s = leerPartida();
-  if (s) { try { empezar(s.pref, s); return; } catch (e) { console.error(e); borrarPartida(); } }
-  abrirModo();
-})();
+// Al entrar (desde el menú del sitio o recargando) funciona como «Nueva partida»: busca versión nueva y muestra
+// el inicio; si quedó una partida guardada, el inicio ofrece continuarla.
+nuevaPartida(false);
