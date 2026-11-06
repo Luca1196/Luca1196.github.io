@@ -182,7 +182,7 @@ function pfT(n,i,done){const v=x=>done||i>=x,nw=x=>!done&&x>0&&i==x;
  const rk=n.r&&v(n.ra),kv=n.k.some(x=>v(x.at));
  if(!rk&&!kv)return`<div class="pt"><span class="pd">⋮</span>${f}</div>`;
  return`<div class="pt"><div class="pk">${n.k.map(x=>pfT(x,i,done)).join("")}</div><div class="pr${rk&&(nw(n.ra)||(c&&nw(n.o.ca)))?" nw":""}"><span class="pn">${rk?esc(n.r)+(c?"<sup>"+n.o.c+"</sup>":""):"?"}</span></div>${f}</div>`}
-function swDg(c,idx,done){if(c.tr)return`<div class="sn pft">${pfT(c.tr,idx,done)}</div>`;const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
+function swDg(c,idx,done){if(c.tr)return`<div class="sn pft"><div style="display:inline-block;padding-right:44px">${pfT(c.tr,idx,done)}</div></div>`;const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
  if(kn("to")){d={n:kn("n")?L.n.replace("*",""):"?",it:kn("n")&&L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond&&kn("cond")?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+(kn("pa")||L.pa=="()"?L.pa:"(…)"),st:kn("st")?STN[L.t]:"…",u:1,dr:!kn("st")}}
  return `<div class="sn" style="overflow-x:auto;padding:4px">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig,g.ent)}</div>`}
 function lineSteps0(L){const a=[],r=L.to.split(":")[0];

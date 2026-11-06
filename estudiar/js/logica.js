@@ -181,12 +181,16 @@ sw("lg","Usar ∨","Tengo: φ∨ψ, φ→χ, ψ→χ\nMeta: χ",[
  st("¿Qué cancelo?","φ y ψ, una por rama","φ∨ψ","Las suposiciones de las ramas.","cancelo φ y ψ")
 ],"E∨: χ bajo φ (E→) y χ bajo ψ (E→); cancelo φ y ψ"),
 sw("lg","Usar ∃","Tengo: ∃xP(x), ∀x(P(x)→Q(x))\nMeta: ∃xQ(x)",[
- st("¿Qué supongo para usar el ∃?","P(x) con x nueva","P(a) con a constante","E∃ supone el testigo con una variable nueva.","supongo P(x)"),
- st("Con P(x) y E∀, ¿qué obtengo?","Q(x), por E→","Q(a)","Instancio con la misma x.","Q(x)"),
- st("¿Cómo llego a la meta?","I∃ con x","I∀","La meta es un ∃.","I∃"),
- st("Al cerrar E∃, ¿qué hipótesis queda entre corchetes [ ]ⁿ?","P(x), la suposición del testigo","∃xP(x)","∃xP(x) no se corchetea: sigue como premisa abierta. Lo que E∃ elimina es su ∃, para trabajar con P(x), y esa suposición se cancela.","cancelo P(x)"),
- st("¿x ∉ FV de la conclusión ∃xQ(x)?","Sí: está ligada","No","Se cumple la condición (∗).","")
-],"E∃: supongo P(x), E∀ y E→ dan Q(x), I∃ da ∃xQ(x); cancelo P(x)"),
+ st("La meta es un ∃. ¿Puedo hacer I∃ ya?","No: no tengo Q(t) para ningún t","Sí, con t = x","I∃ pide tener ya probada una instancia Q(t).",""),
+ st("¿Qué hipótesis desarmo primero?","∃xP(x), con E∃: me da un testigo","∀x(P(x)→Q(x)), con E∀","El ∀ se puede instanciar con cualquier término; conviene tener primero el testigo del ∃ para instanciar justo con él.","E∃ ·"),
+ st("¿Qué supongo para usar E∃?","P(x), con x nueva","P(a), con a constante","E∃ supone la fórmula sin el ∃, con una variable que no aparezca libre en otro lado.","supongo P(x)"),
+ st("Bajo esa suposición, ¿qué meta busco?","∃xQ(x), la misma meta","Q(x)","E∃ concluye lo mismo que se prueba adentro; Q(x) será un paso intermedio.",""),
+ st("Tengo P(x). ¿Cómo uso ∀x(P(x)→Q(x))?","E∀ con t = x: P(x)→Q(x)","E→ directo sobre el ∀","Una fórmula con ∀ adelante primero se instancia; recién después aparece la →.","E∀ ·"),
+ st("Tengo P(x)→Q(x) y P(x).","E→: obtengo Q(x)","I→","La → está en lo que tengo y tengo su antecedente: E→.","E→ ·"),
+ st("Tengo Q(x). Meta ∃xQ(x).","I∃ con t = x","I∀","La meta es un ∃ y Q(x) es su instancia con x.","I∃ ·"),
+ st("Al cerrar E∃, ¿qué va entre corchetes [ ]ⁿ?","P(x), la suposición","∃xP(x), la premisa","∃xP(x) sigue abierta (en Γ); se cancela la suposición del testigo.","cancelo P(x)"),
+ st("Condición (∗) de E∃","x ∉ FV de ∃xQ(x) ni de ∀x(P(x)→Q(x))","t libre para x","La x supuesta no puede quedar libre en la conclusión ni en otra hipótesis abierta. En ∃xQ(x) y en ∀x(…) x está ligada: se cumple.","")
+],"E∃ sobre ∃xP(x) con [P(x)]: E∀ con x, E→ da Q(x), I∃ da ∃xQ(x)"),
 sw("lg","Usar ¬ y ⊥",null,[
  st("Tengo ¬φ y quiero ⊥. ¿Qué me falta?","φ","ψ, cualquier otra fórmula","E¬ pide una fórmula y su negación: acá φ y ¬φ."),
  st("Tengo ⊥ y quiero ψ.","E⊥","E¬","Ex falso: de ⊥ sale cualquier fórmula."),
@@ -336,7 +340,7 @@ const LGX={
 "Meta ¬":[0,0,"Tengo: φ→ψ, ¬ψ y el supuesto φ (de I¬)\nMeta original: ¬φ","Tengo: φ→ψ, ¬ψ, supuesto φ\nMeta: ⊥","Derivé ⊥ bajo el supuesto φ\nMeta original: ¬φ (con I¬)"],
 "Meta atómica (RAA)":[0,0,0,0,"Tengo: ¬¬φ y el supuesto ¬φ (de RAA)\nMeta: ⊥"],
 "Meta ∀":[0,0,"Tengo: ∀x(P(x)∧Q(x))\nMeta tras I∀: P(x), con x arbitraria","Cierro con I∀ hacia ∀xP(x)\nHipótesis abierta: ∀x(P(x)∧Q(x))"],
-"Usar ∃":[0,"Tengo: ∀x(P(x)→Q(x)) y el supuesto P(x) (x nueva, de E∃)\nMeta: ∃xQ(x)","Tengo: P(x), Q(x) (por E∀ y E→)\nMeta: ∃xQ(x)","Llegué a ∃xQ(x) bajo el supuesto P(x)\nPremisa del E∃: ∃xP(x)","Cierro E∃ sobre ∃xP(x) con conclusión ∃xQ(x)\nHipótesis abiertas: ∀x(P(x)→Q(x))"],
+"Usar ∃":[0,"Tengo: ∃xP(x), ∀x(P(x)→Q(x))\nMeta: ∃xQ(x)\nTodavía no tengo nada de la forma Q(…)","Abro E∃ sobre ∃xP(x)\nMeta: ∃xQ(x)","Supuesto: P(x) (x nueva, de E∃)\nTengo además: ∀x(P(x)→Q(x))","Supuesto: P(x)\nTengo: ∀x(P(x)→Q(x))\nMeta: ∃xQ(x)","Tengo: P(x), P(x)→Q(x) (por E∀)\nMeta: ∃xQ(x)","Tengo: Q(x) (por E→)\nMeta: ∃xQ(x)","Llegué a ∃xQ(x) bajo el supuesto P(x)\nPremisa del E∃: ∃xP(x)","Cierro E∃ sobre ∃xP(x) con conclusión ∃xQ(x)\nHipótesis abierta: ∀x(P(x)→Q(x))"],
 "Combinar 2c (∀ desde contradicción)":[0,"Tengo: ψ, (∀x)¬P(x)\nMeta: (∀x)Q(x), armo con I∀","Tengo: ψ, (∀x)¬P(x)\nMeta: Q(x), con x arbitraria","Tengo: ψ, (∀x)¬P(x)\nMeta: Q(x), con x arbitraria","Tengo: ψ, (∀x)¬P(x)\nMeta: ⊥ (de ahí saldrá Q(x) con E⊥)","Tengo: ψ = (∀x)P(f(x))∧(∃z)¬P(z), (∀x)¬P(x)\nMeta: ⊥ (E¬: busco una fórmula y su negación)","Tengo: ψ = (∀x)P(f(x))∧(∃z)¬P(z), (∀x)¬P(x)\nMeta: ⊥ (E¬: busco una fórmula y su negación)","Tengo: ψ = (∀x)P(f(x))∧(∃z)¬P(z), (∀x)¬P(x)\nMeta: ⊥ (E¬: busco una fórmula y su negación)","Tengo: ψ = (∀x)P(f(x))∧(∃z)¬P(z), (∀x)¬P(x)\nMeta: ⊥ (por E¬ necesito P(f(x)) y ¬P(f(x)))","Tengo: (∀x)P(f(x)) (salió de ψ por E∧), (∀x)¬P(x)\nMeta: ⊥","Tengo: P(f(x)), (∀x)¬P(x)\nMeta: ⊥","Tengo: P(f(x)), (∀x)¬P(x)\nQuiero instanciar con t = f(x)","Tengo: P(f(x)), ¬P(f(x))\nMeta: ⊥, y después Q(x)","Tengo: Q(x) (por E⊥)\nMeta: (∀x)Q(x), cierro con I∀\nHipótesis abiertas: ψ, (∀x)¬P(x)"],
 "Combinar 3b (∃ en hipótesis y en meta)":[0,0,"Tengo: (∃x)R(x,x), (∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))\nMeta: (∃x)P(x,x)\nAbro E∃ sobre (∃x)R(x,x)","Supuesto: R(x,x), x nueva (de E∃)\nTengo además: la ∀∀∀\nMeta: (∃x)P(x,x)","Supuesto: R(x,x)\nTengo: (∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))\nMeta: (∃x)P(x,x)","Supuesto: R(x,x)\nTengo: (∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))\nMeta: (∃x)P(x,x)","Tengo: R(x,x) y R(x,x)∧R(x,x)→P(x,x)\nMeta: (∃x)P(x,x)","Tengo: R(x,x)∧R(x,x) y R(x,x)∧R(x,x)→P(x,x)\nMeta: (∃x)P(x,x)","Tengo: P(x,x)\nMeta: (∃x)P(x,x)","Derivé (∃x)P(x,x) bajo el supuesto R(x,x)\nPremisa del E∃: (∃x)R(x,x)","Cierro E∃ sobre (∃x)R(x,x) con conclusión (∃x)P(x,x)\nHipótesis abierta: la ∀∀∀"],
 "Combinar 3a → (casos y contradicción)":[0,"Supuesto: α∨(β∧¬γ)\nMeta: ¬α→¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α\nMeta: ¬(β→γ)","Supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta: ⊥","Abro E∨ sobre α∨(β∧¬γ)\nSupuestos: ¬α, β→γ\nMeta: ⊥","Rama α. Supuestos: α, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Supuestos: β∧¬γ, ¬α, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: β, ¬γ, β→γ\nMeta: ⊥","Rama β∧¬γ. Tengo: γ, ¬γ\nMeta: ⊥","Las dos ramas llegaron a ⊥ (E∨ sobre α∨(β∧¬γ))\nCierro E∨","Llegué a ⊥ con supuestos: α∨(β∧¬γ), ¬α, β→γ\nMeta original: ⊢ (α∨(β∧¬γ))→(¬α→¬(β→γ))"],
@@ -350,7 +354,7 @@ sw("lg","Usar ∀","Tengo: ∀x(P(x)→Q(x)), P(a)\nMeta: Q(a)",[
  st("¿Debe ser a libre para x?","Sí","No","Si no, a quedaría capturada por un cuantificador."),
  st("Tras E∀ tengo P(a)→Q(a). ¿Qué hago?","E→ con P(a)","I→","Con el antecedente P(a) alcanza.")])
 );
-const LGR={"Meta ∧":[0,0,"I∧"],"Meta →":[0,"I→","I→","I→","I→"],"Meta ¬":[0,"I¬","I¬","I¬","I¬"],"Meta atómica (RAA)":[0,0,0,"RAA","RAA"],"Meta ∨":[0,"I∨","I∨"],"Meta ∨ sin hipótesis":[0,0,0,"RAA"],"Meta ∀":[0,"I∀","I∀","I∀"],"Meta ∃":[0,"I∃","I∃"],"Meta ↔":[0,"I↔"],"Usar ∧":[0,"E∧","E∧"],"Usar →":[0,"E→","E→"],"Usar ∨":[0,"E∨","E∨","E∨"],"Usar ∃":[0,"E∃","E∃","E∃","E∃"],"Usar ∀":[0,"E∀","E∀","E∀"]};
+const LGR={"Meta ∧":[0,0,"I∧"],"Meta →":[0,"I→","I→","I→","I→"],"Meta ¬":[0,"I¬","I¬","I¬","I¬"],"Meta atómica (RAA)":[0,0,0,"RAA","RAA"],"Meta ∨":[0,"I∨","I∨"],"Meta ∨ sin hipótesis":[0,0,0,"RAA"],"Meta ∀":[0,"I∀","I∀","I∀"],"Meta ∃":[0,"I∃","I∃"],"Meta ↔":[0,"I↔"],"Usar ∧":[0,"E∧","E∧"],"Usar →":[0,"E→","E→"],"Usar ∨":[0,"E∨","E∨","E∨"],"Usar ∃":[0,0,"E∃","E∃","E∃","E∃","E∃","E∃","E∃"],"Usar ∀":[0,"E∀","E∀","E∀"]};
 /* ---- Árboles de las cadenas de Lógica (se asignan por título) ---- */
 const N=(f,at,r,ra,k,o)=>({f,at,r,ra,k:k||[],o:o||{}});
 const TRS={
@@ -367,7 +371,7 @@ const TRS={
 "Usar ∧":N("ψ",0,"E∧",2,[N("φ∧ψ",2)]),
 "Usar →":N("ψ",0,"E→",1,[N("φ→ψ",1),N("φ",2,0,0,0,{open:1})]),
 "Usar ∨":N("χ",0,"E∨",1,[N("φ∨ψ",1),N("χ",3,"E→",3,[N("φ",3,0,0,0,{c:1,ca:4}),N("φ→χ",3)]),N("χ",3,"E→",3,[N("ψ",3,0,0,0,{c:2,ca:4}),N("ψ→χ",3)])],{c:"1,2",ca:4}),
-"Usar ∃":N("∃xQ(x)",0,"E∃",1,[N("∃xP(x)",1),N("∃xQ(x)",1,"I∃",3,[N("Q(x)",2,"E→",2,[N("P(x)",1,0,0,0,{c:1,ca:4}),N("P(x)→Q(x)",2,"E∀",2,[N("∀x(P(x)→Q(x))",2)])])])],{c:1,ca:4}),
+"Usar ∃":N("∃xQ(x)",0,"E∃",2,[N("∃xP(x)",2),N("∃xQ(x)",2,"I∃",7,[N("Q(x)",3,"E→",6,[N("P(x)",3,0,0,0,{c:1,ca:8}),N("P(x)→Q(x)",5,"E∀",5,[N("∀x(P(x)→Q(x))",5)])],{fa:6})])],{c:1,ca:8}),
 "Febrero 3a (RAA dentro de I→)":N("((p→q)∧(¬r→p))→(¬q→r)",0,"I→",1,[N("¬q→r",1,"I→",2,[N("r",2,"RAA",3,[N("⊥",4,"E¬",8,[N("q",5,"E→",7,[N("p→q",7,"E∧",7,[N("(p→q)∧(¬r→p)",7,0,0,0,{c:1,ca:9})]),N("p",6,"E→",6,[N("¬r→p",6,"E∧",6,[N("(p→q)∧(¬r→p)",6,0,0,0,{c:1,ca:9})]),N("¬r",6,0,0,0,{c:3,ca:9})])]),N("¬q",5,0,0,0,{c:2,ca:9})])],{c:3,ca:9})],{c:2,ca:9})],{c:1,ca:9}),
 "Febrero 3b (∃ con igualdad)":N("(∃w)f(h(w)) =′ g(f(w))",0,"E∃",2,[N("(∃z)P(z)",2),N("(∃w)f(h(w)) =′ g(f(w))",2,"I∃",8,[N("f(h(z)) =′ g(f(z))",4,"RI4",7,[N("g(z) =′ h(z)",5,"RI2",5,[N("h(z) =′ g(z)",4,"E→",4,[N("P(z)→h(z) =′ g(z)",4,"E∀",4,[N("(∀y)(P(y)→h(y) =′ g(y))",4)]),N("P(z)",4,0,0,0,{c:1,ca:9})])]),N("f(g(z)) =′ g(f(z))",6,"E∀",6,[N("(∀x)f(g(x)) =′ g(f(x))",6)])],{fa:7})])],{c:1,ca:9}),
 "Combinar 2c (∀ desde contradicción)":N("(∀x)Q(x)",0,"I∀",1,[N("Q(x)",2,"E⊥",4,[N("⊥",4,"E¬",5,[N("P(f(x))",5,"E∀",10,[N("(∀x)P(f(x))",9,"E∧",9,[N("(∀x)P(f(x))∧(∃z)¬P(z)",9)])],{fa:8}),N("¬P(f(x))",5,"E∀",11,[N("(∀x)¬P(x)",11)],{fa:8})])])]),
