@@ -1142,7 +1142,7 @@ function actualizarGuia() {
   let els = p ? (p.els || [...document.querySelectorAll(selector)]).filter(x => x && x.getClientRects().length) : [];
   if (p && !els.length && p.alt) els = [...document.querySelectorAll(p.alt)];
   const el = els[0];
-  const tapado = document.querySelector("#capa .velo") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado)) || (p && p.cuando && !p.cuando(p));
+  const tapado = document.querySelector("#capa .velo, .inicio") || (p && p.turno && (ui.fase !== "accion" || ui.ocupado)) || (p && p.turnoFin && (ui.fase !== "post" || ui.ocupado)) || (p && p.cuando && !p.cuando(p));
   if (!p || !el || tapado || !el.getClientRects().length) { if (capa) capa.hidden = true; if (!p && capa) capa.remove(); return; }
   if (!capa) {
     capa = document.createElement("div"); capa.id = "guia";
@@ -1205,7 +1205,7 @@ addEventListener("resize", () => { if (guia.paso >= 0 || ui.tutorial) actualizar
 
 // Tutorial, después de la guía: tus opciones de este momento, con el mismo globo y foco de la guía
 function pasoContinuo() {
-  if (g.terminado || ui.ocupado || document.querySelector("#capa .velo")) return null;
+  if (g.terminado || ui.ocupado || document.querySelector("#capa .velo, .inicio")) return null;
   const q = s => [...document.querySelectorAll(s)];
   if (g.turnoDe !== YO || !["accion", "post"].includes(ui.fase))
     return { continuo: true, els: q(".rival.turno"), txt: `Juega <b>${esc(nombreJ(g.turnoDe))}</b>: mira el cielo para ver qué hace…` };
@@ -1234,6 +1234,7 @@ function marcarGuiaVista() { preferencias.tutorialVisto = true; try { localStora
 // Pantalla de inicio: solo elegir el modo de juego; después, la preparación de la partida
 function abrirModo() {
   document.querySelectorAll(".inicio").forEach(x => x.remove());
+  document.getElementById("guia")?.remove();   // la guía de la partida anterior no queda encima del inicio
   const d = document.createElement("div");
   d.className = "inicio";
   d.innerHTML = `<div class="inicio-caja"><h1>Sistemas Exoplanetas</h1>
