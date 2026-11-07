@@ -143,7 +143,7 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  const w=pool.map(c=>1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0));let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;
  while(r>w[k]&&k<pool.length-1){r-=w[k];k++}
  return{c:pool[k],i:0,only:false,built:[],err:0}}
-function swNew(){SW=swPick();SW.rc=(!SW.only&&SW.c.dg&&SW.c.out)?"ask":null;SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swNew(){SW=swPick();SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»",Dom:"el dominio",Esc:"el enunciado"};
 function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.map((l,i)=>{if(hl){const on=hl=="ESC"?(di<0||i<di):(di>=0&&i>di&&new RegExp(hl).test(l));return on?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
@@ -152,7 +152,6 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
  `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["p4","Prog4"],["lg","Lógica"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
- if(u.rc){h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · armá la línea</div><div class="sn">${ctxH(c.ctx,null,null)}</div>${swDg(c,0,0)}<div class="qt">Armá la línea completa de cabeza: número, operación, parámetros, receptor, condición y estereotipo.</div>`+(u.rc=="ask"?`<button class="btn pri big" data-w="rcv">Ver la línea</button>`:`<div class="sn">${esc(c.out)}</div><div class="swopts"><div class="swo l" data-w="rn" role="button" tabindex="0">← Me faltó algo</div><div class="swo r" data-w="ry" role="button" tabindex="0">La tenía completa →</div></div>`)+`</div></div>`;V.innerHTML=h;return}
  const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
@@ -164,13 +163,7 @@ function swBind(){const el=$("swc");if(!el||SW.ans)return;
  el.onpointerdown=e=>{SDRAG={x:e.clientX,dx:0,t:e.target.closest("[data-w]")};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition="none"};
  el.onpointermove=e=>{if(!SDRAG)return;SDRAG.dx=e.clientX-SDRAG.x;el.style.transform=`translateX(${SDRAG.dx}px) rotate(${SDRAG.dx/30}deg)`;el.classList.toggle("tl",SDRAG.dx<-30);el.classList.toggle("tr",SDRAG.dx>30)};
  el.onpointerup=el.onpointercancel=()=>{if(!SDRAG)return;const dx=SDRAG.dx,t=SDRAG.t;SDRAG=null;el.style.transition="";if(Math.abs(dx)>80)swChoose(dx<0?"L":"R");else if(Math.abs(dx)<8&&t&&/^(L|R|NS)$/.test(t.dataset.w)){el.style.transform="";el.classList.remove("tl","tr");swChoose(t.dataset.w)}else{el.style.transform="";el.classList.remove("tl","tr")}}}
-/* Armar primero: en las tarjetas por línea se arma la línea sin opciones, se destapa y se autoevalúa; si faltó algo, siguen los pasos guiados. */
-function swRc(w){const u=SW;if(!u||!u.rc)return;const c=u.c;
- if(w=="rcv"){u.rc="rev";swDraw();return}
- u.rc=null;
- if(w=="ry"){c.steps.forEach((_,i)=>{const k=c.id+":"+i;S2.box[k]=Math.min(4,(S2.box[k]||0)+1)});S2.n++;S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=3;u.bonus=5;S2.xp+=5;u.err=0;u.recap=true;SLAST=c.id;SLT=swTop(c);SV2();swDraw();return}
- logA("sw",c.s,c.g,false,{q:"Armar la línea completa",x:c.ctx||"",a:c.out,p:"Me faltó algo",ns:0,ms:Date.now()-(u.ts||Date.now()),rp:0,n:0});SCOMBO=0;swStep()}
-function swChoose(side){if(!SW||SW.ans||SW.recap||SW.rc)return;const u=SW,c=u.c,s=c.steps[u.i],ok=side!="NS"&&(side=="L")==u.cl,k=c.id+":"+u.i;
+function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.steps[u.i],ok=side!="NS"&&(side=="L")==u.cl,k=c.id+":"+u.i;
  u.ans=ok?"ok":"no";u.pick=side;logA("sw",c.s,c.g,ok,{q:s.q,x:s.x||c.ctx||"",a:s.a,p:side=="NS"?"No sé ("+s.b+")":s.b,ns:side=="NS"?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:u.i+1});S2.box[k]=ok?(Date.now()-(u.ts||0)>25000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1)):0;S2.n++;SUN++;
  if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
  else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+8});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
@@ -185,9 +178,8 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  swStep()}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if(TAB!=3)return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
- if(w=="L"||w=="R"||w=="NS")swChoose(w);else if(w=="rcv"||w=="rn"||w=="ry")swRc(w);else if(w=="go")swAdvance();else if(w=="sf"){SF=b.dataset.v;swNew()}});
+ if(w=="L"||w=="R"||w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="sf"){SF=b.dataset.v;swNew()}});
 document.addEventListener("keydown",e=>{if(TAB!=3||!SW||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
- if(SW.rc){if(SW.rc=="ask"&&(k=="Enter"||k==" ")&&e.target.tagName!="BUTTON"){e.preventDefault();swRc("rcv")}else if(SW.rc=="rev"&&(k=="ArrowLeft"||k=="ArrowRight")){e.preventDefault();swRc(k=="ArrowLeft"?"rn":"ry")}return}
  if(k=="ArrowDown"&&SW.ans==null&&!SW.recap){e.preventDefault();swChoose("NS")}
  else if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
  else if((k=="Enter"||k==" ")&&e.target.tagName!="BUTTON"){e.preventDefault();if(SW.recap||SW.ans=="no")swAdvance()}});
