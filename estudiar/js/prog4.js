@@ -213,7 +213,7 @@ function lineSteps(L){const a=lineSteps0(L),p=L.n.replace("*","").split("."),pr=
   to:L.t=="A"?"Me fijo en las flechas del diagrama de clases: "+L.arrow+" "+(/ \*$/.test(L.to)?"→ va a la colección (con *)":"→ va a un solo objeto (multiplicidad 1: sin *)")+".":L.new?"Me fijo en que es un create: el receptor es el objeto nuevo.":L.t=="G"?"Me fijo en que es un singleton: se llega sin referencia previa.":(L.self?"Me fijo en que el mensaje es para mí mismo: el receptor es el propio objeto.":"Me fijo en «Tengo»: "+r+" ya está ahí, se le envía directo."),
   cond:"Me fijo en el objetivo ▶: "+(/foreach|forEach/.test(L.cond)?"«cada»/recorrer → next con [foreach].":"«solo si» → condición antes del mensaje.")};
  const out=a.filter(x=>L.t=="A"||x.k!="q");
- out.forEach(x=>{if(cue[x.k])x.w=cue[x.k]+keep(x.w)});return out}
+ out.forEach(x=>{if(cue[x.k]){x.cue=cue[x.k];x.w=cue[x.k]+keep(x.w)}});return out}
 const EXS=[
 {g:"postularse",op:"postularse(ci, rut, codOferta)",L:[
 {n:"1",nd:"1.1",nw:"Primer mensaje de la operación: nivel 1.",from:":Controlador",fd:"Sistema",fw:"La operación del sistema entra al Controlador; no hay caja «Sistema» en comunicación.",goal:"Necesito al estudiante a partir de su cédula.",op:"find",od:"next",ow:"Buscar por clave es find; next recorre todos.",pa:"(ci)",pd:"(ci, rut)",pw:"La clave de búsqueda es ci, que viene de la operación.",to:":Estudiante *",td:"est:Estudiante",tw:"find va a la colección.",res:"est",rw:"Voy a usar al estudiante después.",t:"A",arrow:"Controlador ──> Estudiante *"},
@@ -377,6 +377,33 @@ sw("p4","aceptarPostulacion · responsabilidades","Operación del sistema: acept
 SWC.filter(c=>c.dg).forEach(c=>{const P={};c.ctx.split("\n").forEach(l=>{const k=l.startsWith("Tengo:")?"T":l.startsWith("Operación que llamo:")?"O":l.startsWith("Clases:")?"C":l.startsWith("▶")?"G":"";if(k)P[k]=l});
  const j=(...k)=>k.map(x=>P[x]).filter(Boolean).join("\n");
  c.steps.forEach(s=>{s.x=({n:j("T","G"),op:j("O","G"),pa:j("T","G"),to:j("T","G"),cond:j("G"),q:j("T","G"),st:s.src&&s.src[0]=="Clases"?j("C"):j("T")})[s.k]||c.ctx})});
+/* Preguntas intermedias en las tarjetas de línea: antes de cada decisión se elige EN QUÉ ME FIJO (y antes de todo, QUÉ META PERSIGO). El id de la tarjeta no cambia. */
+SWC.filter(c=>c.dg).forEach(c=>{const L=c.dg.cur,cls=(L.to.split(":")[1]||L.to.replace(/ \*$/,"").replace(/^:/,"")).trim(),KD=/^(find|next|create|add|remove|destroy)$/.test(L.op),
+ ser=L.op=="find"||L.op=="next",
+ M=ser?["Conseguir un objeto que todavía no tengo","Pedirle algo a un objeto que ya tengo"]:L.op=="create"?["Crear un objeto nuevo","Pedirle algo a un objeto que ya tengo"]:L.op=="add"||L.op=="remove"?["Enlazar o desenlazar en una colección","Conseguir un objeto que todavía no tengo"]:L.op=="destroy"?["Eliminar un objeto","Pedirle algo a un objeto que ya tengo"]:["Pedirle algo a un objeto que ya tengo","Conseguir un objeto que todavía no tengo"],
+ LK={n:["Quién envía y qué mensaje ejecuta (el diagrama)","El objetivo ▶"],
+  op:KD?["El verbo del objetivo ▶ (buscar, recorrer, crear, agregar)","Las operaciones de "+cls+" en el dominio"]:["Las operaciones de "+cls+" en el dominio","El verbo del objetivo ▶ (find, next, add…)"],
+  pa:["La firma de "+L.op+" y «Tengo»","El diagrama de clases"],
+  to:L.t=="A"?["Las flechas de «Clases»","«Tengo»"]:L.new?["Que es un create: el receptor es el nuevo","Las flechas de «Clases»"]:L.t=="G"?["Que es el Controlador: se llega sin referencia","Las flechas de «Clases»"]:L.self?["Que se lo envío a mí mismo","Las flechas de «Clases»"]:["«Tengo»: ya lo obtuve","Las flechas de «Clases»"],
+  cond:["El objetivo ▶: «solo si» o «cada»","«Tengo»"],
+  st:L.t=="A"?["«Tengo» y las flechas de «Clases»","El objetivo ▶"]:L.t=="P"?["Si figura en la firma de la operación","La operación que envío"]:L.t=="G"?["Que es el Controlador (singleton)","La operación que envío"]:L.new?["Que lo crea este mismo mensaje","La operación que envío"]:["De dónde salió: find, create o next en «Tengo»","La operación que envío"]},
+ QN={n:"el número",op:"la operación",pa:"los parámetros",to:"el receptor",cond:"la condición",st:"el estereotipo"},o=[];
+ /* Camino: por qué intermediarios paso desde el Controlador hasta el receptor, y qué condiciones lo alcanzan. */
+ {const PV=c.dg.prev||[],ent=key(c.dg.ent||":Controlador"),CM={},kk=x=>{const q=String(x).replace(/ \*$/,"");return key(q)},nm=x=>{const q=String(x).replace(/ \*$/,"");if(q.includes(":")){const[a,b]=q.split(":");if(a)CM[a]=b;return a||q}return q},
+  resOf=m=>{const r=/^(?:\[[^\]]*\]\s*)*(\w+) := /.exec(m||"");return r?r[1]:null},cdOf=m=>{const r=/^((?:\[[^\]]*\]\s*)+)/.exec(m||"");return r?r[1].trim():""};
+  PV.concat([L]).forEach(x=>{nm(x.o||x.from);nm(x.d||x.to)});
+  const disp=k=>k==ent?(c.dg.ent||"Controlador").replace(/^:/,""):(k.startsWith(":")?k.slice(1)+" *":(CM[k]&&CM[k]!=k?k+":"+CM[k]:k)),
+  up=k=>{const ch=[k];let cur=k,g=0;while(cur!=ent&&g++<12){const m=PV.slice().reverse().find(x=>(resOf(x.msg)==cur||(kk(x.d)==cur&&!x.m&&/create\(/.test(x.msg)))&&kk(x.o)!=cur);if(!m)break;cur=kk(m.o);ch.unshift(cur)}return ch};
+  const fromK=kk(L.from),toK=kk(L.to.replace(/ \*$/,"")),sh=/ \*$/.test(L.to);
+  let P=L.t=="G"?[ent]:L.new||L.t=="A"||L.self?up(fromK).concat(L.self?[]:[toK.startsWith(":")||!L.new?kk(L.to):toK]):up(toK);
+  if(L.t=="A")P=up(fromK).concat([":"+cls.replace(/ \*$/,"")]);
+  if(P.length>=2&&P[0]==ent){const full=P.map(disp).join(" → "),others=[...new Set(PV.map(x=>kk(x.d)).filter(k=>!k.startsWith(":")&&!P.includes(k)&&k!=ent))];
+   let bad=null;if(P.length>=3)bad=[P[0]].concat(P.slice(2)).map(disp).join(" → ");else if(others.length)bad=[P[0],others[0],P[1]].map(disp).join(" → ");
+   if(bad)o.push(Object.assign(st("¿Por qué camino llego al receptor?",full,bad,P.length>=3?"Cada salto necesita una flecha en «Clases» o un objeto que ya tengo: no hay atajo, hay que pasar por "+P.slice(1,-1).map(disp).join(" y ")+".":"Del emisor sale la flecha directa al receptor: no hace falta ningún intermediario.",""),{k:"mcamino",src:["Clases","dg"],x:c.ctx}))}
+  const pn=L.n.replace("*","").split("."),anc=PV.filter(x=>{const q=x.n.replace("*","").split(".");return q.length<pn.length&&q.every((v,i)=>v==pn[i])}),inh=anc.filter(x=>cdOf(x.msg)).map(x=>({n:x.n,c:cdOf(x.msg)})),own=L.cond;
+  if(inh.length&&!own)o.push(Object.assign(st("¿Qué condición tiene este mensaje?","Ninguna propia: depende del "+inh[0].n+" "+inh[0].c,"Repetir "+inh[0].c+" acá","Es hijo del "+inh[0].n+": solo se ejecuta si el "+inh[0].n+" se ejecuta, así que la condición va una vez, en el padre.",""),{k:"mcond0",src:["dg"],x:c.ctx}))}
+ c.steps.forEach(s=>{const l=LK[s.k];if(l)o.push(Object.assign(st("¿En qué me fijo para decidir "+QN[s.k]+"?",l[0],l[1],s.cue||s.w||"",""),{k:"m"+s.k,src:s.src,x:c.ctx}));o.push(s)});
+ c.steps=o});
 
 /* ===== Prog4: «Qué miro» — cada tarjeta enseña en qué fijarse para decidir (el algoritmo de resolución) ===== */
 {const Q=(x,q,a,b,w)=>Object.assign(st(q,a,b,"Me fijo en: "+w,""),{x});
