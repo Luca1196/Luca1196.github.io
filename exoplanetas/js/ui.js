@@ -948,7 +948,7 @@ async function mostrarFinal() {
   if (gan.idx === YO) { banner("¡VICTORIA!", "tu equipo tiene la mayor reputación"); Sfx.victoria(); } else Sfx.derrota();
   const v = await ventana({ titulo: gan.idx === YO ? "¡Ganaste!" : `Gana ${esc(gan.nombre)}`, color: "var(--hito)", cuerpo: `
     <table class="tabla">${filas}</table>
-    <p class="tenue">¿Qué te pareció el juego? Tu opinión ayuda a mejorarlo.</p><div class="lista">${BOTON_ENCUESTA}</div>
+    <a class="btn-opinion" href="${ENCUESTA}" target="_blank" rel="noopener">${ICO.opinion}<span><b>¿Qué te pareció el juego?</b><small>Cuéntanos en 1 minuto: tu opinión nos ayuda a mejorarlo</small></span></a>
     <h3>La Verdad de cada planeta</h3><div style="overflow-x:auto"><table class="tabla"><tr><th>Planeta</th><th>Era</th><th>Verdad</th></tr>${planetas || '<tr><td colspan="3">No se descubrieron planetas.</td></tr>'}</table></div>`,
     botones: [{ txt: "Cerrar", valor: null, clase: "gris" }, { txt: "Jugar otra", valor: "nueva" }] });
   if (v === "nueva") nuevaPartida();

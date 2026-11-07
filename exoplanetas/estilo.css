@@ -521,3 +521,12 @@ body.guia-solo-tec #mano .carta.mar { opacity: .3; filter: grayscale(1); }
 .guia-globo .ot-op.rec b { color: var(--oro-2); }
 .inicio .pdf { justify-self: center; width: auto; padding: 10px 16px; }
 .inicio .modo.continuar { border-color: var(--pla); background: rgba(63,191,107,.14); } .inicio .modo.continuar b { color: #9affc8; }
+/* Botón grande de opinión al final de la partida */
+.btn-opinion { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; text-decoration: none; color: var(--tinta);
+  background: linear-gradient(var(--oro-2), var(--oro)); box-shadow: 0 5px 0 #b07c00, 0 0 18px rgba(255,200,61,.45); animation: msgLatido 1.8s ease-in-out infinite; }
+.btn-opinion svg { flex: none; width: 34px; height: 34px; }
+.btn-opinion span { display: grid; gap: 2px; text-align: left; }
+.btn-opinion b { font-family: var(--f-display); font-weight: 400; font-size: 20px; line-height: 1.1; }
+.btn-opinion small { font-size: 13px; font-weight: 800; opacity: .85; }
+.btn-opinion:active { transform: translateY(3px); box-shadow: 0 2px 0 #b07c00; }
+@media (prefers-reduced-motion: reduce) { .btn-opinion { animation: none; } }
