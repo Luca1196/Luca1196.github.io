@@ -136,7 +136,7 @@ const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!="sw"||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
- const ok=c=>SF=="all"||SF=="err"||c.s==SF,PD=swPend(),di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&swTop(r.c)!=SLT);
+ const ok=c=>SF=="all"||SF=="err"||(SF=="pa"?/^Parcial P/.test(c.g):c.s==SF),PD=swPend(),di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
  if(SF=="err"){let a=[...PD.values()];if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
  let pool=SWC.filter(c=>ok(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(ok);
@@ -150,7 +150,7 @@ function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
- `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["p4","Prog4"],["lg","Lógica"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
+ `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["p4","Prog4"],["pa","Parcial P1/P3"],["lg","Lógica"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
  const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
