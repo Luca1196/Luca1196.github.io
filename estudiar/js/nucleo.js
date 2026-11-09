@@ -130,20 +130,24 @@ let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
 try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}
 const SV2=()=>{try{localStorage.setItem("sw1",JSON.stringify(S2))}catch(e){}};
 let SLT="",SLK="";const swTop=c=>c.s+"|"+c.g.replace(/ · .*$/,"").replace(/ \d+\/\d+$/,"").replace(/ \(.*\)$/,"");
+/* Al fallar se rota de tema: comunicación → deducción natural → código C++ → clases/secuencia. */
+const SAO=["com","ded","cod","mod"],area=c=>c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="";
 let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
 const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 /* Pendientes = pasos que fallaste alguna vez (registro de Errores) y todavía no acertaste 2 veces seguidas. Pesan más al elegir serie y forman el filtro "Mis errores". */
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!="sw"||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
- const ok=c=>SF=="all"||SF=="err"||(SF=="pa"?/^Parcial P/.test(c.g):c.s==SF),PD=swPend(),di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&swTop(r.c)!=SLT);
+ const ok=c=>SF=="all"||SF=="err"||(SF=="pa"?/^Parcial P/.test(c.g):c.s==SF),PD=swPend();
+ if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
+ const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
- if(SF=="err"){let a=[...PD.values()];if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
- let pool=SWC.filter(c=>ok(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(ok);
+ if(SF=="err"){let a=[...PD.values()];if(SAX&&a.some(r=>arF(r.c)))a=a.filter(r=>arF(r.c));if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
+ let pool=SWC.filter(c=>ok(c)&&arF(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(c=>ok(c)&&arF(c));if(!pool.length)pool=SWC.filter(ok);
  const w=pool.map(c=>1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0));let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;
  while(r>w[k]&&k<pool.length-1){r-=w[k];k++}
  return{c:pool[k],i:0,only:false,built:[],err:0}}
-function swNew(){SW=swPick();SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swNew(){SW=swPick();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»",Dom:"el dominio",Esc:"el enunciado"};
 function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.map((l,i)=>{if(hl){const on=hl=="ESC"?(di<0||i<di):(di>=0&&i>di&&new RegExp(hl).test(l));return on?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
@@ -173,9 +177,9 @@ function swChoose(side){if(!SW||SW.ans||SW.recap)return;const u=SW,c=u.c,s=c.ste
  SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
 function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.steps[u.i];
  SLK=u.c.id+":"+u.i;
- if(u.recap||u.only){SLT=swTop(u.c);swNew();return}
+ if(u.recap||u.only){if(u.ans=="no")SERR=area(u.c);SLT=swTop(u.c);swNew();return}
  /* Error a mitad de serie: se corta y se pasa a otro tema; el paso fallado vuelve más tarde (SRETRY, +8 respuestas) y la serie entera pesa más (pendientes). */
- if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);
+ if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);SERR=area(u.c);
   /* «No sé» → la siguiente serie es la de teoría del tema (THL, definida en prog4.js/logica.js), si no es la misma */
   if(u.pick=="NS"){const st=u.c.steps[u.i],T=window.THL||[],L=T.find(t=>t.re.test(st.q+" "+st.a))||T.find(t=>t.re.test(st.x||u.c.ctx||"")),tc=L&&SWC.find(c=>c.g==L.g);if(tc&&tc.id!=u.c.id){SW={c:tc,i:0,only:false,built:[],err:0,ts:Date.now(),ans:null,cl:Math.random()<.5,teo:1};swDraw();return}}
   swNew();return}
