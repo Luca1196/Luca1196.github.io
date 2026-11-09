@@ -509,3 +509,33 @@ sw("p4","¿En qué me fijo?",null,[{"q": "Para el estereotipo…", "a": "de dón
 sw("p4","¿Por qué remove antes que destroy?",null,[{"q": "a guarda b en su colección. Destruyo b primero. ¿Qué queda en la colección de a?", "a": "Una referencia a un objeto que ya no existe", "b": "Nada: se borra sola", "w": "Destruir b no lo saca de las colecciones que lo apuntan.", "th": "destroy elimina el objeto, pero las colecciones que lo tenían no se enteran: siguen guardando una referencia colgante."}, {"q": "Entonces, ¿qué hago primero?", "a": "remove(b) de la colección de a", "b": "destroy() a b", "w": "Primero desengancho, después destruyo: no queda ninguna referencia colgante."}, {"q": "b está en dos colecciones (de a y de c). ¿Cuándo lo destruyo?", "a": "Después de sacarlo de las dos", "b": "Después de sacarlo de una", "w": "Mientras alguien lo apunte, no se destruye."}].map(o=>Object.assign(st(o.q,o.a,o.b,o.w),o.th?{th:o.th}:{},o.x?{x:o.x}:{}))));
 /* THL: tema → serie de teoría a la que lleva un «No sé» */
 window.THL=window.THL||[];THL.push({re:/remove|destroy|link/,g:"Borrado desde cero"},{re:/abstracta|subclase/,g:"Operación abstracta"},{re:/next\(|recorr/,g:"Recorridos desde cero"},{re:/genérica|del dominio|find/,g:"¿Genérica o del dominio?"},{re:/camino/,g:"Camino al receptor"},{re:/[Nn]úmero|numer/,g:"Numeración en operación de clase"});
+
+/* ===== Armador de líneas con fichas (estilo Duolingo): reemplaza los pasos de deslizar de cada línea de comunicación ===== */
+{const SA="«association»",SL="«local»";
+ const objT=(s,w)=>{const star=/ \*$/.test(s),b=s.replace(/ \*$/,""),r=[];
+  if(b.startsWith(":"))r.push({t:":",k:"o",w:"Objeto anónimo (primera vez, sin nombre): se escribe :Clase, con los dos puntos delante."},{t:b.slice(1),k:"o",g:1,w});
+  else if(b.includes(":")){const[a,c]=b.split(":");r.push({t:a,k:"o",w},{t:":",k:"o",g:1,w:"Primera aparición con nombre: nombre:Clase."},{t:c,k:"o",g:1,w})}
+  else r.push({t:b,k:"o",w:w||"Ya apareció antes: alcanza con el nombre, sin ':' ni clase."});
+  if(star)r.push({t:"*",k:"o",w:"El receptor es la colección: va con *."});return r};
+ SWC.filter(c=>c.dg).forEach(c=>{const L=c.dg.cur,old=c.steps,ex=[];
+  const sc=re=>{const s=old.find(s=>re.test(s.q)&&s.src);return s?{src:s.src,hl:s.hl}:{}};
+  ex.push({t:L.n+":",k:"n",w:L.nw||"Numeración."});
+  objT(L.from,L.fw).forEach(x=>ex.push(x));ex.push({t:"→",k:"a",auto:1});
+  objT(L.to,L.tw).forEach(x=>ex.push(Object.assign(x,sc(/objeto|receptor/i))));
+  if(L.cond)ex.push(Object.assign({t:L.cond,k:"c",w:L.cw||"La condición va entre corchetes antes del mensaje."},sc(/condici/i)));
+  if(L.res)ex.push({t:L.res,k:"r",w:L.rw||"Guarda el resultado."},{t:":=",k:"r",g:0,w:"El resultado se guarda con :=."});
+  ex.push(Object.assign({t:L.op,k:"m",w:L.ow||"Operación."},sc(/operaci/i)));
+  ex.push({t:L.pa,k:"p",g:1,w:L.pw||"Parámetros."});
+  ex.push({t:SS[L.t],k:"s",w:(old.filter(s=>/Estereotipo/.test(s.q)).pop()||{}).w||"Estereotipo."});
+  ex.forEach((x,i)=>{if(x.t==":"&&i>0&&ex[i-1].k=="o"&&/^[a-z]/.test(ex[i-1].t))x.g=1});
+  const cnt=t=>ex.filter(x=>x.t==t).length,D=[];
+  const add=(t,w)=>{if(t&&!ex.some(x=>x.t==t)&&!D.some(x=>x.t==t))D.push({t,k:"d",w})};
+  D.push({t:":",k:"d"},{t:"*",k:"d"});
+  if(L.res)D.push({t:"=",k:"d"});else D.push({t:":=",k:"d"},{t:"=",k:"d"});
+  add(L.t=="A"||L.t=="G"?SL:SA);if(L.t=="P")add(SA);
+  if(L.nd)add(L.nd+":");if(L.od)add(L.od);if(L.pd)add(L.pd);
+  const dobj=s=>s?objT(s).map(x=>x.t):[];
+  dobj(L.td).concat(dobj(L.fd)).forEach(t=>{if(D.length<8&&!/^[:*]$/.test(t))add(t)});
+  const fix=D.slice(0,8);c.bld={exp:ex,bank:ex.filter(x=>x.k!="a").map(x=>({t:x.t})).concat(fix.map(x=>({t:x.t}))),n:ex.length};
+  c.lineSteps=old;
+  c.steps=[Object.assign(st("Armá la línea",lineStr(L),"—",""),{k:"bld"})]})}
