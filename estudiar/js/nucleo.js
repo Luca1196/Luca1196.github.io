@@ -151,6 +151,10 @@ function swNew(){SW=swPick();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.rand
 function swStep(){SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»",Dom:"el dominio",Esc:"el enunciado"};
 function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.map((l,i)=>{if(hl){const on=hl=="ESC"?(di<0||i<di):(di>=0&&i>di&&new RegExp(hl).test(l));return on?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
+/* Contexto plegable: firma, «Tengo» y ▶ a la vista; «Clases» y «Dominio» desplegables (se abren solos si ahí estaba el dato). */
+function bldCtx(t,src,hl){const T=t.split("\n"),H=ctxH(t,src,hl).match(/<div[^>]*>.*?<\/div>/g)||[],di=T.indexOf("Dominio:");let v="",cl="",dm="";
+ T.forEach((l,i)=>{if(l.startsWith("Clases:"))cl+=H[i];else if(di>=0&&i>=di)dm+=H[i];else v+=H[i]});
+ const dt=(n,x)=>x?`<details${x.includes('class="hl"')?" open":""}><summary>${n}</summary>${x}</details>`:"";return v+dt("Clases",cl)+dt("Dominio",dm)}
 const bldDisp=a=>a.map((x,i)=>(i&&!x.g?" ":"")+esc(x.t)).join("");
 const bsNew=c=>({p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,m:null,src:null,hl:null,done:false});
 function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X=c.bld.exp,e=X[b.p],ns=i<0;
@@ -188,7 +192,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
 /* Armador de fichas (líneas de comunicación): se elige cada ficha en orden; la correcta se acepta, la equivocada muestra la regla. */
  if(c.bld){const b=u.bs||(u.bs=bsNew(c)),bk=c.bld.bank;
   h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso · ":""}armá la línea</div>`+
-  `<div class="sn">${ctxH(c.ctx,b.src,b.hl)}</div>${swDg(c,0,b.done)}<div class="qt">Armá la línea con las fichas</div>`+
+  `<div class="sn">${bldCtx(c.ctx,b.src,b.hl)}</div>${swDg(c,0,b.done)}<div class="qt">Armá la línea con las fichas</div>`+
   `<div class="bpl${b.done?" fin":""}">${b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
   (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div>${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+
   (b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": esta línea vuelve en un rato.":"Línea correcta"}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
