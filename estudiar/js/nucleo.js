@@ -154,7 +154,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
  const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
- h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
+ h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":(u.teo?"📘 teoría por tu «No sé» · ":"")+"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
  ((s.x||c.ctx)?`<div class="sn">${ctxH(s.x||c.ctx,u.ans=="no"?s.src:null,u.ans=="no"?s.hl:null)}</div>`:"")+(u.ans=="no"&&s.src&&s.src.includes("dg")?`<div class="hl">${swDg(c,u.i,0)}</div>`:swDg(c,u.i,0))+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.filter(Boolean).join(" · "))} …</div>`:"")+
  (s.th?`<div class="th">📘 ${esc(s.th)}</div>`:"")+`<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+(u.ans?"":`<button class="btn ghost" data-w="NS" style="display:block;margin:10px auto 0">No sé <span class="mut">(↓)</span></button>`)+
  (u.ans=="no"?`<div class="fb no"><b>${u.pick=="NS"?"No sabías. ":""}Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div>${s.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${s.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
@@ -175,7 +175,10 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  SLK=u.c.id+":"+u.i;
  if(u.recap||u.only){SLT=swTop(u.c);swNew();return}
  /* Error a mitad de serie: se corta y se pasa a otro tema; el paso fallado vuelve más tarde (SRETRY, +8 respuestas) y la serie entera pesa más (pendientes). */
- if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);swNew();return}
+ if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);
+  /* «No sé» → la siguiente serie es la de teoría del tema (THL, definida en prog4.js/logica.js), si no es la misma */
+  if(u.pick=="NS"){const st=u.c.steps[u.i],T=window.THL||[],L=T.find(t=>t.re.test(st.q+" "+st.a))||T.find(t=>t.re.test(st.x||u.c.ctx||"")),tc=L&&SWC.find(c=>c.g==L.g);if(tc&&tc.id!=u.c.id){SW={c:tc,i:0,only:false,built:[],err:0,ts:Date.now(),ans:null,cl:Math.random()<.5,teo:1};swDraw();return}}
+  swNew();return}
  if(s&&s.f)u.built.push(s.f);u.i++;
  if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
  swStep()}
