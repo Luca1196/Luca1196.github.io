@@ -216,8 +216,8 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  if(u.recap||u.only){if(u.ans=="no")SERR=area(u.c);SLT=swTop(u.c);swNew();return}
  /* Error a mitad de serie: se corta y se pasa a otro tema; el paso fallado vuelve más tarde (SRETRY, +8 respuestas) y la serie entera pesa más (pendientes). */
  if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);SERR=area(u.c);
-  /* «No sé» → la siguiente serie es la de teoría del tema (THL, definida en prog4.js/logica.js), si no es la misma */
-  if(u.pick=="NS"){const st=u.c.steps[u.i],T=window.THL||[],L=T.find(t=>t.re.test(st.q+" "+st.a))||T.find(t=>t.re.test(st.x||u.c.ctx||"")),tc=L&&SWC.find(c=>c.g==L.g);if(tc&&tc.id!=u.c.id){SW={c:tc,i:0,only:false,built:[],err:0,ts:Date.now(),ans:null,cl:Math.random()<.5,teo:1};swDraw();return}}
+  /* «No sé» → la siguiente serie es la de teoría del tema (THL, definida en prog4.js/logica.js), de la MISMA materia (campo s), si no es la misma serie */
+  if(u.pick=="NS"){const st=u.c.steps[u.i],T=(window.THL||[]).filter(t=>t.s==u.c.s),L=T.find(t=>t.re.test(st.q+" "+st.a))||T.find(t=>t.re.test(st.x||u.c.ctx||"")),tc=L&&SWC.find(c=>c.g==L.g);if(tc&&tc.id!=u.c.id){SW={c:tc,i:0,only:false,built:[],err:0,ts:Date.now(),ans:null,cl:Math.random()<.5,teo:1};swDraw();return}}
   swNew();return}
  if(s&&s.f)u.built.push(s.f);u.i++;
  if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
