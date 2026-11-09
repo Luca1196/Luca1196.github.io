@@ -177,6 +177,9 @@ function bldWhy(e,t){const x=t.t,r=e.t;
  if(e.k=="o"&&e.g&&x!=":"&&r!=x&&bldIsCls(x))return"Primera aparición con nombre: primero el nombre del objeto, después «:» y recién ahí la clase.";
  return e.w||"Esa ficha no corresponde en este lugar."}
 const bldIsCls=x=>/^[A-Z]/.test(x);
+/* «No sé» → explicación teórica del tema de ESA pregunta, en la misma tarjeta (THT en prog4.js/logica.js: {re, t, p}; se busca en pregunta+respuesta, después título y contexto) */
+function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o=T.find(x=>x.re.test(q))||T.find(x=>x.re.test(c.g))||T.find(x=>x.re.test(s.x||c.ctx||""));
+ if(!o&&!s.th)return"";return`<div class="th" style="margin-top:10px"><b>📘 ${esc(o?o.t:"Teoría")}</b>${s.th?`<div style="margin-top:4px">${esc(s.th)}</div>`:""}${o?o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join(""):""}</div>`}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
@@ -196,7 +199,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso":(u.teo?"📘 teoría por tu «No sé» · ":"")+"paso "+(u.i+1)+"/"+c.steps.length}</div>`+
  ((s.x||c.ctx)?`<div class="sn">${ctxH(s.x||c.ctx,u.ans=="no"?s.src:null,u.ans=="no"?s.hl:null)}</div>`:"")+(u.ans=="no"&&s.src&&s.src.includes("dg")?`<div class="hl">${swDg(c,u.i,0)}</div>`:swDg(c,u.i,0))+(c.out&&!u.only&&u.built.length?`<div class="sn">Armando: ${esc(u.built.filter(Boolean).join(" · "))} …</div>`:"")+
  (s.th?`<div class="th">📘 ${esc(s.th)}</div>`:"")+`<div class="qt">${esc(s.q)}</div><div class="swopts"><div class="swo l${cl("L")}" data-w="L" role="button" tabindex="0">← ${esc(L)}</div><div class="swo r${cl("R")}" data-w="R" role="button" tabindex="0">${esc(R)} →</div></div>`+(u.ans?"":`<button class="btn ghost" data-w="NS" style="display:block;margin:10px auto 0">No sé <span class="mut">(↓)</span></button>`)+
- (u.ans=="no"?`<div class="fb no"><b>${u.pick=="NS"?"No sabías. ":""}Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div>${s.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${s.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
+ (u.ans=="no"?`<div class="fb no"><b>${u.pick=="NS"?"No sabías. ":""}Era: ${esc(s.a)}</b><div>${esc(s.w||"")}</div>${u.pick=="NS"?swTeo(c,s):""}${s.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${s.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div><button class="btn pri big" data-w="go">Continuar</button>`:"")+`</div></div>`;
  V.innerHTML=h;swBind()}
 function swBind(){const el=$("swc");if(!el||SW.ans)return;
  /* Solo el deslizado horizontal contesta: tocar o mover hacia abajo (scroll) no cuenta. */
@@ -216,8 +219,6 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  if(u.recap||u.only){if(u.ans=="no")SERR=area(u.c);SLT=swTop(u.c);swNew();return}
  /* Error a mitad de serie: se corta y se pasa a otro tema; el paso fallado vuelve más tarde (SRETRY, +8 respuestas) y la serie entera pesa más (pendientes). */
  if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);SERR=area(u.c);
-  /* «No sé» → la siguiente serie es la de teoría del tema (THL, definida en prog4.js/logica.js), de la MISMA materia (campo s), si no es la misma serie */
-  if(u.pick=="NS"){const st=u.c.steps[u.i],T=(window.THL||[]).filter(t=>t.s==u.c.s),L=T.find(t=>t.re.test(st.q+" "+st.a))||T.find(t=>t.re.test(st.x||u.c.ctx||"")),tc=L&&SWC.find(c=>c.g==L.g);if(tc&&tc.id!=u.c.id){SW={c:tc,i:0,only:false,built:[],err:0,ts:Date.now(),ans:null,cl:Math.random()<.5,teo:1};swDraw();return}}
   swNew();return}
  if(s&&s.f)u.built.push(s.f);u.i++;
  if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
