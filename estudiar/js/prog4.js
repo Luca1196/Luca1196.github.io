@@ -525,7 +525,7 @@ window.THL=window.THL||[];THL.push({s:"p4",re:/secuencia del sistema|recordad|me
   objT(L.from,L.fw).forEach(x=>ex.push(x));ex.push({t:"→",k:"a",auto:1});
   objT(L.to,L.tw).forEach(x=>ex.push(Object.assign(x,sc(/objeto|receptor/i))));
   if(L.cond)ex.push(Object.assign({t:L.cond,k:"c",w:L.cw||"La condición va entre corchetes antes del mensaje."},sc(/condici/i)));
-  if(L.res)ex.push({t:L.res,k:"r",w:L.rw||"Guarda el resultado."},{t:":=",k:"r",g:0,w:"El resultado se guarda con :=."});
+  if(L.res)ex.push({t:L.res,k:"r",w:(L.rw||"Se guarda el resultado.")},{t:":=",k:"r",g:0,w:"El resultado se guarda con :=."});
   ex.push(Object.assign({t:L.op,k:"m",w:L.ow||"Operación."},sc(/operaci/i)));
   ex.push({t:L.pa,k:"p",g:1,w:L.pw||"Parámetros."});
   ex.push({t:SS[L.t],k:"s",w:(old.filter(s=>/Estereotipo/.test(s.q)).pop()||{}).w||"Estereotipo."});

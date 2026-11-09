@@ -163,7 +163,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
  if(t.t!=e.t||ns){const ph=b.pl.map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");b.e++;SCOMBO=0;S2.box[k]=0;
   if(b.e==1)SRETRY.push({c,i:0,due:SUN+8});
   logA("sw",c.s,c.g,false,{q:"Armá la línea",x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
-  b.m=ns?["Era «"+e.t+"»",e.w||""]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
+  b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}
@@ -179,7 +179,8 @@ function bldWhy(e,t){const x=t.t,r=e.t;
  if(x=="=")return"El resultado se guarda con «:=», no con «=».";
  if(x==":=")return e.k=="r"?e.w:"«:=» solo si el mensaje devuelve algo que después uso. Acá no toca todavía.";
  if(e.k=="o"&&e.g&&x!=":"&&r!=x&&bldIsCls(x))return"Primera aparición con nombre: primero el nombre del objeto, después «:» y recién ahí la clase.";
- return e.w||"Esa ficha no corresponde en este lugar."}
+ return bldLead(e)+(e.w||"")}
+const bldLead=e=>({n:"Ahora va el número del mensaje. ",o:"Ahora va el objeto (origen o destino). ",c:"Ahora va la condición, entre corchetes. ",r:"Primero va la variable donde guardo lo que devuelve el mensaje (nombre := operación). ",m:"Ahora va la operación. ",p:"Ahora van los parámetros. ",s:"Falta el estereotipo. "})[e.k]||"";
 const bldIsCls=x=>/^[A-Z]/.test(x);
 /* «No sé» → explicación teórica del tema de ESA pregunta, en la misma tarjeta (THT en prog4.js/logica.js: {re, t, p}; se busca en pregunta+respuesta, después título y contexto) */
 function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o=T.find(x=>x.re.test(q))||T.find(x=>x.re.test(c.g))||T.find(x=>x.re.test(s.x||c.ctx||""));
