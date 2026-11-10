@@ -132,7 +132,7 @@ const TPL={
  "RAA":{n:"RAA",m:["¿Qué suponés? (se cancela)","¿Qué queda arriba de la raya?"]},
  "I∨":{n:"I∨",m:["¿Qué queda arriba de la raya?"]},
  "I↔":{n:"I↔",m:["Premisa izquierda","Premisa derecha"]},
- "E→":{n:"E→",m:["Premisa: la implicación","Premisa: su antecedente"]},
+ "E→":{n:"E→",m:["Premisa: la implicación A→meta","Premisa: su antecedente A (lo que está a la izquierda de →)"]},
  "E¬":{n:"E¬",m:["Premisa: la fórmula φ","Premisa: su negación ¬φ"]},
  "E∧":{n:"E∧",m:["Premisa: la conjunción"]},
  "E∨":{n:"E∨",m:["Premisa: la disyunción"]},
@@ -149,7 +149,7 @@ function chk(r,o,M){const g=o.g,bad0=m=>({m}),ARM={and:"I∧",imp:"I→",not:"I�
  case"I¬":return g.k!="not"?bad(`I¬ arma una negación y la meta ${P(g)} no empieza con ¬.`):!eq(M[0],g.a)?bad(`I¬ supone lo que está bajo el ¬ (${P(g.a)}), no ${P(M[0])}.`):M[1].k!="bot"?bad("I¬ busca una contradicción: arriba va ⊥."):{ok:1,run:["I¬",[]]};
  case"RAA":return !eq(M[0],NG(g))?bad(`RAA supone la negación de la meta (${P(NG(g))}), no ${P(M[0])}.`):M[1].k!="bot"?bad("RAA busca una contradicción: arriba va ⊥."):{ok:1,run:["RAA",[]]};
  case"I∨":return g.k!="or"?bad(`I∨ arma una disyunción y la meta ${P(g)} no lo es.`):eq(M[0],g.l)?{ok:1,run:["I∨",[0]]}:eq(M[0],g.r)?{ok:1,run:["I∨",[1]]}:bad(`I∨ necesita uno de los dos lados: ${P(g.l)} o ${P(g.r)}.`);
- case"E→":return M[0].k!="imp"?bad(`La primera premisa de E→ es una implicación; ${P(M[0])} no lo es.`):!eq(M[0].r,g)?bad(`${P(M[0])} da ${P(M[0].r)}, pero la meta es ${P(g)}.`):!eq(M[1],M[0].l)?bad(`La segunda premisa es el antecedente de ${P(M[0])}: ${P(M[0].l)}.`):{ok:1,run:["E→b",[P(M[1])]]};
+ case"E→":return M[0].k!="imp"?bad(`La primera premisa de E→ es una implicación; ${P(M[0])} no lo es.`):!eq(M[0].r,g)?bad(`${P(M[0])} da ${P(M[0].r)}, pero la meta es ${P(g)}.`):!eq(M[1],M[0].l)?bad(`E→ funciona así: de A→B y A se obtiene B. Con ${P(M[0])}, A es ${P(M[0].l)} (lo de la izquierda de la flecha), así que la segunda premisa es ${P(M[0].l)}. ${eq(M[1],g)?P(g)+" es lo que se obtiene: va abajo de la raya, no arriba.":""}`):{ok:1,run:["E→b",[P(M[1])]]};
  case"E¬":return g.k!="bot"?bad(`E¬ concluye ⊥, y la meta es ${P(g)}.`):!eq(M[1],NG(M[0]))?bad(`La segunda premisa tiene que ser la negación de la primera: ${P(NG(M[0]))}.`):{ok:1,run:["E¬b",[P(M[0])]]};
  case"E∧":return M[0].k!="and"?bad(`E∧ usa una conjunción; ${P(M[0])} no lo es.`):eq(M[0].l,g)||eq(M[0].r,g)?{ok:1,cust:"E∧"}:bad(`${P(M[0])} no tiene a ${P(g)} como parte.`);
  case"E∨":return M[0].k!="or"?bad(`E∨ usa una disyunción; ${P(M[0])} no lo es.`):{ok:1,cust:"E∨"};
