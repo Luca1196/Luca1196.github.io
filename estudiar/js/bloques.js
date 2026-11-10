@@ -179,7 +179,7 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
  let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px">${E.map((x,i)=>`<button class="btn chip${i==ex?" sel":""}" data-b="ex" data-i="${i}">${esc(x.t)}${ST.done[x.t]?" ✓":""}</button>`).join("")}</div>
  <div class="sn" style="margin-top:10px">${e.P.length?esc(e.P.join(", "))+" ":""}⊢ ${esc(e.g)}</div>
  <div class="sn pft bqt"><div style="display:inline-block;padding-right:52px">${rg(root,o&&o.id)}</div></div>`;
- if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b></div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button></div></div>`;V.innerHTML=h;return}
+ if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b></div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button><button class="btn" data-b="cp">${D.cpOk?"Copiado ✓":"Copiar para Claude"}</button></div>${D.cp?`<textarea style="width:100%;height:140px;font:12px var(--m);margin-top:8px">${esc(D.cp)}</textarea>`:""}</div>`;D.cpOk=0;V.innerHTML=h;return}
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>${(()=>{const L=[];let q=o;while(q.par!=null){newSup(q).forEach(x=>L.unshift("["+esc(P(x.f))+"]"+sup(x.d.l)));q=D.S.G[q.par]}return L.length?`<div class="mut" style="font-size:14px">En esta rama suponés: ${L.join(" ")}</div>`:""})()}
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(P(x.f))+"]"+sup(x.d.l):esc(P(x.f))}</span>`).join(" "):"nada"}</div>`;
  const t=D.r&&TPL[D.r];
@@ -188,7 +188,7 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
   ${t.ay?`<div class="mut" style="font-size:14px">${esc(t.ay)}</div>`:""}<div class="lbl">${esc(t.m[k])}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([v,lab])=>`<button class="btn chip${v[0]=="H"?" bqhy":""}" data-b="m" data-v="${esc(v)}">${lab}</button>`).join("")||'<span class="mut">No tenés hipótesis.</span>'}</div>
   <div class="row" style="gap:8px">${k?'<button class="btn ghost" data-b="mb">Borrar último</button>':""}<button class="btn ghost" data-b="cx">Cancelar</button></div>`}
  else h+=(e.q?BK.concat([BKQ]):BK).map(([tt,L])=>`<div class="lbl" style="margin-top:10px">${tt}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(id=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(TPL[id].n)}</button>`).join("")}</div>`).join("");
- h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button></div></div></div>`;
+ h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button><button class="btn" data-b="cp">${D.cpOk?"Copiado ✓":"Copiar para Claude"}</button></div>${D.cp?`<textarea style="width:100%;height:140px;font:12px var(--m);margin-top:8px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:8px">${esc(D.cp)}</textarea>`:""}</div></div>`;D.cpOk=0;
  V.innerHTML=h;const s=V.querySelector(".bqh.on");if(s)try{s.scrollIntoView({block:"nearest",inline:"center"})}catch(_){}}
 const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
 /* aplicar cuando están todos los miembros */
@@ -223,6 +223,18 @@ function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:
  if(g.k=="or")return`I∨ solo si sabés qué lado vale (${P(g.l)} o ${P(g.r)}); si no, RAA suponiendo ${P(NG(g))}.`;
  if(c.some(f=>f.k=="bot"))return`Tenés ⊥: E⊥ te da ${P(g)}.`;
  return`Nada directo para ${P(g)}: RAA (suponés ${P(NG(g))} y arriba queda ⊥).`}
+/* «Copiar para Claude»: el árbol actual en texto (de la conclusión hacia arriba, con sangría = premisas) */
+function bqTxt(){const S=D.S,e=E[ex],cu=D.S.G[0].s=="d"?null:curG(),L=[],rl=(r,l)=>` [${RN(r)}${l?" "+l:""}]`,
+ dT=(d,n)=>{const p="  ".repeat(n);if(d.r=="hip"){L.push(p+(d.l?"["+d.f+"]"+d.l:d.f)+(d.l?"  (suposición)":"  (premisa)"));return}L.push(p+d.f+rl(d.r,d.l));d.c.forEach(c=>dT(c,n+1))},
+ gT=(o,n)=>{const p="  ".repeat(n);if(o.s=="d")return dT(o.d,n);
+  if(!o.how){const sp=newSup(o).map(x=>"["+P(x.f)+"]"+x.d.l).join(" ");L.push(p+P(o.g)+"  ← HUECO ABIERTO"+(cu&&o.id==cu.id?" (seleccionado)":"")+(sp?"  · rama con "+sp:""));return}
+  L.push(p+P(o.g)+rl(o.how.k,o.how.l));if(o.how.fd)dT(o.how.fd,n+1);o.subs.forEach(i=>gT(S.G[i],n+1))};
+ gT(S.G[0],0);const fb=D.fb?D.fb.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim():"";
+ return`BLOQUES · ${e.t}: ${e.P.length?e.P.join(", ")+" ":""}⊢ ${e.g}
+Árbol (conclusión arriba; cada sangría son las premisas de la regla entre corchetes):
+${L.join("\n")}
+`+(cu?`Meta seleccionada: ${P(cu.g)} · Tengo: ${cu.ctx.map(x=>x.d.l?"["+P(x.f)+"]"+x.d.l:P(x.f)).join(", ")||"nada"}\n`:"Árbol completo.\n")+(fb?`Último mensaje: ${fb}\n`:"")}
+function bqCopy(){const t=bqTxt();D.cp=t;try{navigator.clipboard.writeText(t).then(()=>{D.cp="";D.cpOk=1;bqDraw()},()=>bqDraw())}catch(_){bqDraw()}}
 function bqNS(){const o=curG(),hn=bqHint(o),th=typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"";
  D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});bqDraw()}
 V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
@@ -234,6 +246,7 @@ V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[dat
  else if(w=="un"&&D.H.length){D.S=D.H.pop();D.fb="";D.r=null;D.m=[];bqDraw()}
  else if(w=="rs"){D=nw(ex);bqDraw()}
  else if(w=="ns")bqNS();
+ else if(w=="cp")bqCopy();
  else if(w=="ex"){ex=+b.dataset.i;D=nw(ex);bqDraw()}
  else if(w=="nx"){ex=(ex+1)%E.length;D=nw(ex);bqDraw()}});
 (()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqsp{font-size:12px;color:var(--ac);white-space:nowrap;font-family:var(--m)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
