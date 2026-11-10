@@ -117,8 +117,10 @@ const RN=r=>({"E¬b":"E¬","E→b":"E→","hip":""}[r]??r);
 const sup=l=>l?`<sup>${esc(l)}</sup>`:"";
 function rd(d){if(d.r=="hip")return`<span class="pf">${d.l?"["+esc(d.f)+"]"+sup(d.l):esc(d.f)}</span>`;
  return`<div class="pt"><div class="pk">${d.c.map(rd).join("")}</div><div class="pr"><span class="pn">${esc(RN(d.r))}${sup(d.l)}</span></div><span class="pf">${esc(d.f)}</span></div>`}
+const newSup=o=>{if(o.par==null)return[];const p=D.S.G[o.par];return o.ctx.slice(p.ctx.length).filter(x=>x.d.l)};
+const supTxt=o=>newSup(o).map(x=>"["+esc(pr(x.f))+"]"+sup(x.d.l)).join(" ");
 function rg(o,cu){const S=D.S;if(o.s=="d")return rd(o.d);
- if(!o.how)return`<button class="bqh${o.id==cu?" on":""}" data-b="g" data-i="${o.id}" aria-label="Meta abierta ${esc(pr(o.g))}">${esc(pr(o.g))}</button>`;
+ if(!o.how){const sp=supTxt(o);return`<div class="pt">${sp?`<span class="bqsp">rama con ${sp}</span><span class="pd">⋮</span>`:""}<button class="bqh${o.id==cu?" on":""}" data-b="g" data-i="${o.id}" aria-label="Meta abierta ${esc(pr(o.g))}">${esc(pr(o.g))}</button></div>`}
  const k=[];if(o.how.fd)k.push(rd(o.how.fd));o.subs.forEach(i=>k.push(rg(S.G[i],cu)));
  return`<div class="pt"><div class="pk">${k.join("")}</div><div class="pr bqr"><span class="pn">${esc(RN(o.how.k))}${sup(o.how.l)}</span></div><span class="pf">${esc(pr(o.g))}</span></div>`}
 /* ---------- Paleta: el usuario elige la regla y después CADA miembro (premisas y suposición). Nada se completa solo. ---------- */
@@ -135,7 +137,7 @@ const TPL={
  "E→":{n:"E→",m:["Premisa: la implicación A→meta","Premisa: su antecedente A (lo que está a la izquierda de →)"]},
  "E¬":{n:"E¬",m:["Premisa: la fórmula φ","Premisa: su negación ¬φ"]},
  "E∧":{n:"E∧",m:["Premisa: la conjunción"]},
- "E∨":{n:"E∨",m:["Premisa: la disyunción"]},
+ "E∨":{n:"E∨",m:["Premisa: la disyunción A∨B (después se abren dos ramas con la meta: una supone A y otra supone B)"]},
  "E⊥":{n:"E⊥",m:["¿Qué queda arriba de la raya?"]}};
 const BK=[["Cerrar una hoja",["hip"]],["Introducción (arma la meta)",["I∧","I→","I¬","I∨","I↔","RAA"]],["Eliminación (usa una fórmula)",["E→","E¬","E∧","E∨","E⊥"]]];
 const P=pr,eq=(a,b)=>P(a)==P(b),MS=m=>m.hyp?"["+P(m.f)+"]"+m.hyp:P(m.f),MSH=m=>m.hyp?"["+esc(P(m.f))+"]"+sup(m.hyp):esc(P(m.f));
@@ -166,7 +168,7 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
  <div class="sn" style="margin-top:10px">${e.P.length?esc(e.P.join(", "))+" ":""}⊢ ${esc(e.g)}</div>
  <div class="sn pft bqt"><div style="display:inline-block;padding-right:52px">${rg(root,o&&o.id)}</div></div>`;
  if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b></div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button></div></div>`;V.innerHTML=h;return}
- h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>
+ h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>${(()=>{const L=[];let q=o;while(q.par!=null){newSup(q).forEach(x=>L.unshift("["+esc(P(x.f))+"]"+sup(x.d.l)));q=D.S.G[q.par]}return L.length?`<div class="mut" style="font-size:14px">En esta rama suponés: ${L.join(" ")}</div>`:""})()}
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(P(x.f))+"]"+sup(x.d.l):esc(P(x.f))}</span>`).join(" "):"nada"}</div>`;
  const t=D.r&&TPL[D.r];
  if(t){const k=D.m.length,HY=o.ctx.filter(x=>x.d.l).map(x=>[`H${x.d.l}`,"["+esc(P(x.f))+"]"+sup(x.d.l)]),PR=o.ctx.filter(x=>!x.d.l).map(x=>[P(x.f),esc(P(x.f))]),L=t.only=="ctx"?HY.concat(PR):HY.concat(pool(o).map(f=>[P(f),esc(P(f))]));
@@ -214,7 +216,7 @@ V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[dat
  else if(w=="ns")bqNS();
  else if(w=="ex"){ex=+b.dataset.i;D=nw(ex);bqDraw()}
  else if(w=="nx"){ex=(ex+1)%E.length;D=nw(ex);bqDraw()}});
-(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
+(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqsp{font-size:12px;color:var(--ac);white-space:nowrap;font-family:var(--m)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
 
 return{bqOpen};
 
