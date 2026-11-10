@@ -98,6 +98,11 @@ const E=[
 {t:"Doble negación",P:["¬¬φ"],g:"φ"},
 {t:"Silogismo disyuntivo",P:["p∨q","¬p"],g:"q"},
 {t:"No contradicción",P:[],g:"¬(φ∧¬φ)"},
+{t:"Choque ∧ y →",P:["β∧¬γ","β→γ"],g:"⊥"},
+{t:"Choque ∧ y → (2)",P:["p∧q","p→¬q"],g:"⊥"},
+{t:"Choque por casos",P:["p∨q","¬p","¬q"],g:"⊥"},
+{t:"Casos con →",P:["p∨q","p→r","q→r","¬r"],g:"⊥"},
+{t:"Núcleo de 3a",P:["α∨(β∧¬γ)","¬α","β→γ"],g:"⊥"},
 {t:"Contrarrecíproca",P:[],g:"(p→q)→(¬q→¬p)"},
 {t:"Tercero excluido",P:[],g:"φ∨¬φ"},
 {t:"Febrero 3a",P:[],g:"((p→q)∧(¬r→p))→(¬q→r)"},
@@ -215,6 +220,9 @@ function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:
  const im=c.find(f=>f.k=="imp"&&eq(f.r,g));if(im)return`Tenés ${P(im)}, que termina en la meta: E→ con premisas ${P(im)} y ${P(im.l)}.`;
  const cj=c.find(f=>f.k=="and"&&(eq(f.l,g)||eq(f.r,g)));if(cj)return`${P(g)} es parte de ${P(cj)}: E∧ con premisa ${P(cj)}.`;
  if(g.k=="bot"){const ns=c.filter(f=>f.k=="not").sort((a,b)=>P(b).length-P(a).length),dir=ns.find(n=>c.some(f=>eq(f,n.a)));if(dir)return`La meta es ⊥ y ya tenés ${P(dir.a)} y ${P(dir)}: E¬ con esas dos.`;
+  const dj0=c.find(f=>f.k=="or");if(dj0)return`Tenés la disyunción ${P(dj0)}: E∨ con meta ⊥, una rama suponiendo ${P(dj0.l)} y otra ${P(dj0.r)}; en cada una buscás la contradicción.`;
+  const cn=c.find(f=>f.k=="and"&&(f.l.k=="not"||f.r.k=="not"));if(cn){const ng=cn.l.k=="not"?cn.l:cn.r,im=c.find(f=>f.k=="imp"&&eq(f.r,ng.a));return`Adentro de ${P(cn)} está ${P(ng)}: el par es ${P(ng.a)} y ${P(ng)} (E¬). ${P(ng)} lo sacás con E∧`+(im?`, y ${P(ng.a)} con E→ desde ${P(im)} (su antecedente ${P(im.l)} también puede salir de la conjunción).`:".")}
+  const ci=c.find(f=>f.k=="imp"&&f.r.k=="not");if(ci)return`${P(ci)} da ${P(ci.r)}: buscá el par ${P(ci.r.a)} y ${P(ci.r)} (E¬), con E→ para ${P(ci.r)}.`;
   const n=ns[0];if(!n)return"La meta es ⊥: E¬ con una fórmula φ y su negación ¬φ.";
   const how=n.a.k=="or"&&c.some(f=>eq(f,n.a.l)||eq(f,n.a.r))?` ${P(n.a)} lo armás con I∨ desde ${P(c.find(f=>eq(f,n.a.l)||eq(f,n.a.r)))}, que tenés en esta rama.`:` Después armás ${P(n.a)} en el hueco que queda.`;
   return`La meta es ⊥: buscá el par con una negación que tengas. Con ${P(n)} el par es ${P(n.a)} y ${P(n)}: E¬ con esas dos.`+how}
