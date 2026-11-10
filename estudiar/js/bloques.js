@@ -1,6 +1,6 @@
 /* SECCIÓN BLOQUES (pestaña 6, en prueba): derivaciones armando el árbol con bloques, estilo Scratch.
    Los bloques SON el árbol: cada meta abierta es un hueco (punteado); al tocarlo y elegir una regla, aparece la raya con sus premisas como huecos nuevos.
-   Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida y explica. Una premisa elegida que ya está en «Tengo» queda como hoja al elegirla (cl0); «Hipótesis» sirve para cerrar a mano un hueco que es una hipótesis. Nada se aplica automáticamente (pedido de Luca).
+   Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida y explica. Hojas: una premisa del ejercicio elegida queda como hoja; una SUPOSICIÓN solo si se elige con corchetes [φ]ⁿ (botón aparte); elegir φ sin corchetes deja un hueco (closeSubs); «Hipótesis» sirve para cerrar a mano un hueco que es una hipótesis. Nada se aplica automáticamente (pedido de Luca).
    MOTOR: copia literal de logica.html (pf/pr/fv/sb/ff/entails/tp y mk/sol/cl0/bld/mv/PM/pl/hint). Si cambia allá, recopiar el bloque entre las marcas.
    Errores: logA("bq",...). «No sé»: hint(o) + teoría THT (swTeo). Progreso: localStorage "bq1". v1: solo ejercicios proposicionales (E). */
 const BQ=(()=>{
@@ -138,11 +138,14 @@ const TPL={
  "E∨":{n:"E∨",m:["Premisa: la disyunción"]},
  "E⊥":{n:"E⊥",m:["¿Qué queda arriba de la raya?"]}};
 const BK=[["Cerrar una hoja",["hip"]],["Introducción (arma la meta)",["I∧","I→","I¬","I∨","I↔","RAA"]],["Eliminación (usa una fórmula)",["E→","E¬","E∧","E∨","E⊥"]]];
-const P=pr,eq=(a,b)=>P(a)==P(b);
-function chk(r,o,M){const g=o.g,bad0=m=>({m}),ARM={and:"I∧",imp:"I→",not:"I¬",iff:"I↔"},
+const P=pr,eq=(a,b)=>P(a)==P(b),MS=m=>m.hyp?"["+P(m.f)+"]"+m.hyp:P(m.f),MSH=m=>m.hyp?"["+esc(P(m.f))+"]"+sup(m.hyp):esc(P(m.f));
+/* cierre de hojas: una premisa del ejercicio (sin etiqueta) elegida queda como hoja; una suposición solo si la elegiste con corchetes [φ]ⁿ */
+function closeSubs(S1,o1,r,M){const mem=["I→","I¬","RAA"].includes(r)?M.slice(1):r=="E∨"?[M[0]]:M;
+ o1.subs.forEach((id,i)=>{const q=S1.G[id],m=mem[i];if(!m||q.s!="o")return;const x=m.hyp?q.ctx.find(y=>y.d.l==m.hyp&&eq(y.f,q.g)):q.ctx.find(y=>!y.d.l&&y.d.r=="hip"&&eq(y.f,q.g));if(x)sol(S1,q,x.d)})}
+function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"I∧",imp:"I→",not:"I¬",iff:"I↔"},
  bad=m=>bad0(m+(r[0]=="E"&&ARM[g.k]&&!o.ctx.some(x=>x.f.k=="imp"&&eq(x.f.r,g))?` Ojo: la meta ${P(g)} tiene conector, así que se ARMA con ${ARM[g.k]}; las eliminaciones son para USAR una fórmula que tenés.`:""));
  switch(r){
- case"hip":return eq(M[0],g)?{ok:1}:bad(`La hoja tiene que ser exactamente la meta ${P(g)}; elegiste ${P(M[0])}.`);
+ case"hip":return eq(M[0],g)?{ok:1}:bad(`La hoja tiene que ser exactamente la meta ${P(g)}; elegiste ${MS(MM[0])}.`);
  case"I∧":return g.k!="and"?bad(`I∧ arma una conjunción y la meta ${P(g)} no lo es.`):eq(M[0],g.l)&&eq(M[1],g.r)?{ok:1,run:["I∧",[]]}:bad(`Para concluir ${P(g)} con I∧, arriba van sus dos partes: ${P(g.l)} y ${P(g.r)}.`);
  case"I↔":return g.k!="iff"?bad(`I↔ arma una bicondicional y la meta ${P(g)} no lo es.`):eq(M[0],{k:"imp",l:g.l,r:g.r})&&eq(M[1],{k:"imp",l:g.r,r:g.l})?{ok:1,run:["I↔",[]]}:bad("I↔ necesita las dos implicaciones, una para cada lado.");
  case"I→":return g.k!="imp"?bad(`I→ arma una implicación y la meta ${P(g)} no lo es.`):!eq(M[0],g.l)?bad(`I→ supone el antecedente de la meta (${P(g.l)}), no ${P(M[0])}.`):!eq(M[1],g.r)?bad(`Bajo la suposición tenés que llegar al consecuente ${P(g.r)}.`):{ok:1,run:["I→",[]]};
@@ -166,23 +169,23 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(P(x.f))+"]"+sup(x.d.l):esc(P(x.f))}</span>`).join(" "):"nada"}</div>`;
  const t=D.r&&TPL[D.r];
- if(t){const k=D.m.length,L=t.only=="ctx"?o.ctx.map(x=>x.f):pool(o);
-  h+=`<div class="sn" style="margin-top:10px">${esc(t.n)}: ${t.m.map((lab,i)=>`<div>${i<k?"✓":i==k?"▶":"·"} ${esc(lab)}: <b>${i<k?esc(P(D.m[i])):"…"}</b></div>`).join("")}</div>
-  <div class="lbl">${esc(t.m[k])}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map((f,i)=>`<button class="btn chip" data-b="m" data-v="${esc(P(f))}">${esc(P(f))}</button>`).join("")||'<span class="mut">No tenés hipótesis.</span>'}</div>
+ if(t){const k=D.m.length,HY=o.ctx.filter(x=>x.d.l).map(x=>[`H${x.d.l}`,"["+esc(P(x.f))+"]"+sup(x.d.l)]),PR=o.ctx.filter(x=>!x.d.l).map(x=>[P(x.f),esc(P(x.f))]),L=t.only=="ctx"?HY.concat(PR):HY.concat(pool(o).map(f=>[P(f),esc(P(f))]));
+  h+=`<div class="sn" style="margin-top:10px">${esc(t.n)}: ${t.m.map((lab,i)=>`<div>${i<k?"✓":i==k?"▶":"·"} ${esc(lab)}: <b>${i<k?MSH(D.m[i]):"…"}</b></div>`).join("")}</div>
+  <div class="lbl">${esc(t.m[k])}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([v,lab])=>`<button class="btn chip${v[0]=="H"?" bqhy":""}" data-b="m" data-v="${esc(v)}">${lab}</button>`).join("")||'<span class="mut">No tenés hipótesis.</span>'}</div>
   <div class="row" style="gap:8px">${k?'<button class="btn ghost" data-b="mb">Borrar último</button>':""}<button class="btn ghost" data-b="cx">Cancelar</button></div>`}
  else h+=BK.map(([tt,L])=>`<div class="lbl" style="margin-top:10px">${tt}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(id=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(TPL[id].n)}</button>`).join("")}</div>`).join("");
  h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button></div></div></div>`;
  V.innerHTML=h;const s=V.querySelector(".bqh.on");if(s)try{s.scrollIntoView({block:"nearest",inline:"center"})}catch(_){}}
 const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
 /* aplicar cuando están todos los miembros */
-function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,p:TPL[r].n+": "+M.map(P).join(" ; ")};D.r=null;D.m=[];
+function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,p:TPL[r].n+": "+M.map(MS).join(" ; ")};D.r=null;D.m=[];
  if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
  const S1=structuredClone(D.S),o1=S1.G[o.id];let res=null;
- if(r=="hip"){const x=o1.ctx.find(y=>eq(y.f,o1.g));sol(S1,o1,x.d)}
- else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0],o1.ctx);o1.subs.push(q.id);cl0(S1,q)}
- else if(c.cust=="E∨"){const f=M[0],n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
-  [[f,[]],[o1.g,[hy(f.l,n1)]],[o1.g,[hy(f.r,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});o1.subs.forEach(i=>cl0(S1,S1.G[i]))}
- else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.run[0]=="E¬b")o1.subs.reverse();o1.subs.forEach(i=>cl0(S1,S1.G[i]))}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
+ if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!y.d.l&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
+ else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0].f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,M)}
+ else if(c.cust=="E∨"){const f=M[0].f,n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
+  [[f,[]],[o1.g,[hy(f.l,n1)]],[o1.g,[hy(f.r,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}
+ else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.run[0]=="E¬b")o1.subs.reverse();closeSubs(S1,o1,r,M)}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
  D.H.push(D.S);D.S=S1;
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
  else{D.fb="";logA("bq","lg",TPL[r].n,true,info)}
@@ -203,7 +206,7 @@ function bqNS(){const o=curG(),hn=bqHint(o),th=typeof swTeo=="function"?swTeo({s
 V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.m=[];D.fb="";bqDraw()}
  else if(w=="r"){D.r=b.dataset.v;D.m=[];D.fb="";bqDraw()}
- else if(w=="m"){const o=curG(),f=pool(o).concat(o.ctx.map(x=>x.f)).find(x=>P(x)==b.dataset.v);D.m.push(f);if(D.m.length>=TPL[D.r].m.length)bqDo();else bqDraw()}
+ else if(w=="m"){const o=curG(),v=b.dataset.v;let m;if(v[0]=="H"){const x=o.ctx.find(y=>y.d.l==v.slice(1));m={f:x.f,hyp:x.d.l}}else m={f:pool(o).concat(o.ctx.map(x=>x.f)).find(x=>P(x)==v)};D.m.push(m);if(D.m.length>=TPL[D.r].m.length)bqDo();else bqDraw()}
  else if(w=="mb"){D.m.pop();bqDraw()}
  else if(w=="cx"){D.r=null;D.m=[];bqDraw()}
  else if(w=="un"&&D.H.length){D.S=D.H.pop();D.fb="";D.r=null;D.m=[];bqDraw()}
@@ -211,7 +214,7 @@ V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[dat
  else if(w=="ns")bqNS();
  else if(w=="ex"){ex=+b.dataset.i;D=nw(ex);bqDraw()}
  else if(w=="nx"){ex=(ex+1)%E.length;D=nw(ex);bqDraw()}});
-(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
+(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
 
 return{bqOpen};
 
