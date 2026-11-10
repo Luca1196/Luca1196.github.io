@@ -1,6 +1,6 @@
 /* SECCIÓN BLOQUES (pestaña 6, en prueba): derivaciones armando el árbol con bloques, estilo Scratch.
    Los bloques SON el árbol: cada meta abierta es un hueco (punteado); al tocarlo y elegir una regla, aparece la raya con sus premisas como huecos nuevos.
-   Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida y explica. Hojas: una premisa del ejercicio elegida queda como hoja; una SUPOSICIÓN solo si se elige con corchetes [φ]ⁿ (botón aparte); elegir φ sin corchetes deja un hueco (closeSubs); «Hipótesis» sirve para cerrar a mano un hueco que es una hipótesis. Nada se aplica automáticamente (pedido de Luca).
+   Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida por lo que exige la regla (no por posiciones fijas: E→, E¬ aceptan cualquier orden; en E∨ el usuario elige qué supone cada rama) y el árbol respeta el orden elegido (sw invierte subs). Al agregar ejercicios no hace falta acomodar nada. Hojas: una premisa del ejercicio elegida queda como hoja; una SUPOSICIÓN solo si se elige con corchetes [φ]ⁿ (botón aparte); elegir φ sin corchetes deja un hueco (closeSubs); «Hipótesis» sirve para cerrar a mano un hueco que es una hipótesis. Nada se aplica automáticamente (pedido de Luca).
    MOTOR: copia literal de logica.html (pf/pr/fv/sb/ff/entails/tp y mk/sol/cl0/bld/mv/PM/pl/hint). Si cambia allá, recopiar el bloque entre las marcas.
    Errores: logA("bq",...). «No sé»: hint(o) + teoría THT (swTeo). Progreso: localStorage "bq1". v1: solo ejercicios proposicionales (E). */
 const BQ=(()=>{
@@ -134,10 +134,10 @@ const TPL={
  "RAA":{n:"RAA",m:["¿Qué suponés? (se cancela)","¿Qué queda arriba de la raya?"]},
  "I∨":{n:"I∨",m:["¿Qué queda arriba de la raya?"]},
  "I↔":{n:"I↔",m:["Premisa izquierda","Premisa derecha"]},
- "E→":{n:"E→",m:["Premisa: la implicación A→meta","Premisa: su antecedente A (lo que está a la izquierda de →)"]},
- "E¬":{n:"E¬",m:["Premisa: la fórmula φ","Premisa: su negación ¬φ"]},
+ "E→":{n:"E→",m:["Premisa izquierda","Premisa derecha"],ay:"Las premisas son una implicación A→meta y su antecedente A (lo de la izquierda de →), en el orden que quieras."},
+ "E¬":{n:"E¬",m:["Premisa izquierda","Premisa derecha"],ay:"Las premisas son una fórmula φ y su negación ¬φ, en el orden que quieras."},
  "E∧":{n:"E∧",m:["Premisa: la conjunción"]},
- "E∨":{n:"E∨",m:["Premisa: la disyunción A∨B (después se abren dos ramas con la meta: una supone A y otra supone B)"]},
+ "E∨":{n:"E∨",m:["Premisa: la disyunción A∨B","Rama izquierda: ¿qué suponés?","Rama derecha: ¿qué suponés?"],ay:"Cada rama supone un lado de la disyunción y llega a la meta."},
  "E⊥":{n:"E⊥",m:["¿Qué queda arriba de la raya?"]}};
 const BK=[["Cerrar una hoja",["hip"]],["Introducción (arma la meta)",["I∧","I→","I¬","I∨","I↔","RAA"]],["Eliminación (usa una fórmula)",["E→","E¬","E∧","E∨","E⊥"]]];
 const P=pr,eq=(a,b)=>P(a)==P(b),MS=m=>m.hyp?"["+P(m.f)+"]"+m.hyp:P(m.f),MSH=m=>m.hyp?"["+esc(P(m.f))+"]"+sup(m.hyp):esc(P(m.f));
@@ -154,10 +154,11 @@ function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"
  case"I¬":return g.k!="not"?bad(`I¬ arma una negación y la meta ${P(g)} no empieza con ¬.`):!eq(M[0],g.a)?bad(`I¬ supone lo que está bajo el ¬ (${P(g.a)}), no ${P(M[0])}.`):M[1].k!="bot"?bad("I¬ busca una contradicción: arriba va ⊥."):{ok:1,run:["I¬",[]]};
  case"RAA":return !eq(M[0],NG(g))?bad(`RAA supone la negación de la meta (${P(NG(g))}), no ${P(M[0])}.`):M[1].k!="bot"?bad("RAA busca una contradicción: arriba va ⊥."):{ok:1,run:["RAA",[]]};
  case"I∨":return g.k!="or"?bad(`I∨ arma una disyunción y la meta ${P(g)} no lo es.`):eq(M[0],g.l)?{ok:1,run:["I∨",[0]]}:eq(M[0],g.r)?{ok:1,run:["I∨",[1]]}:bad(`I∨ necesita uno de los dos lados: ${P(g.l)} o ${P(g.r)}.`);
- case"E→":return M[0].k!="imp"?bad(`La primera premisa de E→ es una implicación; ${P(M[0])} no lo es.`):!eq(M[0].r,g)?bad(`${P(M[0])} da ${P(M[0].r)}, pero la meta es ${P(g)}.`):!eq(M[1],M[0].l)?bad(`E→ funciona así: de A→B y A se obtiene B. Con ${P(M[0])}, A es ${P(M[0].l)} (lo de la izquierda de la flecha), así que la segunda premisa es ${P(M[0].l)}. ${eq(M[1],g)?P(g)+" es lo que se obtiene: va abajo de la raya, no arriba.":""}`):{ok:1,run:["E→b",[P(M[1])]]};
- case"E¬":return g.k!="bot"?bad(`E¬ concluye ⊥, y la meta es ${P(g)}.`):!eq(M[1],NG(M[0]))?bad(`La segunda premisa tiene que ser la negación de la primera: ${P(NG(M[0]))}.`):{ok:1,run:["E¬b",[P(M[0])]]};
+ case"E→":{const i=[0,1].find(j=>M[j].k=="imp"&&eq(M[j].r,g)&&eq(M[1-j],M[j].l));if(i!==undefined)return{ok:1,run:["E→b",[P(M[1-i])]],sw:i==1};
+  const im=M.find(f=>f.k=="imp");return !im?bad(`E→ necesita una implicación entre las premisas; ${P(M[0])} y ${P(M[1])} no lo son.`):!eq(im.r,g)?bad(`${P(im)} da ${P(im.r)}, pero la meta es ${P(g)}.`):bad(`E→ funciona así: de A→B y A se obtiene B. Con ${P(im)}, A es ${P(im.l)} (lo de la izquierda de la flecha), así que la otra premisa es ${P(im.l)}.${M.some(f=>eq(f,g))?" "+P(g)+" es lo que se obtiene: va abajo de la raya, no arriba.":""}`)}
+ case"E¬":{if(g.k!="bot")return bad(`E¬ concluye ⊥, y la meta es ${P(g)}.`);const i=[0,1].find(j=>eq(M[1-j],NG(M[j])));return i===undefined?bad(`Las premisas de E¬ son una fórmula y su negación (φ y ¬φ); ${P(M[0])} y ${P(M[1])} no lo son.`):{ok:1,run:["E¬b",[P(M[i])]],sw:i==0}}
  case"E∧":return M[0].k!="and"?bad(`E∧ usa una conjunción; ${P(M[0])} no lo es.`):eq(M[0].l,g)||eq(M[0].r,g)?{ok:1,cust:"E∧"}:bad(`${P(M[0])} no tiene a ${P(g)} como parte.`);
- case"E∨":return M[0].k!="or"?bad(`E∨ usa una disyunción; ${P(M[0])} no lo es.`):{ok:1,cust:"E∨"};
+ case"E∨":return M[0].k!="or"?bad(`E∨ usa una disyunción; ${P(M[0])} no lo es.`):(eq(M[1],M[0].l)&&eq(M[2],M[0].r))||(eq(M[1],M[0].r)&&eq(M[2],M[0].l))?{ok:1,cust:"E∨"}:bad(`Cada rama supone un lado de ${P(M[0])}: una ${P(M[0].l)} y la otra ${P(M[0].r)}.`);
  case"E⊥":return g.k=="bot"?bad("La meta ya es ⊥."):M[0].k!="bot"?bad("E⊥ parte de ⊥: arriba va ⊥."):{ok:1,run:["E⊥",[]]}}}
 /* fórmulas candidatas para elegir: lo que tengo, la meta, sus subfórmulas, sus negaciones y ⊥ */
 function pool(o){const m={},add=f=>{m[P(f)]=f};Object.values(FPm(o)).forEach(f=>{add(f);if(f.k!="not"&&f.k!="bot")add(NG(f))});add(BOT);o.ctx.forEach(x=>add(x.f));
@@ -173,7 +174,7 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
  const t=D.r&&TPL[D.r];
  if(t){const k=D.m.length,HY=o.ctx.filter(x=>x.d.l).map(x=>[`H${x.d.l}`,"["+esc(P(x.f))+"]"+sup(x.d.l)]),PR=o.ctx.filter(x=>!x.d.l).map(x=>[P(x.f),esc(P(x.f))]),L=t.only=="ctx"?HY.concat(PR):HY.concat(pool(o).map(f=>[P(f),esc(P(f))]));
   h+=`<div class="sn" style="margin-top:10px">${esc(t.n)}: ${t.m.map((lab,i)=>`<div>${i<k?"✓":i==k?"▶":"·"} ${esc(lab)}: <b>${i<k?MSH(D.m[i]):"…"}</b></div>`).join("")}</div>
-  <div class="lbl">${esc(t.m[k])}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([v,lab])=>`<button class="btn chip${v[0]=="H"?" bqhy":""}" data-b="m" data-v="${esc(v)}">${lab}</button>`).join("")||'<span class="mut">No tenés hipótesis.</span>'}</div>
+  ${t.ay?`<div class="mut" style="font-size:14px">${esc(t.ay)}</div>`:""}<div class="lbl">${esc(t.m[k])}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([v,lab])=>`<button class="btn chip${v[0]=="H"?" bqhy":""}" data-b="m" data-v="${esc(v)}">${lab}</button>`).join("")||'<span class="mut">No tenés hipótesis.</span>'}</div>
   <div class="row" style="gap:8px">${k?'<button class="btn ghost" data-b="mb">Borrar último</button>':""}<button class="btn ghost" data-b="cx">Cancelar</button></div>`}
  else h+=BK.map(([tt,L])=>`<div class="lbl" style="margin-top:10px">${tt}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(id=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(TPL[id].n)}</button>`).join("")}</div>`).join("");
  h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button></div></div></div>`;
@@ -186,8 +187,8 @@ function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+
  if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!y.d.l&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
  else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0].f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,M)}
  else if(c.cust=="E∨"){const f=M[0].f,n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
-  [[f,[]],[o1.g,[hy(f.l,n1)]],[o1.g,[hy(f.r,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}
- else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.run[0]=="E¬b")o1.subs.reverse();closeSubs(S1,o1,r,M)}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
+  [[f,[]],[o1.g,[hy(M[1].f,n1)]],[o1.g,[hy(M[2].f,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}
+ else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.sw)o1.subs.reverse();closeSubs(S1,o1,r,M)}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
  D.H.push(D.S);D.S=S1;
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
  else{D.fb="";logA("bq","lg",TPL[r].n,true,info)}
