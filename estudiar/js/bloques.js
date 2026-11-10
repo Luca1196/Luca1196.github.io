@@ -182,7 +182,7 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
 const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
 /* aplicar cuando están todos los miembros */
 function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,p:TPL[r].n+": "+M.map(MS).join(" ; ")};D.r=null;D.m=[];
- if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
+ if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}<div class="hn" style="margin-top:8px">💡 ${esc(bqHint(o))}</div></div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
  const S1=structuredClone(D.S),o1=S1.G[o.id];let res=null;
  if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!y.d.l&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
  else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0].f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,M)}
@@ -199,8 +199,12 @@ function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:
  if(g.k!="bot"&&I[g.k]&&g.k!="or")return`La meta ${P(g)} tiene conector principal ${{and:"∧",imp:"→",not:"¬",iff:"↔"}[g.k]}: se ARMA con su introducción, ${I[g.k]}.`;
  const im=c.find(f=>f.k=="imp"&&eq(f.r,g));if(im)return`Tenés ${P(im)}, que termina en la meta: E→ con premisas ${P(im)} y ${P(im.l)}.`;
  const cj=c.find(f=>f.k=="and"&&(eq(f.l,g)||eq(f.r,g)));if(cj)return`${P(g)} es parte de ${P(cj)}: E∧ con premisa ${P(cj)}.`;
- if(g.k=="bot"){const n=c.find(f=>f.k=="not");return n?`La meta es ⊥: E¬ con una fórmula y su negación (por ejemplo ${P(n.a)} y ${P(n)}).`:"La meta es ⊥: E¬ con una fórmula φ y su negación ¬φ."}
+ if(g.k=="bot"){const ns=c.filter(f=>f.k=="not").sort((a,b)=>P(b).length-P(a).length),dir=ns.find(n=>c.some(f=>eq(f,n.a)));if(dir)return`La meta es ⊥ y ya tenés ${P(dir.a)} y ${P(dir)}: E¬ con esas dos.`;
+  const n=ns[0];if(!n)return"La meta es ⊥: E¬ con una fórmula φ y su negación ¬φ.";
+  const how=n.a.k=="or"&&c.some(f=>eq(f,n.a.l)||eq(f,n.a.r))?` ${P(n.a)} lo armás con I∨ desde ${P(c.find(f=>eq(f,n.a.l)||eq(f,n.a.r)))}, que tenés en esta rama.`:` Después armás ${P(n.a)} en el hueco que queda.`;
+  return`La meta es ⊥: buscá el par con una negación que tengas. Con ${P(n)} el par es ${P(n.a)} y ${P(n)}: E¬ con esas dos.`+how}
  const dj=c.find(f=>f.k=="or");if(dj)return`Tenés la disyunción ${P(dj)}: E∨ (una rama por lado, en cada una probás ${P(g)}).`;
+ if(g.k=="or"&&c.some(f=>eq(f,g.l)||eq(f,g.r))){const x=c.find(f=>eq(f,g.l)||eq(f,g.r));return`Tenés ${P(x)}, que es un lado de ${P(g)}: I∨ con ${P(x)}.`}
  if(g.k=="or")return`I∨ solo si sabés qué lado vale (${P(g.l)} o ${P(g.r)}); si no, RAA suponiendo ${P(NG(g))}.`;
  if(c.some(f=>f.k=="bot"))return`Tenés ⊥: E⊥ te da ${P(g)}.`;
  return`Nada directo para ${P(g)}: RAA (suponés ${P(NG(g))} y arriba queda ⊥).`}
