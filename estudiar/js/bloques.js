@@ -1,6 +1,6 @@
 /* SECCIÓN BLOQUES (pestaña 6, en prueba): derivaciones armando el árbol con bloques, estilo Scratch.
    Los bloques SON el árbol: cada meta abierta es un hueco (punteado); al tocarlo y elegir una regla, aparece la raya con sus premisas como huecos nuevos.
-   Se construye hacia atrás desde la meta; «Usar lo que tengo» aplica eliminaciones sobre hipótesis (lo derivado aparece en el árbol cuando se usa).
+   Se construye hacia atrás desde la meta con los botones de «Armar la meta»; para usar una hipótesis se TOCA (useHyp elige la regla: A→meta ⇒ E→ hacia atrás, A∧B ⇒ E∧, A∨B ⇒ E∨, ¬φ con meta ⊥ ⇒ E¬, etc.) (lo derivado aparece en el árbol cuando se usa).
    MOTOR: copia literal de logica.html (pf/pr/fv/sb/ff/entails/tp y mk/sol/cl0/bld/mv/PM/pl/hint). Si cambia allá, recopiar el bloque entre las marcas.
    Errores: logA("bq",...). «No sé»: hint(o) + teoría THT (swTeo). Progreso: localStorage "bq1". v1: solo ejercicios proposicionales (E). */
 const BQ=(()=>{
@@ -121,10 +121,11 @@ function rg(o,cu){const S=D.S;if(o.s=="d")return rd(o.d);
  const k=[];if(o.how.fd)k.push(rd(o.how.fd));o.subs.forEach(i=>k.push(rg(S.G[i],cu)));
  return`<div class="pt"><div class="pk">${k.join("")}</div><div class="pr bqr"><span class="pn">${esc(RN(o.how.k))}${sup(o.how.l)}</span></div><span class="pf">${esc(pr(o.g))}</span></div>`}
 /* ---------- Paleta ---------- */
-const BK=[["Armar la meta",[["I∧","I∧"],["I→","I→"],["I¬","I¬"],["I∨","I∨"],["I↔","I↔"],["RAA","RAA"],["E⊥","E⊥ (de ⊥)"]]],
+const BK=[["Armar la meta",[["I∧","I∧"],["I→","I→"],["I¬","I¬"],["I∨","I∨"],["I↔","I↔"],["RAA","RAA"],["E⊥","E⊥ (de ⊥)"]]]];
+const BKX=[
  ["Usar una hipótesis para llegar a la meta",[["E→b","E→: uso A→meta, busco A"],["E¬b","E¬ (meta ⊥): uso ¬φ, busco φ"]]],
  ["Desarmar lo que tengo",[["E∧","E∧"],["E→f","E→ (ya tengo A)"],["E¬f","E¬ (ya tengo φ y ¬φ)"],["E∨","E∨ (casos)"]]]];
-const BQ4=[["I∀","I∀"],["I∃","I∃"],["E∀","E∀"],["E∃","E∃"]];
+const BQ4=[["I∀","I∀"],["I∃","I∃"]];
 const PQ={f:"¿Sobre cuál de lo que tengo?",t:"¿Con qué término?",s:"¿Qué lado probás?","φ":"¿Qué fórmula φ?"},
  PQR={"E→b":"¿Qué implicación usás? (la nueva meta será su antecedente)","E¬b":"¿Qué negación usás? (la nueva meta será lo que está bajo el ¬)"};
 /* Opciones de E→/E¬ hacia atrás expresadas como «uso X, busco Y» (el motor recibe φ = lo que hay que buscar) */
@@ -140,25 +141,43 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
  if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b> Revisá cada raya: regla, premisas y qué cancela.</div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button></div></div>`;V.innerHTML=h;return}
  const r=D.r,need=r?PM(r,o):[],k=need[D.a.length];
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(pr(o.g))}</div>
- <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(pr(x.f))+"]"+sup(x.d.l):esc(pr(x.f))}</span>`).join(" "):"nada"}</div>`;
+ <div class="lbl" style="margin-top:10px">Usar lo que tengo: tocá una hipótesis</div><div class="row" style="flex-wrap:wrap;gap:6px">${o.ctx.length?o.ctx.map((x,i)=>`<button class="btn bqc" data-b="h" data-i="${i}">${x.d.l?"["+esc(pr(x.f))+"]"+sup(x.d.l):esc(pr(x.f))}</button>`).join(""):'<span class="mut">nada</span>'}</div>`;
  if(r&&k)h+=`<div class="lbl" style="margin-top:10px">${esc(RN(r))} · ${(!D.all&&PQR[r]&&k=="φ")?PQR[r]:PQ[k]}</div><div class="row" style="flex-wrap:wrap;gap:6px">${opts(r,k,o).map(([v,t])=>`<button class="btn chip" data-b="p" data-v="${esc(String(v))}">${esc(t)}</button>`).join("")}</div><button class="btn ghost" data-b="cx">Cancelar</button>`;
  else h+=(e.q?[["Cuantificadores",BQ4]]:[]).concat(BK).map(([t,L])=>`<div class="lbl" style="margin-top:10px">${t}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([id,tx])=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(tx)}</button>`).join("")}</div>`).join("");
  h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button></div></div></div>`;
  V.innerHTML=h;const t=V.querySelector(".bqh.on");if(t)try{t.scrollIntoView({block:"nearest",inline:"center"})}catch(_){}}
 const ctxTxt=o=>o.ctx.map(x=>pr(x.f)).join(", ")||"nada";
-function bqApply(){const o=curG(),r=D.r,a=D.a.map((v,i)=>PM(r,o)[i]=="f"||PM(r,o)[i]=="s"?+v:v),S1=structuredClone(D.S),res=mv(S1,S1.G[o.id],r,a),info={q:"Meta: "+pr(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t};
+function bqApply(){const o=curG(),r=D.r,a=D.a.map((v,i)=>PM(r,o)[i]=="f"||PM(r,o)[i]=="s"?+v:v);bqRun(o,r,a,"")}
+function bqRun(o,r,a,okm){const S1=structuredClone(D.S),res=mv(S1,S1.G[o.id],r,a),info={q:"Meta: "+pr(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t};
  D.r=null;D.a=[];
  if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encastra.</b> ${esc(res.m)}</div>`;logA("bq","lg",RN(r),false,Object.assign(info,{a:hint(o),p:RN(r)+(a.length?" "+a.join(", "):""),x:res.m}));bqDraw();return}
  D.H.push(D.S);D.S=S1;
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",RN(r),false,Object.assign(info,{a:"Deshacer y elegir otro camino",p:RN(r),x:res.m}))}
- else{D.fb="";logA("bq","lg",RN(r),true,info)}
+ else{D.fb=okm?`<div class="fb ok">${esc(okm)}</div>`:"";logA("bq","lg",RN(r),true,info)}
  if(D.S.G[0].s=="d"){ST.done[E[ex].t]=1;SVQ()}
  bqDraw()}
+/* Tocar una hipótesis H con la meta g seleccionada: la app elige la regla que corresponde */
+function useHyp(o,i){const x=o.ctx[i];if(!x)return;const f=x.f,g=o.g,P=pr,info={q:"Meta: "+P(g)+" · Tengo: "+ctxTxt(o),x:E[ex].t},has2=h=>o.ctx.some(y=>P(y.f)==P(h));
+ const no=m=>{D.fb=`<div class="fb no"><b>No sirve acá.</b> ${esc(m)}</div>`;logA("bq","lg","usar "+P(f),false,Object.assign(info,{a:hint(o),p:"usar "+P(f),x:m}));bqDraw()};
+ if(f.k=="imp"&&P(f.r)==P(g))return bqRun(o,"E→b",[P(f.l)],`E→: usás ${P(f)}; ahora falta probar ${P(f.l)}.`);
+ if(f.k=="imp"&&has2(f.l))return bqRun(o,"E→f",[i],`E→: con ${P(f.l)} y ${P(f)} ahora tenés ${P(f.r)}.`);
+ if(f.k=="imp")return no(`${P(f)} da ${P(f.r)}, que no es la meta, y todavía no tenés ${P(f.l)}. Tocala con una meta que sea ${P(f.r)}, o conseguí ${P(f.l)} primero.`);
+ if(f.k=="and")return bqRun(o,"E∧",[i],`E∧: ahora tenés ${P(f.l)} y ${P(f.r)} por separado.`);
+ if(f.k=="or")return bqRun(o,"E∨",[i],`E∨: dos ramas, una suponiendo ${P(f.l)} y otra ${P(f.r)}; en cada una probás ${P(g)}.`);
+ if(f.k=="not"&&g.k=="bot")return bqRun(o,"E¬b",[P(f.a)],`E¬: usás ${P(f)}; ahora falta probar ${P(f.a)}.`);
+ if(f.k=="not"&&has2(f.a))return bqRun(o,"E¬f",[i],`E¬: con ${P(f.a)} y ${P(f)} ahora tenés ⊥`+(g.k=="bot"?".":`. Tocá ⊥ para sacar ${P(g)} con E⊥.`));
+ if(f.k=="not")return no(`${P(f)} sirve para llegar a ⊥ (E¬). La meta es ${P(g)}: si no se arma con su conector, probá RAA para que la meta pase a ser ⊥.`);
+ if(f.k=="bot")return bqRun(o,"E⊥",[],"E⊥: de ⊥ sale cualquier fórmula.");
+ if(f.k=="all"){D.r="E∀";D.a=[String(i)];D.fb="";return bqDraw()}
+ if(f.k=="ex")return bqRun(o,"E∃",[i],`E∃: suponés la fórmula sin el ∃ con una variable nueva.`);
+ if(g.k=="bot")return bqRun(o,"E¬b",[P(f)],`E¬: usás ${P(f)}; ahora falta probar ¬${P(f)}.`);
+ return no(`${P(f)} es atómica y no es la meta: sola no te lleva a ${P(g)}.`)}
 function bqNS(){const o=curG(),hn=hint(o),th=typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+pr(o.g),a:"",x:""}):"";
  D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+pr(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});bqDraw()}
 V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.a=[];D.fb="";bqDraw()}
  else if(w=="r"){D.r=b.dataset.v;D.a=[];D.all=0;D.fb="";const o=curG();if(!PM(D.r,o).length)bqApply();else bqDraw()}
+ else if(w=="h"){const o=curG();D.r=null;D.a=[];useHyp(o,+b.dataset.i)}
  else if(w=="p"&&b.dataset.v=="__all"){D.all=1;bqDraw()}
  else if(w=="p"){D.a.push(b.dataset.v);const o=curG();if(D.a.length>=PM(D.r,o).length)bqApply();else bqDraw()}
  else if(w=="cx"){D.r=null;D.a=[];bqDraw()}
@@ -167,7 +186,7 @@ V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[dat
  else if(w=="ns")bqNS();
  else if(w=="ex"){ex=+b.dataset.i;D=nw(ex);bqDraw()}
  else if(w=="nx"){ex=(ex+1)%E.length;D=nw(ex);bqDraw()}});
-(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
+(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqc{font-family:var(--m);font-weight:600;border-style:solid}";document.head.appendChild(st)})();
 return{bqOpen};
 
 })();
