@@ -122,10 +122,16 @@ function rg(o,cu){const S=D.S;if(o.s=="d")return rd(o.d);
  return`<div class="pt"><div class="pk">${k.join("")}</div><div class="pr bqr"><span class="pn">${esc(RN(o.how.k))}${sup(o.how.l)}</span></div><span class="pf">${esc(pr(o.g))}</span></div>`}
 /* ---------- Paleta ---------- */
 const BK=[["Armar la meta",[["I∧","I∧"],["I→","I→"],["I¬","I¬"],["I∨","I∨"],["I↔","I↔"],["RAA","RAA"],["E⊥","E⊥ (de ⊥)"]]],
- ["Buscar lo que falta",[["E¬b","E¬ (busco φ y ¬φ)"],["E→b","E→ (busco A→meta y A)"]]],
- ["Usar lo que tengo",[["E∧","E∧"],["E→f","E→"],["E¬f","E¬"],["E∨","E∨ (casos)"]]]];
+ ["Usar una hipótesis para llegar a la meta",[["E→b","E→: uso A→meta, busco A"],["E¬b","E¬ (meta ⊥): uso ¬φ, busco φ"]]],
+ ["Desarmar lo que tengo",[["E∧","E∧"],["E→f","E→ (ya tengo A)"],["E¬f","E¬ (ya tengo φ y ¬φ)"],["E∨","E∨ (casos)"]]]];
 const BQ4=[["I∀","I∀"],["I∃","I∃"],["E∀","E∀"],["E∃","E∃"]];
-const PQ={f:"¿Sobre cuál de lo que tengo?",t:"¿Con qué término?",s:"¿Qué lado probás?","φ":"¿Qué fórmula φ?"};
+const PQ={f:"¿Sobre cuál de lo que tengo?",t:"¿Con qué término?",s:"¿Qué lado probás?","φ":"¿Qué fórmula φ?"},
+ PQR={"E→b":"¿Qué implicación usás? (la nueva meta será su antecedente)","E¬b":"¿Qué negación usás? (la nueva meta será lo que está bajo el ¬)"};
+/* Opciones de E→/E¬ hacia atrás expresadas como «uso X, busco Y» (el motor recibe φ = lo que hay que buscar) */
+function opts(r,k,o){if(k!="φ"||!(r=="E→b"||r=="E¬b")||D.all)return pl(k,o);const g=pr(o.g);let L=[];
+ if(r=="E→b")L=o.ctx.filter(x=>x.f.k=="imp"&&pr(x.f.r)==g).map(x=>[pr(x.f.l),"uso "+pr(x.f)+" · busco "+pr(x.f.l)]);
+ else L=o.ctx.filter(x=>x.f.k=="not").map(x=>[pr(x.f.a),"uso "+pr(x.f)+" · busco "+pr(x.f.a)]).concat(o.ctx.filter(x=>x.f.k!="not"&&x.f.k!="bot").map(x=>[pr(x.f),"uso "+pr(x.f)+" · busco ¬"+pr(x.f)]));
+ return L.concat([["__all",L.length?"Otra (elegir la fórmula a buscar)":"No tengo ninguna: elegir la fórmula a buscar"]])}
 function bqOpen(){if(!D)D=nw(ex);bqDraw()}
 function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if(o)D.cur=o.id;const e=E[ex];
  let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px">${E.map((x,i)=>`<button class="btn chip${i==ex?" sel":""}" data-b="ex" data-i="${i}">${esc(x.t)}${ST.done[x.t]?" ✓":""}</button>`).join("")}</div>
@@ -135,7 +141,7 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
  const r=D.r,need=r?PM(r,o):[],k=need[D.a.length];
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(pr(o.g))}</div>
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(pr(x.f))+"]"+sup(x.d.l):esc(pr(x.f))}</span>`).join(" "):"nada"}</div>`;
- if(r&&k)h+=`<div class="lbl" style="margin-top:10px">${esc(RN(r))} · ${PQ[k]}</div><div class="row" style="flex-wrap:wrap;gap:6px">${pl(k,o).map(([v,t])=>`<button class="btn chip" data-b="p" data-v="${esc(String(v))}">${esc(t)}</button>`).join("")}</div><button class="btn ghost" data-b="cx">Cancelar</button>`;
+ if(r&&k)h+=`<div class="lbl" style="margin-top:10px">${esc(RN(r))} · ${(!D.all&&PQR[r]&&k=="φ")?PQR[r]:PQ[k]}</div><div class="row" style="flex-wrap:wrap;gap:6px">${opts(r,k,o).map(([v,t])=>`<button class="btn chip" data-b="p" data-v="${esc(String(v))}">${esc(t)}</button>`).join("")}</div><button class="btn ghost" data-b="cx">Cancelar</button>`;
  else h+=(e.q?[["Cuantificadores",BQ4]]:[]).concat(BK).map(([t,L])=>`<div class="lbl" style="margin-top:10px">${t}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([id,tx])=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(tx)}</button>`).join("")}</div>`).join("");
  h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button></div></div></div>`;
  V.innerHTML=h;const t=V.querySelector(".bqh.on");if(t)try{t.scrollIntoView({block:"nearest",inline:"center"})}catch(_){}}
@@ -152,7 +158,8 @@ function bqNS(){const o=curG(),hn=hint(o),th=typeof swTeo=="function"?swTeo({s:"
  D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+pr(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});bqDraw()}
 V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.a=[];D.fb="";bqDraw()}
- else if(w=="r"){D.r=b.dataset.v;D.a=[];D.fb="";const o=curG();if(!PM(D.r,o).length)bqApply();else bqDraw()}
+ else if(w=="r"){D.r=b.dataset.v;D.a=[];D.all=0;D.fb="";const o=curG();if(!PM(D.r,o).length)bqApply();else bqDraw()}
+ else if(w=="p"&&b.dataset.v=="__all"){D.all=1;bqDraw()}
  else if(w=="p"){D.a.push(b.dataset.v);const o=curG();if(D.a.length>=PM(D.r,o).length)bqApply();else bqDraw()}
  else if(w=="cx"){D.r=null;D.a=[];bqDraw()}
  else if(w=="un"&&D.H.length){D.S=D.H.pop();D.fb="";D.r=null;D.a=[];bqDraw()}
