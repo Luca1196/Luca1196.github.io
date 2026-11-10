@@ -102,7 +102,10 @@ const E=[
 {t:"Tercero excluido",P:[],g:"φ∨¬φ"},
 {t:"Febrero 3a",P:[],g:"((p→q)∧(¬r→p))→(¬q→r)"},
 {t:"3a ←",P:[],g:`(${SD})→(${H})`},
-{t:"3a →",P:[],g:`(${H})→(${SD})`}];
+{t:"3a →",P:[],g:`(${H})→(${SD})`},
+{t:"3a completo",P:[],g:`(${H})↔(${SD})`},
+{t:"2c",P:["(∀x)P(f(x)) ∧ (∃z)¬P(z)","(∀x)¬P(x)"],g:"(∀x)Q(x)"},
+{t:"3b",P:["(∃x)R(x,x)","(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],g:"(∃x)P(x,x)"}];
 E.forEach(e=>{e.PA=e.P.map(pf);e.GA=pf(e.g);e.q=/[∀∃]/.test(e.P.join("")+e.g)});
 let ex=0;
 /* ---------- Estado ---------- */
@@ -138,12 +141,16 @@ const TPL={
  "E¬":{n:"E¬",m:["Premisa izquierda","Premisa derecha"],ay:"Las premisas son una fórmula φ y su negación ¬φ, en el orden que quieras."},
  "E∧":{n:"E∧",m:["Premisa: la conjunción"]},
  "E∨":{n:"E∨",m:["Premisa: la disyunción A∨B","Rama izquierda: ¿qué suponés?","Rama derecha: ¿qué suponés?"],ay:"Cada rama supone un lado de la disyunción y llega a la meta."},
- "E⊥":{n:"E⊥",m:["¿Qué queda arriba de la raya?"]}};
-const BK=[["Cerrar una hoja",["hip"]],["Introducción (arma la meta)",["I∧","I→","I¬","I∨","I↔","RAA"]],["Eliminación (usa una fórmula)",["E→","E¬","E∧","E∨","E⊥"]]];
-const P=pr,eq=(a,b)=>P(a)==P(b),MS=m=>m.hyp?"["+P(m.f)+"]"+m.hyp:P(m.f),MSH=m=>m.hyp?"["+esc(P(m.f))+"]"+sup(m.hyp):esc(P(m.f));
+ "E⊥":{n:"E⊥",m:["¿Qué queda arriba de la raya?"]},
+ "I∀":{n:"I∀",m:["¿Qué queda arriba de la raya?"],ay:"Arriba va la fórmula sin el ∀, con la misma variable. Condición: la variable no puede estar libre en una hipótesis abierta."},
+ "E∀":{n:"E∀",m:["Premisa: el ∀ que usás (de lo que tenés)","¿Con qué término t lo instanciás?"],k:["ctx","t"],ay:"E∀ saca la instancia φ(t) de un (∀x)φ que tenés. Si la instancia es la meta, la cierra; si no, queda en «Tengo». Condición: t libre para x."},
+ "I∃":{n:"I∃",m:["¿Con qué término t (el testigo)?"],k:["t"],ay:"Para probar (∃x)φ alcanza con probar φ(t). Arriba queda φ(t). Condición: t libre para x."},
+ "E∃":{n:"E∃",m:["Premisa: el ∃ que usás (de lo que tenés)"],k:["ctx"],ay:"E∃ suponé la fórmula sin el ∃ (con su variable) y llegá a la misma meta; esa suposición se cancela. Condición: la variable no libre en la meta ni en otras hipótesis abiertas."}};
+const BK=[["Cerrar una hoja",["hip"]],["Introducción (arma la meta)",["I∧","I→","I¬","I∨","I↔","RAA"]],["Eliminación (usa una fórmula)",["E→","E¬","E∧","E∨","E⊥"]]],BKQ=["Cuantificadores",["I∀","E∀","I∃","E∃"]];
+const P=pr,eq=(a,b)=>P(a)==P(b),MS=m=>m.t?"t = "+m.t:m.hyp?"["+P(m.f)+"]"+m.hyp:P(m.f),MSH=m=>m.t?"t = "+esc(m.t):m.hyp?"["+esc(P(m.f))+"]"+sup(m.hyp):esc(P(m.f));
 /* cierre de hojas: una premisa del ejercicio (sin etiqueta) elegida queda como hoja; una suposición solo si la elegiste con corchetes [φ]ⁿ */
 function closeSubs(S1,o1,r,M){const mem=["I→","I¬","RAA"].includes(r)?M.slice(1):r=="E∨"?[M[0]]:M;
- o1.subs.forEach((id,i)=>{const q=S1.G[id],m=mem[i];if(!m||q.s!="o")return;const x=m.hyp?q.ctx.find(y=>y.d.l==m.hyp&&eq(y.f,q.g)):q.ctx.find(y=>!y.d.l&&y.d.r=="hip"&&eq(y.f,q.g));if(x)sol(S1,q,x.d)})}
+ o1.subs.forEach((id,i)=>{const q=S1.G[id],m=mem[i];if(!m||q.s!="o")return;const x=m.hyp?q.ctx.find(y=>y.d.l==m.hyp&&eq(y.f,q.g)):q.ctx.find(y=>!(y.d.r=="hip"&&y.d.l)&&eq(y.f,q.g));if(x)sol(S1,q,x.d)})}
 function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"I∧",imp:"I→",not:"I¬",iff:"I↔"},
  bad=m=>bad0(m+(r[0]=="E"&&ARM[g.k]&&!o.ctx.some(x=>x.f.k=="imp"&&eq(x.f.r,g))?` Ojo: la meta ${P(g)} tiene conector, así que se ARMA con ${ARM[g.k]}; las eliminaciones son para USAR una fórmula que tenés.`:""));
  switch(r){
@@ -157,7 +164,11 @@ function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"
  case"E→":{const i=[0,1].find(j=>M[j].k=="imp"&&eq(M[j].r,g)&&eq(M[1-j],M[j].l));if(i!==undefined)return{ok:1,run:["E→b",[P(M[1-i])]],sw:i==1};
   const im=M.find(f=>f.k=="imp");return !im?bad(`E→ necesita una implicación entre las premisas; ${P(M[0])} y ${P(M[1])} no lo son.`):!eq(im.r,g)?bad(`${P(im)} da ${P(im.r)}, pero la meta es ${P(g)}.`):bad(`E→ funciona así: de A→B y A se obtiene B. Con ${P(im)}, A es ${P(im.l)} (lo de la izquierda de la flecha), así que la otra premisa es ${P(im.l)}.${M.some(f=>eq(f,g))?" "+P(g)+" es lo que se obtiene: va abajo de la raya, no arriba.":""}`)}
  case"E¬":{if(g.k!="bot")return bad(`E¬ concluye ⊥, y la meta es ${P(g)}.`);const i=[0,1].find(j=>eq(M[1-j],NG(M[j])));return i===undefined?bad(`Las premisas de E¬ son una fórmula y su negación (φ y ¬φ); ${P(M[0])} y ${P(M[1])} no lo son.`):{ok:1,run:["E¬b",[P(M[i])]],sw:i==0}}
- case"E∧":return M[0].k!="and"?bad(`E∧ usa una conjunción; ${P(M[0])} no lo es.`):eq(M[0].l,g)||eq(M[0].r,g)?{ok:1,cust:"E∧"}:bad(`${P(M[0])} no tiene a ${P(g)} como parte.`);
+ case"E∧":return M[0].k!="and"?bad(`E∧ usa una conjunción; ${P(M[0])} no lo es.`):eq(M[0].l,g)||eq(M[0].r,g)?{ok:1,cust:"E∧"}:o.ctx.some(x=>eq(x.f,M[0])&&!(x.d.r=="hip"&&x.d.l))?{ok:1,cust:"E∧f"}:bad(`${P(M[0])} no tiene a ${P(g)} como parte, y no la tenés para separarla.`);
+ case"I∀":return g.k!="all"?bad(`I∀ arma un (∀x)φ y la meta ${P(g)} no lo es.`):eq(M[0],g.a)?{ok:1,run:["I∀",[]]}:bad(`Con I∀, arriba va la fórmula sin el ∀ y con la misma variable: ${P(g.a)}.`);
+ case"E∀":{if(M[0].k!="all")return bad(`E∀ usa un (∀x)φ; ${P(M[0])} no lo es.`);return{ok:1,cust:"E∀"}}
+ case"I∃":return g.k!="ex"?bad(`I∃ arma un (∃x)φ y la meta ${P(g)} no lo es.`):{ok:1,run:["I∃",[MM[0].t]]};
+ case"E∃":return M[0].k!="ex"?bad(`E∃ usa un (∃x)φ; ${P(M[0])} no lo es.`):{ok:1,cust:"E∃"};
  case"E∨":return M[0].k!="or"?bad(`E∨ usa una disyunción; ${P(M[0])} no lo es.`):(eq(M[1],M[0].l)&&eq(M[2],M[0].r))||(eq(M[1],M[0].r)&&eq(M[2],M[0].l))?{ok:1,cust:"E∨"}:bad(`Cada rama supone un lado de ${P(M[0])}: una ${P(M[0].l)} y la otra ${P(M[0].r)}.`);
  case"E⊥":return g.k=="bot"?bad("La meta ya es ⊥."):M[0].k!="bot"?bad("E⊥ parte de ⊥: arriba va ⊥."):{ok:1,run:["E⊥",[]]}}}
 /* fórmulas candidatas para elegir: lo que tengo, la meta, sus subfórmulas, sus negaciones y ⊥ */
@@ -172,11 +183,11 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>${(()=>{const L=[];let q=o;while(q.par!=null){newSup(q).forEach(x=>L.unshift("["+esc(P(x.f))+"]"+sup(x.d.l)));q=D.S.G[q.par]}return L.length?`<div class="mut" style="font-size:14px">En esta rama suponés: ${L.join(" ")}</div>`:""})()}
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(P(x.f))+"]"+sup(x.d.l):esc(P(x.f))}</span>`).join(" "):"nada"}</div>`;
  const t=D.r&&TPL[D.r];
- if(t){const k=D.m.length,HY=o.ctx.filter(x=>x.d.l).map(x=>[`H${x.d.l}`,"["+esc(P(x.f))+"]"+sup(x.d.l)]),PR=o.ctx.filter(x=>!x.d.l).map(x=>[P(x.f),esc(P(x.f))]),L=t.only=="ctx"?HY.concat(PR):HY.concat(pool(o).map(f=>[P(f),esc(P(f))]));
+ if(t){const k=D.m.length,HY=o.ctx.filter(x=>x.d.l).map(x=>[`H${x.d.l}`,"["+esc(P(x.f))+"]"+sup(x.d.l)]),PR=o.ctx.filter(x=>!x.d.l).map(x=>[P(x.f),esc(P(x.f))]),kd=(t.k||[])[k]||(t.only=="ctx"?"ctx":"pool"),L=kd=="t"?Object.keys(TPm()).map(x=>["T"+x,esc(x)]):kd=="ctx"?HY.concat(PR):HY.concat(pool(o).map(f=>[P(f),esc(P(f))]));
   h+=`<div class="sn" style="margin-top:10px">${esc(t.n)}: ${t.m.map((lab,i)=>`<div>${i<k?"✓":i==k?"▶":"·"} ${esc(lab)}: <b>${i<k?MSH(D.m[i]):"…"}</b></div>`).join("")}</div>
   ${t.ay?`<div class="mut" style="font-size:14px">${esc(t.ay)}</div>`:""}<div class="lbl">${esc(t.m[k])}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([v,lab])=>`<button class="btn chip${v[0]=="H"?" bqhy":""}" data-b="m" data-v="${esc(v)}">${lab}</button>`).join("")||'<span class="mut">No tenés hipótesis.</span>'}</div>
   <div class="row" style="gap:8px">${k?'<button class="btn ghost" data-b="mb">Borrar último</button>':""}<button class="btn ghost" data-b="cx">Cancelar</button></div>`}
- else h+=BK.map(([tt,L])=>`<div class="lbl" style="margin-top:10px">${tt}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(id=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(TPL[id].n)}</button>`).join("")}</div>`).join("");
+ else h+=(e.q?BK.concat([BKQ]):BK).map(([tt,L])=>`<div class="lbl" style="margin-top:10px">${tt}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(id=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(TPL[id].n)}</button>`).join("")}</div>`).join("");
  h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button></div></div></div>`;
  V.innerHTML=h;const s=V.querySelector(".bqh.on");if(s)try{s.scrollIntoView({block:"nearest",inline:"center"})}catch(_){}}
 const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
@@ -184,14 +195,18 @@ const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
 function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,p:TPL[r].n+": "+M.map(MS).join(" ; ")};D.r=null;D.m=[];
  if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}<div class="hn" style="margin-top:8px">💡 ${esc(bqHint(o))}</div></div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
  const S1=structuredClone(D.S),o1=S1.G[o.id];let res=null;
- if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!y.d.l&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
+ if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!(y.d.r=="hip"&&y.d.l)&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
  else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0].f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,M)}
+ else if(c.cust=="E∧f"||c.cust=="E∀"||c.cust=="E∃"){const m=M[0],i=o1.ctx.findIndex(y=>m.hyp?y.d.l==m.hyp:eq(y.f,m.f)&&!(y.d.r=="hip"&&y.d.l));
+  NOAUTO=true;res=c.cust=="E∧f"?mv(S1,o1,"E∧",[i]):c.cust=="E∀"?mv(S1,o1,"E∀",[i,M[1].t]):mv(S1,o1,"E∃",[i]);NOAUTO=false;
+  if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}
+  if(c.cust!="E∃"){const y=o1.ctx.find(y=>eq(y.f,o1.g)&&!(y.d.r=="hip"&&y.d.l));if(y)sol(S1,o1,y.d);else{const nw=c.cust=="E∀"?sb(m.f.a,m.f.v,TPm()[M[1].t]):null;D.ok2=c.cust=="E∀"?`E∀: ahora tenés ${P(nw)} (en «Tengo»).`:`E∧: ahora tenés ${P(m.f.l)} y ${P(m.f.r)} (en «Tengo»).`}}}
  else if(c.cust=="E∨"){const f=M[0].f,n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
   [[f,[]],[o1.g,[hy(M[1].f,n1)]],[o1.g,[hy(M[2].f,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}
  else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.sw)o1.subs.reverse();closeSubs(S1,o1,r,M)}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
  D.H.push(D.S);D.S=S1;
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
- else{D.fb="";logA("bq","lg",TPL[r].n,true,info)}
+ else{D.fb=D.ok2?`<div class="fb ok">${esc(D.ok2)}</div>`:"";D.ok2="";logA("bq","lg",TPL[r].n,true,info)}
  if(D.S.G[0].s=="d"){ST.done[E[ex].t]=1;SVQ()}
  bqDraw()}
 function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:"I¬",or:"I∨",iff:"I↔"};
@@ -213,7 +228,7 @@ function bqNS(){const o=curG(),hn=bqHint(o),th=typeof swTeo=="function"?swTeo({s
 V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.m=[];D.fb="";bqDraw()}
  else if(w=="r"){D.r=b.dataset.v;D.m=[];D.fb="";bqDraw()}
- else if(w=="m"){const o=curG(),v=b.dataset.v;let m;if(v[0]=="H"){const x=o.ctx.find(y=>y.d.l==v.slice(1));m={f:x.f,hyp:x.d.l}}else m={f:pool(o).concat(o.ctx.map(x=>x.f)).find(x=>P(x)==v)};D.m.push(m);if(D.m.length>=TPL[D.r].m.length)bqDo();else bqDraw()}
+ else if(w=="m"){const o=curG(),v=b.dataset.v;let m;if(v[0]=="H"){const x=o.ctx.find(y=>y.d.l==v.slice(1));m={f:x.f,hyp:x.d.l}}else if(v[0]=="T"&&v.length>1&&TPm()[v.slice(1)]&&(TPL[D.r].k||[])[D.m.length]=="t")m={t:v.slice(1),f:{k:"at",n:v.slice(1),a:[]}};else m={f:pool(o).concat(o.ctx.map(x=>x.f)).find(x=>P(x)==v)};D.m.push(m);if(D.m.length>=TPL[D.r].m.length)bqDo();else bqDraw()}
  else if(w=="mb"){D.m.pop();bqDraw()}
  else if(w=="cx"){D.r=null;D.m=[];bqDraw()}
  else if(w=="un"&&D.H.length){D.S=D.H.pop();D.fb="";D.r=null;D.m=[];bqDraw()}
