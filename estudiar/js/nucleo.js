@@ -163,7 +163,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
  if(t.t!=e.t||ns){const ph=b.pl.map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");b.e++;SCOMBO=0;S2.box[k]=0;
   if(b.e==1)SRETRY.push({c,i:0,due:SUN+8});
   logA("sw",c.s,c.g,false,{q:"Armá la línea",x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
-  b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
+  b.teo=ns?({n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}
@@ -195,7 +195,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
   h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso · ":""}armá la línea</div>`+
   `<div class="sn">${bldCtx(c.ctx,b.src,b.hl)}</div>${swDg(c,0,b.done)}<div class="qt">Armá la línea con las fichas</div>`+
   `<div class="bpl${b.done?" fin":""}">${b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
-  (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div>${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+
+  (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div>${(()=>{const o=b.teo&&(window.THT||[]).find(x=>x.t==b.teo);return o?`<div class="th" style="margin-top:10px"><b>📘 ${esc(o.t)}</b>${o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join("")}</div>`:""})()}${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+
   (b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": esta línea vuelve en un rato.":"Línea correcta"}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
    `<div class="bank">${b.ord.map(i=>`<button class="btn tile${b.used[i]?" used":""}" data-w="tl" data-i="${i}"${b.used[i]?" disabled":""}>${esc(bk[i].t)}</button>`).join("")}</div><button class="btn ghost" data-w="tns" style="display:block;margin:10px auto 0">No sé qué sigue</button>`)+`</div></div>`;
   V.innerHTML=h;return}

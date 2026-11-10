@@ -139,7 +139,8 @@ const TPL={
  "E⊥":{n:"E⊥",m:["¿Qué queda arriba de la raya?"]}};
 const BK=[["Cerrar una hoja",["hip"]],["Introducción (arma la meta)",["I∧","I→","I¬","I∨","I↔","RAA"]],["Eliminación (usa una fórmula)",["E→","E¬","E∧","E∨","E⊥"]]];
 const P=pr,eq=(a,b)=>P(a)==P(b);
-function chk(r,o,M){const g=o.g,bad=m=>({m});
+function chk(r,o,M){const g=o.g,bad0=m=>({m}),ARM={and:"I∧",imp:"I→",not:"I¬",iff:"I↔"},
+ bad=m=>bad0(m+(r[0]=="E"&&ARM[g.k]&&!o.ctx.some(x=>x.f.k=="imp"&&eq(x.f.r,g))?` Ojo: la meta ${P(g)} tiene conector, así que se ARMA con ${ARM[g.k]}; las eliminaciones son para USAR una fórmula que tenés.`:""));
  switch(r){
  case"hip":return eq(M[0],g)?{ok:1}:bad(`La hoja tiene que ser exactamente la meta ${P(g)}; elegiste ${P(M[0])}.`);
  case"I∧":return g.k!="and"?bad(`I∧ arma una conjunción y la meta ${P(g)} no lo es.`):eq(M[0],g.l)&&eq(M[1],g.r)?{ok:1,run:["I∧",[]]}:bad(`Para concluir ${P(g)} con I∧, arriba van sus dos partes: ${P(g.l)} y ${P(g.r)}.`);
@@ -175,19 +176,29 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
 const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
 /* aplicar cuando están todos los miembros */
 function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,p:TPL[r].n+": "+M.map(P).join(" ; ")};D.r=null;D.m=[];
- if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:hint(o),x:c.m}));return bqDraw()}
+ if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
  const S1=structuredClone(D.S),o1=S1.G[o.id];let res=null;
  if(r=="hip"){const x=o1.ctx.find(y=>eq(y.f,o1.g));sol(S1,o1,x.d)}
  else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0],o1.ctx);o1.subs.push(q.id);cl0(S1,q)}
  else if(c.cust=="E∨"){const f=M[0],n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
   [[f,[]],[o1.g,[hy(f.l,n1)]],[o1.g,[hy(f.r,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});o1.subs.forEach(i=>cl0(S1,S1.G[i]))}
- else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.run[0]=="E¬b")o1.subs.reverse();o1.subs.forEach(i=>cl0(S1,S1.G[i]))}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:hint(o),x:res.m}));return bqDraw()}}
+ else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.run[0]=="E¬b")o1.subs.reverse();o1.subs.forEach(i=>cl0(S1,S1.G[i]))}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
  D.H.push(D.S);D.S=S1;
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
  else{D.fb="";logA("bq","lg",TPL[r].n,true,info)}
  if(D.S.G[0].s=="d"){ST.done[E[ex].t]=1;SVQ()}
  bqDraw()}
-function bqNS(){const o=curG(),hn=hint(o),th=typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"";
+function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:"I¬",or:"I∨",iff:"I↔"};
+ if(c.some(f=>eq(f,g)))return`La meta ${P(g)} ya está en «Tengo»: cerrala con Hipótesis.`;
+ if(g.k!="bot"&&I[g.k]&&g.k!="or")return`La meta ${P(g)} tiene conector principal ${{and:"∧",imp:"→",not:"¬",iff:"↔"}[g.k]}: se ARMA con su introducción, ${I[g.k]}.`;
+ const im=c.find(f=>f.k=="imp"&&eq(f.r,g));if(im)return`Tenés ${P(im)}, que termina en la meta: E→ con premisas ${P(im)} y ${P(im.l)}.`;
+ const cj=c.find(f=>f.k=="and"&&(eq(f.l,g)||eq(f.r,g)));if(cj)return`${P(g)} es parte de ${P(cj)}: E∧ con premisa ${P(cj)}.`;
+ if(g.k=="bot"){const n=c.find(f=>f.k=="not");return n?`La meta es ⊥: E¬ con una fórmula y su negación (por ejemplo ${P(n.a)} y ${P(n)}).`:"La meta es ⊥: E¬ con una fórmula φ y su negación ¬φ."}
+ const dj=c.find(f=>f.k=="or");if(dj)return`Tenés la disyunción ${P(dj)}: E∨ (una rama por lado, en cada una probás ${P(g)}).`;
+ if(g.k=="or")return`I∨ solo si sabés qué lado vale (${P(g.l)} o ${P(g.r)}); si no, RAA suponiendo ${P(NG(g))}.`;
+ if(c.some(f=>f.k=="bot"))return`Tenés ⊥: E⊥ te da ${P(g)}.`;
+ return`Nada directo para ${P(g)}: RAA (suponés ${P(NG(g))} y arriba queda ⊥).`}
+function bqNS(){const o=curG(),hn=bqHint(o),th=typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"";
  D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});bqDraw()}
 V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.m=[];D.fb="";bqDraw()}
