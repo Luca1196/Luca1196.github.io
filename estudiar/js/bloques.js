@@ -1,10 +1,10 @@
 /* SECCIÓN BLOQUES (pestaña 6, en prueba): derivaciones armando el árbol con bloques, estilo Scratch.
    Los bloques SON el árbol: cada meta abierta es un hueco (punteado); al tocarlo y elegir una regla, aparece la raya con sus premisas como huecos nuevos.
-   Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida y explica. Las hojas no se cierran solas (NOAUTO en cl0): se cierran con la regla «Hipótesis». Nada se aplica automáticamente (pedido de Luca).
+   Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida y explica. Una premisa elegida que ya está en «Tengo» queda como hoja al elegirla (cl0); «Hipótesis» sirve para cerrar a mano un hueco que es una hipótesis. Nada se aplica automáticamente (pedido de Luca).
    MOTOR: copia literal de logica.html (pf/pr/fv/sb/ff/entails/tp y mk/sol/cl0/bld/mv/PM/pl/hint). Si cambia allá, recopiar el bloque entre las marcas.
    Errores: logA("bq",...). «No sé»: hint(o) + teoría THT (swTeo). Progreso: localStorage "bq1". v1: solo ejercicios proposicionales (E). */
 const BQ=(()=>{
-let NOAUTO=true;/* Bloques: las hojas NO se cierran solas (el usuario usa «Hipótesis») */
+let NOAUTO=false;/* Una premisa que ELEGISTE y ya tenés queda como hoja (se cierra al elegirla); las demás quedan como hueco */
 /* ===== MOTOR (copia de logica.html) ===== */
 function pf(s){const T=s.match(/[A-Za-z0-9_α-ωΑ-Ω]+|\S/g);let i=0;const nt=()=>T[i++],pk=()=>T[i];
 const trm=()=>{const n=nt();if(pk()=="("){i++;const a=[trm()];while(pk()==","){i++;a.push(trm())}i++;return{k:"fn",n,a}}return{k:"v",n}};
@@ -178,10 +178,10 @@ function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+
  if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:hint(o),x:c.m}));return bqDraw()}
  const S1=structuredClone(D.S),o1=S1.G[o.id];let res=null;
  if(r=="hip"){const x=o1.ctx.find(y=>eq(y.f,o1.g));sol(S1,o1,x.d)}
- else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0],o1.ctx);o1.subs.push(q.id)}
+ else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0],o1.ctx);o1.subs.push(q.id);cl0(S1,q)}
  else if(c.cust=="E∨"){const f=M[0],n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
-  [[f,[]],[o1.g,[hy(f.l,n1)]],[o1.g,[hy(f.r,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)})}
- else{res=mv(S1,o1,c.run[0],c.run[1]);if(c.run[0]=="E¬b"&&!(res&&res.blocked))o1.subs.reverse();/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:hint(o),x:res.m}));return bqDraw()}}
+  [[f,[]],[o1.g,[hy(f.l,n1)]],[o1.g,[hy(f.r,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});o1.subs.forEach(i=>cl0(S1,S1.G[i]))}
+ else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.run[0]=="E¬b")o1.subs.reverse();o1.subs.forEach(i=>cl0(S1,S1.G[i]))}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:hint(o),x:res.m}));return bqDraw()}}
  D.H.push(D.S);D.S=S1;
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
  else{D.fb="";logA("bq","lg",TPL[r].n,true,info)}
