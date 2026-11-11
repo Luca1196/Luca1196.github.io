@@ -209,14 +209,18 @@ function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"
 /* fórmulas candidatas para elegir: lo que tengo, la meta, sus subfórmulas, sus negaciones y ⊥ */
 function pool(o){const m={},add=f=>{m[P(f)]=f};Object.values(FPm(o)).forEach(f=>{add(f);if(f.k!="not"&&f.k!="bot")add(NG(f))});add(BOT);o.ctx.forEach(x=>add(x.f));
  return Object.values(m).sort((a,b)=>P(a).length-P(b).length||P(a).localeCompare(P(b)))}
-function bqOpen(){if(!D)D=nw(ex);bqDraw()}
+/* Modo incrustado: una tarjeta de Deslizar arma un árbol corto acá adentro (EMB = {el, cb, err}) */
+let EMB=null;const OUT=()=>EMB?EMB.el:V;
+function bqOpen(){EMB=null;if(!D)D=nw(ex);bqDraw()}
+function bqEmbed(t,el,cb){const i=E.findIndex(x=>x.t==t);if(i<0)return;EMB={el,cb,err:0,ns:0,i};ex=i;D=nw(i);bqDraw()}
 function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if(o)D.cur=o.id;const e=E[ex];
  const GR=[...new Set(E.map(x=>x.grp))],cg=D.grp||e.grp,nd2=g=>E.filter(x=>x.grp==g),dn=g=>nd2(g).filter(x=>ST.done[x.t]).length;
- let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px">${GR.map(g=>`<button class="btn chip${g==cg?" sel":""}" data-b="gr" data-v="${esc(g)}">${esc(g)} <span class="mut">${dn(g)}/${nd2(g).length}</span></button>`).join("")}</div>
- <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px">${E.map((x,i)=>x.grp!=cg?"":`<button class="btn chip${i==ex?" sel":""}${unl(i)?"":" bqlk"}" data-b="ex" data-i="${i}">${unl(i)?"":"🔒 "}${esc(x.t)}${ST.done[x.t]?" ✓":""}</button>`).join("")}</div>
+ let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px${EMB?";display:none":""}">${GR.map(g=>`<button class="btn chip${g==cg?" sel":""}" data-b="gr" data-v="${esc(g)}">${esc(g)} <span class="mut">${dn(g)}/${nd2(g).length}</span></button>`).join("")}</div>
+ <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px${EMB?";display:none":""}">${E.map((x,i)=>x.grp!=cg?"":`<button class="btn chip${i==ex?" sel":""}${unl(i)?"":" bqlk"}" data-b="ex" data-i="${i}">${unl(i)?"":"🔒 "}${esc(x.t)}${ST.done[x.t]?" ✓":""}</button>`).join("")}</div>
  <div class="sn" style="margin-top:10px">${e.P.length?esc(e.P.join(", "))+" ":""}⊢ ${esc(e.g)}</div>
  <div class="sn pft bqt"><div style="display:inline-block;padding-right:52px">${rg(root,o&&o.id)}</div></div>`;
- if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b>${D.unl&&D.unl.length?` Se desbloqueó: ${D.unl.map(esc).join(", ")}.`:""}</div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button><button class="btn" data-b="cp">${D.cpOk?"Copiado ✓":"Copiar para Claude"}</button></div>${D.cp?`<textarea style="width:100%;height:140px;font:12px var(--m);margin-top:8px">${esc(D.cp)}</textarea>`:""}</div>`;D.cpOk=0;V.innerHTML=h;return}
+ if(done&&EMB){h+=`</div>`;OUT().innerHTML=h;const em=EMB;EMB=null;setTimeout(()=>em.cb(em.err,em.ns),0);return}
+ if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b>${D.unl&&D.unl.length?` Se desbloqueó: ${D.unl.map(esc).join(", ")}.`:""}</div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button><button class="btn" data-b="cp">${D.cpOk?"Copiado ✓":"Copiar para Claude"}</button></div>${D.cp?`<textarea style="width:100%;height:140px;font:12px var(--m);margin-top:8px">${esc(D.cp)}</textarea>`:""}</div>`;D.cpOk=0;OUT().innerHTML=h;return}
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>${(()=>{const L=[];let q=o;while(q.par!=null){newSup(q).forEach(x=>L.unshift("["+esc(P(x.f))+"]"+sup(x.d.l)));q=D.S.G[q.par]}return L.length?`<div class="mut" style="font-size:14px">En esta rama suponés: ${L.join(" ")}</div>`:""})()}
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(P(x.f))+"]"+sup(x.d.l):esc(P(x.f))}</span>`).join(" "):"nada"}</div>`;
  const t=D.r&&TPL[D.r];
@@ -226,23 +230,23 @@ function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if
   <div class="row" style="gap:8px">${k?'<button class="btn ghost" data-b="mb">Borrar último</button>':""}<button class="btn ghost" data-b="cx">Cancelar</button></div>`}
  else h+=(e.q?BK.concat([BKQ]):BK).map(([tt,L])=>`<div class="lbl" style="margin-top:10px">${tt}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(id=>`<button class="btn bqb" data-b="r" data-v="${id}">${esc(TPL[id].n)}</button>`).join("")}</div>`).join("");
  h+=`${D.fb}<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-b="ns">No sé</button><button class="btn" data-b="un"${D.H.length?"":" disabled"}>Deshacer</button><button class="btn ghost" data-b="rs">Reiniciar</button><button class="btn" data-b="cp">${D.cpOk?"Copiado ✓":"Copiar para Claude"}</button></div>${D.cp?`<textarea style="width:100%;height:140px;font:12px var(--m);margin-top:8px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:8px">${esc(D.cp)}</textarea>`:""}</div></div>`;D.cpOk=0;
- V.innerHTML=h;const s=V.querySelector(".bqh.on");if(s)try{s.scrollIntoView({block:"nearest",inline:"center"})}catch(_){}}
+ OUT().innerHTML=h;const s=OUT().querySelector(".bqh.on");if(s)try{s.scrollIntoView({block:"nearest",inline:"center"})}catch(_){}}
 const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
 /* aplicar cuando están todos los miembros */
 function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,p:TPL[r].n+": "+M.map(MS).join(" ; ")};D.r=null;D.m=[];
- if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}<div class="hn" style="margin-top:8px">💡 ${esc(bqHint(o))}</div></div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
+ if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}<div class="hn" style="margin-top:8px">💡 ${esc(bqHint(o))}</div></div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
  const S1=structuredClone(D.S),o1=S1.G[o.id];let res=null;
- if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!(y.d.r=="hip"&&y.d.l)&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
+ if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!(y.d.r=="hip"&&y.d.l)&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;if(EMB)EMB.err++;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
  else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0].f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,M)}
  else if(c.cust=="E∧f"||c.cust=="E∀"||c.cust=="E∃"){const m=M[0],i=o1.ctx.findIndex(y=>m.hyp?y.d.l==m.hyp:eq(y.f,m.f)&&!(y.d.r=="hip"&&y.d.l));
   NOAUTO=true;res=c.cust=="E∧f"?mv(S1,o1,"E∧",[i]):c.cust=="E∀"?mv(S1,o1,"E∀",[i,M[1].t]):mv(S1,o1,"E∃",[i]);NOAUTO=false;
-  if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}
+  if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}
   if(c.cust!="E∃"){const y=o1.ctx.find(y=>eq(y.f,o1.g)&&!(y.d.r=="hip"&&y.d.l));if(y)sol(S1,o1,y.d);else{const nw=c.cust=="E∀"?sb(m.f.a,m.f.v,TPm()[M[1].t]):null;D.ok2=c.cust=="E∀"?`E∀: ahora tenés ${P(nw)} (en «Tengo»).`:`E∧: ahora tenés ${P(m.f.l)} y ${P(m.f.r)} (en «Tengo»).`}}}
  else if(c.cust=="E∨"){const f=M[0].f,n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
   [[f,[]],[o1.g,[hy(M[1].f,n1)]],[o1.g,[hy(M[2].f,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}
- else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.sw)o1.subs.reverse();closeSubs(S1,o1,r,M)}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
+ else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.sw)o1.subs.reverse();closeSubs(S1,o1,r,M)}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
  D.H.push(D.S);D.S=S1;
- if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
+ if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
  else{D.fb=D.ok2?`<div class="fb ok">${esc(D.ok2)}</div>`:"";D.ok2="";logA("bq","lg",TPL[r].n,true,info)}
  if(D.S.G[0].s=="d"&&!ST.done[E[ex].t]){const antes=E.map((_,i)=>unl(i));ST.done[E[ex].t]=1;SVQ();const nu=E.filter((x,i)=>!antes[i]&&unl(i)).map(x=>x.t);D.unl=nu}
  bqDraw()}
@@ -275,9 +279,9 @@ function bqTxt(){const S=D.S,e=E[ex],cu=D.S.G[0].s=="d"?null:curG(),L=[],rl=(r,l
 ${L.join("\n")}
 `+(cu?`Meta seleccionada: ${P(cu.g)} · Tengo: ${cu.ctx.map(x=>x.d.l?"["+P(x.f)+"]"+x.d.l:P(x.f)).join(", ")||"nada"}\n`:"Árbol completo.\n")+(fb?`Último mensaje: ${fb}\n`:"")}
 function bqCopy(){const t=bqTxt();D.cp=t;try{navigator.clipboard.writeText(t).then(()=>{D.cp="";D.cpOk=1;bqDraw()},()=>bqDraw())}catch(_){bqDraw()}}
-function bqNS(){const o=curG(),hn=bqHint(o),th=typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"";
+function bqNS(){if(EMB){EMB.err++;EMB.ns++}const o=curG(),hn=bqHint(o),th=typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"";
  D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});bqDraw()}
-V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
+V.addEventListener("click",ev=>{if(EMB?!EMB.el.contains(ev.target):TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.m=[];D.fb="";bqDraw()}
  else if(w=="r"){D.r=b.dataset.v;D.m=[];D.fb="";bqDraw()}
  else if(w=="m"){const o=curG(),v=b.dataset.v;let m;if(v[0]=="H"){const x=o.ctx.find(y=>y.d.l==v.slice(1));m={f:x.f,hyp:x.d.l}}else if(v[0]=="T"&&v.length>1&&TPm()[v.slice(1)]&&(TPL[D.r].k||[])[D.m.length]=="t")m={t:v.slice(1),f:{k:"at",n:v.slice(1),a:[]}};else m={f:pool(o).concat(o.ctx.map(x=>x.f)).find(x=>P(x)==v)};D.m.push(m);if(D.m.length>=TPL[D.r].m.length)bqDo();else bqDraw()}
@@ -292,7 +296,9 @@ V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[dat
  else if(w=="nx"){ex=nextEx();D=nw(ex);bqDraw()}});
 (()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqlk{opacity:.55}.bqsp{font-size:12px;color:var(--ac);white-space:nowrap;font-family:var(--m)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
 
-return{bqOpen,_go:(t,all)=>{if(all)ST.done=Object.fromEntries(E.map(x=>[x.t,1]));const i=E.findIndex(x=>x.t==t);ex=i;D=nw(i);bqDraw()},_reset:()=>{ST.done={};ex=0;D=nw(0);bqDraw()}};/* _go/_reset: solo para pruebas */
+/* Deslizar: los ejercicios intermedios (los que son previa de otro, y los patrones de contradicción) son tarjetas «Árbol · …» */
+{const RQ=new Set(E.flatMap(x=>x.req));E.filter(x=>RQ.has(x.t)||x.grp=="Patrones de contradicción").forEach(x=>{const c=sw("lg","Árbol · "+x.t,null,[st("Armá el árbol",x.t,"—","")]);c.bqx=x.t;SWC.push(c)})}
+return{bqOpen,bqEmbed,_go:(t,all)=>{if(all)ST.done=Object.fromEntries(E.map(x=>[x.t,1]));const i=E.findIndex(x=>x.t==t);ex=i;D=nw(i);bqDraw()},_reset:()=>{ST.done={};ex=0;D=nw(0);bqDraw()}};/* _go/_reset: solo para pruebas */
 
 })();
 const bqOpen=BQ.bqOpen;
