@@ -539,6 +539,7 @@ window.THL=window.THL||[];THL.push({s:"p4",re:/secuencia del sistema|recordad|me
   const dobj=s=>s?objT(s).map(x=>x.t):[];
   dobj(L.td).concat(dobj(L.fd)).forEach(t=>{if(D.length<8&&!/^[:*]$/.test(t))add(t)});
   const fix=D.slice(0,8);c.bld={exp:ex,bank:ex.filter(x=>x.k!="a").map(x=>({t:x.t})).concat(fix.map(x=>({t:x.t}))),n:ex.length};
+  if(!/\nClases: /.test(c.ctx)&&c.dg.clc)c.ctx=c.ctx.replace("\n▶ ","\nClases: "+c.dg.clc+"\n▶ ");
   c.lineSteps=old;
   c.steps=[Object.assign(st("Armá la línea",lineStr(L),"—",""),{k:"bld"})]})}
 
