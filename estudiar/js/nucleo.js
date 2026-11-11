@@ -41,7 +41,8 @@ try{Object.assign(E1,JSON.parse(localStorage.getItem("err1")||"{}"))}catch(e){}
 /* Música no registra errores: se limpian los que hubieran quedado guardados */
 if(E1.log.some(e=>e.w=="mu")||Object.keys(E1.st).some(k=>k.startsWith("mu|"))){E1.log=E1.log.filter(e=>e.w!="mu");Object.keys(E1.st).forEach(k=>{if(k.startsWith("mu|"))delete E1.st[k]});try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}}
 const SVE=()=>{try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}};
-function logA(w,s,g,ok,info){const k=w+"|"+s+"|"+g,v=E1.st[k]||(E1.st[k]=[0,0]);v[1]++;if(ok)v[0]++;else{E1.log.push(Object.assign({t:Date.now(),w,s,g},info));if(E1.log.length>4000)E1.log.splice(0,E1.log.length-4000)}SVE()}
+function logA(w,s,g,ok,info){/* aciertos por día (E1.day[fecha][w|s] = [ok, intentos]) para medir progreso */{const dy=new Date().toLocaleDateString("en-CA"),D2=E1.day||(E1.day={}),x=D2[dy]||(D2[dy]={}),kk=w+"|"+s,y=x[kk]||(x[kk]=[0,0]);y[1]++;if(ok)y[0]++}
+ const k=w+"|"+s+"|"+g,v=E1.st[k]||(E1.st[k]=[0,0]);v[1]++;if(ok)v[0]++;else{E1.log.push(Object.assign({t:Date.now(),w,s,g},info));if(E1.log.length>4000)E1.log.splice(0,E1.log.length-4000)}SVE()}
 const D0=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
 const TD=()=>new Date().toLocaleDateString("en-CA");
 const roll=()=>{const t=TD();if(S.day!=t){if(S.day){const gap=Math.max(0,Math.round((new Date(t)-new Date(S.day))/864e5)-1);S.debt=Math.max(0,S.nm+S.debt-S.nw)+gap*S.nm}S.day=t;S.nw=0;S.xpd=0;SV()}};
