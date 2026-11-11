@@ -212,11 +212,30 @@ function pool(o){const m={},add=f=>{m[P(f)]=f};Object.values(FPm(o)).forEach(f=>
  return Object.values(m).sort((a,b)=>P(a).length-P(b).length||P(a).localeCompare(P(b)))}
 /* Modo incrustado: una tarjeta de Deslizar arma un árbol corto acá adentro (EMB = {el, cb, err}) */
 let EMB=null;const OUT=()=>EMB?EMB.el:V;
+/* Mapa de previas (pestaña Bloques): grafo por grupo; flecha = «es previa de». Nodo: ✓ resuelto en Bloques, ★ acertado sin errores en Deslizar. Las previas de otro grupo se ven punteadas. Tocar un nodo abre el ejercicio. */
+let MAPV=0;
+function mapHtml(g){const own=E.filter(x=>x.grp==g),ids=new Set(own.map(x=>x.t)),ext=[...new Set(own.flatMap(x=>x.req).filter(t=>!ids.has(t)))],N=own.map(x=>x.t).concat(ext),req=t=>ids.has(t)?E.find(x=>x.t==t).req:[],dp={};
+ const dep=t=>dp[t]!=null?dp[t]:(dp[t]=req(t).length?1+Math.max(...req(t).map(dep)):0);N.forEach(dep);
+ const L=[];N.forEach(t=>{(L[dp[t]]=L[dp[t]]||[]).push(t)});const W=t=>Math.max(60,Math.round(t.length*7.4)+22),HH=34,GY=46,GX=12,pos={};
+ let mw=0;L.forEach(r=>{mw=Math.max(mw,r.reduce((a,t)=>a+W(t),0)+GX*(r.length-1))});mw+=20;
+const lay=()=>L.forEach((r,d)=>{let x=(mw-(r.reduce((a,t)=>a+W(t),0)+GX*(r.length-1)))/2;r.forEach(t=>{pos[t]={x,y:10+d*(HH+GY),w:W(t)};x+=W(t)+GX})});lay();
+ /* menos cruces: ordenar cada capa por el promedio de x de sus previas (dos pasadas) */
+ for(let k=0;k<2;k++){L.forEach((r,d)=>{if(!d)return;const c=t=>{const q=req(t).filter(u=>pos[u]);return q.length?q.reduce((a,u)=>a+pos[u].x+pos[u].w/2,0)/q.length:pos[t].x};r.sort((a,b)=>c(a)-c(b))});lay()}
+ const H=10+L.length*(HH+GY)-GY+10,bq=(window.S2&&S2.bqok)||{};
+ let sv=`<svg width="${mw}" height="${H}" role="img" aria-label="Mapa de previas de ${esc(g)}" style="display:block;margin:auto;font:12px var(--m)"><defs><marker id="pa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--mut)" stroke-width="1.5"/></marker></defs>`;
+ N.forEach(t=>req(t).forEach(r=>{const a=pos[r],b=pos[t];if(!a||!b)return;sv+=`<line x1="${a.x+a.w/2}" y1="${a.y+HH}" x2="${b.x+b.w/2}" y2="${b.y-2}" stroke="var(--mut)" stroke-width="1" marker-end="url(#pa)"/>`}));
+ N.forEach(t=>{const q=pos[t],i=E.findIndex(x=>x.t==t),dn=ST.done[t],ex2=!ids.has(t),lb=(dn?"✓ ":"")+(bq[t]?"★ ":"")+t;
+  sv+=`<g data-b="mx" data-i="${i}" style="cursor:pointer"><rect x="${q.x}" y="${q.y}" width="${q.w}" height="${HH}" rx="8" fill="${dn?"var(--okbg)":"var(--card)"}" stroke="${dn?"var(--ok)":"var(--ac)"}" stroke-width="1"${ex2?' stroke-dasharray="4 3"':""}/><text x="${q.x+q.w/2}" y="${q.y+HH/2+4}" text-anchor="middle" fill="var(--fg)">${esc(lb.length>40?lb.slice(0,39)+"…":lb)}</text></g>`});
+ return sv+"</svg>"}
+function bqMap(){const GR=[...new Set(E.map(x=>x.grp))],g=D.mg||E[ex].grp;
+ OUT().innerHTML=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px">${GR.map(x=>`<button class="btn chip${x==g?" sel":""}" data-b="mg" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+ <div class="row between" style="margin-top:8px"><span class="mut" style="font-size:13px">Flecha = «es previa de». ✓ resuelto acá · ★ acertado en Deslizar (abre lo siguiente allá). Punteado: previa de otro grupo.</span><button class="btn" data-b="mp">Volver</button></div>
+ <div class="sn" style="overflow-x:auto;padding:8px;margin-top:8px">${mapHtml(g)}</div></div>`}
 function bqOpen(){EMB=null;if(!D)D=nw(ex);bqDraw()}
 function bqEmbed(t,el,cb){const i=E.findIndex(x=>x.t==t);if(i<0)return;EMB={el,cb,err:0,ns:0,i};ex=i;D=nw(i);bqDraw()}
-function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if(o)D.cur=o.id;const e=E[ex];
+function bqDraw(){if(MAPV&&!EMB)return bqMap();const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if(o)D.cur=o.id;const e=E[ex];
  const GR=[...new Set(E.map(x=>x.grp))],cg=D.grp||e.grp,nd2=g=>E.filter(x=>x.grp==g),dn=g=>nd2(g).filter(x=>ST.done[x.t]).length;
- let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px${EMB?";display:none":""}">${GR.map(g=>`<button class="btn chip${g==cg?" sel":""}" data-b="gr" data-v="${esc(g)}">${esc(g)} <span class="mut">${dn(g)}/${nd2(g).length}</span></button>`).join("")}</div>
+ let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px${EMB?";display:none":""}">${GR.map(g=>`<button class="btn chip${g==cg?" sel":""}" data-b="gr" data-v="${esc(g)}">${esc(g)} <span class="mut">${dn(g)}/${nd2(g).length}</span></button>`).join("")}<button class="btn" data-b="mp">Mapa de previas</button></div>
  <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px${EMB?";display:none":""}">${E.map((x,i)=>x.grp!=cg?"":`<button class="btn chip${i==ex?" sel":""}${unl(i)?"":" bqlk"}" data-b="ex" data-i="${i}">${unl(i)?"":"🔒 "}${esc(x.t)}${ST.done[x.t]?" ✓":""}</button>`).join("")}</div>
  <div class="sn" style="margin-top:10px">${e.P.length?esc(e.P.join(", "))+" ":""}⊢ ${esc(e.g)}</div>
  <div class="sn pft bqt"><div style="display:inline-block;padding-right:52px">${rg(root,o&&o.id)}</div></div>`;
@@ -291,6 +310,9 @@ V.addEventListener("click",ev=>{if(EMB?!EMB.el.contains(ev.target):TAB!=6)return
  else if(w=="un"&&D.H.length){D.S=D.H.pop();D.fb="";D.r=null;D.m=[];bqDraw()}
  else if(w=="rs"){D=nw(ex);bqDraw()}
  else if(w=="ns")bqNS();
+ else if(w=="mp"){MAPV=MAPV?0:1;D.mg=null;bqDraw()}
+ else if(w=="mg"){D.mg=b.dataset.v;bqDraw()}
+ else if(w=="mx"){const i=+b.dataset.i;if(i>=0){MAPV=0;ex=i;D=nw(i);bqDraw()}}
  else if(w=="cp")bqCopy();
  else if(w=="ex"){const i=+b.dataset.i;if(!unl(i)){const f=E[i].req.filter(t=>!ST.done[t]);D.fb=`<div class="fb no"><b>🔒 ${esc(E[i].t)}</b> se desbloquea cuando resuelvas: ${f.map(esc).join(", ")}.</div>`;return bqDraw()}ex=i;D=nw(ex);bqDraw()}
  else if(w=="gr"){const g=b.dataset.v;let i=E.findIndex((x,j)=>x.grp==g&&unl(j)&&!ST.done[x.t]);if(i<0)i=E.findIndex((x,j)=>x.grp==g&&unl(j));if(i>=0){ex=i;D=nw(ex)}else{D.grp=g;D.fb=""}bqDraw()}
