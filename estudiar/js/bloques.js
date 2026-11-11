@@ -297,6 +297,8 @@ V.addEventListener("click",ev=>{if(EMB?!EMB.el.contains(ev.target):TAB!=6)return
 (()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqlk{opacity:.55}.bqsp{font-size:12px;color:var(--ac);white-space:nowrap;font-family:var(--m)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
 
 /* Deslizar: los ejercicios intermedios (los que son previa de otro, y los patrones de contradicción) son tarjetas «Árbol · …» */
+/* Se quitan también las series de Lógica que se crean después de logica.js (PORT de Repaso, etc.): Lógica en Deslizar = solo árboles */
+for(let i=SWC.length-1;i>=0;i--)if(SWC[i].s=="lg"&&!SWC[i].bqx)SWC.splice(i,1);
 {const RQ=new Set(E.flatMap(x=>x.req));E.filter(x=>RQ.has(x.t)||x.grp=="Patrones de contradicción").forEach(x=>{const c=sw("lg","Árbol · "+x.t,null,[st("Armá el árbol",x.t,"—","")]);c.bqx=x.t;SWC.push(c)})}
 return{bqOpen,bqEmbed,_go:(t,all)=>{if(all)ST.done=Object.fromEntries(E.map(x=>[x.t,1]));const i=E.findIndex(x=>x.t==t);ex=i;D=nw(i);bqDraw()},_reset:()=>{ST.done={};ex=0;D=nw(0);bqDraw()}};/* _go/_reset: solo para pruebas */
 
