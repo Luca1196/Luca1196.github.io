@@ -349,7 +349,7 @@ V.addEventListener("click",ev=>{if(EMB?!EMB.el.contains(ev.target):TAB!=6)return
 
 /* Deslizar: los ejercicios intermedios (los que son previa de otro, y los patrones de contradicción) son tarjetas «Árbol · …» */
 /* Se quitan también las series de Lógica que se crean después de logica.js (PORT de Repaso, etc.): Lógica en Deslizar = solo árboles */
-for(let i=SWC.length-1;i>=0;i--)if(SWC[i].s=="lg"&&!SWC[i].bqx)SWC.splice(i,1);
+for(let i=SWC.length-1;i>=0;i--)if(SWC[i].s=="lg"&&!SWC[i].bqx&&!SWC[i].keep)SWC.splice(i,1);
 {const RQ=new Set(E.flatMap(x=>x.req));E.filter(x=>RQ.has(x.t)||x.grp=="Patrones de contradicción").forEach(x=>{const c=sw("lg","Árbol · "+x.t,null,[st("Armá el árbol",x.t,"—","")]);c.bqx=x.t;SWC.push(c)})}
 return{bqOpen,bqEmbed,req:t=>{const x=E.find(y=>y.t==t);return x?x.req:[]},_go:(t,all)=>{if(all)ST.done=Object.fromEntries(E.map(x=>[x.t,1]));const i=E.findIndex(x=>x.t==t);ex=i;D=nw(i);bqDraw()},_reset:()=>{ST.done={};ex=0;D=nw(0);bqDraw()}};/* _go/_reset: solo para pruebas */
 

@@ -141,6 +141,8 @@ lgApply();
    - Teoría previa (s.th, recuadro 📘) antes de las preguntas de temas que fueron «No sé».
    - Lógica en Deslizar = solo tarjetas «Árbol · …» (árboles cortos de Bloques); aparecen recién cuando sus previas se
      acertaron sin errores (S2.bqok). Las series de conceptos de Lógica se retiraron (siguen en logica.js, sin mostrar).
+     Excepción: las series de otros tipos de ejercicio de examen (semántica, modelos) llevan keep:1 y previas propias (c.req: títulos de
+     series que hay que terminar sin errores).
    ===================================================================================================== */
 /* ---- Pestaña Deslizar: decisiones binarias (estado propio en localStorage "sw1") ---- */
 let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
@@ -155,7 +157,7 @@ const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!="sw"||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
- const avail=c=>!c.bqx||BQ.req(c.bqx).every(t=>(S2.bqok||{})[t]),ok=c=>avail(c)&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF])),PD=swPend();
+ const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),ok=c=>avail(c)&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF])),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
  const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
@@ -250,7 +252,7 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);SERR=area(u.c);
   swNew();return}
  if(s&&s.f)u.built.push(s.f);u.i++;
- if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
+ if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;if(!u.err&&!u.only)(S2.bqok=S2.bqok||{})[u.c.g]=1;/* serie completa sin errores: abre las que la tienen de previa (c.req) */S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
  swStep()}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if(TAB!=3)return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
