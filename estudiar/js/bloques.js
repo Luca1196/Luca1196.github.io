@@ -2,7 +2,7 @@
    Los bloques SON el árbol: cada meta abierta es un hueco (punteado); al tocarlo y elegir una regla, aparece la raya con sus premisas como huecos nuevos.
    Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida por lo que exige la regla (no por posiciones fijas: E→, E¬ aceptan cualquier orden; en E∨ el usuario elige qué supone cada rama) y el árbol respeta el orden elegido (sw invierte subs). Al agregar ejercicios no hace falta acomodar nada. Hojas: una premisa del ejercicio elegida queda como hoja; una SUPOSICIÓN solo si se elige con corchetes [φ]ⁿ (botón aparte); elegir φ sin corchetes deja un hueco (closeSubs); «Hipótesis» sirve para cerrar a mano un hueco que es una hipótesis. Nada se aplica automáticamente (pedido de Luca).
    MOTOR: copia literal de logica.html (pf/pr/fv/sb/ff/entails/tp y mk/sol/cl0/bld/mv/PM/pl/hint). Si cambia allá, recopiar el bloque entre las marcas.
-   Errores: logA("bq",...). «No sé»: hint(o) + teoría THT (swTeo). Progreso: localStorage "bq1". v1: solo ejercicios proposicionales (E). */
+   Errores: logA("bq",...). «No sé»: hint(o) + teoría THT (swTeo). Progreso: localStorage "bq1". Ejercicios en E con grp y req (previas): ver comentario sobre E. */
 const BQ=(()=>{
 let NOAUTO=false;/* Una premisa que ELEGISTE y ya tenés queda como hoja (se cierra al elegirla); las demás quedan como hueco */
 /* ===== MOTOR (copia de logica.html) ===== */
@@ -91,32 +91,62 @@ if(g.k=="or"||g.k=="ex")return"I∨/I∃ solo si ya sabés qué lado o testigo v
 return"Nada directo: RAA (suponé ¬meta y buscá ⊥) (paso 4).";}
 /* ===== FIN MOTOR ===== */
 /* ---------- Ejercicios (v1: solo proposicional) ---------- */
+/* Ejercicios por grupos con PREVIAS (req): un compuesto se desbloquea al resolver sus pasos intermedios.
+   Para agregar un ejercicio compuesto: extraer sus pasos intermedios (subderivaciones con sus hipótesis) como ejercicios propios del mismo grupo y ponerlos en req. */
 const SD="α∨(β∧¬γ)",H="¬α→¬(β→γ)";
 const E=[
-{t:"Conmutar ∧",P:["p∧q"],g:"q∧p"},
-{t:"Cadena de →",P:["φ→ψ","ψ→σ"],g:"φ→σ"},
-{t:"Doble negación",P:["¬¬φ"],g:"φ"},
-{t:"Silogismo disyuntivo",P:["p∨q","¬p"],g:"q"},
-{t:"No contradicción",P:[],g:"¬(φ∧¬φ)"},
-{t:"Choque ∧ y →",P:["β∧¬γ","β→γ"],g:"⊥"},
-{t:"Choque ∧ y → (2)",P:["p∧q","p→¬q"],g:"⊥"},
-{t:"Choque por casos",P:["p∨q","¬p","¬q"],g:"⊥"},
-{t:"Casos con →",P:["p∨q","p→r","q→r","¬r"],g:"⊥"},
-{t:"Núcleo de 3a",P:["α∨(β∧¬γ)","¬α","β→γ"],g:"⊥"},
-{t:"Contrarrecíproca",P:[],g:"(p→q)→(¬q→¬p)"},
-{t:"Tercero excluido",P:[],g:"φ∨¬φ"},
-{t:"Febrero 3a",P:[],g:"((p→q)∧(¬r→p))→(¬q→r)"},
-{t:"3a ←",P:[],g:`(${SD})→(${H})`},
-{t:"3a →",P:[],g:`(${H})→(${SD})`},
-{t:"3a completo",P:[],g:`(${H})↔(${SD})`},
-{t:"2c",P:["(∀x)P(f(x)) ∧ (∃z)¬P(z)","(∀x)¬P(x)"],g:"(∀x)Q(x)"},
-{t:"3b",P:["(∃x)R(x,x)","(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],g:"(∃x)P(x,x)"}];
+{t:"Conmutar ∧",g:"q∧p",P:["p∧q"],req:[],grp:"Base"},
+{t:"Usar → dos veces",g:"σ",P:["φ→ψ","ψ→σ","φ"],req:[],grp:"Base"},
+{t:"Cadena de →",g:"φ→σ",P:["φ→ψ","ψ→σ"],req:["Usar → dos veces"],grp:"Base"},
+{t:"Choque directo",g:"⊥",P:["φ","¬φ"],req:[],grp:"Base"},
+{t:"De ⊥ sale cualquiera",g:"q",P:["p","¬p"],req:["Choque directo"],grp:"Base"},
+{t:"Silogismo disyuntivo",g:"q",P:["p∨q","¬p"],req:["De ⊥ sale cualquiera"],grp:"Base"},
+{t:"Choque con ¬¬φ",g:"⊥",P:["¬¬φ","¬φ"],req:["Choque directo"],grp:"Base"},
+{t:"Doble negación",g:"φ",P:["¬¬φ"],req:["Choque con ¬¬φ"],grp:"Base"},
+{t:"Choque en una ∧",g:"⊥",P:["φ∧¬φ"],req:["Choque directo"],grp:"Base"},
+{t:"No contradicción",g:"¬(φ∧¬φ)",P:[],req:["Choque en una ∧"],grp:"Base"},
+{t:"Modus tollens: choque",g:"⊥",P:["p→q","¬q","p"],req:["Choque directo"],grp:"Base"},
+{t:"Contrarrecíproca",g:"(p→q)→(¬q→¬p)",P:[],req:["Modus tollens: choque"],grp:"Base"},
+{t:"Choque ∧ y →",g:"⊥",P:["β∧¬γ","β→γ"],req:["Choque directo"],grp:"Patrones de contradicción"},
+{t:"Choque ∧ y → (2)",g:"⊥",P:["p∧q","p→¬q"],req:["Choque ∧ y →"],grp:"Patrones de contradicción"},
+{t:"Choque por casos",g:"⊥",P:["p∨q","¬p","¬q"],req:["Choque directo"],grp:"Patrones de contradicción"},
+{t:"Casos con →",g:"⊥",P:["p∨q","p→r","q→r","¬r"],req:["Choque por casos"],grp:"Patrones de contradicción"},
+{t:"Núcleo de 3a",g:"⊥",P:["α∨(β∧¬γ)","¬α","β→γ"],req:["Choque ∧ y →", "Choque por casos"],grp:"Patrones de contradicción"},
+{t:"Chocar con ¬(φ∨¬φ)",g:"⊥",P:["¬(φ∨¬φ)","φ"],req:[],grp:"Tercero excluido"},
+{t:"Probar ¬φ desde ¬(φ∨¬φ)",g:"¬φ",P:["¬(φ∨¬φ)"],req:["Chocar con ¬(φ∨¬φ)"],grp:"Tercero excluido"},
+{t:"Tercero excluido",g:"φ∨¬φ",P:[],req:["Probar ¬φ desde ¬(φ∨¬φ)"],grp:"Tercero excluido"},
+{t:"Sacar p de la ∧",g:"p",P:["(p→q)∧(¬r→p)","¬r"],req:[],grp:"Febrero 3a"},
+{t:"Sacar q encadenando",g:"q",P:["(p→q)∧(¬r→p)","¬r"],req:["Sacar p de la ∧"],grp:"Febrero 3a"},
+{t:"Choque con ¬q",g:"⊥",P:["(p→q)∧(¬r→p)","¬q","¬r"],req:["Sacar q encadenando"],grp:"Febrero 3a"},
+{t:"RAA para r",g:"r",P:["(p→q)∧(¬r→p)","¬q"],req:["Choque con ¬q"],grp:"Febrero 3a"},
+{t:"Febrero 3a",g:"((p→q)∧(¬r→p))→(¬q→r)",P:[],req:["RAA para r"],grp:"Febrero 3a"},
+{t:"Probar ¬(β→γ)",g:"¬(β→γ)",P:["α∨(β∧¬γ)","¬α"],req:["Núcleo de 3a"],grp:"3a"},
+{t:"3a ←",g:`(${SD})→(${H})`,P:[],req:["Probar ¬(β→γ)"],grp:"3a"},
+{t:"Chocar con ¬(α∨…) desde α",g:"⊥",P:[`¬(${SD})`,"α"],req:[],grp:"3a"},
+{t:"Probar ¬α",g:"¬α",P:[`¬(${SD})`],req:["Chocar con ¬(α∨…) desde α"],grp:"3a"},
+{t:"Chocar desde β y ¬γ",g:"⊥",P:[`¬(${SD})`,"β","¬γ"],req:["Chocar con ¬(α∨…) desde α"],grp:"3a"},
+{t:"Probar γ por RAA",g:"γ",P:[`¬(${SD})`,"β"],req:["Chocar desde β y ¬γ"],grp:"3a"},
+{t:"Probar β→γ",g:"β→γ",P:[`¬(${SD})`],req:["Probar γ por RAA"],grp:"3a"},
+{t:"Núcleo de 3a →",g:"⊥",P:[`${H}`,`¬(${SD})`],req:["Probar ¬α", "Probar β→γ"],grp:"3a"},
+{t:"3a →",g:`(${H})→(${SD})`,P:[],req:["Núcleo de 3a →"],grp:"3a"},
+{t:"3a completo",g:`(${H})↔(${SD})`,P:[],req:["3a ←", "3a →"],grp:"3a"},
+{t:"Sacar P(f(x)) de ψ",g:"P(f(x))",P:["(∀x)P(f(x)) ∧ (∃z)¬P(z)"],req:[],grp:"2c"},
+{t:"Instanciar con f(x)",g:"¬P(f(x))",P:["(∀x)¬P(x)"],req:[],grp:"2c"},
+{t:"Choque en 2c",g:"⊥",P:["(∀x)P(f(x)) ∧ (∃z)¬P(z)","(∀x)¬P(x)"],req:["Sacar P(f(x)) de ψ", "Instanciar con f(x)"],grp:"2c"},
+{t:"Q(x) desde ⊥",g:"Q(x)",P:["(∀x)P(f(x)) ∧ (∃z)¬P(z)","(∀x)¬P(x)"],req:["Choque en 2c"],grp:"2c"},
+{t:"2c",g:"(∀x)Q(x)",P:["(∀x)P(f(x)) ∧ (∃z)¬P(z)","(∀x)¬P(x)"],req:["Q(x) desde ⊥"],grp:"2c"},
+{t:"E∀ tres veces",g:"R(x,x)∧R(x,x)→P(x,x)",P:["(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],req:[],grp:"3b"},
+{t:"Usar la ∀∀∀ con R(x,x)",g:"P(x,x)",P:["R(x,x)","(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],req:["E∀ tres veces"],grp:"3b"},
+{t:"I∃ con testigo x",g:"(∃x)P(x,x)",P:["R(x,x)","R(x,x)∧R(x,x)→P(x,x)"],req:["Usar la ∀∀∀ con R(x,x)"],grp:"3b"},
+{t:"3b",g:"(∃x)P(x,x)",P:["(∃x)R(x,x)","(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],req:["I∃ con testigo x"],grp:"3b"}];
 E.forEach(e=>{e.PA=e.P.map(pf);e.GA=pf(e.g);e.q=/[∀∃]/.test(e.P.join("")+e.g)});
 let ex=0;
 /* ---------- Estado ---------- */
 let ST=(()=>{try{return JSON.parse(localStorage.getItem("bq1")||"{}")}catch(e){return{}}})();ST.done=ST.done||{};
 const SVQ=()=>{try{localStorage.setItem("bq1",JSON.stringify(ST))}catch(e){}};
 let D=null;/* {S, H:[pilas para deshacer], cur, r (regla elegida), a (parámetros), fb (html de feedback)} */
+const unl=i=>E[i].req.every(t=>ST.done[t]);
+const nextEx=()=>{for(let k=1;k<=E.length;k++){const j=(ex+k)%E.length;if(unl(j)&&!ST.done[E[j].t])return j}return(ex+1)%E.length};
 const nw=i=>{const e=E[i],S={G:[],lab:0,log:[]},o=mk(S,null,e.GA,e.PA.map(f=>({f,d:nd(f,"hip")})));cl0(S,o);return{S,H:[],cur:null,r:null,a:[],fb:""}};
 const lf=S=>{const r=[],w=o=>o.subs.length?o.subs.forEach(i=>w(S.G[i])):o.s=="o"&&r.push(o);w(S.G[0]);return r};
 const curG=()=>{const L=lf(D.S);return L.find(x=>x.id==D.cur)||L[0]};
@@ -181,10 +211,12 @@ function pool(o){const m={},add=f=>{m[P(f)]=f};Object.values(FPm(o)).forEach(f=>
  return Object.values(m).sort((a,b)=>P(a).length-P(b).length||P(a).localeCompare(P(b)))}
 function bqOpen(){if(!D)D=nw(ex);bqDraw()}
 function bqDraw(){const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if(o)D.cur=o.id;const e=E[ex];
- let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px">${E.map((x,i)=>`<button class="btn chip${i==ex?" sel":""}" data-b="ex" data-i="${i}">${esc(x.t)}${ST.done[x.t]?" ✓":""}</button>`).join("")}</div>
+ const GR=[...new Set(E.map(x=>x.grp))],cg=D.grp||e.grp,nd2=g=>E.filter(x=>x.grp==g),dn=g=>nd2(g).filter(x=>ST.done[x.t]).length;
+ let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px">${GR.map(g=>`<button class="btn chip${g==cg?" sel":""}" data-b="gr" data-v="${esc(g)}">${esc(g)} <span class="mut">${dn(g)}/${nd2(g).length}</span></button>`).join("")}</div>
+ <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px">${E.map((x,i)=>x.grp!=cg?"":`<button class="btn chip${i==ex?" sel":""}${unl(i)?"":" bqlk"}" data-b="ex" data-i="${i}">${unl(i)?"":"🔒 "}${esc(x.t)}${ST.done[x.t]?" ✓":""}</button>`).join("")}</div>
  <div class="sn" style="margin-top:10px">${e.P.length?esc(e.P.join(", "))+" ":""}⊢ ${esc(e.g)}</div>
  <div class="sn pft bqt"><div style="display:inline-block;padding-right:52px">${rg(root,o&&o.id)}</div></div>`;
- if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b></div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button><button class="btn" data-b="cp">${D.cpOk?"Copiado ✓":"Copiar para Claude"}</button></div>${D.cp?`<textarea style="width:100%;height:140px;font:12px var(--m);margin-top:8px">${esc(D.cp)}</textarea>`:""}</div>`;D.cpOk=0;V.innerHTML=h;return}
+ if(done){h+=`<div class="fb ok"><b>¡Árbol completo!</b>${D.unl&&D.unl.length?` Se desbloqueó: ${D.unl.map(esc).join(", ")}.`:""}</div><div class="row" style="gap:8px"><button class="btn pri" data-b="nx">Siguiente ejercicio</button><button class="btn" data-b="rs">Repetir</button><button class="btn" data-b="cp">${D.cpOk?"Copiado ✓":"Copiar para Claude"}</button></div>${D.cp?`<textarea style="width:100%;height:140px;font:12px var(--m);margin-top:8px">${esc(D.cp)}</textarea>`:""}</div>`;D.cpOk=0;V.innerHTML=h;return}
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>${(()=>{const L=[];let q=o;while(q.par!=null){newSup(q).forEach(x=>L.unshift("["+esc(P(x.f))+"]"+sup(x.d.l)));q=D.S.G[q.par]}return L.length?`<div class="mut" style="font-size:14px">En esta rama suponés: ${L.join(" ")}</div>`:""})()}
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(P(x.f))+"]"+sup(x.d.l):esc(P(x.f))}</span>`).join(" "):"nada"}</div>`;
  const t=D.r&&TPL[D.r];
@@ -212,7 +244,7 @@ function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+
  D.H.push(D.S);D.S=S1;
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
  else{D.fb=D.ok2?`<div class="fb ok">${esc(D.ok2)}</div>`:"";D.ok2="";logA("bq","lg",TPL[r].n,true,info)}
- if(D.S.G[0].s=="d"){ST.done[E[ex].t]=1;SVQ()}
+ if(D.S.G[0].s=="d"&&!ST.done[E[ex].t]){const antes=E.map((_,i)=>unl(i));ST.done[E[ex].t]=1;SVQ();const nu=E.filter((x,i)=>!antes[i]&&unl(i)).map(x=>x.t);D.unl=nu}
  bqDraw()}
 function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:"I¬",or:"I∨",iff:"I↔"};
  if(c.some(f=>eq(f,g)))return`La meta ${P(g)} ya está en «Tengo»: cerrala con Hipótesis.`;
@@ -255,11 +287,12 @@ V.addEventListener("click",ev=>{if(TAB!=6)return;const b=ev.target.closest("[dat
  else if(w=="rs"){D=nw(ex);bqDraw()}
  else if(w=="ns")bqNS();
  else if(w=="cp")bqCopy();
- else if(w=="ex"){ex=+b.dataset.i;D=nw(ex);bqDraw()}
- else if(w=="nx"){ex=(ex+1)%E.length;D=nw(ex);bqDraw()}});
-(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqsp{font-size:12px;color:var(--ac);white-space:nowrap;font-family:var(--m)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
+ else if(w=="ex"){const i=+b.dataset.i;if(!unl(i)){const f=E[i].req.filter(t=>!ST.done[t]);D.fb=`<div class="fb no"><b>🔒 ${esc(E[i].t)}</b> se desbloquea cuando resuelvas: ${f.map(esc).join(", ")}.</div>`;return bqDraw()}ex=i;D=nw(ex);bqDraw()}
+ else if(w=="gr"){const g=b.dataset.v;let i=E.findIndex((x,j)=>x.grp==g&&unl(j)&&!ST.done[x.t]);if(i<0)i=E.findIndex((x,j)=>x.grp==g&&unl(j));if(i>=0){ex=i;D=nw(ex)}else{D.grp=g;D.fb=""}bqDraw()}
+ else if(w=="nx"){ex=nextEx();D=nw(ex);bqDraw()}});
+(()=>{const st=document.createElement("style");st.textContent=".bqt{overflow-x:auto;text-align:center}.bqh{font:inherit;font-family:var(--m);border:2px dashed var(--ac);border-radius:8px;background:var(--card);color:var(--fg);padding:2px 10px;cursor:pointer;white-space:nowrap}.bqh.on{background:var(--ac);color:var(--onac);border-style:solid}.bqr{border-top-style:dashed}.bqb{font-family:var(--m);font-weight:600}.bqhy{font-family:var(--m);border-color:var(--ac)}.bqlk{opacity:.55}.bqsp{font-size:12px;color:var(--ac);white-space:nowrap;font-family:var(--m)}.bqc{display:inline-block;font-family:var(--m);border:1px solid var(--bd);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;color:var(--fg)}";document.head.appendChild(st)})();
 
-return{bqOpen};
+return{bqOpen,_go:(t,all)=>{if(all)ST.done=Object.fromEntries(E.map(x=>[x.t,1]));const i=E.findIndex(x=>x.t==t);ex=i;D=nw(i);bqDraw()},_reset:()=>{ST.done={};ex=0;D=nw(0);bqDraw()}};/* _go/_reset: solo para pruebas */
 
 })();
 const bqOpen=BQ.bqOpen;
