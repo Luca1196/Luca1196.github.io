@@ -138,7 +138,7 @@ const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!="sw"||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
- const ok=c=>SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF]),PD=swPend();
+ const avail=c=>!c.bqx||BQ.req(c.bqx).every(t=>(S2.bqok||{})[t]),ok=c=>avail(c)&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF])),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
  const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
@@ -193,7 +193,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;
    BQ.bqEmbed(c.bqx,$("bqemb"),(err,ns)=>{u.bqd=1;u.bqe=err;u.ans=err?"no":"ok";S2.n++;SUN++;const k=c.id+":0";
-    if(!err){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=3;S2.box[k]=Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,1400)}
+    if(!err){(S2.bqok=S2.bqok||{})[c.bqx]=1;logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=3;S2.box[k]=Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,1400)}
     else{SCOMBO=0;S2.box[k]=0;SRETRY.push({c,i:0,due:SUN+8});logA("sw",c.s,c.g,false,{q:"Armá el árbol",x:c.bqx,a:"árbol completo sin errores",p:err+(err==1?" error":" errores")+(ns?" ("+ns+" «No sé»)":""),ns:ns?1:0,n:1})}
     SV2();swDraw()});return}
   h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${esc(c.g)}</div><div class="fb ${u.bqe?"no":"ok"}"><b>${u.bqe?u.bqe+(u.bqe==1?" error":" errores")+": este árbol vuelve en un rato.":"¡Árbol completo sin errores!"}</b></div>${u.bqe?`<button class="btn pri big" data-w="go">Continuar</button>`:""}</div></div>`;V.innerHTML=h;return}

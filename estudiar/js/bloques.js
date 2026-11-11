@@ -145,7 +145,8 @@ let ex=0;
 let ST=(()=>{try{return JSON.parse(localStorage.getItem("bq1")||"{}")}catch(e){return{}}})();ST.done=ST.done||{};
 const SVQ=()=>{try{localStorage.setItem("bq1",JSON.stringify(ST))}catch(e){}};
 let D=null;/* {S, H:[pilas para deshacer], cur, r (regla elegida), a (parámetros), fb (html de feedback)} */
-const unl=i=>E[i].req.every(t=>ST.done[t]);
+/* Pestaña Bloques: todo desbloqueado (pedido 10/11). Las previas (req) se usan en Deslizar: una tarjeta «Árbol · …» aparece recién cuando sus previas se acertaron sin errores ahí. */
+const unl=i=>true;
 const nextEx=()=>{for(let k=1;k<=E.length;k++){const j=(ex+k)%E.length;if(unl(j)&&!ST.done[E[j].t])return j}return(ex+1)%E.length};
 const nw=i=>{const e=E[i],S={G:[],lab:0,log:[]},o=mk(S,null,e.GA,e.PA.map(f=>({f,d:nd(f,"hip")})));cl0(S,o);return{S,H:[],cur:null,r:null,a:[],fb:""}};
 const lf=S=>{const r=[],w=o=>o.subs.length?o.subs.forEach(i=>w(S.G[i])):o.s=="o"&&r.push(o);w(S.G[0]);return r};
@@ -300,7 +301,7 @@ V.addEventListener("click",ev=>{if(EMB?!EMB.el.contains(ev.target):TAB!=6)return
 /* Se quitan también las series de Lógica que se crean después de logica.js (PORT de Repaso, etc.): Lógica en Deslizar = solo árboles */
 for(let i=SWC.length-1;i>=0;i--)if(SWC[i].s=="lg"&&!SWC[i].bqx)SWC.splice(i,1);
 {const RQ=new Set(E.flatMap(x=>x.req));E.filter(x=>RQ.has(x.t)||x.grp=="Patrones de contradicción").forEach(x=>{const c=sw("lg","Árbol · "+x.t,null,[st("Armá el árbol",x.t,"—","")]);c.bqx=x.t;SWC.push(c)})}
-return{bqOpen,bqEmbed,_go:(t,all)=>{if(all)ST.done=Object.fromEntries(E.map(x=>[x.t,1]));const i=E.findIndex(x=>x.t==t);ex=i;D=nw(i);bqDraw()},_reset:()=>{ST.done={};ex=0;D=nw(0);bqDraw()}};/* _go/_reset: solo para pruebas */
+return{bqOpen,bqEmbed,req:t=>{const x=E.find(y=>y.t==t);return x?x.req:[]},_go:(t,all)=>{if(all)ST.done=Object.fromEntries(E.map(x=>[x.t,1]));const i=E.findIndex(x=>x.t==t);ex=i;D=nw(i);bqDraw()},_reset:()=>{ST.done={};ex=0;D=nw(0);bqDraw()}};/* _go/_reset: solo para pruebas */
 
 })();
 const bqOpen=BQ.bqOpen;
