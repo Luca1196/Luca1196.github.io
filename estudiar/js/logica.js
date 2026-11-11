@@ -1,4 +1,9 @@
 /* SECCIÓN LÓGICA: tarjetas de Repaso, cadenas de Deslizar (deducción natural), combinaciones de examen, contexto por paso (LGX/LGR) y árboles (TRS). lgApply() lo llama nucleo.js después de portar tarjetas. */
+/* DECISIONES DIDÁCTICAS DE LÓGICA (ver también bloques.js y la sección Deslizar de nucleo.js):
+   - Preguntarse siempre «¿la fórmula está en lo que busco (introducción) o en lo que tengo (eliminación)?».
+   - Cada «No sé» de la exportación de errores se responde con teoría (THT y recuadros th) y tarjetas previas más fáciles;
+     cada confusión repetida, con una serie que contraste las dos opciones.
+   - Los ejercicios de examen se practican como árboles en Bloques, partidos en pasos intermedios con previas. */
 /* ---- Tarjetas (cortas): Lógica ---- */
 const LGA=[
 /* d = distractores. "texto||por que no" => el motivo se muestra al elegir esa opcion. */

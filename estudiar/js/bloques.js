@@ -1,3 +1,31 @@
+/* =====================================================================================================
+   DECISIONES DIDÁCTICAS DE BLOQUES (acordadas con Luca, nov 2026). Respetarlas al reciclar este código.
+   -----------------------------------------------------------------------------------------------------
+   1. Los bloques SON el árbol de Gentzen (hojas arriba, raíz abajo). No hay un árbol aparte: lo que se ve es lo que
+      se escribiría en el examen. Cada meta abierta es un hueco punteado; se selecciona tocándolo.
+   2. Se arma hacia atrás desde la meta, con BOTONES. Se probó arrastrar bloques y se descartó por incómodo (celular).
+   3. NADA AUTOMÁTICO. El estudiante elige la regla y después CADA miembro (cada premisa, qué supone, qué queda arriba)
+      de una lista de fórmulas. Se probaron y descartaron: que tocar una hipótesis eligiera la regla sola, y que la app
+      armara pares de premisas: confundía y no hacía practicar.
+   4. Validar por lo que EXIGE la regla, no por posiciones fijas ni por una solución guardada: E→ y E¬ aceptan las premisas
+      en cualquier orden; en E∨ se elige qué supone cada rama. El árbol respeta el orden elegido (sw invierte subs).
+      Así cualquier ejercicio nuevo admite todas las derivaciones válidas sin tocar código.
+   5. Suposiciones con corchetes: [φ]ⁿ es un botón aparte (borde de color). La hoja se cierra solo si se elige con
+      corchetes (para practicar escribirlos). φ sin corchetes deja un hueco. Las premisas del ejercicio no llevan
+      corchetes y, al elegirlas, quedan como hoja (sin paso extra «Hipótesis»).
+   6. Cada hueco de una rama muestra su suposición («rama con [p]¹») y el panel dice «En esta rama suponés…»:
+      sin eso no se distinguía qué rama de un E∨/E∃ era cuál.
+   7. Mensajes de error que ENSEÑAN: explican la regla (de A→B y A sale B; la meta va abajo de la raya) y distinguen
+      ARMAR (introducción: la fórmula está en la meta) de USAR (eliminación: la fórmula está en lo que tengo), que es la
+      confusión más repetida de Luca (E→ vs I→). Al fallar se muestra además la pista 💡 de esa meta.
+   8. «No sé» = pista con el vocabulario de los botones (bqHint, no el del motor viejo) + teoría del tema (THT/swTeo).
+      Para ⊥ la pista busca el par concreto: negación que tenés, negación escondida en una ∧, o E∨ con meta ⊥.
+   9. Ejercicios por grupos con PREVIAS (req): cada compuesto tiene sus pasos intermedios como ejercicios propios
+      (ej. «contradecir una ∧ con una →», «desarmar un ∨ para llegar a ⊥»). En esta pestaña todo está desbloqueado;
+      las previas rigen en Deslizar (tarjetas «Árbol · …» que aparecen al acertar sus previas sin errores) y se ven en
+      el «Mapa de previas». Al agregar un ejercicio compuesto: extraer sus pasos intermedios y ponerlos en req.
+  10. «Copiar para Claude» copia el árbol actual en texto para consultar en el chat.
+   ===================================================================================================== */
 /* SECCIÓN BLOQUES (pestaña 6, en prueba): derivaciones armando el árbol con bloques, estilo Scratch.
    Los bloques SON el árbol: cada meta abierta es un hueco (punteado); al tocarlo y elegir una regla, aparece la raya con sus premisas como huecos nuevos.
    Se construye hacia atrás: el usuario elige la regla y después CADA miembro (premisas y suposición) de una lista de fórmulas (pool); chk() valida por lo que exige la regla (no por posiciones fijas: E→, E¬ aceptan cualquier orden; en E∨ el usuario elige qué supone cada rama) y el árbol respeta el orden elegido (sw invierte subs). Al agregar ejercicios no hace falta acomodar nada. Hojas: una premisa del ejercicio elegida queda como hoja; una SUPOSICIÓN solo si se elige con corchetes [φ]ⁿ (botón aparte); elegir φ sin corchetes deja un hueco (closeSubs); «Hipótesis» sirve para cerrar a mano un hueco que es una hipótesis. Nada se aplica automáticamente (pedido de Luca).

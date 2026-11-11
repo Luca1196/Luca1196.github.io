@@ -126,6 +126,22 @@ PORT.forEach(k=>{const[sj,g]=k.split("|"),cs=CARDS.filter(c=>c.k=="mc"&&c.s==sj&
 lgApply();
 /* Sin duplicados en Prog4: estas cadenas sueltas quedan cubiertas por las tarjetas por línea de cada ejercicio y por la serie «Qué miro». */
 {const DROP=/^(Estereotipo \((parámetro|asociación|local)\)|Numeración: ¿quién envía\?|Destino: ¿colección u objeto\?|Condición \[ \]|Destino \d\/\d|Mensaje|Decisión \d\/\d|Quiz ejercicios \d\/\d)$/;for(let i=SWC.length-1;i>=0;i--)if(SWC[i].s=="p4"&&DROP.test(SWC[i].g))SWC.splice(i,1)}
+/* =====================================================================================================
+   DECISIONES DIDÁCTICAS DE DESLIZAR (acordadas con Luca, oct-nov 2026). Respetarlas al reciclar este código.
+   - Tarjetas atómicas: una decisión por paso, con el contexto justo para responderla (ni más ni menos).
+   - Sin spoilers: un paso no puede nombrar algo que el estudiante todavía no dedujo (ni en la pregunta, ni en el
+     contexto, ni en el árbol: lo no decidido se muestra como «?»). Los pasos siguen el orden en que razonaría.
+   - Distractores tentadores (errores reales), nunca absurdos.
+   - Al fallar NO se repregunta enseguida: la serie se corta, se pasa a otro TEMA (swTop) y el paso fallado vuelve
+     ~8 respuestas después (SRETRY). Un paso fallado queda «pendiente» hasta 2 aciertos seguidos (swPend): pesa más
+     al elegir y forma el filtro «Mis errores».
+   - Un acierto que tarda más de 25 s no sube de caja (se sabía a medias).
+   - «No sé» (flecha ↓) cuenta como error, se registra aparte y muestra EN LA MISMA TARJETA la teoría de eso que no
+     supo (swTeo/THT). Se descartó saltar a otra serie de teoría: no era lo que necesitaba ver.
+   - Teoría previa (s.th, recuadro 📘) antes de las preguntas de temas que fueron «No sé».
+   - Lógica en Deslizar = solo tarjetas «Árbol · …» (árboles cortos de Bloques); aparecen recién cuando sus previas se
+     acertaron sin errores (S2.bqok). Las series de conceptos de Lógica se retiraron (siguen en logica.js, sin mostrar).
+   ===================================================================================================== */
 /* ---- Pestaña Deslizar: decisiones binarias (estado propio en localStorage "sw1") ---- */
 let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
 try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}

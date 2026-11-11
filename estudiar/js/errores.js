@@ -1,4 +1,9 @@
 /* SECCIÓN ERRORES: resumen, lista y exportación. */
+/* DECISIONES DIDÁCTICAS DE ERRORES: la pestaña existe para traer los errores al chat y ajustar el estudio.
+   - «No sé» va marcado y separado de las confusiones: indica falta de teoría (se responde con explicación y tarjetas
+     previas), no una confusión entre opciones (se responde con contrastes).
+   - La exportación agrupa: aciertos por día (para medir progreso en una fecha), tasa por tema, confusiones repetidas
+     (correcta → elegí), «No sé» y fallos agrupados con su contexto. Ejercicios (ej) solo registra fallos: no entra en %. */
 /* ===== Errores (pestaña 5): resumen, lista y exportación para Claude ===== */
 const WN={rep:"Repaso",sw:"Deslizar",mu:"Música",ej:"Ejercicios",bq:"Bloques"},SN={p4:"Prog4",lg:"Lógica",mu:"Música"};
 let ERW="all",ERR=0,ERT="",ERNS=0;
