@@ -1502,6 +1502,8 @@ document.addEventListener("keydown", evento => {
  *     respuestas: hasta 8 puntos  +  racha: hasta 2 puntos  =  10
  *   - Sin racha, la nota máxima es 8: se aprueba sabiendo, pero
  *     el 9 y el 10 solo los alcanza quien estudia seguido.
+ *   - Quien sabe el procedimiento pero no memorizó las fórmulas
+ *     saca 4 (sin racha) o 6 (con racha de 3 días).
  *   - Quien adivina al azar saca en promedio entre 2 y 3.
  *   - Aprobación: 5 (una pregunta bien de primera + racha de 1 día,
  *     o las dos preguntas resueltas con algún error).
@@ -1512,7 +1514,10 @@ const CONFIG_EVALUACION = {
   cantidadPreguntas: 2,
   puntosPorPregunta: 4,
   penalizacionError: 3,      // por cada opción incorrecta elegida
-  penalizacionFormula: 1,    // por usar "Ver fórmula" (una vez por pregunta)
+  // Por usar "Ver fórmula" (una vez por pregunta). Vale la mitad de la pregunta
+  // porque el objetivo es que aprendan a MEMORIZAR repasando todos los días:
+  // resolver sin la fórmula vale el doble que resolver mirándola.
+  penalizacionFormula: 2,
   // Bonus por racha de días (se usa el mayor que se cumpla)
   bonusRacha: [
     { dias: 3, puntos: 2 },  // llama a color
