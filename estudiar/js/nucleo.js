@@ -41,7 +41,7 @@ try{Object.assign(E1,JSON.parse(localStorage.getItem("err1")||"{}"))}catch(e){}
 /* Música no registra errores: se limpian los que hubieran quedado guardados */
 if(E1.log.some(e=>e.w=="mu")||Object.keys(E1.st).some(k=>k.startsWith("mu|"))){E1.log=E1.log.filter(e=>e.w!="mu");Object.keys(E1.st).forEach(k=>{if(k.startsWith("mu|"))delete E1.st[k]});try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}}
 const SVE=()=>{try{localStorage.setItem("err1",JSON.stringify(E1))}catch(e){}};
-function logA(w,s,g,ok,info){/* aciertos por día (E1.day[fecha][w|s] = [ok, intentos]) para medir progreso */{const dy=new Date().toLocaleDateString("en-CA"),D2=E1.day||(E1.day={}),x=D2[dy]||(D2[dy]={}),kk=w+"|"+s,y=x[kk]||(x[kk]=[0,0]);y[1]++;if(ok)y[0]++}
+function logA(w,s,g,ok,info){if(w=="sw"&&TAB==7)w="bs";/* aciertos por día (E1.day[fecha][w|s] = [ok, intentos]) para medir progreso */{const dy=new Date().toLocaleDateString("en-CA"),D2=E1.day||(E1.day={}),x=D2[dy]||(D2[dy]={}),kk=w+"|"+s,y=x[kk]||(x[kk]=[0,0]);y[1]++;if(ok)y[0]++}
  const k=w+"|"+s+"|"+g,v=E1.st[k]||(E1.st[k]=[0,0]);v[1]++;if(ok)v[0]++;else{E1.log.push(Object.assign({t:Date.now(),w,s,g},info));if(E1.log.length>4000)E1.log.splice(0,E1.log.length-4000)}SVE()}
 const D0=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
 const TD=()=>new Date().toLocaleDateString("en-CA");
@@ -64,7 +64,7 @@ return ilv(dd).concat(ilv(nn).slice(0,mode=="todo"?nn.length:remain()))}
 const hdr=()=>{$("hd").textContent=(S.stk?"Racha "+S.stk+(S.stk==1?" día":" días")+" · ":"")+"XP hoy "+S.xpd};
 
 /* ---- Pestañas ---- */
-function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5,6,7].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==6)bqOpen();else if(i==0)home();else if(i==5)erOpen();else if(i==3){if(SF=="bas")SF="all";swOpen()}else if(i==7){SF="bas";swOpen()}else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
+function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5,6,7].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==6)bqOpen();else if(i==0)home();else if(i==5)erOpen();else if(i==3){swMode(3);SF=SF=="bas"?"all":SF;swOpen()}else if(i==7){swMode(7);SF="bas";swOpen()}else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
 function frame(src,t){V.innerHTML=`<iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
 
 /* ---- Inicio ---- */
@@ -147,7 +147,7 @@ lgApply();
 /* ---- Pestaña Deslizar: decisiones binarias (estado propio en localStorage "sw1") ---- */
 let S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};
 try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}
-const SV2=()=>{try{localStorage.setItem("sw1",JSON.stringify(S2))}catch(e){}};
+let SK="sw1";const SV2=()=>{try{localStorage.setItem(SK,JSON.stringify(S2))}catch(e){}};
 let SLT="",SLK="";const swTop=c=>c.s+"|"+c.g.replace(/ · .*$/,"").replace(/ \d+\/\d+$/,"").replace(/ \(.*\)$/,"");
 /* Al fallar se rota de tema: comunicación → deducción natural → código C++ → clases/secuencia. */
 const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="";
@@ -155,7 +155,7 @@ let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
 const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 /* Pendientes = pasos que fallaste alguna vez (registro de Errores) y todavía no acertaste 2 veces seguidas. Pesan más al elegir serie y forman el filtro "Mis errores". */
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
- E1.log.forEach(e=>{if(e.w!="sw"||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
+ E1.log.forEach(e=>{if(e.w!=(TAB==7?"bs":"sw")||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),bas=c=>c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com",ok=c=>SF=="bas"?bas(c):(!bas(c)&&avail(c)&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF]))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
@@ -205,7 +205,7 @@ const bldIsCls=x=>/^[A-Z]/.test(x);
 function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o=T.find(x=>x.re.test(q))||T.find(x=>x.re.test(c.g))||T.find(x=>x.re.test(s.x||c.ctx||""));
  if(!o&&!s.th)return"";return`<div class="th" style="margin-top:10px"><b>📘 ${esc(o?o.t:"Teoría")}</b>${s.th?`<div style="margin-top:4px">${esc(s.th)}</div>`:""}${o?o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join(""):""}</div>`}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
- let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
+ let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
  (TAB==7?"":`<div class="row" style="margin-top:8px">${[["all","Mezclado"],["com","Comunicación (P2)"],["p1","Clases y secuencia (P1)"],["p3","Código C++ (P3)"],["lg","Lógica"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`);
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
@@ -254,6 +254,10 @@ function swAdvance(){clearTimeout(STM);if(!SW||(TAB!=3&&TAB!=7))return;const u=S
  if(s&&s.f)u.built.push(s.f);u.i++;
  if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;if(!u.err&&!u.only)(S2.bqok=S2.bqok||{})[u.c.g]=1;/* serie completa sin errores: abre las que la tienen de previa (c.req) */S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
  swStep()}
+/* Principal y Básico son secciones separadas: cada una con su propio progreso, racha, repasos y almacenamiento (sw1 / sw1b). */
+let SWM=3;const SWX={};
+function swMode(m){clearTimeout(STM);if(m==SWM)return;SWX[SWM]={S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW};SWM=m;SK=m==7?"sw1b":"sw1";const x=SWX[m];
+ if(x){({S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW}=x)}else{S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};try{const r=localStorage.getItem(SK);if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}SCOMBO=0;SRETRY=[];SLAST="";SLT="";SLK="";SERR="";SAX="";SUN=0;SW=null}}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if((TAB!=3&&TAB!=7))return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
  if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="tns")swTile(-1);else if(w=="sf"){SF=b.dataset.v;swNew()}});
