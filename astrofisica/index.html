@@ -15,6 +15,7 @@
 <div class="modo-switch">
   <button id="btnModoPractica" class="activo" onclick="cambiarModo('practica')">🎯 Practicar</button>
   <button id="btnModoMemorizar" onclick="cambiarModo('memorizar')">🧠 Memorizar</button>
+  <button id="btnModoEvaluacion" onclick="cambiarModo('evaluacion')">📝 Evaluación</button>
 </div>
 
 <!-- ============ MODO PRÁCTICA ============ -->
@@ -72,6 +73,11 @@
     <button class="fc-reset" id="btnResetFlash" onclick="reiniciarFlashcards()">Reiniciar progreso de flashcards</button>
   </div>
 
+</div>
+
+<!-- ============ MODO EVALUACIÓN ============ -->
+<div id="modoEvaluacion" class="fc-ocultar">
+  <div id="evZona"></div>
 </div>
 
 <script src="app.js"></script>

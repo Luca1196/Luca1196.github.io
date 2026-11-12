@@ -14,43 +14,50 @@ const CONFIG_PREGUNTAS = {
   magnitud_absoluta_paralaje: {
     nombre: "Magnitud absoluta a partir del paralaje",
     dominioInicial: 50,
-    generador: generarMagnitudAbsoluta
+    generador: generarMagnitudAbsoluta,
+    formulas: ["fc_distancia_paralaje", "fc_magnitud_absoluta"]   // flashcards que muestra el botón "Ver fórmula" en la evaluación
   },
 
   luminosidad: {
     nombre: "Luminosidad (Stefan-Boltzmann)",
     dominioInicial: 50,
-    generador: generarLuminosidad
+    generador: generarLuminosidad,
+    formulas: ["fc_luminosidad", "fc_const_stefan"]   // flashcards que muestra el botón "Ver fórmula" en la evaluación
   },
 
   flujo_luminosidad: {
     nombre: "Flujo a partir de la luminosidad",
     dominioInicial: 50,
-    generador: generarFlujoLuminosidad
+    generador: generarFlujoLuminosidad,
+    formulas: ["fc_flujo_luminosidad"]   // flashcards que muestra el botón "Ver fórmula" en la evaluación
   },
 
   flujo_temperatura: {
     nombre: "Flujo a partir de la temperatura",
     dominioInicial: 50,
-    generador: generarFlujoTemperatura
+    generador: generarFlujoTemperatura,
+    formulas: ["fc_flujo_temperatura", "fc_const_stefan"]   // flashcards que muestra el botón "Ver fórmula" en la evaluación
   },
 
   pogson_diferencia: {
     nombre: "Pogson: diferencia de magnitudes",
     dominioInicial: 50,
-    generador: generarPogsonDiferencia
+    generador: generarPogsonDiferencia,
+    formulas: ["fc_pogson_diferencia"]   // flashcards que muestra el botón "Ver fórmula" en la evaluación
   },
 
   pogson_cociente: {
     nombre: "Pogson: cociente de flujos",
     dominioInicial: 50,
-    generador: generarPogsonCociente
+    generador: generarPogsonCociente,
+    formulas: ["fc_pogson_cociente"]   // flashcards que muestra el botón "Ver fórmula" en la evaluación
   },
 
   ley_wien: {
     nombre: "Ley de Wien",
     dominioInicial: 50,
-    generador: generarLeyWien
+    generador: generarLeyWien,
+    formulas: ["fc_wien_lambda"]   // flashcards que muestra el botón "Ver fórmula" en la evaluación
   }
 
   /*
@@ -1105,6 +1112,8 @@ function poblarSelectorTemas() {
 function cambiarFiltroTema() {
   temaFiltro = document.getElementById("temaSelector").value;
   nuevaPregunta();
+// Si se recargó la página con una evaluación a medias, se cierra con lo que tenía
+if (cargarHistorialEval().enCurso) cambiarModo("evaluacion");
 }
 
 function mostrarDominio(tipo) {
@@ -1478,6 +1487,345 @@ document.addEventListener("keydown", evento => {
 
 /****************************************************************
  *
+ *                    MODO EVALUACIÓN
+ *
+ *   ============================================================
+ *
+ *   Usa los mismos generadores que "Practicar", pero:
+ *   - cada pregunta vale PUNTOS_POR_PREGUNTA,
+ *   - cada respuesta incorrecta resta PENALIZACION_ERROR
+ *     (y se puede volver a intentar mientras queden puntos),
+ *   - "Ver fórmula" resta PENALIZACION_FORMULA,
+ *   - la racha de días suma un bonus (premia el estudio habitual).
+ *
+ *   Con los valores por defecto (2 preguntas):
+ *     respuestas: hasta 8 puntos  +  racha: hasta 2 puntos  =  10
+ *   - Sin racha, la nota máxima es 8: se aprueba sabiendo, pero
+ *     el 9 y el 10 solo los alcanza quien estudia seguido.
+ *   - Quien adivina al azar saca en promedio entre 2 y 3.
+ *   - Aprobación: 5 (una pregunta bien de primera + racha de 1 día,
+ *     o las dos preguntas resueltas con algún error).
+ *
+ ****************************************************************/
+
+const CONFIG_EVALUACION = {
+  cantidadPreguntas: 2,
+  puntosPorPregunta: 4,
+  penalizacionError: 3,      // por cada opción incorrecta elegida
+  penalizacionFormula: 1,    // por usar "Ver fórmula" (una vez por pregunta)
+  // Bonus por racha de días (se usa el mayor que se cumpla)
+  bonusRacha: [
+    { dias: 3, puntos: 2 },  // llama a color
+    { dias: 1, puntos: 1 }
+  ],
+  notaMaxima: 10,
+  notaMinima: 1,
+  notaAprobacion: 5,
+  unaPorDia: true,           // solo una evaluación por día
+  // Temas que pueden tocar (ids de CONFIG_PREGUNTAS). Vacío = todos.
+  temas: []
+};
+
+const STORAGE_KEY_EVAL = "astrofisica_evaluacion_v1";
+
+let evaluacion = null;   // evaluación en curso
+
+function cargarHistorialEval() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_EVAL)) || { resultados: [], enCurso: null }; }
+  catch (e) { return { resultados: [], enCurso: null }; }
+}
+function guardarHistorialEval(h) {
+  try { localStorage.setItem(STORAGE_KEY_EVAL, JSON.stringify(h)); } catch (e) {}
+}
+
+function rachaActualDias() {
+  if (rachaDiaria.fecha !== fechaLocal()) rachaDiaria = cargarRachaDiaria();
+  return rachaDiaria.racha;
+}
+
+function calcularBonusRacha(dias) {
+  const tramo = CONFIG_EVALUACION.bonusRacha
+    .filter(t => dias >= t.dias)
+    .sort((a, b) => b.puntos - a.puntos)[0];
+  return tramo ? tramo.puntos : 0;
+}
+
+/* Pantalla inicial de la pestaña */
+function mostrarInicioEvaluacion() {
+  const zona = document.getElementById("evZona");
+  const h = cargarHistorialEval();
+  const C = CONFIG_EVALUACION;
+
+  // Si se recargó la página en medio de una evaluación, se cierra con lo que tenía
+  if (h.enCurso) {
+    cerrarEvaluacion(h.enCurso, true);
+    return;
+  }
+
+  const hoy = fechaLocal();
+  const deHoy = h.resultados.filter(r => r.fecha === hoy);
+  if (C.unaPorDia && deHoy.length > 0) {
+    mostrarResultado(deHoy[deHoy.length - 1], true);
+    return;
+  }
+
+  const dias = rachaActualDias();
+  const bonus = calcularBonusRacha(dias);
+  const maxResp = C.cantidadPreguntas * C.puntosPorPregunta;
+
+  zona.innerHTML = `
+    <div class="ev-card">
+      <h2>📝 Evaluación</h2>
+      <p>${C.cantidadPreguntas} ${C.cantidadPreguntas === 1 ? "pregunta" : "preguntas"} de los temas de Practicar.</p>
+      <ul class="ev-reglas">
+        <li>Cada pregunta vale <strong>${C.puntosPorPregunta} puntos</strong>.</li>
+        <li>Cada respuesta incorrecta resta <strong>${C.penalizacionError}</strong>; podés volver a intentar mientras te queden puntos.</li>
+        <li>El botón <strong>Ver fórmula</strong> resta <strong>${C.penalizacionFormula}</strong>.</li>
+        <li>Bonus por racha: ${C.bonusRacha.slice().sort((a,b)=>a.dias-b.dias).map(t => `<strong>+${t.puntos}</strong> con ${t.dias} ${t.dias === 1 ? "día" : "días"}`).join(", ")}.</li>
+        <li>Nota máxima ${C.notaMaxima} · se aprueba con ${C.notaAprobacion}.</li>
+        ${C.unaPorDia ? "<li>Se puede hacer <strong>una sola vez por día</strong>. Si salís o recargás la página, la evaluación se cierra con lo que tengas.</li>" : ""}
+      </ul>
+      <div class="ev-bonus">🔥 Tu racha: <strong>${dias} ${dias === 1 ? "día" : "días"}</strong> → bonus <strong>+${bonus}</strong>
+        <div class="ev-sub">Puntaje posible hoy: ${Math.min(C.notaMaxima, maxResp + bonus)} de ${C.notaMaxima}</div>
+      </div>
+      <button onclick="empezarEvaluacion()">Empezar evaluación</button>
+    </div>
+    ${historialHTML(h)}`;
+}
+
+function empezarEvaluacion() {
+  const C = CONFIG_EVALUACION;
+  const pool = (C.temas.length ? C.temas : Object.keys(CONFIG_PREGUNTAS)).filter(id => CONFIG_PREGUNTAS[id]);
+  const temas = mezclar(pool).slice(0, C.cantidadPreguntas);
+  while (temas.length < C.cantidadPreguntas) temas.push(pool[Math.floor(Math.random() * pool.length)]);
+
+  const dias = rachaActualDias();
+  evaluacion = {
+    fecha: fechaLocal(),
+    inicio: Date.now(),
+    racha: dias,
+    bonusRacha: calcularBonusRacha(dias),
+    indice: 0,
+    preguntas: temas.map(tipo => {
+      const g = CONFIG_PREGUNTAS[tipo].generador();
+      return {
+        tipo, enunciado: g.enunciado, unidad: g.unidad || "", opciones: g.opciones,
+        errores: 0, usoFormula: false, resuelta: false, puntos: C.puntosPorPregunta, descartadas: []
+      };
+    })
+  };
+  guardarEnCurso();
+  document.querySelector(".modo-switch").classList.add("fc-ocultar");
+  mostrarPreguntaEval();
+}
+
+/* Lo que se guarda mientras se rinde: si recarga, se cierra con esto */
+function guardarEnCurso() {
+  const h = cargarHistorialEval();
+  h.enCurso = {
+    fecha: evaluacion.fecha, inicio: evaluacion.inicio,
+    racha: evaluacion.racha, bonusRacha: evaluacion.bonusRacha,
+    preguntas: evaluacion.preguntas.map(p => ({
+      tipo: p.tipo, errores: p.errores, usoFormula: p.usoFormula, resuelta: p.resuelta, puntos: p.puntos
+    }))
+  };
+  guardarHistorialEval(h);
+}
+
+function puntosPregunta(p) {
+  const C = CONFIG_EVALUACION;
+  if (!p.resuelta) return 0;
+  return Math.max(0, C.puntosPorPregunta - p.errores * C.penalizacionError - (p.usoFormula ? C.penalizacionFormula : 0));
+}
+/* Puntos que todavía puede ganar (para decidir si sigue intentando) */
+function puntosRestantes(p) {
+  const C = CONFIG_EVALUACION;
+  return Math.max(0, C.puntosPorPregunta - p.errores * C.penalizacionError - (p.usoFormula ? C.penalizacionFormula : 0));
+}
+
+function mostrarPreguntaEval() {
+  const p = evaluacion.preguntas[evaluacion.indice];
+  const C = CONFIG_EVALUACION;
+  const zona = document.getElementById("evZona");
+  const unidad = p.unidad ? " " + p.unidad : "";
+
+  zona.innerHTML = `
+    <div class="ev-progreso">Pregunta ${evaluacion.indice + 1} de ${evaluacion.preguntas.length}
+      <span class="ev-puntos" id="evPuntos">Vale: ${puntosRestantes(p)} / ${C.puntosPorPregunta}</span></div>
+    <div class="question">${p.enunciado}</div>
+    <div id="evOpciones"></div>
+    <div id="evFormula"></div>
+    <div id="evFeedback" class="ev-feedback"></div>
+    <div class="ev-acciones">
+      <button class="ev-btn-formula" id="evBtnFormula" onclick="verFormulaEval()">💡 Ver fórmula (−${C.penalizacionFormula})</button>
+      <button id="evBtnSiguiente" class="fc-ocultar" onclick="siguientePreguntaEval()"></button>
+    </div>`;
+
+  const cont = document.getElementById("evOpciones");
+  p.opciones.forEach((op, i) => {
+    const div = document.createElement("div");
+    div.className = "option";
+    div.textContent = "= " + formatoResultado(op.valor) + unidad;
+    div.onclick = () => responderEval(i, div);
+    cont.appendChild(div);
+  });
+}
+
+function verFormulaEval() {
+  const p = evaluacion.preguntas[evaluacion.indice];
+  if (p.usoFormula || p.resuelta) return;
+  p.usoFormula = true;
+  guardarEnCurso();
+
+  const ids = CONFIG_PREGUNTAS[p.tipo].formulas || [];
+  const tarjetas = ids.map(id => CONFIG_FLASHCARDS.find(f => f.id === id)).filter(Boolean);
+  document.getElementById("evFormula").innerHTML = `
+    <div class="explicacion ev-formula">
+      ${tarjetas.length ? tarjetas.map(t => `<div class="paso">${t.formula}</div><p class="ev-sub">${t.nota || ""}</p>`).join("")
+                        : "<p>No hay fórmula cargada para este tema.</p>"}
+    </div>`;
+  document.getElementById("evBtnFormula").disabled = true;
+  actualizarPuntosEval(p);
+  if (puntosRestantes(p) === 0) terminarPreguntaEval(p, false);
+}
+
+function actualizarPuntosEval(p) {
+  document.getElementById("evPuntos").textContent = `Vale: ${puntosRestantes(p)} / ${CONFIG_EVALUACION.puntosPorPregunta}`;
+}
+
+function responderEval(indice, elemento) {
+  const p = evaluacion.preguntas[evaluacion.indice];
+  if (p.resuelta || p.terminada || p.descartadas.includes(indice)) return;
+  const op = p.opciones[indice];
+
+  if (op.tipo === "correcta") {
+    p.resuelta = true;
+    elemento.classList.add("correct");
+    sonidoCorrecto();
+    terminarPreguntaEval(p, true);
+  } else {
+    p.errores++;
+    p.descartadas.push(indice);
+    elemento.classList.add("incorrect");
+    elemento.style.pointerEvents = "none";
+    sonidoIncorrecto();
+    actualizarPuntosEval(p);
+    if (puntosRestantes(p) === 0) {
+      terminarPreguntaEval(p, false);
+    } else {
+      document.getElementById("evFeedback").innerHTML =
+        `❌ Incorrecto (−${CONFIG_EVALUACION.penalizacionError}). Podés intentar de nuevo.`;
+    }
+  }
+  guardarEnCurso();
+}
+
+function terminarPreguntaEval(p, acerto) {
+  p.terminada = true;
+  p.puntos = puntosPregunta(p);
+  document.querySelectorAll("#evOpciones .option").forEach((el, i) => {
+    el.style.pointerEvents = "none";
+    if (p.opciones[i].tipo === "correcta") el.classList.add("correct");
+  });
+  document.getElementById("evBtnFormula").disabled = true;
+  document.getElementById("evFeedback").innerHTML = acerto
+    ? `✅ ¡Correcto! +${p.puntos} ${p.puntos === 1 ? "punto" : "puntos"}`
+    : "❌ Se terminaron los puntos de esta pregunta. La respuesta correcta está marcada en verde.";
+
+  const btn = document.getElementById("evBtnSiguiente");
+  const ultima = evaluacion.indice === evaluacion.preguntas.length - 1;
+  btn.textContent = ultima ? "Ver nota" : "Siguiente pregunta";
+  btn.classList.remove("fc-ocultar");
+  guardarEnCurso();
+}
+
+function siguientePreguntaEval() {
+  if (evaluacion.indice < evaluacion.preguntas.length - 1) {
+    evaluacion.indice++;
+    mostrarPreguntaEval();
+  } else {
+    const h = cargarHistorialEval();
+    cerrarEvaluacion(h.enCurso, false);
+  }
+}
+
+/* Calcula la nota, la guarda en el historial y muestra el resultado */
+function cerrarEvaluacion(enCurso, abandonada) {
+  const C = CONFIG_EVALUACION;
+  const preguntas = enCurso.preguntas.map(p => ({ ...p, puntos: puntosPregunta(p) }));
+  const puntosRespuestas = preguntas.reduce((a, p) => a + p.puntos, 0);
+  const bruto = puntosRespuestas + enCurso.bonusRacha;
+  const nota = Math.max(C.notaMinima, Math.min(C.notaMaxima, Math.round(bruto)));
+
+  const resultado = {
+    fecha: enCurso.fecha,
+    hora: new Date(enCurso.inicio).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }),
+    duracionSeg: Math.round((Date.now() - enCurso.inicio) / 1000),
+    racha: enCurso.racha,
+    bonusRacha: enCurso.bonusRacha,
+    puntosRespuestas,
+    nota,
+    abandonada,
+    preguntas: preguntas.map(p => ({
+      tema: CONFIG_PREGUNTAS[p.tipo] ? CONFIG_PREGUNTAS[p.tipo].nombre : p.tipo,
+      resuelta: p.resuelta, errores: p.errores, usoFormula: p.usoFormula, puntos: p.puntos
+    }))
+  };
+
+  const h = cargarHistorialEval();
+  h.resultados.push(resultado);
+  h.enCurso = null;
+  guardarHistorialEval(h);
+  evaluacion = null;
+  document.querySelector(".modo-switch").classList.remove("fc-ocultar");
+
+  if (!abandonada && nota >= C.notaAprobacion) { lanzarConfeti(); sonidoRachaEspecial(); }
+  mostrarResultado(resultado, false);
+}
+
+function mostrarResultado(r, yaHecha) {
+  const C = CONFIG_EVALUACION;
+  const aprobado = r.nota >= C.notaAprobacion;
+  const fechaTexto = r.fecha.split("-").reverse().join("/");
+  const filas = r.preguntas.map((p, i) => {
+    const detalle = [
+      p.resuelta ? "resuelta" : "sin resolver",
+      p.errores ? `${p.errores} ${p.errores === 1 ? "error" : "errores"} (−${p.errores * C.penalizacionError})` : "",
+      p.usoFormula ? `fórmula (−${C.penalizacionFormula})` : ""
+    ].filter(Boolean).join(" · ");
+    return `<tr><td>${i + 1}. ${p.tema}<div class="ev-sub">${detalle}</div></td><td class="ev-num">${p.puntos}</td></tr>`;
+  }).join("");
+
+  document.getElementById("evZona").innerHTML = `
+    <div class="ev-card ev-resultado">
+      ${yaHecha ? `<p class="ev-sub">Ya hiciste la evaluación de hoy. Podés volver a hacerla mañana.</p>` : ""}
+      <div class="ev-nota ${aprobado ? "aprobado" : "reprobado"}">${r.nota}<span>/${C.notaMaxima}</span></div>
+      <div class="ev-estado">${aprobado ? "Aprobado" : "No aprobado"}${r.abandonada ? " · evaluación interrumpida" : ""}</div>
+      <table class="ev-tabla">
+        ${filas}
+        <tr><td>🔥 Bonus por racha (${r.racha} ${r.racha === 1 ? "día" : "días"})</td><td class="ev-num">+${r.bonusRacha}</td></tr>
+        <tr class="ev-total"><td>Nota</td><td class="ev-num">${r.nota}</td></tr>
+      </table>
+      <div class="ev-sub">${fechaTexto} · ${r.hora} · duración ${Math.floor(r.duracionSeg / 60)} min ${r.duracionSeg % 60} s</div>
+    </div>
+    ${historialHTML(cargarHistorialEval())}`;
+}
+
+function historialHTML(h) {
+  if (!h.resultados.length) return "";
+  const filas = h.resultados.slice(-10).reverse().map(r =>
+    `<tr><td>${r.fecha.split("-").reverse().join("/")} ${r.hora}</td><td>🔥 ${r.racha}</td><td class="ev-num">${r.nota}${r.abandonada ? "*" : ""}</td></tr>`).join("");
+  return `
+    <div class="ev-card">
+      <h3>Evaluaciones anteriores</h3>
+      <table class="ev-tabla">${filas}</table>
+      ${h.resultados.some(r => r.abandonada) ? `<div class="ev-sub">* interrumpida (se salió o recargó la página)</div>` : ""}
+    </div>`;
+}
+
+
+/****************************************************************
+ *
  *                    CAMBIO DE MODO
  *
  ****************************************************************/
@@ -1487,12 +1835,17 @@ function cambiarModo(modo) {
 
   document.getElementById("modoPractica").classList.toggle("fc-ocultar", modo !== "practica");
   document.getElementById("modoMemorizar").classList.toggle("fc-ocultar", modo !== "memorizar");
+  document.getElementById("modoEvaluacion").classList.toggle("fc-ocultar", modo !== "evaluacion");
 
   document.getElementById("btnModoPractica").classList.toggle("activo", modo === "practica");
   document.getElementById("btnModoMemorizar").classList.toggle("activo", modo === "memorizar");
+  document.getElementById("btnModoEvaluacion").classList.toggle("activo", modo === "evaluacion");
 
   if (modo === "memorizar") {
     mostrarSiguienteFlash();
+  }
+  if (modo === "evaluacion") {
+    mostrarInicioEvaluacion();
   }
 }
 
@@ -1506,3 +1859,5 @@ function cambiarModo(modo) {
 poblarSelectorTemas();
 poblarSelectorCategorias();
 nuevaPregunta();
+// Si se recargó la página con una evaluación a medias, se cierra con lo que tenía
+if (cargarHistorialEval().enCurso) cambiarModo("evaluacion");

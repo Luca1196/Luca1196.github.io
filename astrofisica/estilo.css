@@ -287,3 +287,30 @@ button:hover { background: #719cff; }
     opacity: 0.3;
   }
 }
+
+/* ================================
+   EVALUACIÓN
+   ================================ */
+.ev-card { background: #1a2140; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+.ev-card h2, .ev-card h3 { margin-top: 0; }
+.ev-reglas { padding-left: 20px; line-height: 1.6; }
+.ev-bonus { background: rgba(255, 179, 71, 0.08); color: #ffb347; border-radius: 10px; padding: 10px 14px; margin: 14px 0; }
+.ev-sub { font-size: 0.85rem; color: #b8bcd0; margin-top: 4px; }
+.ev-progreso { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: #b8bcd0; }
+.ev-puntos { color: #ffb347; font-weight: bold; }
+.ev-feedback { min-height: 24px; margin: 10px 0; }
+.ev-acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+.ev-btn-formula { background: #303650; }
+.ev-btn-formula:hover { background: #3c4466; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+.ev-formula { display: block; border-left-color: #ffb347; }
+.ev-resultado { text-align: center; }
+.ev-nota { font-size: 4rem; font-weight: bold; line-height: 1; }
+.ev-nota span { font-size: 1.5rem; color: #b8bcd0; }
+.ev-nota.aprobado { color: #42d392; }
+.ev-nota.reprobado { color: #ff6874; }
+.ev-estado { margin: 6px 0 16px; color: #d8dbe8; }
+.ev-tabla { width: 100%; border-collapse: collapse; text-align: left; margin-bottom: 10px; }
+.ev-tabla td { padding: 8px 6px; border-bottom: 1px solid #303650; }
+.ev-num { text-align: right; font-weight: bold; white-space: nowrap; }
+.ev-total td { border-bottom: none; font-size: 1.1rem; }
