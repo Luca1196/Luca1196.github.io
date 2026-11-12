@@ -790,16 +790,32 @@ function desglosarCientifico(valor) {
 
 const STORAGE_KEY = "astrofisica_progreso_v4";
 const STORAGE_KEY_FLASH = "astrofisica_flashcards_v2";
-const STORAGE_KEY_RACHA = "astrofisica_racha_diaria_v1";
+const STORAGE_KEY_RACHA = "astrofisica_racha_v2";
+const STORAGE_KEY_RACHA_V1 = "astrofisica_racha_diaria_v1";   // formato anterior (se migra)
 
 /*
- * RACHA DIARIA
- * La racha cuenta DÍAS CONSECUTIVOS en los que se alcanzó la meta diaria
- * de aciertos. Objetivo: fomentar el hábito de estudiar un poco todos los días
- * (práctica distribuida). Solo cuentan los aciertos, no los intentos.
- * Cambiá META_DIARIA para ajustar la exigencia.
+ * RACHA DE ESTUDIO
+ * ----------------
+ * Objetivo: que aprendan que lo mejor es repasar UN POCO CASI TODOS LOS DÍAS
+ * (práctica distribuida → memoria de largo plazo).
+ *
+ * Un día "cuenta" si se juntan META_DIARIA puntos de estudio:
+ *   - cada acierto en Practicar suma PUNTOS_ACIERTO_PRACTICA
+ *   - cada tarjeta de Memorizar recordada (Difícil, Bien o Fácil) suma PUNTOS_TARJETA
+ *     ("Otra vez" no suma: no se recordó)
+ *
+ * La racha NO exige días consecutivos: se mantiene mientras en cualquier
+ * ventana de 7 días haya al menos DIAS_POR_SEMANA días estudiados.
+ * Los días que se pueden faltar (7 − DIAS_POR_SEMANA) se muestran como
+ * "COMODINES" (como en TikTok): con 5 de 7 hay 2 comodines por semana
+ * (fin de semana, parcial de otra materia, enfermedad) para no perder
+ * todo lo construido por un mal día.
+ * El número de la racha = días estudiados desde que empezó.
  */
-const META_DIARIA = 3;
+const META_DIARIA = 6;
+const PUNTOS_ACIERTO_PRACTICA = 2;
+const PUNTOS_TARJETA = 1;
+const DIAS_POR_SEMANA = 5;
 // Días de racha necesarios para que la llama se encienda a color (como en TikTok)
 const DIAS_LLAMA_COLOR = 3;
 
@@ -825,25 +841,37 @@ function fechaLocal(desfaseDias = 0) {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+function diasEntre(fechaA, fechaB) {
+  const [a1, a2, a3] = fechaA.split("-").map(Number);
+  const [b1, b2, b3] = fechaB.split("-").map(Number);
+  return Math.round((Date.UTC(b1, b2 - 1, b3) - Date.UTC(a1, a2 - 1, a3)) / 864e5);
+}
+
 function cargarRachaDiaria() {
-  let datos = { fecha: fechaLocal(), aciertosHoy: 0, racha: 0, mejorRacha: 0, ultimoDiaCumplido: null };
+  let datos = { fecha: fechaLocal(), puntosHoy: 0, diasCumplidos: [], mejorRacha: 0 };
   try {
     const guardado = JSON.parse(localStorage.getItem(STORAGE_KEY_RACHA));
-    if (guardado) datos = { ...datos, ...guardado };
+    if (guardado) {
+      datos = { ...datos, ...guardado };
+    } else {
+      // Migración del formato anterior (racha de días consecutivos)
+      const viejo = JSON.parse(localStorage.getItem(STORAGE_KEY_RACHA_V1));
+      if (viejo && viejo.ultimoDiaCumplido) {
+        const u = viejo.ultimoDiaCumplido;
+        const offU = -diasEntre(u, fechaLocal());
+        for (let i = 0; i < (viejo.racha || 0); i++) datos.diasCumplidos.push(fechaLocal(offU - i));
+        datos.mejorRacha = viejo.mejorRacha || 0;
+        if (viejo.fecha === fechaLocal()) datos.puntosHoy = (viejo.aciertosHoy || 0) * PUNTOS_ACIERTO_PRACTICA;
+      }
+    }
   } catch (e) { /* sin datos guardados */ }
 
-  const hoy = fechaLocal();
-  const ayer = fechaLocal(-1);
-
-  // Día nuevo: se reinicia el contador de aciertos de hoy
-  if (datos.fecha !== hoy) {
-    datos.fecha = hoy;
-    datos.aciertosHoy = 0;
+  if (datos.fecha !== fechaLocal()) {
+    datos.fecha = fechaLocal();
+    datos.puntosHoy = 0;
   }
-  // Si el último día cumplido no fue hoy ni ayer, la racha se cortó
-  if (datos.ultimoDiaCumplido !== hoy && datos.ultimoDiaCumplido !== ayer) {
-    datos.racha = 0;
-  }
+  // Solo hace falta el último año
+  datos.diasCumplidos = datos.diasCumplidos.filter(f => diasEntre(f, fechaLocal()) <= 400);
   return datos;
 }
 
@@ -851,23 +879,62 @@ function guardarRachaDiaria() {
   try { localStorage.setItem(STORAGE_KEY_RACHA, JSON.stringify(rachaDiaria)); } catch (e) {}
 }
 
-/* Suma un acierto al día. Devuelve true si con este acierto se cumplió la meta de hoy. */
-function registrarAciertoDiario() {
+/*
+ * Calcula la racha: se recorre hacia atrás desde hoy y se corta en el primer
+ * día en que una ventana de 7 días tendría más faltas de las permitidas.
+ * Hoy, si todavía no se cumplió, no cuenta como falta (el día no terminó),
+ * salvo que hoyEsFalta = true (para saber si hoy es imprescindible estudiar).
+ */
+function calcularRacha(diasCumplidos, hoyEsFalta = false, detalle = false) {
+  const hechos = new Set(diasCumplidos);
+  const faltasPermitidas = 7 - DIAS_POR_SEMANA;
+  const estado = [];   // estado[d] para el día de hace d días: true = estudió, false = faltó, null = hoy pendiente
+  let racha = 0;
+  let inicio = -1;   // hace cuántos días empezó la racha
+
+  for (let d = 0; d <= 400; d++) {
+    const fecha = fechaLocal(-d);
+    estado[d] = hechos.has(fecha) ? true : (d === 0 && !hoyEsFalta ? null : false);
+
+    let faltas = 0;
+    for (let k = d; k >= Math.max(0, d - 6); k--) if (estado[k] === false) faltas++;
+    if (faltas > faltasPermitidas) break;
+
+    if (estado[d] === true) { racha++; inicio = d; }
+  }
+  if (!detalle) return racha;
+
+  // Comodines usados = faltas de los últimos 6 días que caen dentro de la racha
+  let usados = 0;
+  for (let k = 1; k <= Math.min(6, inicio); k++) if (estado[k] === false) usados++;
+  return { racha, comodinesRestantes: Math.max(0, faltasPermitidas - usados) };
+}
+
+function estudioCumplidoHoy() {
+  return rachaDiaria.diasCumplidos.includes(fechaLocal());
+}
+
+/* Suma puntos de estudio al día. Devuelve true si con esto se cumplió la meta de hoy. */
+function registrarEstudio(puntos) {
   // Por si la página quedó abierta pasada la medianoche
   if (rachaDiaria.fecha !== fechaLocal()) rachaDiaria = cargarRachaDiaria();
 
-  rachaDiaria.aciertosHoy++;
+  rachaDiaria.puntosHoy += puntos;
   let metaCumplidaAhora = false;
 
-  const hoy = fechaLocal();
-  if (rachaDiaria.aciertosHoy >= META_DIARIA && rachaDiaria.ultimoDiaCumplido !== hoy) {
-    rachaDiaria.racha = rachaDiaria.ultimoDiaCumplido === fechaLocal(-1) ? rachaDiaria.racha + 1 : 1;
-    rachaDiaria.ultimoDiaCumplido = hoy;
-    rachaDiaria.mejorRacha = Math.max(rachaDiaria.mejorRacha, rachaDiaria.racha);
+  if (rachaDiaria.puntosHoy >= META_DIARIA && !estudioCumplidoHoy()) {
+    rachaDiaria.diasCumplidos.push(fechaLocal());
+    rachaDiaria.mejorRacha = Math.max(rachaDiaria.mejorRacha, calcularRacha(rachaDiaria.diasCumplidos));
     metaCumplidaAhora = true;
   }
   guardarRachaDiaria();
+  mostrarRacha();
   return metaCumplidaAhora;
+}
+
+function celebrarMetaDiaria() {
+  setTimeout(sonidoRachaEspecial, 300);
+  setTimeout(lanzarConfeti, 400);
 }
 
 function crearProgresoInicial() {
@@ -1127,23 +1194,37 @@ function mostrarDominio(tipo) {
 }
 
 function mostrarRacha() {
-  const contenedor = document.getElementById("rachaCard");
   if (rachaDiaria.fecha !== fechaLocal()) rachaDiaria = cargarRachaDiaria();
 
-  const { racha, aciertosHoy, mejorRacha, ultimoDiaCumplido } = rachaDiaria;
-  const cumplidaHoy = ultimoDiaCumplido === fechaLocal();
-  const hechos = Math.min(aciertosHoy, META_DIARIA);
+  const { puntosHoy, mejorRacha, diasCumplidos } = rachaDiaria;
+  const racha = calcularRacha(diasCumplidos);
+  const cumplidaHoy = estudioCumplidoHoy();
+  const hechos = Math.min(puntosHoy, META_DIARIA);
   const faltan = META_DIARIA - hechos;
+  const hoyImprescindible = !cumplidaHoy && racha > 0 && calcularRacha(diasCumplidos, true) < racha;
+  const totalComodines = 7 - DIAS_POR_SEMANA;
+  const comodines = racha === 0 ? totalComodines
+    : (hoyImprescindible ? 0 : calcularRacha(diasCumplidos, false, true).comodinesRestantes);
+
+  // Últimos 7 días (el último es hoy)
+  const nombres = ["D", "L", "M", "M", "J", "V", "S"];
+  const semana = [];
+  for (let d = 6; d >= 0; d--) {
+    const f = fechaLocal(-d);
+    const dia = new Date(); dia.setDate(dia.getDate() - d);
+    semana.push({ letra: nombres[dia.getDay()], hecho: diasCumplidos.includes(f), hoy: d === 0 });
+  }
+  const estudiadosSemana = semana.filter(x => x.hecho).length;
 
   let mensaje;
   if (cumplidaHoy) {
-    mensaje = aciertosHoy > META_DIARIA
-      ? `¡Meta de hoy cumplida! (+${aciertosHoy - META_DIARIA} extra) Volvé mañana 💪`
-      : "¡Meta de hoy cumplida! Volvé mañana para seguir la racha 💪";
-  } else if (racha > 0) {
-    mensaje = `Te ${faltan === 1 ? "falta 1 acierto" : `faltan ${faltan} aciertos`} para mantener la racha hoy`;
+    mensaje = "¡Día de hoy cumplido! Volvé mañana 💪";
+  } else if (racha === 0) {
+    mensaje = `Juntá ${META_DIARIA} puntos hoy para empezar una racha`;
+  } else if (hoyImprescindible) {
+    mensaje = `⚠️ No te quedan comodines: hoy tenés que estudiar o se corta la racha (te ${faltan === 1 ? "falta 1 punto" : `faltan ${faltan} puntos`})`;
   } else {
-    mensaje = `Acertá ${META_DIARIA} preguntas hoy para empezar una racha`;
+    mensaje = `Te ${faltan === 1 ? "falta 1 punto" : `faltan ${faltan} puntos`} para sumar hoy. Si hoy no podés, se usa un comodín 🃏`;
   }
 
   const llamaEncendida = racha >= DIAS_LLAMA_COLOR;
@@ -1151,12 +1232,16 @@ function mostrarRacha() {
   const avisoLlama = llamaEncendida ? "" :
     `<div class="racha-mensaje">${diasParaEncender === 1 ? "Falta 1 día" : `Faltan ${diasParaEncender} días`} de racha para encender la llama</div>`;
 
-  const unidad = racha === 1 ? "día" : "días";
-  contenedor.innerHTML = `
+  const html = `
     <div class="racha-fila">
       <span class="racha-fuego ${llamaEncendida ? "" : "apagado"}">🔥</span>
-      <strong>${racha} ${unidad}</strong>
+      <strong>${racha} ${racha === 1 ? "día" : "días"}</strong>
       ${mejorRacha > 0 ? `<span class="racha-mejor">· mejor: ${mejorRacha}</span>` : ""}
+      <span class="racha-comodines" title="Días que podés faltar en una semana sin perder la racha">${"🃏".repeat(comodines)}<span class="gastado">${"🃏".repeat(totalComodines - comodines)}</span></span>
+    </div>
+    <div class="racha-semana" title="Para mantener la racha: ${DIAS_POR_SEMANA} de cada 7 días">
+      ${semana.map(x => `<span class="racha-dia ${x.hecho ? "hecho" : ""} ${x.hoy ? "hoy" : ""}">${x.letra}</span>`).join("")}
+      <span class="racha-semana-txt">${estudiadosSemana}/7 · comodines: ${comodines}/${totalComodines}</span>
     </div>
     <div class="racha-meta">
       <div class="racha-puntos">${Array.from({ length: META_DIARIA }, (_, i) =>
@@ -1164,7 +1249,10 @@ function mostrarRacha() {
       <span>Hoy: ${hechos}/${META_DIARIA}</span>
     </div>
     <div class="racha-mensaje">${mensaje}</div>
+    <div class="racha-mensaje racha-ayuda">Acierto en Practicar = ${PUNTOS_ACIERTO_PRACTICA} puntos · tarjeta recordada = ${PUNTOS_TARJETA} punto</div>
     ${avisoLlama}`;
+
+  document.querySelectorAll(".racha-card").forEach(el => { el.innerHTML = html; });
 }
 
 function nuevaPregunta() {
@@ -1241,10 +1329,7 @@ function seleccionarRespuesta(indice, elemento) {
     sonidoCorrecto();
     lanzarConfeti();
 
-    if (registrarAciertoDiario()) {
-      setTimeout(sonidoRachaEspecial, 300);
-      setTimeout(lanzarConfeti, 400);
-    }
+    if (registrarEstudio(PUNTOS_ACIERTO_PRACTICA)) celebrarMetaDiaria();
   } else {
     elemento.classList.add("incorrect");
     document.getElementById("feedback").innerHTML = "❌ Incorrecto.";
@@ -1467,6 +1552,7 @@ function calificarFlash(calificacion) {
 
   flashRepasadas++;
   guardarFlashcards();
+  if (calificacion !== "otra" && registrarEstudio(PUNTOS_TARJETA)) celebrarMetaDiaria();
   mostrarSiguienteFlash();
 }
 
@@ -1545,7 +1631,7 @@ function guardarHistorialEval(h) {
 
 function rachaActualDias() {
   if (rachaDiaria.fecha !== fechaLocal()) rachaDiaria = cargarRachaDiaria();
-  return rachaDiaria.racha;
+  return calcularRacha(rachaDiaria.diasCumplidos);
 }
 
 function calcularBonusRacha(dias) {
