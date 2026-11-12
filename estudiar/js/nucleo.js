@@ -64,7 +64,7 @@ return ilv(dd).concat(ilv(nn).slice(0,mode=="todo"?nn.length:remain()))}
 const hdr=()=>{$("hd").textContent=(S.stk?"Racha "+S.stk+(S.stk==1?" día":" días")+" · ":"")+"XP hoy "+S.xpd};
 
 /* ---- Pestañas ---- */
-function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5,6].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==6)bqOpen();else if(i==0)home();else if(i==5)erOpen();else if(i==3)swOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
+function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5,6,7].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==6)bqOpen();else if(i==0)home();else if(i==5)erOpen();else if(i==3){if(SF=="bas")SF="all";swOpen()}else if(i==7){SF="bas";swOpen()}else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
 function frame(src,t){V.innerHTML=`<iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
 
 /* ---- Inicio ---- */
@@ -207,7 +207,7 @@ function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}"><div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
- `<div class="row" style="margin-top:8px">${[["all","Mezclado"],["com","Comunicación (P2)"],["p1","Clases y secuencia (P1)"],["p3","Código C++ (P3)"],["lg","Lógica"],["bas","Básico"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`;
+ (TAB==7?"":`<div class="row" style="margin-top:8px">${[["all","Mezclado"],["com","Comunicación (P2)"],["p1","Clases y secuencia (P1)"],["p3","Código C++ (P3)"],["lg","Lógica"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`);
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;
@@ -244,7 +244,7 @@ function swChoose(side){if(!SW||SW.ans||SW.recap||SW.c.bld||SW.c.bqx)return;cons
  if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
  else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+8});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
  SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
-function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.steps[u.i];
+function swAdvance(){clearTimeout(STM);if(!SW||(TAB!=3&&TAB!=7))return;const u=SW,s=u.c.steps[u.i];
  SLK=u.c.id+":"+u.i;
  if(u.c.bld||u.c.bqx){SLT=swTop(u.c);SLAST=u.c.id;if((u.bs&&u.bs.e)||u.bqe)SERR=area(u.c);swNew();return}
  if(u.recap||u.only){if(u.ans=="no")SERR=area(u.c);SLT=swTop(u.c);swNew();return}
@@ -255,9 +255,9 @@ function swAdvance(){clearTimeout(STM);if(!SW||TAB!=3)return;const u=SW,s=u.c.st
  if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;if(!u.err&&!u.only)(S2.bqok=S2.bqok||{})[u.c.g]=1;/* serie completa sin errores: abre las que la tienen de previa (c.req) */S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
  swStep()}
 function swOpen(){SW=null;swNew()}
-V.addEventListener("click",ev=>{if(TAB!=3)return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
+V.addEventListener("click",ev=>{if((TAB!=3&&TAB!=7))return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
  if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="tns")swTile(-1);else if(w=="sf"){SF=b.dataset.v;swNew()}});
-document.addEventListener("keydown",e=>{if(TAB!=3||!SW||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
+document.addEventListener("keydown",e=>{if((TAB!=3&&TAB!=7)||!SW||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
  if(k=="ArrowDown"&&SW.ans==null&&!SW.recap){e.preventDefault();swChoose("NS")}
  else if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}
  else if((k=="Enter"||k==" ")&&e.target.tagName!="BUTTON"){e.preventDefault();if(SW.recap||SW.ans=="no")swAdvance()}});
