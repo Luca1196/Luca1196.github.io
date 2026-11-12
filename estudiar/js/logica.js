@@ -461,7 +461,9 @@ THT.unshift({s:"lg",re:/chocar|par va a|el par es|Contradicción con/,t:"Buscar 
 /* Las series largas de ejercicios (Combinar…, Febrero 3a/3b) se reemplazan en Deslizar por las tarjetas «Árbol · …» de bloques.js (pedido 10/11) */
 /* Pedido 10/11: en Deslizar, Lógica son SOLO las tarjetas «Árbol · …» (se agregan después, en bloques.js). Todas las series anteriores de Lógica se quitan de Deslizar;
    su contenido sigue en el código (y la teoría THT se usa en el «No sé» de Bloques). Para volver a mostrarlas, borrar esta línea. */
-for(let i=SWC.length-1;i>=0;i--)if(SWC[i].s=="lg")SWC.splice(i,1);
+/* Pedido 12/11: las series teóricas (binarias) de deducción natural se archivan en la pestaña Básico (c.arch); las ligadas a ejercicios de examen (Combinar, Febrero, Contradicción…) siguen fuera. */
+SWC.forEach(c=>{if(c.s=="lg")c.arch=!/^(Combinar|Febrero|Contradicción)/.test(c.g)});
+for(let i=SWC.length-1;i>=0;i--)if(SWC[i].s=="lg"&&!SWC[i].arch)SWC.splice(i,1);
 
 /* ===== Ejercicios 2 (semántica proposicional) y 4 (modelos) del examen de febrero 2026 (pedido 11/11).
    Series de Deslizar con keep:1 (no las quita el filtro de «solo árboles») y req: previas por título de serie, que se abren

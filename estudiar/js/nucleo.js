@@ -157,7 +157,7 @@ const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!=(TAB==7?"bs":"sw")||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
- const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),bas=c=>c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com",ok=c=>SF=="bas"?bas(c):(!bas(c)&&avail(c)&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF]))),PD=swPend();
+ const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&avail(c)&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF]))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
  const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
