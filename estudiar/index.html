@@ -6,7 +6,7 @@ ANTES DE RECICLAR: cada archivo de sección (bloques.js, nucleo.js/Deslizar, log
 ESTRUCTURA POR ARCHIVOS (nov 2026): una sección = un archivo, para que cada chat edite solo el suyo y no haya choques.
   js/prog4.js    Prog4: tarjetas de Repaso, cadenas de Deslizar, ejercicios línea por línea y de exámenes
   js/logica.js   Lógica: tarjetas de Repaso, cadenas de Deslizar, combinaciones de examen, LGX/LGR (contexto por paso), TRS (árboles)
-  js/musica.js + css/musica.css   Música (Simon de tónicas en bajo)
+  js/musica.js + css/musica.css   Oído (pestaña 4 + tarjetas intercaladas en Principal; ver DECISIONES en musica.js). El Simon de canciones se quitó (nov 2026).
   js/bloques.js  Bloques (pestaña 6): reemplaza a Ejercicios Lógica (botón t2 oculto; #logica abre Bloques; logica.html se conserva): árbol de deducción armado con bloques; motor copiado de logica.html
   js/errores.js  Errores (resumen, lista, exportación)
   js/nucleo.js   Núcleo: estado, Repaso, motor de Deslizar, pestañas (tocar solo si afecta a todas las secciones)
@@ -60,7 +60,7 @@ CODIGO DE ESTA PAGINA (un solo script):
   ETIQUETA: las opciones son el MENSAJE completo con cada estereotipo (no etiquetas sueltas); el estereotipo es del receptor.
   REPASO OCULTO (oct 2026): el botón t0 tiene hidden y la página abre en Deslizar; Repaso sigue accesible con #repaso. Los tags de Repaso sin serie propia se portan a Deslizar con PORT.
   DESLIZAR (pestaña 3, estado propio 'sw1'): SWC = cadenas de decisiones binarias sw(subj,tag,ctx,[st(pregunta,correcta,incorrecta,motivo,fragmento)],salida). Cada tarjeta de Repaso larga se descompone en pasos atómicos A/B; la correcta cae al azar a izquierda o derecha (deslizar, flechas o tocar). Sin 'salida' la cadena es suelta (sin armado). Errores vuelven a los 3 pasos. Nivel cada 25 aciertos. Agregar cadenas al final de SWC; no toca el mazo de Repaso. Las de Lógica muestran su árbol creciendo si tienen entrada en TRS (mismo título).
-  MUSICA (pestaña 4, estado 'mu1'): estilo Simon en un bajo de 6 cuerdas BEADGC (25 trastes (0-24)). MSEC = [cancion,artista,parte,'tónicas separadas por espacio']; cada tónica ilumina todas sus posiciones (trastes 0-24) y vale cualquiera (misma nota). Dos modos (S3.mo): "ap" aprendizaje Simon y "pr" práctica (sin demostración, toda la parte; al primer error termina, ilumina la correcta y guarda el récord aparte con clave "|pr"); al acertar se guarda {s,f} en MU.seq[k] y en las demostraciones siguientes suena esa posición (si no hay, mLow). La secuencia crece de a una desde 2. En acordes con bajo (ej. D/F#) la tónica es la nota del bajo (F#). Agregar partes al final de MSEC. Las tónicas vienen de cifrados de internet (verificar con el disco).
+  OIDO (pestaña 4, estado 'mu1'): ver DECISIONES DIDÁCTICAS en js/musica.js (tarjetas de oído, registro progresivo, intercalado en Principal).
   PROG4 POR LINEAS: EXS (tras SWC) describe postularse y aceptarPostulacion línea a línea (n,from,op,pa,to,res,cond,t); lineSteps genera los pasos atómicos y el contexto muestra operación, clases y las últimas líneas ya dibujadas. Para otro ejercicio, agregar un objeto a EXS. Cada tarjeta de línea muestra el diagrama (swDg/dgm, copia de dg de prog4.html) con las líneas ya dibujadas en gris y la flecha actual en trazo discontinuo que se completa según los pasos respondidos (cada paso lleva .k: n, op, pa, to, cond, q, st).
   OPCIONES: en d (distractores) cada opcion puede llevar motivo: "texto||por que no". Los distractores deben ser TENTADORES (errores reales: regla invertida, eliminacion sin la premisa que pide, regla de otro conector), nunca absurdos. El motivo se muestra al elegirla.
   DOMINIO: boton 'Ver dominio' (DOM) en tarjetas Prog4 de Etiqueta/Destino/Mensaje/Decision (DOMT). Cada tarjeta Prog4 debe ser consistente con DOM (viene de CL y M en prog4.html). Lógica: toda tarjeta muestra 'Tengo:' y 'Meta:' completos. mc(...,w,h): h = pista propia de la tarjeta (si no, HINT del tag).
@@ -142,18 +142,18 @@ a{color:var(--ac)}
 .ghost{background:transparent;border-bottom-width:1px;font-size:14px;margin-top:16px}
 @media(prefers-reduced-motion:reduce){.pb i{transition:none}.btn:active:not(:disabled){transform:none}}
 </style>
-<link rel="stylesheet" href="css/musica.css?v=202611122020">
+<link rel="stylesheet" href="css/musica.css?v=202611121955">
 <div class="wrap">
 <header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
-<nav class="tabs"><button id="t0" class="btn tab" hidden>Repaso</button><button id="t3" class="btn tab">Principal</button><button id="t7" class="btn tab">Básico</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab" hidden>Ejercicios Lógica</button><button id="t4" class="btn tab">Música</button><button id="t6" class="btn tab">Bloques</button><button id="t5" class="btn tab">Errores</button></nav>
+<nav class="tabs"><button id="t0" class="btn tab" hidden>Repaso</button><button id="t3" class="btn tab">Principal</button><button id="t7" class="btn tab">Básico</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t2" class="btn tab" hidden>Ejercicios Lógica</button><button id="t4" class="btn tab">Oído</button><button id="t6" class="btn tab">Bloques</button><button id="t5" class="btn tab">Errores</button></nav>
 <div id="v"></div>
 </div>
-<script src="js/base.js?v=202611122020"></script>
-<script src="js/prog4.js?v=202611122020"></script>
-<script src="js/logica.js?v=202611122020"></script>
-<script src="js/nucleo.js?v=202611122020"></script>
-<script src="js/musica.js?v=202611122020"></script>
-<script src="js/errores.js?v=202611122020"></script>
-<script src="js/bloques.js?v=202611122020"></script>
-<script src="js/inicio.js?v=202611122020"></script>
+<script src="js/base.js?v=202611121955"></script>
+<script src="js/prog4.js?v=202611121955"></script>
+<script src="js/logica.js?v=202611121955"></script>
+<script src="js/nucleo.js?v=202611121955"></script>
+<script src="js/musica.js?v=202611121955"></script>
+<script src="js/errores.js?v=202611121955"></script>
+<script src="js/bloques.js?v=202611121955"></script>
+<script src="js/inicio.js?v=202611121955"></script>
 </html>
