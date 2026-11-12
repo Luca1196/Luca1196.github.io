@@ -2,6 +2,7 @@
 /* DECISIONES DIDÁCTICAS (nov 2026): Luca dejó de practicar canciones (Simon de tónicas, quitado) y ahora entrena el oído.
    - Una "tarjeta" por nota (12 clases de altura). Suena una nota del bajo (posición al azar, trastes 0-12) y hay que
      tocarla en el mástil hasta encontrarla o rendirse. Vale cualquier octava/posición con la misma nota.
+   - Volver a tocar una nota ya probada (misma nota, cualquier octava) solo la hace sonar: no cuenta como intento (pedido de Luca).
    - Cada toque equivocado suena (para comparar) y se anota el intervalo de error: distancia más corta desde la nota
      correcta a la tocada, con signo (+ = tocó más arriba), de 1 a 6 semitonos (2m, 2M, 3m, 3M, 4J, tritono).
    - Registro en Errores con logA("oi","mu","Nota X", ok, {a, f: fallos, iv: [semitonos], rd: se rindió}).
@@ -47,6 +48,7 @@ function oiEnd(rd){const o=OI,n=NN[o.pc];o.done=1;o.rd=rd;S3.oi=S3.oi||{};const 
  oiDraw();if(rd)mTone(o.s,o.f)}
 function oiTap(s,f){const o=OI;if(!o)return;mTone(s,f);if(o.done)return;
  if(mPc(s,f)==o.pc){oiEnd(0);return}
+ if(o.taps.some(t=>mPc(t[0],t[1])==mPc(s,f)))return;/* nota ya probada: solo suena (para escucharla), no cuenta como intento */
  let d=((mSt(s,f)-o.st)%12+12)%12;if(d>6)d-=12;o.taps.push([s,f,d]);oiDraw()}
 let MSC=null;
 function muScr(){const sc=$("fbs");if(!sc)return;if(MSC===null){const c=sc.querySelector('.fc[data-f="5"]');if(!c||!c.offsetLeft)return;MSC=Math.max(0,c.offsetLeft-34)}sc.scrollLeft=MSC;sc.onscroll=()=>{MSC=sc.scrollLeft}}
