@@ -265,7 +265,7 @@ const lay=()=>L.forEach((r,d)=>{let x=(mw-(r.reduce((a,t)=>a+W(t),0)+GX*(r.lengt
  return sv+"</svg>"}
 function bqMap(){const GR=[...new Set(E.map(x=>x.grp))],g=D.mg||E[ex].grp;
  OUT().innerHTML=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px">${GR.map(x=>`<button class="btn chip${x==g?" sel":""}" data-b="mg" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>
- <div class="row between" style="margin-top:8px"><span class="mut" style="font-size:13px">Flecha = «es previa de». ✓ resuelto acá · ★ acertado en Deslizar (abre lo siguiente allá). Punteado: previa de otro grupo.</span><button class="btn" data-b="mp">Volver</button></div>
+ <div class="row between" style="margin-top:8px"><span class="mut" style="font-size:13px">Flecha = «es previa de». ✓ resuelto acá · ★ acertado en Principal (abre lo siguiente allá). Punteado: previa de otro grupo.</span><button class="btn" data-b="mp">Volver</button></div>
  <div class="sn" style="overflow-x:auto;padding:8px;margin-top:8px">${mapHtml(g)}</div></div>`}
 function bqOpen(){EMB=null;if(!D)D=nw(ex);bqDraw()}
 function bqEmbed(t,el,cb){const i=E.findIndex(x=>x.t==t);if(i<0)return;EMB={el,cb,err:0,ns:0,i};ex=i;D=nw(i);bqDraw()}
