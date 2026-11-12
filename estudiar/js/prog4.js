@@ -184,7 +184,15 @@ function pfT(n,i,done){const v=x=>done||i>=x,nw=x=>!done&&x>0&&i==x;
  return`<div class="pt"><div class="pk">${n.k.map(x=>pfT(x,i,done)).join("")}</div><div class="pr${rk&&(nw(n.ra)||(c&&nw(n.o.ca)))?" nw":""}"><span class="pn">${rk?esc(n.r)+(c?"<sup>"+n.o.c+"</sup>":""):"?"}</span></div>${f}</div>`}
 function swDg(c,idx,done){if(c.tr)return`<div class="sn pft"><div style="display:inline-block;padding-right:44px">${pfT(c.tr,idx,done)}</div></div>`;const g=c.dg;if(!g)return"";const ks=c.steps.map(x=>x.k),kn=k=>done||ks.slice(0,idx).includes(k),L=g.cur;let d=null;
  if(kn("to")){d={n:kn("n")?L.n.replace("*",""):"?",it:kn("n")&&L.n.includes("*"),o:L.from,d:L.to.replace(/ \*$/,""),m:/ \*$/.test(L.to),msg:(L.cond&&kn("cond")?L.cond+" ":"")+(L.res?L.res+" := ":"")+L.op+(kn("pa")||L.pa=="()"?L.pa:"(…)"),st:kn("st")?STN[L.t]:"…",u:1,dr:!kn("st")}}
- return `<div class="sn" style="overflow-x:auto;padding:4px">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig,g.ent)}</div>`}
+ return `<div class="sn dgs" style="overflow-x:auto;padding:4px;touch-action:pan-x pan-y" onpointerdown="event.stopPropagation()">${dgm(g.prev.map(x=>({...x,u:0})),d,g.sig,g.ent)}</div><div class="row between mut" style="font-size:12px;margin:-4px 2px 6px"><span>↔ deslizá el diagrama para verlo entero</span><button class="btn chip" style="font-size:12px;padding:2px 10px" onclick="dgFull(this)" onpointerdown="event.stopPropagation()">⤢ Ampliar</button></div>`}
+/* Diagrama en pantalla completa (pedido de Luca: en el teléfono no veía el diagrama; además la tarjeta deslizable
+   capturaba el arrastre horizontal). La caja .dgs ahora se puede deslizar y «Ampliar» la abre a pantalla completa. */
+function dgFull(b){const s=b.closest(".row").previousElementSibling.querySelector("svg");if(!s)return;let bb;try{bb=s.getBBox()}catch(e){}
+ const x0=bb?Math.floor(bb.x)-8:0,y0=bb?Math.floor(bb.y)-8:0,W=bb?Math.ceil(bb.width)+16:+s.getAttribute("width"),H=bb?Math.ceil(bb.height)+16:+s.getAttribute("height");
+ const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;z-index:60;background:var(--bg);overflow:auto;padding:56px 8px 12px;touch-action:auto";
+ o.innerHTML=`<div style="position:fixed;top:10px;right:12px;z-index:61;display:flex;gap:8px"><button class="btn" data-z>Ajustar al ancho</button><button class="btn pri" data-x>✕ Cerrar</button></div><p class="mut" style="margin:0 0 6px;font-size:13px">Deslizá en cualquier dirección. Con el teléfono horizontal se ve más.</p>`;
+ const k=s.cloneNode(true);k.setAttribute("viewBox",`${x0} ${y0} ${W} ${H}`);k.style.color="var(--fg)";let fit=0;const set=()=>{k.setAttribute("width",fit?"100%":W);k.setAttribute("height",fit?"auto":H);k.style.maxWidth=fit?"100%":"none";o.querySelector("[data-z]").textContent=fit?"Tamaño real":"Ajustar al ancho"};set();o.appendChild(k);
+ o.querySelector("[data-z]").onclick=()=>{fit=!fit;set()};o.querySelector("[data-x]").onclick=()=>o.remove();document.body.appendChild(o)}
 function lineSteps0(L){const a=[],r=L.to.split(":")[0];
  a.push(st("¿Qué número lleva?",L.n,L.nd,L.nw,L.n+":"));
  a.push(st("¿Qué operación?",L.op,L.od,L.ow,(L.res?L.res+" := ":"")+L.op));

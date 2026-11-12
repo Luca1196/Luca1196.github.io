@@ -3,9 +3,9 @@
 /* COPIAR TARJETA (pedido de Luca): botón fijo 📋 que copia la tarjeta visible (las tarjetas deslizables no dejan
    seleccionar texto) con su identificación, para pegarla en el chat cuando algo está mal. */
 (()=>{const TN={0:"Repaso",1:"Ejercicios Prog4",2:"Ejercicios Lógica",3:"Principal",4:"Oído",5:"Errores",6:"Bloques",7:"Básico"};
- const st=document.createElement("style");st.textContent="#cpc{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:50;border-radius:99px;box-shadow:0 2px 10px rgba(0,0,0,.25)}";document.head.appendChild(st);
- const b=document.createElement("button");b.id="cpc";b.className="btn";b.textContent="📋 Copiar tarjeta";document.body.appendChild(b);
- const cp=t=>{const ok=()=>{b.textContent="Copiado ✓";setTimeout(()=>b.textContent="📋 Copiar tarjeta",1500)},fb=()=>{const x=document.createElement("textarea");x.value=t;x.style.cssText="position:fixed;opacity:0";document.body.appendChild(x);x.select();try{document.execCommand("copy");ok()}catch(e){prompt("Copiá este texto:",t)}x.remove()};
+ const st=document.createElement("style");st.textContent="#cpc{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:50;border-radius:99px;width:44px;height:44px;padding:0;font-size:18px;opacity:.9;box-shadow:0 2px 10px rgba(0,0,0,.25)}";document.head.appendChild(st);
+ const b=document.createElement("button");b.id="cpc";b.className="btn";b.textContent="📋";b.title="Copiar tarjeta";b.setAttribute("aria-label","Copiar tarjeta");document.body.appendChild(b);
+ const cp=t=>{const ok=()=>{b.textContent="✓";setTimeout(()=>b.textContent="📋",1500)},fb=()=>{const x=document.createElement("textarea");x.value=t;x.style.cssText="position:fixed;opacity:0";document.body.appendChild(x);x.select();try{document.execCommand("copy");ok()}catch(e){prompt("Copiá este texto:",t)}x.remove()};
   try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}};
  b.onclick=()=>{let id="";
   if(typeof OI!="undefined"&&OI&&(TAB==3||TAB==4))id=`tarjeta de oído · nota ${NN[OI.pc]} · cuerda ${MSTR[OI.s][0]} traste ${OI.f}`;
