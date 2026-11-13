@@ -136,6 +136,8 @@ lgApply();
      ~8 respuestas después (SRETRY). Un paso fallado queda «pendiente» hasta 2 aciertos seguidos (swPend): pesa más
      al elegir y forma el filtro «Mis errores».
    - Un acierto que tarda más de 25 s no sube de caja (se sabía a medias).
+   - Sin fechas de vencimiento (Luca no las quiere): se prioriza lo que hace más tiempo que no se ve (S2.seen), pesado por lo flojo y los pendientes.
+     La solución a la repetición es sumar ejercicios (de exámenes viejos), no espaciar por días.
    - «No sé» (flecha ↓) cuenta como error, se registra aparte y muestra EN LA MISMA TARJETA la teoría de eso que no
      supo (swTeo/THT). Se descartó saltar a otra serie de teoría: no era lo que necesitaba ver.
    - Teoría previa (s.th, recuadro 📘) antes de las preguntas de temas que fueron «No sé».
@@ -163,10 +165,12 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
  if(SF=="err"){let a=[...PD.values()];if(SAX&&a.some(r=>arF(r.c)))a=a.filter(r=>arF(r.c));if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
  let pool=SWC.filter(c=>ok(c)&&arF(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(c=>ok(c)&&arF(c));if(!pool.length)pool=SWC.filter(ok);
- const w=pool.map(c=>1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0));let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;
- while(r>w[k]&&k<pool.length-1){r-=w[k];k++}
- return{c:pool[k],i:0,only:false,built:[],err:0}}
-function swNew(){NLE=null;SW=swPick();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+ /* Prioridad (pedido 12/11, sin fechas): lo que hace MÁS TIEMPO que no ves. Nunca vista = máxima prioridad.
+    El tiempo transcurrido se multiplica por lo flojo (cajas bajas) y por los pendientes de error; se elige al azar entre las 3 primeras para no ser predecible. */
+ const SE=S2.seen||(S2.seen={}),now=Date.now(),sc=c=>{const st=SE[c.id];const weak=1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0)/c.steps.length;return(st?(now-st):1e12+Math.random()*1e9)*weak};
+ const top=pool.map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
+ return{c:pk,i:0,only:false,built:[],err:0}}
+function swNew(){NLE=null;SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){NLE=null;SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»",Dom:"el dominio",Esc:"el enunciado"};
 function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.map((l,i)=>{if(hl){const on=hl=="ESC"?(di<0||i<di):(di>=0&&i>di&&new RegExp(hl).test(l));return on?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
