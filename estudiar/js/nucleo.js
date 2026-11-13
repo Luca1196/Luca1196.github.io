@@ -136,6 +136,7 @@ lgApply();
      ~8 respuestas después (SRETRY). Un paso fallado queda «pendiente» hasta 2 aciertos seguidos (swPend): pesa más
      al elegir y forma el filtro «Mis errores».
    - Un acierto que tarda más de 25 s no sube de caja (se sabía a medias).
+   - Al terminar una tarjeta «Árbol · …» el árbol completo queda visible (memoria visual) con un botón Continuar.
    - Sin fechas de vencimiento (Luca no las quiere): se prioriza lo que hace más tiempo que no se ve (S2.seen), pesado por lo flojo y los pendientes.
      La solución a la repetición es sumar ejercicios (de exámenes viejos), no espaciar por días.
    - «No sé» (flecha ↓) cuenta como error, se registra aparte y muestra EN LA MISMA TARJETA la teoría de eso que no

@@ -25,6 +25,12 @@
       las previas rigen en Deslizar (tarjetas «Árbol · …» que aparecen al acertar sus previas sin errores) y se ven en
       el «Mapa de previas». Al agregar un ejercicio compuesto: extraer sus pasos intermedios y ponerlos en req.
   10. «Copiar para Claude» copia el árbol actual en texto para consultar en el chat.
+  11. Al elegir regla se ve su FORMA (vista previa con las premisas arriba y la meta ABAJO de la raya) y cada miembro tiene
+      una etiqueta clara de qué se está eligiendo. Al pedir una suposición nueva no se ofrecen hipótesis ya entre corchetes.
+  12. Orden de las pistas: primero desarmar una ∧ que contiene la meta; con un par contradictorio, E⊥ y después E¬;
+      dentro de una rama de un ∨ no se vuelve a sugerir E∨ del mismo ∨ (evitaba quedar «recursivo»).
+  13. Cuantificadores: las anotaciones (qué variable es libre en qué hipótesis abierta) fueron lo MENOS entendido; los
+      mensajes y la teoría explican la condición con palabras, no solo con la notación.
    ===================================================================================================== */
 /* SECCIÓN BLOQUES (pestaña 6, en prueba): derivaciones armando el árbol con bloques, estilo Scratch.
    Los bloques SON el árbol: cada meta abierta es un hueco (punteado); al tocarlo y elegir una regla, aparece la raya con sus premisas como huecos nuevos.

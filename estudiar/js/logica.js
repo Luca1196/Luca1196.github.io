@@ -3,7 +3,9 @@
    - Preguntarse siempre «¿la fórmula está en lo que busco (introducción) o en lo que tengo (eliminación)?».
    - Cada «No sé» de la exportación de errores se responde con teoría (THT y recuadros th) y tarjetas previas más fáciles;
      cada confusión repetida, con una serie que contraste las dos opciones.
-   - Los ejercicios de examen se practican como árboles en Bloques, partidos en pasos intermedios con previas. */
+   - Los ejercicios de examen se practican como árboles en Bloques, partidos en pasos intermedios con previas.
+   - Los demás tipos de ejercicio de examen (semántica, modelos; todo menos el tipo 1) se pasan a series de Deslizar
+     sacadas de exámenes reales (Feb 2026 primero). Más ejercicios salen de exámenes viejos que trae Luca: no inventarlos. */
 /* ---- Tarjetas (cortas): Lógica ---- */
 const LGA=[
 /* d = distractores. "texto||por que no" => el motivo se muestra al elegir esa opcion. */
