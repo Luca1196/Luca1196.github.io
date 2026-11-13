@@ -10,16 +10,17 @@
    - Se intercalan en Principal (pestaña 3): 1 tarjeta de oído cada OI_CADA tarjetas (envuelve swNew de nucleo.js).
    - Elección de nota: pesa más la que más falla y la que nunca salió; no repite la anterior. Stats en S3.oi (mu1).
    - REGISTRO PROGRESIVO (pedido de Luca): el oído distingue mejor el registro medio, así que se empieza por las notas
-     más agudas del bajo y se baja a medida que mejora. OIR = niveles por semitono (0 = B grave 31 Hz, 25 = C3 131 Hz,
+     más agudas del bajo y se baja a medida que mejora. Solo suenan notas de los trastes OF0-OF1 (5 a 9, pedido de Luca);
+     OIR = niveles por cuerdas: 1) C, G, D (ya cubren las 12 notas); 2) + A; 3) + E; 4) + B.  (Texto viejo: niveles por semitono, 0 = B grave 31 Hz, 25 = C3 131 Hz,
      49 = C5 523 Hz). S3.oiL = nivel; S3.oiH = últimos resultados del nivel (1 = al primer intento). Sube de nivel con
      ≥ 80 % de aciertos al primer intento en las últimas 20 tarjetas. */
 const NN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-const MSTR=[["C",0,130.81],["G",7,98],["D",2,73.42],["A",9,55],["E",4,41.2],["B",11,30.87]],MF=25,OI_CADA=4;
+const MSTR=[["C",0,130.81],["G",7,98],["D",2,73.42],["A",9,55],["E",4,41.2],["B",11,30.87]],MF=25,OI_CADA=5;
 let S3=(()=>{try{return JSON.parse(localStorage.getItem("mu1")||"{}")}catch(e){return{}}})();
 const mSave=()=>{try{localStorage.setItem("mu1",JSON.stringify(S3))}catch(e){}};
 let MT=[],MAU=null,OI=null,OIN=0;
 const mPc=(s,f)=>(MSTR[s][1]+f)%12,mNm=(s,f)=>NN[mPc(s,f)],mSt=(s,f)=>Math.round(12*Math.log2(MSTR[s][2]*Math.pow(2,f/12)/30.87));
-const OIR=[[25,49,"agudo (C3–C5)"],[18,49,"medio (F2–C5)"],[10,49,"medio-grave (A1–C5)"],[0,49,"todo el bajo (B0–C5)"]],oiLv=()=>Math.min(S3.oiL||0,OIR.length-1);
+const OIR=[[[0,1,2],"cuerdas C, G y D (F2–A3)"],[[0,1,2,3],"+ cuerda A (D2–A3)"],[[0,1,2,3,4],"+ cuerda E (A1–A3)"],[[0,1,2,3,4,5],"todas las cuerdas (E1–A3)"]],OF0=5,OF1=9,oiLv=()=>Math.min(S3.oiL||0,OIR.length-1);
 const IVN={1:"2m",2:"2M",3:"3m",4:"3M",5:"4J",6:"tritono"},ivT=d=>(d>0?"+":"−")+IVN[Math.abs(d)];
 function muStop(){MT.forEach(clearTimeout);MT=[]}
 function mTone(s,f){if(S3.snd===0)return;try{MAU=MAU||new(window.AudioContext||window.webkitAudioContext)();const a=MAU;if(a.state=="suspended")a.resume();const fr=MSTR[s][2]*Math.pow(2,f/12),t=a.currentTime,g=a.createGain(),lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+1.1);lp.connect(g);g.connect(a.destination);[[1,"sawtooth",.6],[2,"triangle",.5],[3,"sine",.25]].forEach(([m,ty,v])=>{const o=a.createOscillator(),h=a.createGain();o.type=ty;o.frequency.value=fr*m;h.gain.value=v;o.connect(h);h.connect(lp);o.start(t);o.stop(t+1.15)})}catch(e){}}
@@ -27,7 +28,7 @@ function mTone(s,f){if(S3.snd===0)return;try{MAU=MAU||new(window.AudioContext||w
 /* ===== Tarjeta de oído ===== */
 function oiPick(){const st=S3.oi||{},w=NN.map((n,i)=>{if(OI&&OI.pc==i)return 0;const x=st[n]||{n:0,f:0};return x.n?1+4*x.f/x.n:3});
  let r=Math.random()*w.reduce((a,b)=>a+b,0),pc=0;for(;pc<11;pc++){r-=w[pc];if(r<0)break}
- const[lo,hi]=OIR[oiLv()],P=[];for(let s=0;s<6;s++)for(let f=0;f<MF;f++){const m=mSt(s,f);if(mPc(s,f)==pc&&m>=lo&&m<=hi)P.push([s,f])}return P[Math.floor(Math.random()*P.length)]}
+ const SS=OIR[oiLv()][0],P=[];SS.forEach(s=>{for(let f=OF0;f<=OF1;f++)if(mPc(s,f)==pc)P.push([s,f])});return P[Math.floor(Math.random()*P.length)]}
 function oiNew(inP){muStop();const[s,f]=oiPick();OI={pc:mPc(s,f),s,f,st:mSt(s,f),taps:[],done:0,rd:0,inP:inP?1:0};oiDraw();MT.push(setTimeout(()=>mTone(s,f),250))}
 function oiBoard(){const nm=S3.nm,o=OI;let h=`<div class="fbr fbh"><span></span>${Array.from({length:MF},(_,f)=>`<span>${f}</span>`).join("")}</div>`;
  const last=o.taps[o.taps.length-1];
@@ -59,6 +60,9 @@ V.addEventListener("click",ev=>{if(!OI||(TAB!=4&&TAB!=3))return;const b=ev.targe
  else if(a=="go"){if(OI.inP){OI=null;swNewBase()}else oiNew(0)}});
 document.addEventListener("keydown",e=>{if(!OI||!OI.done||(TAB!=4&&TAB!=3)||e.target.tagName=="BUTTON")return;if(e.key=="Enter"||e.key==" "||e.key=="ArrowRight"){e.preventDefault();V.querySelector('[data-o="go"]').click()}});
 
-/* ===== Intercalado en Principal: 1 de cada OI_CADA tarjetas es de oído (solo pestaña 3, no en Básico) ===== */
-const swNewBase=swNew;
-swNew=function(){OI=null;if(TAB==3&&SWM==3&&++OIN%OI_CADA==0){SW=null;oiNew(1);return}swNewBase()};
+/* ===== Intercalado en Principal (solo pestaña 3, no en Básico): cuenta los pasos respondidos (logA "sw" en la pestaña 3)
+   y, al terminar la serie en curso, si ya van OI_CADA pasos desde la última, muestra una tarjeta de oído.
+   La primera aparece después de la primera serie. ===== */
+const swNewBase=swNew,logABase=logA;let OIK=OI_CADA;
+logA=function(w){if(w=="sw"&&TAB==3)OIK++;return logABase.apply(this,arguments)};
+swNew=function(){OI=null;if(TAB==3&&SWM==3&&SW&&OIK>=OI_CADA){OIK=0;SW=null;oiNew(1);return}swNewBase()};
