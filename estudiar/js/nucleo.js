@@ -160,7 +160,7 @@ const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!=(TAB==7?"bs":"sw")||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
- const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&avail(c)&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF]))),PD=swPend();
+ const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&avail(c)&&(SF=="lin"?!!c.ln:(!c.ln||SF=="err")&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF])))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
  const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
@@ -179,7 +179,8 @@ function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.
 function bldCtx(t,src,hl){const T=t.split("\n"),H=ctxH(t,src,hl).match(/<div[^>]*>.*?<\/div>/g)||[],di=T.indexOf("Dominio:");let v="",cl="",dm="";
  T.forEach((l,i)=>{if(false)cl+=H[i];else if(di>=0&&i>=di)dm+=H[i];else v+=H[i]});
  const dt=(n,x)=>x?`<details${x.includes('class="hl"')?" open":""}><summary>${n}</summary>${x}</details>`:"";return v+dt("Clases",cl)+dt("Dominio",dm)}
-const bldDisp=a=>a.map((x,i)=>(i&&!x.g?" ":"")+esc(x.t)).join("");
+const bldDisp=a=>a.map((x,i)=>(i?(x.k=="l"?"<br>":!x.g?" ":""):"")+esc(x.t)).join("");
+const blkCtx=c=>{const k=c.bk;return `<div class="lt"><b>Diagrama de la operación</b> (te falta el tramo ${esc(k.a)}${k.a==k.b?"":"–"+esc(k.b)})</div>`+k.before.map(x=>`<div>${esc(x)}</div>`).join("")+`<div class="gap">▢ tramo ${esc(k.a)}${k.a==k.b?"":"–"+esc(k.b)}</div>`+k.after.map(x=>`<div>${esc(x)}</div>`).join("")};
 const bsNew=c=>({p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,m:null,src:null,hl:null,done:false});
 function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X=c.bld.exp,e=X[b.p],ns=i<0;
  if(ns)i=c.bld.bank.findIndex((t,j)=>!b.used[j]&&t.t==e.t);else if(b.used[i])return;
@@ -197,6 +198,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */
 function bldWhy(e,t){const x=t.t,r=e.t;
+ if(e.k=="l")return t.w||"";
  if(x==":"&&e.k!="o")return"Los dos puntos solo van en un objeto: :Clase (anónimo) o nombre:Clase (primera aparición). Acá no hay un objeto por abrir.";
  if(r==":"&&x!=":")return(e.g?"Primera aparición con nombre: nombre:Clase, hay que escribir los dos puntos.":"Objeto anónimo: se escribe :Clase. Falta el «:» delante de la clase.");
  if(x==":"&&e.nm)return"Este objeto ya lo tengo (figura en «Tengo»): se escribe solo su nombre, sin «:». Los dos puntos van en objetos anónimos (:Clase) o en la primera aparición (nombre:Clase).";
@@ -206,9 +208,9 @@ function bldWhy(e,t){const x=t.t,r=e.t;
  if(x==":=")return e.k=="r"?e.w:"«:=» solo si el mensaje devuelve algo que después uso. Acá no toca todavía.";
  if(e.k=="o"&&e.g&&x!=":"&&r!=x&&bldIsCls(x))return"Primera aparición con nombre: primero el nombre del objeto, después «:» y recién ahí la clase.";
  return bldLead(e)+(e.w||"")}
-const bldLead=e=>({n:"Ahora va el número. Lo define quién ENVÍA el mensaje (el objeto que está ejecutando esa operación), no el último que recibió: si sigue siendo el mismo, continúa la secuencia (n+1); si es el receptor de un mensaje k, empieza k.1. ",o:"Ahora va el objeto (origen o destino). ",c:"Ahora va la condición, entre corchetes. ",r:"Primero va la variable donde guardo lo que devuelve el mensaje (nombre := operación). Se guarda cuando ese resultado se usa en un mensaje posterior, como receptor o como parámetro; el ▶ «Se necesita…» suele avisarlo. ",m:"Ahora va la operación. ",p:"Ahora van los parámetros: los de la operación tal como figura en «Dominio». ",s:"Falta el estereotipo. "})[e.k]||"";
+const bldLead=e=>({l:"Ahora va la línea que sigue en el tramo. ",n:"Ahora va el número. Lo define quién ENVÍA el mensaje (el objeto que está ejecutando esa operación), no el último que recibió: si sigue siendo el mismo, continúa la secuencia (n+1); si es el receptor de un mensaje k, empieza k.1. ",o:"Ahora va el objeto (origen o destino). ",c:"Ahora va la condición, entre corchetes. ",r:"Primero va la variable donde guardo lo que devuelve el mensaje (nombre := operación). Se guarda cuando ese resultado se usa en un mensaje posterior, como receptor o como parámetro; el ▶ «Se necesita…» suele avisarlo. ",m:"Ahora va la operación. ",p:"Ahora van los parámetros: los de la operación tal como figura en «Dominio». ",s:"Falta el estereotipo. "})[e.k]||"";
 /* Orden fijo de una línea, con el lugar actual en negrita (se muestra solo tras un error) */
-const bldOrd=(e,b)=>{const k=e.k=="o"?(b.pl.some(x=>x.k=="a")?"t":"f"):e.k;return"Orden: "+[["n","nº:"],["f","origen"],["a","→"],["t","destino"],["c","[condición]"],["r","var :="],["m","operación"],["p","(parámetros)"],["s","«estereotipo»"]].map(([q,t])=>q==k?"<b>"+esc(t)+"</b>":esc(t)).join(" ")};
+const bldOrd=(e,b)=>{if(e.k=="l")return"Las líneas se arman en orden: cada una se apoya en la anterior.";const k=e.k=="o"?(b.pl.some(x=>x.k=="a")?"t":"f"):e.k;return"Orden: "+[["n","nº:"],["f","origen"],["a","→"],["t","destino"],["c","[condición]"],["r","var :="],["m","operación"],["p","(parámetros)"],["s","«estereotipo»"]].map(([q,t])=>q==k?"<b>"+esc(t)+"</b>":esc(t)).join(" ")};
 const bldIsCls=x=>/^[A-Z]/.test(x);
 /* «No sé» → explicación teórica del tema de ESA pregunta, en la misma tarjeta (THT en prog4.js/logica.js: {re, t, p}; se busca en pregunta+respuesta, después título y contexto) */
 function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o=T.find(x=>x.re.test(q))||T.find(x=>x.re.test(c.g))||T.find(x=>x.re.test(s.x||c.ctx||""));
@@ -216,7 +218,7 @@ function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
- (TAB==7?"":`<div class="row" style="margin-top:8px">${[["all","Mezclado"],["com","Comunicación (P2)"],["p1","Clases y secuencia (P1)"],["p3","Código C++ (P3)"],["lg","Lógica"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`);
+ (TAB==7?"":`<div class="row" style="margin-top:8px">${[["all","Mezclado"],["com","Comunicación (P2)"],["p1","Clases y secuencia (P1)"],["p3","Código C++ (P3)"],["lg","Lógica"],["lin","Líneas sueltas"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`);
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;
@@ -227,8 +229,8 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
   h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${esc(c.g)}</div>${u.bqh||""}<div class="fb ${u.bqe?"no":"ok"}"><b>${u.bqe?u.bqe+(u.bqe==1?" error":" errores")+": este árbol vuelve en un rato.":"¡Árbol completo sin errores!"}</b></div>${u.bqe?noteBox():""}<button class="btn pri big" data-w="go">Continuar</button></div></div>`;V.innerHTML=h;return}
 /* Armador de fichas (líneas de comunicación): se elige cada ficha en orden; la correcta se acepta, la equivocada muestra la regla. */
  if(c.bld){const b=u.bs||(u.bs=bsNew(c)),bk=c.bld.bank;
-  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso · ":""}armá la línea</div>`+
-  `<div class="sn">${(typeof letraHtml!="undefined"&&letraHtml(c,c.ctx,b.hl,b.src))||bldCtx(c.ctx,b.src,b.hl)}</div>${swDg(c,0,b.done)}<div class="qt">Armá la línea con las fichas</div>`+
+  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso · ":""}${c.blk?"armá el tramo":"armá la línea"}</div>`+
+  `<div class="sn">${((typeof letraHtml!="undefined"&&letraHtml(c,c.ctx,b.hl,b.src))||bldCtx(c.ctx,b.src,b.hl))+(c.bk?blkCtx(c):"")}</div>${swDg(c,0,b.done)}<div class="qt">${c.blk?"Armá el tramo: elegí las líneas en orden":"Armá la línea con las fichas"}</div>`+
   `<div class="bpl${b.done?" fin":""}">${b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
   (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div><div class="mut" style="margin-top:6px">${b.o||""}</div>${(()=>{const o=b.teo&&(window.THT||[]).find(x=>x.t==b.teo);return o?`<div class="th" style="margin-top:10px"><b>📘 ${esc(o.t)}</b>${o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join("")}</div>`:""})()}${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+(b.e?noteBox():"")+
   (b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": esta línea vuelve en un rato.":"Línea correcta"}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
