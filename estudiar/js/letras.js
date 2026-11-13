@@ -18,8 +18,8 @@ calcularHerbicidaTotal:{sig:"calcularHerbicidaTotal(idC: string, fInicio: DtFech
 const letraDe=c=>{const m=/^(Jul26|Feb26) · (\w+)/.exec(c.g||"");if(!m)return null;const E=LET[m[1]],k=m[2]=="Hotel"?"reservarHospedaje":m[2];return E&&E.ops[k]?{E,k,o:E.ops[k],sub:m[2]=="Hotel"}:null};
 const letraHtml=(c,t,hl,src)=>{const x=letraDe(c);if(!x)return null;const {E,o}=x,li=a=>a.map(s=>esc(s)).join("\n"),H=ctxH(t,src,hl).match(/<div[^>]*>.*?<\/div>/g)||[],T=t.split("\n"),
  goal=H.filter((_,i)=>T[i].startsWith("▶")||T[i].startsWith("Tengo:")),
- hv=src&&src.includes("Dom")||hl&&hl!="ESC",he=src&&src.includes("Esc")||hl=="ESC",
+ hv=src&&src.includes("Dom")||hl&&hl!="ESC",he=c.route||src&&src.includes("Esc")||hl=="ESC",
  blk=(n,s)=>`<div class="lt"><b>${n}</b> ${s}</div>`;
- return (x.sub?`<div class="lt">Sub-diagrama de <b>reservarHospedaje</b>: la operación se ejecuta ahora sobre el hotel h:Hotel.</div>`:"")+goal.join("")+
+ return (x.sub?`<div class="lt">Sub-diagrama de <b>reservarHospedaje</b>: la operación se ejecuta ahora sobre el hotel h:Hotel.</div>`:"")+goal.join("")+(c.route&&c.dg&&c.dg.clc?`<div class="lt"><b>Flechas del diagrama de clases (de la solución)</b><br>${esc(c.dg.clc).replace(/ · /g,"<br>")}</div>`:"")+
  `<details${he?" open":""}><summary>Enunciado · ${esc(E.tit)}</summary><div class="lt">${esc(E.txt).replace(/\n/g,"<br>")}</div><img class="ltim" src="${E.img}" alt="Modelo de dominio"><div class="lt"><b>Restricciones</b><br>${E.rs.map(r=>"• "+esc(r)).join("<br>")}</div><div class="lt"><b>Se pide</b><br>${esc(E.pide)}</div></details>`+
  `<div class="lt${hv?" hl":""}"><b>${esc(o.sig)}</b>${blk("Descripción",esc(o.d))}${blk("Parámetros",o.pa.map(esc).join("<br>"))}</div>`+`<details${hv?" open":""}><summary>Precondiciones</summary><div class="lt">${o.pr.map(esc).join("<br>")}</div></details><details${hv?" open":""}><summary>Poscondiciones</summary><div class="lt">${o.po.map(esc).join("<br>").replace(/ {3}/g,"&emsp;")}</div></details>`};

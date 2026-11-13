@@ -584,13 +584,19 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
  {s:"p4",re:/(?!)/,t:"Numeración de mensajes",p:["Los mensajes del que ejecuta la operación (el Controlador, o el objeto de una operación de clase) son 1, 2, 3… Lo que envía un objeto mientras ejecuta el mensaje 2.2 es 2.2.1, 2.2.2…; dentro de un recorrido 2.2.2* los hijos conservan el *: 2.2.2.1*.","Para saber el número: ¿quién envía? ¿qué mensaje está ejecutando ese objeto en este momento? El número es el de ese mensaje más un nivel. Ej.: u ejecuta 2 (bajaMascota) → sus mensajes son 2.1, 2.2…; m ejecuta 2.2 → sus mensajes son 2.2.1, 2.2.2…"]},
  {s:"p4",re:/(?!)/,t:"Notación de objetos",p:["El emisor es quien ejecuta el mensaje del que cuelga este (está en «Tengo» como «x ejecuta …»).","Si el receptor ya apareció antes (está en «Tengo»), se escribe solo su nombre (m, r, p): sin «:» ni clase. La primera vez, nombre:Clase (r:Reserva) o :Clase si es anónimo; una colección, :Clase *."]});
 
-/* ===== Mensajes completos: un mensaje del Controlador (o del objeto que ejecuta) con todo lo que cuelga de él; se arma línea por línea con fichas, sin perder el contexto del conjunto ===== */
-{const G={};SWC.filter(c=>c.bld&&c.dg).forEach(c=>{c.ln=1;const k=c.g.replace(/ · [^·]+$/,"");(G[k]=G[k]||[]).push(c)});
- const top=c=>c.dg.cur.n.replace("*","").split(".")[0],cl=(c,re)=>(c.ctx.split("\n").find(l=>re.test(l))||"");
+/* ===== Packs por mensaje: tarjeta 0 = elegir el recorrido (objetos por los que pasa el mensaje); siguientes = sintaxis de cada línea, en orden (SPACK) ===== */
+{const G={};SWC.filter(c=>c.bld&&c.dg).forEach(c=>{const k=c.g.replace(/ · [^·]+$/,"");(G[k]=G[k]||[]).push(c)});
+ const top=c=>c.dg.cur.n.replace("*","").split(".")[0],cl=(c,re)=>(c.ctx.split("\n").find(l=>re.test(l))||""),RE=/[A-ZÁÉÍÓÑÚ][A-Za-zÁÉÍÓÑÚáéíóñú_]*/g;
  Object.entries(G).forEach(([g,cs])=>{const U=[];cs.forEach(c=>{const u=U[U.length-1];if(u&&top(u[0])==top(c))u.push(c);else U.push([c])});
-  U.forEach(ch=>{if(ch.length<2)return;const first=ch[0],ix=cs.indexOf(first),a=top(first),exp=[],bank=[];
-   ch.forEach((c,i)=>{if(i)exp.push({t:"",k:"a",auto:1,nl:1,ln:i});c.bld.exp.forEach(x=>exp.push(Object.assign({ln:i},x)));c.bld.bank.forEach(x=>bank.push(Object.assign({ln:i},x)))});
-   const lc=ch.map(c=>({h:cl(c,/^Tengo:/),g:cl(c,/^▶/)})),
-    gg=g+" · mensaje "+a+(ch.length>1?" y lo que cuelga":""),
-    c=Object.assign(sw("p4",gg,first.ctx,[Object.assign(st("Armá el mensaje",ch.map(x=>lineStr(x.dg.cur)).join("\n"),"—",""),{k:"bld"})],""),{dg:first.dg,bld:{exp,bank,n:exp.length},blk:1,bk:{lc,a,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
+  const M={};cs.forEach(c=>{const L=c.dg.cur;[L.from,L.to].forEach(t=>{const v=t.replace(/ \*$/,"").split(":");if(v[0]&&v[1])M[v[0]]=v[1]})});
+  if(cs[0].dg.ent){const[a,b]=cs[0].dg.ent.split(":");M[a]=b}
+  const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(M[k]||k)};
+  U.forEach(ch=>{if(ch.length<2)return;ch.forEach(c=>c.ln=1);const first=ch[0],ix=cs.indexOf(first),a=top(first),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
+   ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!R.includes(x))R.push(x)});
+   const held={};ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!/:/.test(c.dg.cur.to)&&!(x in held))held[x]=1});const exp=[],bank=[];R.forEach((x,i)=>{const pv=R[i-1],ar=arr.find(z=>pv&&z.includes(pv)&&z.includes(x));
+    if(!i)exp.push({t:x,k:"a",auto:1});else exp.push({t:"→",k:"a",auto:1},{t:x,k:"rt",pv,w:(held[x]?"«"+x+"» ya lo tenés (figura en «Tengo»): el mensaje se le manda directo.":"Se llega a «"+x+"» desde «"+pv+"»"+(ar?" (flecha en Clases: "+ar.trim()+")":" por una flecha del diagrama de clases")+".")});});
+   const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,3);
+   exp.filter(x=>x.k=="rt").forEach(x=>bank.push({t:x.t,rt:1}));D.forEach(x=>bank.push({t:x}));
+   const gl=cl(first,/^▶/),tg=cl(first,/^Tengo:/),ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gl+(/\nClases: /.test(first.ctx)?"":"\nClases: "+clc),
+    c=Object.assign(sw("p4",g+" · recorrido "+a,ctx,[Object.assign(st("Elegí el recorrido",R.join(" → "),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,bk:{a,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
    SWC.push(c)})})}

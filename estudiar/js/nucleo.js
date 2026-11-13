@@ -153,13 +153,14 @@ try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}
 let SK="sw1";const SV2=()=>{try{localStorage.setItem(SK,JSON.stringify(S2))}catch(e){}};
 let SLT="",SLK="";const swTop=c=>c.s+"|"+c.g.replace(/ · .*$/,"").replace(/ \d+\/\d+$/,"").replace(/ \(.*\)$/,"");
 /* Al fallar se rota de tema: comunicación → deducción natural → código C++ → clases/secuencia. */
-const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="";
+const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="",SPACK=[];
 let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
 const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 /* Pendientes = pasos que fallaste alguna vez (registro de Errores) y todavía no acertaste 2 veces seguidas. Pesan más al elegir serie y forman el filtro "Mis errores". */
 function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).push(c)});
  E1.log.forEach(e=>{if(e.w!=(TAB==7?"bs":"sw")||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
+ if(SPACK.length&&TAB==3){const c=SPACK.shift();return{c,i:0,only:false,built:[],err:0}}
  const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&avail(c)&&(SF=="lin"?!!c.ln:(!c.ln||SF=="err")&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF])))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
  const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
@@ -180,24 +181,25 @@ function bldCtx(t,src,hl){const T=t.split("\n"),H=ctxH(t,src,hl).match(/<div[^>]
  T.forEach((l,i)=>{if(false)cl+=H[i];else if(di>=0&&i>=di)dm+=H[i];else v+=H[i]});
  const dt=(n,x)=>x?`<details${x.includes('class="hl"')?" open":""}><summary>${n}</summary>${x}</details>`:"";return v+dt("Clases",cl)+dt("Operaciones de las clases (no vienen en la letra)",dm)}
 const bldDisp=a=>a.map((x,i)=>x.nl?"<br>":(i&&!x.g&&!a[i-1].nl?" ":"")+esc(x.t)).join("");
-const blkCtx=c=>{const k=c.bk;return `<div class="lt"><b>Diagrama de la operación</b></div>`+k.before.map(x=>`<div>${esc(x)}</div>`).join("")+`<div class="gap">▢ mensaje ${esc(k.a)} y lo que cuelga de él</div>`+k.after.map(x=>`<div>${esc(x)}</div>`).join("")};
-const bsNew=c=>({p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,m:null,src:null,hl:null,done:false});
+const blkCtx=c=>{const k=c.bk;return `<div class="lt"><b>Diagrama de la operación</b></div>`+k.before.map(x=>`<div>${esc(x)}</div>`).join("")+`<div class="gap">▢ mensaje ${esc(k.a)} y lo que cuelga de él: ¿por qué objetos pasa?</div>`+k.after.map(x=>`<div>${esc(x)}</div>`).join("")};
+const bsNew=c=>{const b={p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,m:null,src:null,hl:null,done:false},X=c.bld.exp;while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}return b};
 function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X=c.bld.exp,e=X[b.p],ns=i<0;
  if(ns)i=c.bld.bank.findIndex((t,j)=>!b.used[j]&&t.t==e.t&&(t.ln==null||t.ln==e.ln));else if(b.used[i])return;
  const t=c.bld.bank[i],k=c.id+":0";
  if(t.t!=e.t||ns){const ph=b.pl.map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");b.e++;SCOMBO=0;S2.box[k]=0;
   if(b.e==1)SRETRY.push({c,i:0,due:SUN+8});
-  logA("sw",c.s,c.g,false,{q:"Armá la línea",x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
+  logA("sw",c.s,c.g,false,{q:c.route?"Elegí el recorrido":"Armá la línea",x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
   NLE=E1.log[E1.log.length-1];
-  b.teo=ns?({n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
+  b.teo=ns?({rt:"Camino al receptor",n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}
- if(b.p>=X.length){b.done=true;u.ans=b.e?"no":"ok";S2.n++;SUN++;
+ if(b.p>=X.length){b.done=true;if(c.pack)SPACK=c.pack.slice();u.ans=b.e?"no":"ok";S2.n++;SUN++;
   if(!b.e){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)+2;S2.box[k]=Date.now()-(u.ts||0)>90000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,900)}}
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */
 function bldWhy(e,t){const x=t.t,r=e.t;
+ if(e.k=="rt")return t.rt?"Ese objeto viene más adelante: antes el mensaje pasa por «"+r+"». "+(e.w||""):"«"+x+"» no forma parte del recorrido de este mensaje: lo que pide el ▶ se resuelve sin pasar por ella.";
  if(x==":"&&e.k!="o")return"Los dos puntos solo van en un objeto: :Clase (anónimo) o nombre:Clase (primera aparición). Acá no hay un objeto por abrir.";
  if(r==":"&&x!=":")return(e.g?"Primera aparición con nombre: nombre:Clase, hay que escribir los dos puntos.":"Objeto anónimo: se escribe :Clase. Falta el «:» delante de la clase.");
  if(x==":"&&e.nm)return"Este objeto ya lo tengo (figura en «Tengo»): se escribe solo su nombre, sin «:». Los dos puntos van en objetos anónimos (:Clase) o en la primera aparición (nombre:Clase).";
@@ -207,9 +209,9 @@ function bldWhy(e,t){const x=t.t,r=e.t;
  if(x==":=")return e.k=="r"?e.w:"«:=» solo si el mensaje devuelve algo que después uso. Acá no toca todavía.";
  if(e.k=="o"&&e.g&&x!=":"&&r!=x&&bldIsCls(x))return"Primera aparición con nombre: primero el nombre del objeto, después «:» y recién ahí la clase.";
  return bldLead(e)+(e.w||"")}
-const bldLead=e=>({n:"Ahora va el número. Lo define quién ENVÍA el mensaje (el objeto que está ejecutando esa operación), no el último que recibió: si sigue siendo el mismo, continúa la secuencia (n+1); si es el receptor de un mensaje k, empieza k.1. ",o:"Ahora va el objeto (origen o destino). ",c:"Ahora va la condición, entre corchetes. ",r:"Primero va la variable donde guardo lo que devuelve el mensaje (nombre := operación). Se guarda cuando ese resultado se usa en un mensaje posterior, como receptor o como parámetro; el ▶ «Se necesita…» suele avisarlo. ",m:"Ahora va la operación. ",p:"Ahora van los parámetros: los de la operación tal como figura en «Dominio». ",s:"Falta el estereotipo. "})[e.k]||"";
+const bldLead=e=>({rt:"Ahora va el siguiente objeto por el que pasa el mensaje. ",n:"Ahora va el número. Lo define quién ENVÍA el mensaje (el objeto que está ejecutando esa operación), no el último que recibió: si sigue siendo el mismo, continúa la secuencia (n+1); si es el receptor de un mensaje k, empieza k.1. ",o:"Ahora va el objeto (origen o destino). ",c:"Ahora va la condición, entre corchetes. ",r:"Primero va la variable donde guardo lo que devuelve el mensaje (nombre := operación). Se guarda cuando ese resultado se usa en un mensaje posterior, como receptor o como parámetro; el ▶ «Se necesita…» suele avisarlo. ",m:"Ahora va la operación. ",p:"Ahora van los parámetros: los de la operación tal como figura en «Dominio». ",s:"Falta el estereotipo. "})[e.k]||"";
 /* Orden fijo de una línea, con el lugar actual en negrita (se muestra solo tras un error) */
-const bldOrd=(e,b)=>{const k=e.k=="o"?(b.pl.some(x=>x.k=="a")?"t":"f"):e.k;return"Orden: "+[["n","nº:"],["f","origen"],["a","→"],["t","destino"],["c","[condición]"],["r","var :="],["m","operación"],["p","(parámetros)"],["s","«estereotipo»"]].map(([q,t])=>q==k?"<b>"+esc(t)+"</b>":esc(t)).join(" ")};
+const bldOrd=(e,b)=>{if(e.k=="rt")return"Recorrido: los objetos se eligen en el orden en que el mensaje pasa por ellos; cada salto necesita una flecha.";const k=e.k=="o"?(b.pl.some(x=>x.k=="a")?"t":"f"):e.k;return"Orden: "+[["n","nº:"],["f","origen"],["a","→"],["t","destino"],["c","[condición]"],["r","var :="],["m","operación"],["p","(parámetros)"],["s","«estereotipo»"]].map(([q,t])=>q==k?"<b>"+esc(t)+"</b>":esc(t)).join(" ")};
 const bldIsCls=x=>/^[A-Z]/.test(x);
 /* «No sé» → explicación teórica del tema de ESA pregunta, en la misma tarjeta (THT en prog4.js/logica.js: {re, t, p}; se busca en pregunta+respuesta, después título y contexto) */
 function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o=T.find(x=>x.re.test(q))||T.find(x=>x.re.test(c.g))||T.find(x=>x.re.test(s.x||c.ctx||""));
@@ -228,8 +230,8 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
   h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${esc(c.g)}</div>${u.bqh||""}<div class="fb ${u.bqe?"no":"ok"}"><b>${u.bqe?u.bqe+(u.bqe==1?" error":" errores")+": este árbol vuelve en un rato.":"¡Árbol completo sin errores!"}</b></div>${u.bqe?noteBox():""}<button class="btn pri big" data-w="go">Continuar</button></div></div>`;V.innerHTML=h;return}
 /* Armador de fichas (líneas de comunicación): se elige cada ficha en orden; la correcta se acepta, la equivocada muestra la regla. */
  if(c.bld){const b=u.bs||(u.bs=bsNew(c)),bk=c.bld.bank,ln=b.done?0:(c.bld.exp[b.p]||{}).ln||0;
-  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso · ":""}${c.blk?"armá el mensaje":"armá la línea"}</div>`+
-  `<div class="sn">${((()=>{const t=c.bk?c.ctx.split("\n").map(l=>l.startsWith("Tengo:")?c.bk.lc[ln].h:l.startsWith("▶")?c.bk.lc[ln].g:l).join("\n"):c.ctx;return(typeof letraHtml!="undefined"&&letraHtml(c,t,b.hl,b.src))||bldCtx(t,b.src,b.hl)})())+(c.bk?blkCtx(c):"")}</div>${swDg(c,0,b.done)}<div class="qt">${c.blk?"Armá el mensaje · línea "+(ln+1)+" de "+c.bk.lc.length:"Armá la línea con las fichas"}</div>`+
+  h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso · ":""}${c.route?"elegí el recorrido":"armá la línea"}</div>`+
+  `<div class="sn">${((()=>{const t=c.ctx;return(typeof letraHtml!="undefined"&&letraHtml(c,t,b.hl,b.src))||bldCtx(t,b.src,b.hl)})())+(c.bk?blkCtx(c):"")}</div>${swDg(c,0,b.done)}<div class="qt">${c.route?"Elegí los objetos por los que pasa el mensaje, en orden":"Armá la línea con las fichas"}</div>`+
   `<div class="bpl${b.done?" fin":""}">${b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
   (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div><div class="mut" style="margin-top:6px">${b.o||""}</div>${(()=>{const o=b.teo&&(window.THT||[]).find(x=>x.t==b.teo);return o?`<div class="th" style="margin-top:10px"><b>📘 ${esc(o.t)}</b>${o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join("")}</div>`:""})()}${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+(b.e?noteBox():"")+
   (b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": esta línea vuelve en un rato.":"Línea correcta"}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
@@ -270,7 +272,7 @@ let NLE=null,NTM=null;
 const noteBox=()=>NLE?`<details class="nt"${NLE.note?" open":""}><summary>✏️ ${NLE.note?"Tu nota":"Agregar una nota a este error"}</summary><textarea data-note="cur" rows="3" placeholder="¿Qué no entendiste o qué te confundió?">${esc(NLE.note||"")}</textarea><div class="mut" style="font-size:12px">Se guarda sola con el error.</div></details>`:"";
 V.addEventListener("input",ev=>{const t=ev.target;if(!t||!t.dataset||t.dataset.note===undefined)return;const e=t.dataset.note=="cur"?NLE:E1.log[+t.dataset.note];if(!e)return;const v=t.value.trim();if(v)e.note=v;else delete e.note;clearTimeout(NTM);NTM=setTimeout(SVE,400)});
 let SWM=3;const SWX={};
-function swMode(m){clearTimeout(STM);if(m==SWM)return;SWX[SWM]={S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW};SWM=m;SK=m==7?"sw1b":"sw1";const x=SWX[m];
+function swMode(m){clearTimeout(STM);if(m==SWM)return;SPACK=[];SWX[SWM]={S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW};SWM=m;SK=m==7?"sw1b":"sw1";const x=SWX[m];
  if(x){({S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW}=x)}else{S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};try{const r=localStorage.getItem(SK);if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}SCOMBO=0;SRETRY=[];SLAST="";SLT="";SLK="";SERR="";SAX="";SUN=0;SW=null}}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if((TAB!=3&&TAB!=7))return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
