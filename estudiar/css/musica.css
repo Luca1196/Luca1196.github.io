@@ -8,3 +8,6 @@
 .fc.lit{background:var(--ac);color:var(--onac)}
 .fc.ok{background:var(--ok);color:#fff}
 .fc.no{background:var(--bad);color:#fff}
+
+.fc.ton{box-shadow:inset 0 0 0 2px var(--ac);color:var(--ac);font-weight:700}
+.fc.ton.ok,.fc.ton.no,.fc.ton.lit{color:#fff}

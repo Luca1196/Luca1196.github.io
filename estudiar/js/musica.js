@@ -1,4 +1,4 @@
-/* SECCIÓN MÚSICA → OÍDO (pestaña 4) */
+/* SECCIÓN MÚSICA → OÍDO (pestaña 4). VIGENTE: el bloque «Tarjeta de oído FUNCIONAL» más abajo; lo que sigue describe la versión anterior (nota sin referencia), que se reemplazó. */
 /* DECISIONES DIDÁCTICAS (nov 2026): Luca dejó de practicar canciones (Simon de tónicas, quitado) y ahora entrena el oído.
    - Una "tarjeta" por nota (12 clases de altura). Suena una nota del bajo (posición al azar, trastes 0-12) y hay que
      tocarla en el mástil hasta encontrarla o rendirse. Vale cualquier octava/posición con la misma nota.
@@ -25,27 +25,42 @@ const IVN={1:"2m",2:"2M",3:"3m",4:"3M",5:"4J",6:"tritono"},ivT=d=>(d>0?"+":"−"
 function muStop(){MT.forEach(clearTimeout);MT=[]}
 function mTone(s,f){if(S3.snd===0)return;try{MAU=MAU||new(window.AudioContext||window.webkitAudioContext)();const a=MAU;if(a.state=="suspended")a.resume();const fr=MSTR[s][2]*Math.pow(2,f/12),t=a.currentTime,g=a.createGain(),lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+1.1);lp.connect(g);g.connect(a.destination);[[1,"sawtooth",.6],[2,"triangle",.5],[3,"sine",.25]].forEach(([m,ty,v])=>{const o=a.createOscillator(),h=a.createGain();o.type=ty;o.frequency.value=fr*m;h.gain.value=v;o.connect(h);h.connect(lp);o.start(t);o.stop(t+1.15)})}catch(e){}}
 
-/* ===== Tarjeta de oído ===== */
-function oiPick(){const st=S3.oi||{},w=NN.map((n,i)=>{if(OI&&OI.pc==i)return 0;const x=st[n]||{n:0,f:0};return x.n?1+4*x.f/x.n:3});
- let r=Math.random()*w.reduce((a,b)=>a+b,0),pc=0;for(;pc<11;pc++){r-=w[pc];if(r<0)break}
- const SS=OIR[oiLv()][0],P=[];SS.forEach(s=>{for(let f=OF0;f<=OF1;f++)if(mPc(s,f)==pc)P.push([s,f])});return P[Math.floor(Math.random()*P.length)]}
-function oiNew(inP){muStop();const[s,f]=oiPick();OI={pc:mPc(s,f),s,f,st:mSt(s,f),taps:[],done:0,rd:0,inP:inP?1:0};oiDraw();MT.push(setTimeout(()=>mTone(s,f),250))}
-function oiBoard(){const nm=S3.nm,o=OI;let h=`<div class="fbr fbh"><span></span>${Array.from({length:MF},(_,f)=>`<span>${f}</span>`).join("")}</div>`;
- const last=o.taps[o.taps.length-1];
+/* ===== Tarjeta de oído FUNCIONAL (nov 2026, tras investigar con Luca: el oído absoluto en adultos casi no se logra;
+   para sacar canciones en vivo sirve el oído relativo a la tónica). Cada tarjeta: tonalidad + cadencia 1-4-5-1 en el
+   bajo, luego la nota; se toca en el mástil (cualquier octava). La tónica se marca en el mástil (.ton, pedido de Luca)
+   salvo en el último nivel, que simula escuchar en vivo (solo la cadencia).
+   Niveles OFL (S3.ofL; sube con 16/20 al primer intento, S3.ofH): 1) grados 1,5,4 en A · 2) 7 grados en A ·
+   3) 7 grados, tonalidad al azar · 4) cromático, tonalidad al azar · 5) cromático, sin decir ni marcar la tónica.
+   Stats por grado en S3.od. Registro: logA("oi","mu","Grado X",ok,{a,p,f,iv,rd,k:tonalidad,dg:grado,dt:[grados tocados]}).
+   Notas: tónica entre st 15 y 22 (A1–F#2 aprox.), objetivo = tónica + grado, en trastes 5-9 de A, D, G o C si se puede. ===== */
+const DGN=["1","b2","2","b3","3","4","#4","5","b6","6","b7","7"],DIA=[0,2,4,5,7,9,11];
+const OFL=[[[0,7,5],0,"grados 1, 5 y 4 en A"],[DIA,0,"los 7 grados en A"],[DIA,1,"7 grados, tonalidad al azar"],[[0,1,2,3,4,5,6,7,8,9,10,11],1,"cromático, tonalidad al azar"],[[0,1,2,3,4,5,6,7,8,9,10,11],2,"cromático, sin mostrar la tónica (como en vivo)"]];
+const ofLv=()=>Math.min(S3.ofL||0,OFL.length-1),oHide=()=>OI&&OFL[OI.lv][1]==2&&!OI.done;
+function mToneSt(st){for(const s of [5,4,3,2,1,0]){const f=st-mSt(s,0);if(f>=0&&f<MF){mTone(s,f);return}}}
+function oiPos(st){const P=[];[3,2,1,0].forEach(s=>{for(let f=OF0;f<=OF1;f++)if(mSt(s,f)==st)P.push([s,f])});if(!P.length)for(let s=0;s<6;s++)for(let f=0;f<=12;f++)if(mSt(s,f)==st)P.push([s,f]);return P[Math.floor(Math.random()*P.length)]}
+function oiPick(){const L=OFL[ofLv()],st=S3.od||{},D=L[0].filter(d=>!(OI&&OI.dg==d&&L[0].length>2)),w=D.map(d=>{const x=st[d]||{n:0,f:0};return x.n?1+4*x.f/x.n:3});
+ let r=Math.random()*w.reduce((a,b)=>a+b,0),k=0;for(;k<D.length-1;k++){r-=w[k];if(r<0)break}return D[k]}
+function oiPlay(full){muStop();const o=OI,T=o.ts,seq=full?[T,T+5,T+7,T]:[];seq.forEach((x,i)=>MT.push(setTimeout(()=>mToneSt(x),200+i*430)));MT.push(setTimeout(()=>mTone(o.s,o.f),full?200+4*430+500:150))}
+function oiNew(inP){muStop();const lv=ofLv(),L=OFL[lv],K=L[1]?Math.floor(Math.random()*12):9;/* st 0 = B, así que pc(st)=(st+11)%12 */
+ let ts=15;for(let x=15;x<=26;x++)if((x+11)%12==K){ts=x;break}
+ const dg=oiPick(),tg=ts+dg>34?ts+dg-12:ts+dg,[s,f]=oiPos(tg);/* objetivo dentro de los trastes 5-9 (st 15-34) */OI={lv,K,ts,dg,pc:mPc(s,f),s,f,st:mSt(s,f),taps:[],done:0,rd:0,inP:inP?1:0};oiDraw();oiPlay(1)}
+const dOf=(s,f)=>((mPc(s,f)-OI.K)%12+12)%12;
+function oiBoard(){const nm=S3.nm,o=OI,last=o.taps[o.taps.length-1],hid=oHide();let h=`<div class="fbr fbh"><span></span>${Array.from({length:MF},(_,f)=>`<span>${f}</span>`).join("")}</div>`;
  for(let s=0;s<6;s++){h+=`<div class="fbr"><b class="fbs">${MSTR[s][0]}</b>`;for(let f=0;f<MF;f++){
-  const c=o.done?(mPc(s,f)==o.pc?(o.rd?"lit":"ok"):(o.taps.some(t=>t[0]==s&&t[1]==f)?"no":"")):(last&&last[0]==s&&last[1]==f?"no":"");
-  h+=`<button class="fc${f==0?" nut":""}${c?" "+c:""}" data-o="t" data-s="${s}" data-f="${f}" aria-label="Cuerda ${MSTR[s][0]}, traste ${f}">${nm?mNm(s,f):(f==3||f==5||f==7||f==9||f==12||f==15||f==17||f==19||f==21||f==24)&&s==5?"·":""}</button>`}h+=`</div>`}return h}
-function oiDraw(){const o=OI,x=(S3.oi||{})[NN[o.pc]],nf=o.taps.length;
- const msg=o.done?(o.rd?`Era <b>${NN[o.pc]}</b>. Te rendiste tras ${nf} ${nf==1?"intento":"intentos"}.`:`¡Era <b>${NN[o.pc]}</b>! ${nf?nf+(nf==1?" intento fallido":" intentos fallidos")+".":"Al primer intento."}`)
-  :nf?`No: tocaste ${mNm(...o.taps[nf-1])} (${ivT(o.taps[nf-1][2])}). Seguí buscando.`:"¿Qué nota sonó? Tocala en el mástil (cualquier octava).";
- V.innerHTML=`<div class="s-mu"><div class="row between"><b class="sj">🎧 Oído</b><span class="mut">Registro ${oiLv()+1}/${OIR.length}: ${OIR[oiLv()][2]} · ${x&&x.n?"Esta nota: "+(x.n-x.f)+"/"+x.n+" al primer intento":""}</span></div>
- <div class="sn" style="margin-top:8px">${msg}</div>${o.up?`<div class="sn" style="margin-top:6px">⬇ ¡Subiste de nivel! Ahora aparecen notas más graves: ${OIR[oiLv()][2]}.</div>`:""}${o.done&&nf?`<div class="mut" style="margin-top:4px">Intervalos de error: ${o.taps.map(t=>mNm(t[0],t[1])+" "+ivT(t[2])).join(" · ")}</div>`:""}
+  const c=o.done?(mPc(s,f)==o.pc?(o.rd?"lit":"ok"):(o.taps.some(t=>t[0]==s&&t[1]==f)?"no":"")):(last&&last[0]==s&&last[1]==f?"no":""),tn=!hid&&mPc(s,f)==o.K?" ton":"";
+  h+=`<button class="fc${f==0?" nut":""}${tn}${c?" "+c:""}" data-o="t" data-s="${s}" data-f="${f}" aria-label="Cuerda ${MSTR[s][0]}, traste ${f}">${nm?mNm(s,f):tn?"1":(f==3||f==5||f==7||f==9||f==12||f==15||f==17||f==19||f==21||f==24)&&s==5?"·":""}</button>`}h+=`</div>`}return h}
+function oiDraw(){const o=OI,x=(S3.od||{})[o.dg],nf=o.taps.length,kn=NN[o.K],hid=oHide(),tp=t=>`${mNm(t[0],t[1])} = grado ${DGN[dOf(t[0],t[1])]} (${ivT(t[2])})`;
+ const msg=o.done?(o.rd?`Era <b>${NN[o.pc]}</b> = grado <b>${DGN[o.dg]}</b> de ${kn}. Te rendiste tras ${nf} ${nf==1?"intento":"intentos"}.`:`¡Era <b>${NN[o.pc]}</b> = grado <b>${DGN[o.dg]}</b> de ${kn}! ${nf?nf+(nf==1?" intento fallido":" intentos fallidos")+".":"Al primer intento."}`)
+  :nf?`No: ${hid?mNm(...o.taps[nf-1])+" ("+ivT(o.taps[nf-1][2])+")":tp(o.taps[nf-1])}. Seguí buscando.`:(hid?"Escuchá la cadencia, encontrá la tónica y después tocá la nota.":`Tonalidad <b>${kn}</b> mayor (marcada con 1). Escuchá la cadencia 1–4–5–1 y después tocá la nota.`);
+ V.innerHTML=`<div class="s-mu"><div class="row between"><b class="sj">🎧 Oído</b><span class="mut">Nivel ${o.lv+1}/${OFL.length}: ${OFL[o.lv][2]}${x&&x.n&&!hid?" · grado "+DGN[o.dg]+": "+(x.n-x.f)+"/"+x.n:""}</span></div>
+ <div class="sn" style="margin-top:8px">${msg}</div>${o.up?`<div class="sn" style="margin-top:6px">¡Subiste de nivel! Ahora: ${OFL[ofLv()][2]}.</div>`:""}${o.done&&nf?`<div class="mut" style="margin-top:4px">Tocaste: ${o.taps.map(tp).join(" · ")}</div>`:""}
  <div id="fbs" style="overflow-x:auto;padding-bottom:6px;margin-top:8px"><div id="fb" class="fbd">${oiBoard()}</div></div>
- <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${o.done?`<button class="btn pri big" data-o="go">Continuar</button>`:`<button class="btn pri" data-o="rp">🔊 Otra vez</button><button class="btn ghost" data-o="rd">Me rindo</button>`}<button class="btn chip${S3.nm?" sel":""}" data-o="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-o="snd">Sonido</button></div></div>`;
+ <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${o.done?`<button class="btn pri big" data-o="go">Continuar</button>`:`<button class="btn pri" data-o="rp">🔊 Cadencia y nota</button><button class="btn" data-o="rn">Solo la nota</button><button class="btn ghost" data-o="rd">Me rindo</button>`}<button class="btn chip${S3.nm?" sel":""}" data-o="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-o="snd">Sonido</button></div></div>`;
  muScr()}
-function oiEnd(rd){const o=OI,n=NN[o.pc];o.done=1;o.rd=rd;S3.oi=S3.oi||{};const x=S3.oi[n]||(S3.oi[n]={n:0,f:0});x.n++;if(rd||o.taps.length)x.f++;
- const H=S3.oiH=(S3.oiH||[]).concat(rd||o.taps.length?0:1).slice(-20);if(H.length>=20&&H.reduce((a,b)=>a+b,0)>=16&&oiLv()<OIR.length-1){S3.oiL=oiLv()+1;S3.oiH=[];o.up=1}mSave();
- logA("oi","mu","Nota "+n,!rd&&!o.taps.length,{q:"🎧 ¿Qué nota sonó?",a:n,p:(rd?"Me rendí":"La encontré")+(o.taps.length?" tras "+o.taps.length+(o.taps.length==1?" fallo: ":" fallos: ")+o.taps.map(t=>mNm(t[0],t[1])+" ("+ivT(t[2])+")").join(", "):" sin tocar ninguna"),f:o.taps.length,iv:o.taps.map(t=>t[2]),rd:rd?1:0});
+function oiEnd(rd){const o=OI;o.done=1;o.rd=rd;S3.od=S3.od||{};const x=S3.od[o.dg]||(S3.od[o.dg]={n:0,f:0});x.n++;if(rd||o.taps.length)x.f++;
+ const H=S3.ofH=(S3.ofH||[]).concat(rd||o.taps.length?0:1).slice(-20);if(H.length>=20&&H.reduce((a,b)=>a+b,0)>=16&&ofLv()<OFL.length-1){S3.ofL=ofLv()+1;S3.ofH=[];o.up=1}mSave();
+ const dt=o.taps.map(t=>dOf(t[0],t[1]));
+ logA("oi","mu","Grado "+DGN[o.dg],!rd&&!o.taps.length,{q:"🎧 Grado en "+NN[o.K]+" (nivel "+(o.lv+1)+")",a:"grado "+DGN[o.dg]+" ("+NN[o.pc]+")",p:(rd?"Me rendí":"La encontré")+(o.taps.length?" tras "+o.taps.length+(o.taps.length==1?" fallo: ":" fallos: ")+o.taps.map((t,i)=>"grado "+DGN[dt[i]]+" "+mNm(t[0],t[1])+" ("+ivT(t[2])+")").join(", "):" sin tocar ninguna"),f:o.taps.length,iv:o.taps.map(t=>t[2]),rd:rd?1:0,k:NN[o.K],dg:o.dg,dt,lv:o.lv+1});
  oiDraw();if(rd)mTone(o.s,o.f)}
 function oiTap(s,f){const o=OI;if(!o)return;mTone(s,f);if(o.done)return;
  if(mPc(s,f)==o.pc){oiEnd(0);return}
@@ -55,7 +70,7 @@ let MSC=null;
 function muScr(){const sc=$("fbs");if(!sc)return;if(MSC===null){const c=sc.querySelector('.fc[data-f="5"]');if(!c||!c.offsetLeft)return;MSC=Math.max(0,c.offsetLeft-34)}sc.scrollLeft=MSC;sc.onscroll=()=>{MSC=sc.scrollLeft}}
 function muOpen(){OI=null;oiNew(0)}
 V.addEventListener("click",ev=>{if(!OI||(TAB!=4&&TAB!=3))return;const b=ev.target.closest("[data-o]");if(!b)return;const a=b.dataset.o;
- if(a=="t")oiTap(+b.dataset.s,+b.dataset.f);else if(a=="rp")mTone(OI.s,OI.f);else if(a=="rd")oiEnd(1);
+ if(a=="t")oiTap(+b.dataset.s,+b.dataset.f);else if(a=="rp")oiPlay(1);else if(a=="rn")oiPlay(0);else if(a=="rd")oiEnd(1);
  else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();oiDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();oiDraw()}
  else if(a=="go"){if(OI.inP){OI=null;swNewBase()}else oiNew(0)}});
 document.addEventListener("keydown",e=>{if(!OI||!OI.done||(TAB!=4&&TAB!=3)||e.target.tagName=="BUTTON")return;if(e.key=="Enter"||e.key==" "||e.key=="ArrowRight"){e.preventDefault();V.querySelector('[data-o="go"]').click()}});

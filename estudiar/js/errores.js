@@ -18,8 +18,16 @@ function dayTxt(from){const L=dayStats(from);if(!L.length)return"\n## Aciertos p
  let o="\n## Aciertos por día (aciertos/intentos)\n";L.forEach(({d,t})=>{o+=`- ${d}: ${t.all[0]}/${t.all[1]} (${pc(...t.all)})`+["sw","bs","bq","rep"].filter(k=>t[k]).map(k=>` · ${WN[k]} ${t[k][0]}/${t[k][1]} (${pc(...t[k])})`).join("")+["s:lg","s:p4"].filter(k=>t[k]).map(k=>` · ${SN[k.slice(2)]} ${pc(...t[k])}`).join("")+"\n"});
  const T=L.reduce((a,{t})=>[a[0]+t.all[0],a[1]+t.all[1]],[0,0]);o+=`Total del período: ${T[0]}/${T[1]} (${pc(...T)})\n`;return o}
 /* Oído (musica.js): por nota (histórico de S3.oi en mu1 + fallos del período) y por intervalo de error (semitonos con signo, + = tocó más arriba) */
-function oiTxt(L){const O=L.filter(e=>e.w=="oi"),st=ld2("mu1").oi||{};if(!O.length&&!Object.keys(st).length)return"";const IV={1:"2m",2:"2M",3:"3m",4:"3M",5:"4J",6:"tritono"};
- let o="\n## Oído: notas que más cuestan (histórico: falladas/tarjetas · fallos del período: intentos fallidos promedio, rendidas)\n";
+/* Oído funcional (grados): por grado (histórico S3.od) y confusiones de grado (era → toqué) */
+function ofTxt(L){const O=L.filter(e=>e.w=="oi"&&e.dg!=null),st=ld2("mu1").od||{},DG=["1","b2","2","b3","3","4","#4","5","b6","6","b7","7"];if(!O.length&&!Object.keys(st).length)return"";
+ let o="\n## Oído funcional: grados que más cuestan (histórico: falladas/tarjetas · período: intentos fallidos promedio, rendidas)\n";
+ Object.entries(st).sort((a,b)=>b[1].f/b[1].n-a[1].f/a[1].n).forEach(([d,x])=>{const E=O.filter(e=>e.dg==d),tf=E.reduce((a,e)=>a+(e.f||0),0);o+=`- grado ${DG[d]}: ${x.f}/${x.n} (${Math.round(x.f/x.n*100)}%)${E.length?` · período: ${E.length} falladas, ${(tf/E.length).toFixed(1)} intentos fallidos promedio, ${E.filter(e=>e.rd).length} rendidas`:""}\n`});
+ const C={};O.forEach(e=>(e.dt||[]).forEach(d=>{const k="era "+DG[e.dg]+" → toqué "+DG[d];C[k]=(C[k]||0)+1}));const cs=Object.entries(C).sort((a,b)=>b[1]-a[1]).slice(0,20);
+ if(cs.length){o+="\n## Oído funcional: confusiones de grado (más repetidas primero; incluye todos los intentos fallidos)\n";cs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}
+ const F=O.filter(e=>(e.dt||[]).length).map(e=>"era "+DG[e.dg]+" → primero toqué "+DG[e.dt[0]]),FC={};F.forEach(k=>FC[k]=(FC[k]||0)+1);const fs=Object.entries(FC).sort((a,b)=>b[1]-a[1]).slice(0,10);
+ if(fs.length){o+="\n## Oído funcional: primera impresión equivocada\n";fs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}return o}
+function oiTxt(L){L=L.filter(e=>e.dg==null);const O=L.filter(e=>e.w=="oi"),st=ld2("mu1").oi||{};if(!O.length&&!Object.keys(st).length)return"";const IV={1:"2m",2:"2M",3:"3m",4:"3M",5:"4J",6:"tritono"};
+ let o="\n## Oído SIN referencia (modo viejo, reemplazado el 12/11): notas que más cuestan (histórico: falladas/tarjetas · fallos del período: intentos fallidos promedio, rendidas)\n";
  Object.entries(st).sort((a,b)=>b[1].f/b[1].n-a[1].f/a[1].n).forEach(([n,x])=>{const E=O.filter(e=>e.a==n),tf=E.reduce((a,e)=>a+(e.f||0),0);o+=`- ${n}: ${x.f}/${x.n} (${Math.round(x.f/x.n*100)}%)${E.length?` · período: ${E.length} falladas, ${(tf/E.length).toFixed(1)} intentos fallidos promedio, ${E.filter(e=>e.rd).length} rendidas`:""}\n`});
  const H={};O.forEach(e=>(e.iv||[]).forEach(d=>{H[d]=(H[d]||0)+1}));const hs=Object.entries(H).sort((a,b)=>b[1]-a[1]);
  if(hs.length){o+="\n## Oído: intervalos de error (desde la nota correcta a la tocada; + = toqué más agudo)\n";hs.forEach(([d,n])=>o+=`- ${d>0?"+":"−"}${IV[Math.abs(d)]} (${d>0?"+":""}${d} st): ${n}×\n`)}
@@ -27,7 +35,7 @@ function oiTxt(L){const O=L.filter(e=>e.w=="oi"),st=ld2("mu1").oi||{};if(!O.leng
  if(cs.length){o+="\n## Oído: confusiones repetidas (nota → intervalo de error)\n";cs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}return o}
 function erTxt(all){const L=E1.log.filter(e=>all||e.t>E1.exp);let o=`ERRORES DE ESTUDIO (${all?"todo el historial":"desde la última exportación"}) · ${L.length} fallos`+(L.length?` · ${fd(L[0].t)} a ${fd(L[L.length-1].t)}`:"")+"\n"+dayTxt(all?"":(E1.exp?new Date(E1.exp).toLocaleDateString("en-CA"):""))+"\n## Tasa por tag (fallos/intentos, histórico)\n";
  Object.entries(E1.st).map(([k,[ok,n]])=>[k,n-ok,n]).filter(x=>x[1]).sort((a,b)=>b[1]/b[2]-a[1]/a[2]).forEach(([k,f,n])=>{const[w,s,g]=k.split("|");o+=w=="ej"?`- ${WN[w]}/${SN[s]}/${g}: ${f} ${f==1?"fallo":"fallos"}\n`:`- ${WN[w]}/${SN[s]}/${g}: ${f}/${n} (${Math.round(f/n*100)}%)\n`});
- const NS=L.filter(e=>e.ns),LC=L.filter(e=>!e.ns&&e.w!="oi");o+=oiTxt(L);
+ const NS=L.filter(e=>e.ns),LC=L.filter(e=>!e.ns&&e.w!="oi");o+=ofTxt(L)+oiTxt(L);
  if(NS.length){const g={};NS.forEach(e=>{const k=e.w+"|"+e.g+"|"+e.q;const x=g[k]||(g[k]={e,n:0,nt:[]});x.n++;if(e.note)x.nt.push(e.note)});o+=`\n## "NO SÉ": no conocía el tema (${NS.length}). Falta teoría, no es una confusión: agregar explicación y tarjetas previas\n`;Object.values(g).sort((a,b)=>b.n-a.n).forEach(({e,n,nt})=>{o+=`\n[${WN[e.w]}/${SN[e.s]}/${e.g}${e.n?" paso "+e.n:""}] ${n}×\n`+(e.x?"  Contexto: "+e.x.replace(/\n/g," / ")+"\n":"")+`  P: ${e.q.replace(/\n/g," / ")}\n  Correcta: ${e.a}\n`+nt.map(t=>"  NOTA DE LUCA: "+t+"\n").join("")})}
  const cf={};LC.forEach(e=>{const k=SN[e.s]+" · "+e.a+"  →  "+e.p;cf[k]=(cf[k]||0)+1});const cfs=Object.entries(cf).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,25);
  if(cfs.length){o+="\n## Confusiones repetidas (correcta → elegí)\n";cfs.forEach(([k,n])=>o+=`- ${n}× ${k}\n`)}
