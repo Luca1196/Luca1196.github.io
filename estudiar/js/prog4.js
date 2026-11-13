@@ -591,8 +591,9 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
   const M={};cs.forEach(c=>{const L=c.dg.cur;[L.from,L.to].forEach(t=>{const v=t.replace(/ \*$/,"").split(":");if(v[0]&&v[1])M[v[0]]=v[1]})});
   if(cs[0].dg.ent){const[a,b]=cs[0].dg.ent.split(":");M[a]=b}
   const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(M[k]||k)};
-  U.forEach(ch=>{if(ch.length<2)return;ch.forEach(c=>c.ln=1);const first=ch[0],ix=cs.indexOf(first),a=top(first),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
+  U.forEach(ch=>{const first=ch[0],ix=cs.indexOf(first),a=top(first),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
    ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!R.includes(x))R.push(x)});
+   if(R.length<2)return;ch.forEach(c=>c.ln=1);
    const held={};ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!/:/.test(c.dg.cur.to)&&!(x in held))held[x]=1});const exp=[],bank=[];R.forEach((x,i)=>{const pv=R[i-1],ar=arr.find(z=>pv&&z.includes(pv)&&z.includes(x));
     if(!i)exp.push({t:x,k:"a",auto:1});else exp.push({t:"→",k:"a",auto:1},{t:x,k:"rt",pv,w:(held[x]?"«"+x+"» ya lo tenés (figura en «Tengo»): el mensaje se le manda directo.":"Se llega a «"+x+"» desde «"+pv+"»"+(ar?" (flecha en Clases: "+ar.trim()+")":" por una flecha del diagrama de clases")+".")});});
    const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,3);
