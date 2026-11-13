@@ -178,7 +178,7 @@ function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.
 /* Contexto plegable: firma, «Tengo» y ▶ a la vista; «Clases» y «Dominio» desplegables (se abren solos si ahí estaba el dato). */
 function bldCtx(t,src,hl){const T=t.split("\n"),H=ctxH(t,src,hl).match(/<div[^>]*>.*?<\/div>/g)||[],di=T.indexOf("Dominio:");let v="",cl="",dm="";
  T.forEach((l,i)=>{if(false)cl+=H[i];else if(di>=0&&i>=di)dm+=H[i];else v+=H[i]});
- const dt=(n,x)=>x?`<details${x.includes('class="hl"')?" open":""}><summary>${n}</summary>${x}</details>`:"";return v+dt("Clases",cl)+dt("Dominio",dm)}
+ const dt=(n,x)=>x?`<details${x.includes('class="hl"')?" open":""}><summary>${n}</summary>${x}</details>`:"";return v+dt("Clases",cl)+dt("Operaciones de las clases (no vienen en la letra)",dm)}
 const bldDisp=a=>a.map((x,i)=>x.nl?"<br>":(i&&!x.g&&!a[i-1].nl?" ":"")+esc(x.t)).join("");
 const blkCtx=c=>{const k=c.bk;return `<div class="lt"><b>Diagrama de la operación</b></div>`+k.before.map(x=>`<div>${esc(x)}</div>`).join("")+`<div class="gap">▢ mensaje ${esc(k.a)} y lo que cuelga de él</div>`+k.after.map(x=>`<div>${esc(x)}</div>`).join("")};
 const bsNew=c=>({p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,m:null,src:null,hl:null,done:false});
