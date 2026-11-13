@@ -187,7 +187,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
   if(b.e==1)SRETRY.push({c,i:0,due:SUN+8});
   logA("sw",c.s,c.g,false,{q:"Armá la línea",x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
   NLE=E1.log[E1.log.length-1];
-  b.teo=ns?({n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
+  b.teo=ns?({n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.src=e.src||null;b.hl=e.hl||null;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}
@@ -198,13 +198,16 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
 function bldWhy(e,t){const x=t.t,r=e.t;
  if(x==":"&&e.k!="o")return"Los dos puntos solo van en un objeto: :Clase (anónimo) o nombre:Clase (primera aparición). Acá no hay un objeto por abrir.";
  if(r==":"&&x!=":")return(e.g?"Primera aparición con nombre: nombre:Clase, hay que escribir los dos puntos.":"Objeto anónimo: se escribe :Clase. Falta el «:» delante de la clase.");
+ if(x==":"&&e.nm)return"Este objeto ya lo tengo (figura en «Tengo»): se escribe solo su nombre, sin «:». Los dos puntos van en objetos anónimos (:Clase) o en la primera aparición (nombre:Clase).";
  if(x=="*")return"El * solo va cuando el receptor es la colección (mensajes find/next sobre la colección). Acá no.";
  if(r=="*")return e.w;
  if(x=="=")return"El resultado se guarda con «:=», no con «=».";
  if(x==":=")return e.k=="r"?e.w:"«:=» solo si el mensaje devuelve algo que después uso. Acá no toca todavía.";
  if(e.k=="o"&&e.g&&x!=":"&&r!=x&&bldIsCls(x))return"Primera aparición con nombre: primero el nombre del objeto, después «:» y recién ahí la clase.";
  return bldLead(e)+(e.w||"")}
-const bldLead=e=>({n:"Ahora va el número del mensaje. ",o:"Ahora va el objeto (origen o destino). ",c:"Ahora va la condición, entre corchetes. ",r:"Primero va la variable donde guardo lo que devuelve el mensaje (nombre := operación). Se guarda cuando ese resultado se usa en un mensaje posterior, como receptor o como parámetro; el ▶ «Se necesita…» suele avisarlo. ",m:"Ahora va la operación. ",p:"Ahora van los parámetros. ",s:"Falta el estereotipo. "})[e.k]||"";
+const bldLead=e=>({n:"Ahora va el número. Lo define quién ENVÍA el mensaje (el objeto que está ejecutando esa operación), no el último que recibió: si sigue siendo el mismo, continúa la secuencia (n+1); si es el receptor de un mensaje k, empieza k.1. ",o:"Ahora va el objeto (origen o destino). ",c:"Ahora va la condición, entre corchetes. ",r:"Primero va la variable donde guardo lo que devuelve el mensaje (nombre := operación). Se guarda cuando ese resultado se usa en un mensaje posterior, como receptor o como parámetro; el ▶ «Se necesita…» suele avisarlo. ",m:"Ahora va la operación. ",p:"Ahora van los parámetros: los de la operación tal como figura en «Dominio». ",s:"Falta el estereotipo. "})[e.k]||"";
+/* Orden fijo de una línea, con el lugar actual en negrita (se muestra solo tras un error) */
+const bldOrd=(e,b)=>{const k=e.k=="o"?(b.pl.some(x=>x.k=="a")?"t":"f"):e.k;return"Orden: "+[["n","nº:"],["f","origen"],["a","→"],["t","destino"],["c","[condición]"],["r","var :="],["m","operación"],["p","(parámetros)"],["s","«estereotipo»"]].map(([q,t])=>q==k?"<b>"+esc(t)+"</b>":esc(t)).join(" ")};
 const bldIsCls=x=>/^[A-Z]/.test(x);
 /* «No sé» → explicación teórica del tema de ESA pregunta, en la misma tarjeta (THT en prog4.js/logica.js: {re, t, p}; se busca en pregunta+respuesta, después título y contexto) */
 function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o=T.find(x=>x.re.test(q))||T.find(x=>x.re.test(c.g))||T.find(x=>x.re.test(s.x||c.ctx||""));
@@ -226,7 +229,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
   h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)} · ${u.only?"repaso · ":""}armá la línea</div>`+
   `<div class="sn">${bldCtx(c.ctx,b.src,b.hl)}</div>${swDg(c,0,b.done)}<div class="qt">Armá la línea con las fichas</div>`+
   `<div class="bpl${b.done?" fin":""}">${b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
-  (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div>${(()=>{const o=b.teo&&(window.THT||[]).find(x=>x.t==b.teo);return o?`<div class="th" style="margin-top:10px"><b>📘 ${esc(o.t)}</b>${o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join("")}</div>`:""})()}${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+(b.e?noteBox():"")+
+  (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div><div class="mut" style="margin-top:6px">${b.o||""}</div>${(()=>{const o=b.teo&&(window.THT||[]).find(x=>x.t==b.teo);return o?`<div class="th" style="margin-top:10px"><b>📘 ${esc(o.t)}</b>${o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join("")}</div>`:""})()}${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+(b.e?noteBox():"")+
   (b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": esta línea vuelve en un rato.":"Línea correcta"}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
    `<div class="bank">${b.ord.map(i=>`<button class="btn tile${b.used[i]?" used":""}" data-w="tl" data-i="${i}"${b.used[i]?" disabled":""}>${esc(bk[i].t)}</button>`).join("")}</div><button class="btn ghost" data-w="tns" style="display:block;margin:10px auto 0">No sé qué sigue</button>`)+`</div></div>`;
   V.innerHTML=h;return}

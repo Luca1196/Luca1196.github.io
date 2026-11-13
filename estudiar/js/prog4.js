@@ -525,8 +525,8 @@ window.THL=window.THL||[];THL.push({s:"p4",re:/secuencia del sistema|recordad|me
  const objT=(s,w)=>{const star=/ \*$/.test(s),b=s.replace(/ \*$/,""),r=[];
   if(b.startsWith(":"))r.push({t:":",k:"o",w:"Objeto anónimo (primera vez, sin nombre): se escribe :Clase, con los dos puntos delante."},{t:b.slice(1),k:"o",g:1,w});
   else if(b.includes(":")){const[a,c]=b.split(":");r.push({t:a,k:"o",w},{t:":",k:"o",g:1,w:"Primera aparición con nombre: nombre:Clase."},{t:c,k:"o",g:1,w})}
-  else r.push({t:b,k:"o",w:w||"Ya apareció antes: alcanza con el nombre, sin ':' ni clase."});
-  if(star)r.push({t:"*",k:"o",w:"El receptor es la colección: va con *."});return r};
+  else r.push({t:b,k:"o",nm:1,w:w||"Ya apareció antes: alcanza con el nombre, sin ':' ni clase."});
+  if(star)r.push({t:"*",k:"o",w:"El receptor es la colección (flecha con * en «Clases»): find, next, add y remove se mandan a la colección, que lleva *."});return r};
  SWC.filter(c=>c.dg).forEach(c=>{const L=c.dg.cur,old=c.steps,ex=[];
   const sc=re=>{const s=old.find(s=>re.test(s.q)&&s.src);return s?{src:s.src,hl:s.hl}:{}};
   ex.push({t:L.n+":",k:"n",w:L.nw||"Numeración."});
