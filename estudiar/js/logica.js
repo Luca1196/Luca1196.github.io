@@ -6,6 +6,27 @@
    - Los ejercicios de examen se practican como árboles en Bloques, partidos en pasos intermedios con previas.
    - Los demás tipos de ejercicio de examen (semántica, modelos; todo menos el tipo 1) se pasan a series de Deslizar
      sacadas de exámenes reales (Feb 2026 primero). Más ejercicios salen de exámenes viejos que trae Luca: no inventarlos. */
+/* RECETA: DE UN PDF DE EXAMEN A TARJETAS (Luca adjunta el PDF en el chat de Lógica; repetir esto para cada examen nuevo)
+   1. Leer el PDF entero y separar los ejercicios por tipo. No inventar ejercicios ni cambiar enunciados: copiar las
+      fórmulas tal cual (con los símbolos del examen: ⊥ ¬ ∧ ∨ → ∀ ∃ =′).
+   2. DEDUCCIÓN NATURAL (árboles) → Bloques (js/bloques.js, array E):
+      {t:"título", g:"meta", P:["premisa",…], req:["títulos de previas"], grp:"Examen <mes año>"}.
+      a. Resolver el árbol completo y buscar el más corto.
+      b. Extraer cada subderivación con hipótesis propias (lo de adentro de un I→, una rama de E∨/E∃, el ⊥ de un RAA) como
+         ejercicio propio del mismo grupo, con sus hipótesis como premisas en P.
+      c. Si una pieza ya existe en otro grupo (ej. «Choque directo»), reusar su título en req en vez de duplicarla.
+      d. Poner esas piezas en req del ejercicio compuesto (cadena: piezas simples → intermedias → ejercicio entero).
+      e. Si el ejercicio usa una regla que Bloques no tiene (ej. igualdad RI2/RI4), avisarle a Luca en vez de forzarlo.
+      Cada ejercicio de E aparece solo en Deslizar como tarjeta «Árbol · <título>» cuando sus req se resolvieron sin errores.
+   3. OTROS TIPOS (semántica, modelos, verdadero/falso, definiciones…) → series de Deslizar en este archivo, como en el bloque
+      «Ejercicios 2 y 4 del examen de febrero 2026» de más abajo:
+      Object.assign(sw("lg","<Tema> · <título>",null,[pasos…]),{keep:1,req:["<Tema> · <previa>"]}).
+      a. Primero series de PIEZAS (qué significa la definición, qué alcanza para probar/refutar), después una serie por ítem
+         del examen («<Tema> · Feb 2026 4a») con req a las piezas que usa.
+      b. Cada paso es {q,a,b,w}: una decisión atómica, b es el error tentador real, w explica por qué. El primer paso de una serie nueva lleva th
+         (teoría corta); el enunciado o los datos van en x, sin adelantar lo que el paso pregunta.
+      c. Si aparece un tema nuevo, sumar su entrada en window.THT (lo que se muestra al tocar «No sé»).
+   4. Actualizar ?v= en index.html, probar en el navegador (node --check y una pasada por Bloques/Deslizar), commit y push. */
 /* ---- Tarjetas (cortas): Lógica ---- */
 const LGA=[
 /* d = distractores. "texto||por que no" => el motivo se muestra al elegir esa opcion. */
