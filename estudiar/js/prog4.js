@@ -584,25 +584,13 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
  {s:"p4",re:/(?!)/,t:"Numeración de mensajes",p:["Los mensajes del que ejecuta la operación (el Controlador, o el objeto de una operación de clase) son 1, 2, 3… Lo que envía un objeto mientras ejecuta el mensaje 2.2 es 2.2.1, 2.2.2…; dentro de un recorrido 2.2.2* los hijos conservan el *: 2.2.2.1*.","Para saber el número: ¿quién envía? ¿qué mensaje está ejecutando ese objeto en este momento? El número es el de ese mensaje más un nivel. Ej.: u ejecuta 2 (bajaMascota) → sus mensajes son 2.1, 2.2…; m ejecuta 2.2 → sus mensajes son 2.2.1, 2.2.2…"]},
  {s:"p4",re:/(?!)/,t:"Notación de objetos",p:["El emisor es quien ejecuta el mensaje del que cuelga este (está en «Tengo» como «x ejecuta …»).","Si el receptor ya apareció antes (está en «Tengo»), se escribe solo su nombre (m, r, p): sin «:» ni clase. La primera vez, nombre:Clase (r:Reserva) o :Clase si es anónimo; una colección, :Clase *."]});
 
-/* ===== Tramos: sub-diagramas de 2–4 mensajes dentro de la operación completa (como los sub-árboles de deducción natural) =====
-   Cada ficha es una LÍNEA entera; los distractores son la misma línea fallada en un solo punto. Las tarjetas de una línea quedan como «líneas sueltas» (c.ln). */
+/* ===== Mensajes completos: un mensaje del Controlador (o del objeto que ejecuta) con todo lo que cuelga de él; se arma línea por línea con fichas, sin perder el contexto del conjunto ===== */
 {const G={};SWC.filter(c=>c.bld&&c.dg).forEach(c=>{c.ln=1;const k=c.g.replace(/ · [^·]+$/,"");(G[k]=G[k]||[]).push(c)});
- const kinds=["t","o","n","p","s"];
- const vari=(L,k)=>{const o=Object.assign({},L);
-  if(k=="t"&&L.td&&L.td!=L.to){o.to=L.td;return[o,L.tw]}
-  if(k=="o"&&L.od&&L.od!=L.op){o.op=L.od;return[o,L.ow]}
-  if(k=="n"&&L.nd&&L.nd!=L.n){o.n=L.nd;return[o,L.nw]}
-  if(k=="p"&&L.pd&&L.pd!=L.pa){o.pa=L.pd;return[o,L.pw]}
-  if(k=="s"){const t=Object.keys(SS).find(x=>x!=L.t&&x!="G");o.t=t;return[o,"El estereotipo describe cómo conoce el emisor al receptor: viene de dónde salió el receptor (firma → «parameter», find/create/next → «local», flecha del diagrama de clases → «association»)."]}
-  return null};
- const chunks=a=>{const r=[];let i=0;while(i<a.length){let n=Math.min(4,a.length-i);if(a.length-i-n==1)n=n==4?3:n+1;if(n==1&&r.length){r[r.length-1].push(a[i]);i++;continue}r.push(a.slice(i,i+n));i+=n}return r};
- Object.entries(G).forEach(([g,cs])=>{const all=cs.map(c=>c.dg.cur);chunks(cs).forEach((ch,ci)=>{if(ch.length<2)return;
-  const Ls=ch.map(c=>c.dg.cur),a=Ls[0].n,b=Ls[Ls.length-1].n,first=ch[0],ix=cs.indexOf(first),
-   exp=Ls.map(L=>({t:lineStr(L),k:"l",w:L.goal||""})),seen=new Set(exp.map(x=>x.t)),D=[];
-  for(let r=0;r<2&&D.length<Ls.length+1;r++)Ls.forEach((L,i)=>{if(D.length>=Ls.length+1)return;for(let j=0;j<kinds.length;j++){const v=vari(L,kinds[(i+j+r)%kinds.length]);if(!v)continue;const t=lineStr(v[0]);if(seen.has(t))continue;seen.add(t);D.push({t,k:"d",w:v[1]});break}});
-  const bank=exp.map(x=>({t:x.t,w:"Esa línea sí está en el tramo, pero va más adelante: cada mensaje se apoya en el anterior, así que se arman en orden."})).concat(D),
-   goals=Ls.map(L=>"▶ "+L.n+": "+L.goal).join("\n"),
-   ctx=first.ctx.replace(/\n▶ [^\n]*/,"\n"+goals),
-   gg=g+" · tramo "+a+(a==b?"":"–"+b),
-   c=Object.assign(sw("p4",gg,ctx,[Object.assign(st("Armá el tramo",exp.map(x=>x.t).join("\n"),"—",""),{k:"bld"})],""),{dg:first.dg,bld:{exp,bank,n:exp.length},blk:1,bk:{before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur)),a,b}});
-  SWC.push(c)})})}
+ const top=c=>c.dg.cur.n.replace("*","").split(".")[0],cl=(c,re)=>(c.ctx.split("\n").find(l=>re.test(l))||"");
+ Object.entries(G).forEach(([g,cs])=>{const U=[];cs.forEach(c=>{const u=U[U.length-1];if(u&&top(u[0])==top(c))u.push(c);else U.push([c])});
+  U.forEach(ch=>{if(ch.length<2)return;const first=ch[0],ix=cs.indexOf(first),a=top(first),exp=[],bank=[];
+   ch.forEach((c,i)=>{if(i)exp.push({t:"",k:"a",auto:1,nl:1,ln:i});c.bld.exp.forEach(x=>exp.push(Object.assign({ln:i},x)));c.bld.bank.forEach(x=>bank.push(Object.assign({ln:i},x)))});
+   const lc=ch.map(c=>({h:cl(c,/^Tengo:/),g:cl(c,/^▶/)})),
+    gg=g+" · mensaje "+a+(ch.length>1?" y lo que cuelga":""),
+    c=Object.assign(sw("p4",gg,first.ctx,[Object.assign(st("Armá el mensaje",ch.map(x=>lineStr(x.dg.cur)).join("\n"),"—",""),{k:"bld"})],""),{dg:first.dg,bld:{exp,bank,n:exp.length},blk:1,bk:{lc,a,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
+   SWC.push(c)})})}
