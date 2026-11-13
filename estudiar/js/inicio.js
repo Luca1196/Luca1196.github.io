@@ -1,5 +1,5 @@
 /* INICIO: se carga al final; engancha pestañas y abre la pestaña del hash. */
-[0,1,2,3,4,5,6,7].forEach(i=>$("t"+i).onclick=()=>tab(i));
+[0,1,2,3,4,5,6,7,8].forEach(i=>$("t"+i).onclick=()=>tab(i));
 /* COPIAR TARJETA (pedido de Luca): botón fijo 📋 que copia la tarjeta visible (las tarjetas deslizables no dejan
    seleccionar texto) con su identificación, para pegarla en el chat cuando algo está mal. */
 (()=>{const TN={0:"Repaso",1:"Ejercicios Prog4",2:"Ejercicios Lógica",3:"Principal",4:"Oído",5:"Errores",6:"Bloques",7:"Básico"};
@@ -15,4 +15,4 @@
   const cl=el.cloneNode(true);cl.querySelectorAll("#fbs,button").forEach(x=>x.remove());cl.style.cssText="position:fixed;left:-9999px;white-space:pre-wrap";document.body.appendChild(cl);let tx=(cl.innerText||"").replace(/\n{3,}/g,"\n\n").trim();cl.remove();
   if(TAB==1||TAB==2){try{tx=($("fr").contentDocument.querySelector("main")||$("fr").contentDocument.body).innerText.trim()}catch(e){}}
   cp(`[${TN[TAB]}${id?" · "+id:""}]\n${tx}`)}})();
-{const hm={repaso:0,prog4:1,logica:6,deslizar:3,musica:4,errores:5,bloques:6,basico:7},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
+{const hm={repaso:0,prog4:1,logica:6,deslizar:3,musica:4,errores:5,bloques:6,basico:7,codigo:8},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
