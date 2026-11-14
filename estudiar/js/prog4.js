@@ -720,7 +720,7 @@ window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{
    dr.sort((x,y)=>x.t<y.t?-1:1).slice(0,3).forEach(x=>bank.push(x));
    D.forEach(x=>bank.push({t:EG[EG.length-1].b+" → "+x+" *",why:"«"+x+"» no interviene en lo que pide el ▶: se resuelve sin pasar por ahí."}));
    const gls=u.map(m=>"▶ "+top(m[0])+": "+cl(m[0],/^▶/).replace(/^▶ /,"")).join("\n"),tg=cl(first,/^Tengo:/),
-    ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gls+(clc?"\nClases: "+clc:""),
+    ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gls+(clc?"\n"+(/^(Jul26|Feb26) · |^(postularse|aceptarPostulacion)( |$)/.test(g)?"Clases: "+clc:"Modelo de dominio (asociaciones, sin dirección): "+EG.filter(e=>e.a!="Controlador").map(e=>e.a+" – "+e.b+(e.w?" *":"")).concat(D.map(x=>EG[EG.length-1].b+" – "+x)).join(" · ")+"\nEl Controlador tiene una colección global de "+EG[0].b+"."):""),
     c=Object.assign(sw("p4",g+" · recorrido "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),ctx,[Object.assign(st("Elegí el recorrido",EG.map(e=>e.a+" → "+e.b+(e.w?" *":"")).join("\n"),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a:tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
    ch.forEach(x=>x.pk=c);SWC.push(c);ent.push(mkT(c))});
   ent.forEach((e,i)=>{if(ent[i+1]){e.next=ent[i+1];if(e.then)e.then.next=ent[i+1]}})})}
