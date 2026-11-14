@@ -80,4 +80,4 @@ document.addEventListener("keydown",e=>{if(!OI||!OI.done||(TAB!=4&&TAB!=3)||e.ta
    La primera aparece después de la primera serie. ===== */
 const swNewBase=swNew,logABase=logA;let OIK=OI_CADA;
 logA=function(w){if(w=="sw"&&TAB==3)OIK++;return logABase.apply(this,arguments)};
-swNew=function(){OI=null;if(TAB==3&&SWM==3&&SW&&OIK>=OI_CADA){OIK=0;SW=null;oiNew(1);return}swNewBase()};
+swNew=function(){OI=null;if(TAB==3&&SWM==3&&SF=="all"&&SW&&OIK>=OI_CADA){OIK=0;SW=null;oiNew(1);return}swNewBase()};
