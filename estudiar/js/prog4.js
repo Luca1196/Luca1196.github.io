@@ -684,11 +684,13 @@ window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{
    const Ls=ch.map(c=>c.dg.cur),toks=tops.map(mt),req=[];
    if(pm&&tops.includes(pm.msg))toks.push("p:"+pm.id);
    if(ui)req.push(mt(top(U[ui-1][U[ui-1].length-1][0])));
+   if(!ui&&g=="aceptarPostulacion")req.push("m:postularse:3");/* usa est y emp ya obtenidos en postularse */
+   if(!ui&&g=="Jul26 · Hotel.reservar")req.push("m:Jul26 · reservarHospedaje:4");/* es el sub-diagrama que sigue al mensaje 4 */
    {const P=new Set(),nx=Ls.filter(l=>l.op=="next").length,gen=/^(find|next|create|add|remove|destroy|getInstance)$/;
     if(nx)P.add("rec");if(nx>=2)P.add("cascada");
     if(Ls.some(l=>/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("filtro");
     if(Ls.some(l=>!/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("cond");
-    if(Ls.some(l=>l.t=="L"&&l.res&&!gen.test(l.op)&&Ls.some(m=>m.n==l.n+".1"&&m.op=="find"&&m.res==l.res)))P.add("interm");
+    if(Ls.some(l=>l.t=="L"&&l.res&&!gen.test(l.op)&&Ls.some(m=>m.n==l.n+".1"&&m.op=="find"&&m.from==l.to.replace(/ \*$/,"").split(":")[0])))P.add("interm");
     if(Ls.some(l=>l.op=="create"))P.add("crear");
     if(Ls.some(l=>l.op=="destroy"||l.op=="remove"))P.add("elim");
     if(Ls.some(l=>l.op=="getInstance"))P.add("id");
