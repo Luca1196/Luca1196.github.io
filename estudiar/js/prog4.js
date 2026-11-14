@@ -9,9 +9,10 @@
       b. Alta en PATS ({id, msg: número del mensaje que enseña el patrón}) y, si depende de otro patrón, en PDEP (ej. eliminar → recorrer).
       c. Teoría: una serie sw("p4","Patrón · <nombre> · teoría",…) al final del archivo (2-3 pasos binarios; b = error tentador; th en el primero).
       d. Si el patrón se reconoce en las líneas, sumar su regla de detección (bloque «Packs por mensaje», conjunto P).
-   2. MENSAJES: cada mensaje que sale del Controlador (o del objeto que ejecuta una operación de clase) con todo lo que cuelga de él es un PACK:
-      tarjeta 0 «elegí el recorrido» (objetos por los que pasa el mensaje; flechas del DCD a la vista) y después las tarjetas de sintaxis de cada línea en orden (SPACK).
-      Se generan solas desde las líneas X(...) del ejercicio; lo único a escribir son las líneas con sus goal/have (la letra dice QUÉ, nunca por dónde se llega).
+   2. UNIDADES: un ejercicio se recorre en unidades; cada unidad = los mensajes sueltos previos (find…) + el mensaje del Controlador (o del objeto que ejecuta una operación de clase) con todo
+      lo que cuelga de él. NUNCA tarjetas de find sueltas ni de recorridos triviales: la unidad abre con la tarjeta «elegí el recorrido» solo si el camino pasa por 3 o más objetos
+      (si no, abre con su primera línea); siguen las tarjetas de sintaxis de cada línea en orden (SPACK) y, al acertar la unidad sin errores, sigue la unidad siguiente del mismo ejercicio.
+      Se generan solas desde las líneas X(...); lo único a escribir son las líneas con sus goal/have (la letra dice QUÉ, nunca por dónde se llega).
    3. PREVIATURAS (automáticas, tokens en S2.bqok): un mensaje aparece solo si se acertó SIN errores el mensaje anterior del mismo ejercicio (m:<ejercicio>:<n>) y los
       patrones que usa (p:<id>, detectados por sus líneas + dependencias PDEP). Los mensajes ya acertados antes cuentan (TOKSEED). Si se agrega un patrón o un ejercicio,
       verificar con jsdom que haya tarjetas disponibles al empezar y que acertar el pack desbloquee lo siguiente.
@@ -661,38 +662,44 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
  {s:"p4",re:/(?!)/,t:"Notación de objetos",p:["El emisor es quien ejecuta el mensaje del que cuelga este (está en «Tengo» como «x ejecuta …»).","Si el receptor ya apareció antes (está en «Tengo»), se escribe solo su nombre (m, r, p): sin «:» ni clase. La primera vez, nombre:Clase (r:Reserva) o :Clase si es anónimo; una colección, :Clase *."]});
 
 window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{})[c.id+":0"]||0)>=1)};
-/* ===== Packs por mensaje: tarjeta 0 = elegir el recorrido (objetos por los que pasa el mensaje); siguientes = sintaxis de cada línea, en orden (SPACK) ===== */
+/* ===== Unidades: un ejercicio se recorre en unidades; cada unidad = mensajes sueltos previos (find…) + el mensaje del Controlador con todo lo que cuelga de él.
+   Si el camino pasa por 3 o más objetos, abre con la tarjeta «elegí el recorrido»; si no, abre con su primera línea. Siguen las tarjetas de sintaxis de cada línea en orden (SPACK)
+   y, al acertar la unidad sin errores, sigue la unidad siguiente del mismo ejercicio. ===== */
 {const G={};SWC.filter(c=>c.bld&&c.dg).forEach(c=>{const k=c.g.replace(/ · [^·]+$/,"");(G[k]=G[k]||[]).push(c)});
  const top=c=>c.dg.cur.n.replace("*","").split(".")[0],cl=(c,re)=>(c.ctx.split("\n").find(l=>re.test(l))||""),RE=/[A-ZÁÉÍÓÑÚ][A-Za-zÁÉÍÓÑÚáéíóñú_]*/g;
- Object.entries(G).forEach(([g,cs])=>{const U=[];cs.forEach(c=>{const u=U[U.length-1];if(u&&top(u[0])==top(c))u.push(c);else U.push([c])});
+ Object.entries(G).forEach(([g,cs])=>{const Mg=[];cs.forEach(c=>{const m=Mg[Mg.length-1];if(m&&top(m[0])==top(c))m.push(c);else Mg.push([c])});
+  const U=[];let pend=[];Mg.forEach(m=>{pend.push(m);if(m.length>1){U.push(pend);pend=[]}});if(pend.length){if(U.length)U[U.length-1].push(...pend);else U.push(pend)}
   const M={};cs.forEach(c=>{const L=c.dg.cur;[L.from,L.to].forEach(t=>{const v=t.replace(/ \*$/,"").split(":");if(v[0]&&v[1])M[v[0]]=v[1]})});
   if(cs[0].dg.ent){const[a,b]=cs[0].dg.ent.split(":");M[a]=b}
-  const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(M[k]||k)};
-  U.forEach((ch,ui)=>{const first=ch[0],ix=cs.indexOf(first),a=top(first),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
+  const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(M[k]||k)},mt=t=>"m:"+g+":"+t,pm=PATS[g],ent=[];
+  Mg.forEach(m=>{TS[mt(top(m[0]))]=m});
+  U.forEach((u,ui)=>{const ch=u.flat(),first=ch[0],ix=cs.indexOf(first),tops=u.map(m=>top(m[0])),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
    ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!R.includes(x))R.push(x)});
-   const Ls=ch.map(c=>c.dg.cur),mt=u=>"m:"+g+":"+top(u[0]),pm=PATS[g],toks=[mt(ch)],req=[];
-   if(pm&&pm.msg==top(first))toks.push("p:"+pm.id);
-   if(ui)req.push(mt(U[ui-1]));
+   const Ls=ch.map(c=>c.dg.cur),toks=tops.map(mt),req=[];
+   if(pm&&tops.includes(pm.msg))toks.push("p:"+pm.id);
+   if(ui)req.push(mt(top(U[ui-1][U[ui-1].length-1][0])));
    {const P=new Set(),nx=Ls.filter(l=>l.op=="next").length,gen=/^(find|next|create|add|remove|destroy|getInstance)$/;
     if(nx)P.add("rec");if(nx>=2)P.add("cascada");
     if(Ls.some(l=>/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("filtro");
     if(Ls.some(l=>!/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("cond");
-    if(Ls.some((l,i)=>l.t=="L"&&l.res&&!gen.test(l.op)&&Ls.some(m=>m.n==l.n+".1"&&m.op=="find"&&m.res==l.res)))P.add("interm");
+    if(Ls.some(l=>l.t=="L"&&l.res&&!gen.test(l.op)&&Ls.some(m=>m.n==l.n+".1"&&m.op=="find"&&m.res==l.res)))P.add("interm");
     if(Ls.some(l=>l.op=="create"))P.add("crear");
     if(Ls.some(l=>l.op=="destroy"||l.op=="remove"))P.add("elim");
     if(Ls.some(l=>l.op=="getInstance"))P.add("id");
     [...P].forEach(x=>(PDEP[x]||[]).forEach(d=>P.add(d)));
     P.forEach(x=>{if(!(pm&&pm.id==x))req.push("p:"+x)})}
-   toks.forEach(t=>{if(/^m:/.test(t))TS[t]=ch});
-   if(R.length<2){ch.forEach(c=>{c.req=req;c.toks=toks});return}
+   if(R.length<3){const rest=ch.slice(1);Object.assign(first,{req,toks,pack:rest.length?rest:null});rest.forEach(x=>{x.ln=1;x.pk=first});ent.push(first);return}
    ch.forEach(c=>c.ln=1);
-   const held={},tg0=cl(first,/^Tengo:/);ch.forEach(c=>{const t=c.dg.cur.to.replace(/ \*$/,""),x=cls(t),nm=t.split(":")[0];if(nm&&!(x in held)&&(!/:/.test(t)||new RegExp("(^|[ ,:])"+nm+"( \\(| ·|,|$)").test(tg0.replace(/^Tengo: /,""))))held[x]=1});const exp=[],bank=[];R.forEach((x,i)=>{const pv=R[i-1],ar=arr.find(z=>pv&&z.includes(pv)&&z.includes(x));
+   const held={},tg0=cl(first,/^Tengo:/);ch.forEach(c=>{const t=c.dg.cur.to.replace(/ \*$/,""),x=cls(t),nm=t.split(":")[0];if(nm&&!(x in held)&&(!/:/.test(t)||new RegExp("(^|[ ,:])"+nm+"( \\(| ·|,|$)").test(tg0.replace(/^Tengo: /,""))))held[x]=1});
+   const exp=[],bank=[];R.forEach((x,i)=>{const pv=R[i-1],ar=arr.find(z=>pv&&z.includes(pv)&&z.includes(x));
     if(!i)exp.push({t:x,k:"a",auto:1});else exp.push({t:"→",k:"a",auto:1},{t:x,k:"rt",pv,w:(held[x]?"«"+x+"» ya lo tenés (figura en «Tengo»): el mensaje se le manda directo.":"Se llega a «"+x+"» desde «"+pv+"»"+(ar?" (flecha en Clases: "+ar.trim()+")":" por una flecha del diagrama de clases")+".")});});
    const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,3);
    exp.filter(x=>x.k=="rt").forEach(x=>bank.push({t:x.t,rt:1}));D.forEach(x=>bank.push({t:x}));
-   const gl=cl(first,/^▶/),tg=cl(first,/^Tengo:/),ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gl+(clc?"\nClases: "+clc:""),
-    c=Object.assign(sw("p4",g+" · recorrido "+a,ctx,[Object.assign(st("Elegí el recorrido",R.join(" → "),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
-   ch.forEach(x=>x.pk=c);SWC.push(c)})})}
+   const gls=u.map(m=>"▶ "+top(m[0])+": "+cl(m[0],/^▶/).replace(/^▶ /,"")).join("\n"),tg=cl(first,/^Tengo:/),
+    ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gls+(clc?"\nClases: "+clc:""),
+    c=Object.assign(sw("p4",g+" · recorrido "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),ctx,[Object.assign(st("Elegí el recorrido",R.join(" → "),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a:tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
+   ch.forEach(x=>x.pk=c);SWC.push(c);ent.push(c)});
+  ent.forEach((e,i)=>{if(ent[i+1])e.next=ent[i+1]})})}
 
 /* ===== Teoría de los patrones (tarjetas binarias, genéricas) ===== */
 SWC.push(
