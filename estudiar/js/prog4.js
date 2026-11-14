@@ -332,6 +332,60 @@ X("2.2.2.2*","rp","ah:AplicacionHerbicida","L","getFecha","()","f","[ah es Aplic
 X("2.2.2.3*","rp","ah:AplicacionHerbicida","L","getHerbicidaAplicado","()","cant","[fInicio <= f & f <= fFin]","Solo si fInicio <= f <= fFin: pido la cantidad.","rp · ah (2.2.2.1*) · f (2.2.2.2*) · firma: fInicio, fFin","AplicacionHerbicida.getHerbicidaAplicado() → devuelve el herbicida aplicado")]}
 ];
 const exNx=n=>{const p=n.replace("*","").split("."),k=+p.pop()+1;return p.concat(k).join(".")};
+/* ===== Patrones (mini-ejercicios genéricos A, B, C): cada uno es un ejercicio más para el motor (tarjeta de recorrido + líneas) ===== */
+EXAM.push(
+{g:"Patrón · Recorrer",op:"sumarValores(idA): int",clc:"Controlador→A* · A→B*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
+X("2",":Controlador","a:A","L","sumarValores","()","total",null,"Le pido a la A que sume el valor de todas sus B.","a (1)","A.sumarValores() → suma el valor de todas sus B"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta sumarValores()"),
+X("2.2*","a","b:B","L","getValor","()","v",null,"Para cada B, pido su valor.","a · b (2.1*, una por vuelta)","B.getValor() → devuelve el valor")]},
+{g:"Patrón · Recorrer y filtrar",op:"sumarActivas(idA): int",clc:"Controlador→A* · A→B*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
+X("2",":Controlador","a:A","L","sumarActivas","()","total",null,"Le pido a la A que sume el valor de sus B activas.","a (1)","A.sumarActivas() → suma el valor de sus B activas"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta sumarActivas()"),
+X("2.2*","a","b:B","L","getEstado","()","e",null,"Para cada B, pido su estado.","a · b (2.1*, una por vuelta)","B.getEstado() → devuelve el estado"),
+X("2.3*","a","b:B","L","getValor","()","v","[e == activa]","Solo si e es activa: pido su valor.","a · b (2.1*) · e (2.2*)","B.getValor() → devuelve el valor")]},
+{g:"Patrón · Obtener por un intermediario",op:"cerrarB(idA, idB)",clc:"Controlador→A* · A→B*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA, idB"),
+X("2",":Controlador","a:A","L","getB","(idB)","b",null,"Necesito la B de esa A: se la pido a la A.","a (1) · firma: idB","A.getB(idB) → devuelve la B de la A"),
+X("2.1","a",":B *","A","find","(idB)","b",null,"La A busca la B entre las suyas.","a ejecuta getB(idB) · firma: idB"),
+X("3",":Controlador","b:B","L","cerrar","()",null,null,"Le pido a la B que se cierre.","a (1), b (2)","B.cerrar() → cierra la B")]},
+{g:"Patrón · Total en cascada",op:"totalA(idA): int",clc:"Controlador→A* · A→B* · B→C*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
+X("2",":Controlador","a:A","L","calcularTotal","()","totalA",null,"Le pido el total a la A.","a (1)","A.calcularTotal() → suma el total de todas sus B"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta calcularTotal()"),
+X("2.2*","a","b:B","L","calcularTotal","()","totalB",null,"Cada B calcula su total.","a · b (2.1*, una por vuelta)","B.calcularTotal() → suma el valor de todas sus C"),
+X("2.2.1*","b",":C *","A","next","()","c","[foreach]","La B recorre sus C.","b ejecuta calcularTotal()"),
+X("2.2.2*","b","c:C","L","getValor","()","v",null,"Para cada C, pido su valor.","b · c (2.2.1*, una por vuelta)","C.getValor() → devuelve el valor")]},
+{g:"Patrón · Crear y registrar",op:"altaX(idA, idB)",clc:"Controlador→A*, B* · A→X* · B→X*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA, idB"),
+X("2",":Controlador",":B *","A","find","(idB)","b",null,"Necesito la B a partir de su id.","a (1) · firma: idB"),
+X("3",":Controlador","a:A","L","altaX","(b)",null,null,"Le pido a la A que dé de alta la X con esa B.","a (1), b (2)","A.altaX(b) → crea la X y la registra"),
+X("3.1","a","x:X","L","create","(a, b)","x",null,"La A crea la X.","a ejecuta altaX(b) · firma: b",null,{new:1}),
+X("3.2","a","b:B","P","agregarX","(x)",null,null,"La B debe registrar la X nueva.","a · x (3.1) · firma: b","B.agregarX(x) → guarda la X en su colección"),
+X("3.2.1","b",":X *","A","add","(x)",null,null,"La X queda guardada del lado de la B.","b ejecuta agregarX(x) · firma: x"),
+X("3.3","a",":X *","A","add","(x)",null,null,"La X queda guardada del lado de la A.","a · x (3.1)")]},
+{g:"Patrón · Condición con un dato previo",op:"cerrarSiActiva(idA)",clc:"Controlador→A*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
+X("2",":Controlador","a:A","L","getEstado","()","e",null,"Necesito el estado de la A para decidir.","a (1)","A.getEstado() → devuelve el estado"),
+X("3",":Controlador","a:A","L","cerrar","()",null,"[e == activa]","Solo si e es activa: se cierra.","a (1) · e (2)","A.cerrar() → cierra la A")]},
+{g:"Patrón · Id único",op:"altaB(idA)",clc:"Controlador (singleton) · Controlador→A* · A→B*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
+X("2",":Controlador","a:A","L","altaB","()",null,null,"Le pido a la A que dé de alta una B.","a (1)","A.altaB() → crea la B y la registra"),
+X("2.1","a","b:B","L","create","(a)","b",null,"La A crea la B.","a ejecuta altaB()",null,{new:1}),
+X("2.1.1","b",":Controlador","G","getInstance","()","cont",null,"La B nueva necesita un id único: obtiene el Controlador.","b ejecuta create(a)"),
+X("2.1.2","b","cont:Controlador","L","getIdUnico","()","id",null,"La B le pide el id al Controlador.","b · cont (2.1.1)"),
+X("2.2","a",":B *","A","add","(b)",null,null,"La B queda guardada en la A.","a · b (2.1)")]},
+{g:"Patrón · Recorrer y eliminar",op:"vaciar(idA)",clc:"Controlador→A* · A→B* · B→C (1) · C→B*",L:[
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
+X("2",":Controlador","a:A","L","vaciar","()",null,null,"Le pido a la A que elimine todas sus B.","a (1)","A.vaciar() → elimina todas sus B"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta vaciar()"),
+X("2.2*","a","b:B","L","desvincular","()",null,null,"Cada B deja de estar enlazada con su C.","a · b (2.1*, una por vuelta)","B.desvincular() → pide a su C que la saque"),
+X("2.2.1*","b",":C","A","quitarB","(b)",null,null,"La B le pide a su C que la saque.","b ejecuta desvincular()","C.quitarB(b) → saca la B de su colección",{one:1}),
+X("2.2.1.1*",":C",":B *","A","remove","(b)",null,null,"La C saca la B de su colección.","C ejecuta quitarB(b) · firma: b"),
+X("2.3*","a","b:B","L","destroy","()",null,null,"Cada B se destruye.","a · b (2.1*)")]}
+);
+const PATS={"Patrón · Recorrer":{id:"rec",msg:"2"},"Patrón · Recorrer y filtrar":{id:"filtro",msg:"2"},"Patrón · Obtener por un intermediario":{id:"interm",msg:"2"},"Patrón · Total en cascada":{id:"cascada",msg:"2"},"Patrón · Crear y registrar":{id:"crear",msg:"3"},"Patrón · Condición con un dato previo":{id:"cond",msg:"3"},"Patrón · Id único":{id:"id",msg:"2"},"Patrón · Recorrer y eliminar":{id:"elim",msg:"2"}},PDEP={filtro:["rec"],cascada:["rec"],elim:["rec"]};
 EXAM.forEach(setGoals);
 /* Dominio de cada examen = las operaciones de las clases que usa el ejercicio (como en la letra), sin decir cuál va en cada línea. */
 const exDom=E=>{const m={},gen=/^(find|next|create|add|remove|destroy|getInstance)$/;E.L.forEach(L=>{if(gen.test(L.op))return;const s=L.sg&&/^(\w+)\.(\w+\([^)]*\)(?::\s*\w+)?)/.exec(L.sg),k=s?s[1]:(L.to.split(":")[1]||L.to).replace(/ \*$/,"").trim(),v=s?s[2]:L.op+L.pa;(m[k]=m[k]||[]);if(!m[k].includes(v))m[k].push(v)});return Object.entries(m).map(([k,v])=>k+": "+v.join(", ")).join("\n")};
@@ -584,6 +638,7 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
  {s:"p4",re:/(?!)/,t:"Numeración de mensajes",p:["Los mensajes del que ejecuta la operación (el Controlador, o el objeto de una operación de clase) son 1, 2, 3… Lo que envía un objeto mientras ejecuta el mensaje 2.2 es 2.2.1, 2.2.2…; dentro de un recorrido 2.2.2* los hijos conservan el *: 2.2.2.1*.","Para saber el número: ¿quién envía? ¿qué mensaje está ejecutando ese objeto en este momento? El número es el de ese mensaje más un nivel. Ej.: u ejecuta 2 (bajaMascota) → sus mensajes son 2.1, 2.2…; m ejecuta 2.2 → sus mensajes son 2.2.1, 2.2.2…"]},
  {s:"p4",re:/(?!)/,t:"Notación de objetos",p:["El emisor es quien ejecuta el mensaje del que cuelga este (está en «Tengo» como «x ejecuta …»).","Si el receptor ya apareció antes (está en «Tengo»), se escribe solo su nombre (m, r, p): sin «:» ni clase. La primera vez, nombre:Clase (r:Reserva) o :Clase si es anónimo; una colección, :Clase *."]});
 
+window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{})[c.id+":0"]||0)>=1)};
 /* ===== Packs por mensaje: tarjeta 0 = elegir el recorrido (objetos por los que pasa el mensaje); siguientes = sintaxis de cada línea, en orden (SPACK) ===== */
 {const G={};SWC.filter(c=>c.bld&&c.dg).forEach(c=>{const k=c.g.replace(/ · [^·]+$/,"");(G[k]=G[k]||[]).push(c)});
  const top=c=>c.dg.cur.n.replace("*","").split(".")[0],cl=(c,re)=>(c.ctx.split("\n").find(l=>re.test(l))||""),RE=/[A-ZÁÉÍÓÑÚ][A-Za-zÁÉÍÓÑÚáéíóñú_]*/g;
@@ -591,13 +646,41 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
   const M={};cs.forEach(c=>{const L=c.dg.cur;[L.from,L.to].forEach(t=>{const v=t.replace(/ \*$/,"").split(":");if(v[0]&&v[1])M[v[0]]=v[1]})});
   if(cs[0].dg.ent){const[a,b]=cs[0].dg.ent.split(":");M[a]=b}
   const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(M[k]||k)};
-  U.forEach(ch=>{const first=ch[0],ix=cs.indexOf(first),a=top(first),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
+  U.forEach((ch,ui)=>{const first=ch[0],ix=cs.indexOf(first),a=top(first),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
    ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!R.includes(x))R.push(x)});
-   if(R.length<2)return;ch.forEach(c=>c.ln=1);
+   const Ls=ch.map(c=>c.dg.cur),mt=u=>"m:"+g+":"+top(u[0]),pm=PATS[g],toks=[mt(ch)],req=[];
+   if(pm&&pm.msg==top(first))toks.push("p:"+pm.id);
+   if(pm&&+top(first)<+pm.msg){ch.forEach(c=>c.hid=1);return}
+   if(ui&&(!pm||+top(U[ui-1][0])>=+pm.msg))req.push(mt(U[ui-1]));
+   {const P=new Set(),nx=Ls.filter(l=>l.op=="next").length,gen=/^(find|next|create|add|remove|destroy|getInstance)$/;
+    if(nx)P.add("rec");if(nx>=2)P.add("cascada");
+    if(Ls.some(l=>/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("filtro");
+    if(Ls.some(l=>!/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("cond");
+    if(Ls.some((l,i)=>l.t=="L"&&l.res&&!gen.test(l.op)&&Ls.some(m=>m.n==l.n+".1"&&m.op=="find"&&m.res==l.res)))P.add("interm");
+    if(Ls.some(l=>l.op=="create"))P.add("crear");
+    if(Ls.some(l=>l.op=="destroy"||l.op=="remove"))P.add("elim");
+    if(Ls.some(l=>l.op=="getInstance"))P.add("id");
+    [...P].forEach(x=>(PDEP[x]||[]).forEach(d=>P.add(d)));
+    P.forEach(x=>{if(!(pm&&pm.id==x))req.push("p:"+x)})}
+   toks.forEach(t=>{if(/^m:/.test(t))TS[t]=ch});
+   if(R.length<2){ch.forEach(c=>{c.req=req;c.toks=toks});return}
+   ch.forEach(c=>c.ln=1);
    const held={},tg0=cl(first,/^Tengo:/);ch.forEach(c=>{const t=c.dg.cur.to.replace(/ \*$/,""),x=cls(t),nm=t.split(":")[0];if(nm&&!(x in held)&&(!/:/.test(t)||new RegExp("(^|[ ,:])"+nm+"( \\(| ·|,|$)").test(tg0.replace(/^Tengo: /,""))))held[x]=1});const exp=[],bank=[];R.forEach((x,i)=>{const pv=R[i-1],ar=arr.find(z=>pv&&z.includes(pv)&&z.includes(x));
     if(!i)exp.push({t:x,k:"a",auto:1});else exp.push({t:"→",k:"a",auto:1},{t:x,k:"rt",pv,w:(held[x]?"«"+x+"» ya lo tenés (figura en «Tengo»): el mensaje se le manda directo.":"Se llega a «"+x+"» desde «"+pv+"»"+(ar?" (flecha en Clases: "+ar.trim()+")":" por una flecha del diagrama de clases")+".")});});
    const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,3);
    exp.filter(x=>x.k=="rt").forEach(x=>bank.push({t:x.t,rt:1}));D.forEach(x=>bank.push({t:x}));
    const gl=cl(first,/^▶/),tg=cl(first,/^Tengo:/),ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gl+(clc?"\nClases: "+clc:""),
-    c=Object.assign(sw("p4",g+" · recorrido "+a,ctx,[Object.assign(st("Elegí el recorrido",R.join(" → "),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,bk:{a,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
-   SWC.push(c)})})}
+    c=Object.assign(sw("p4",g+" · recorrido "+a,ctx,[Object.assign(st("Elegí el recorrido",R.join(" → "),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
+   ch.forEach(x=>x.pk=c);SWC.push(c)})})}
+
+/* ===== Teoría de los patrones (tarjetas binarias, genéricas) ===== */
+SWC.push(
+sw("p4","Patrón · Recorrer · teoría",null,[{q:"Para repetir algo con cada B de la colección de a, ¿cómo lo hago?",a:"a manda next() a :B * con [foreach], y el número lleva *",b:"a manda find() a :B * una vez por cada B",w:"find trae un elemento por clave; next con * trae el siguiente en cada vuelta.",th:"Recorrer = next() a la colección con [foreach]; el número lleva *. Lo que se hace con cada elemento cuelga del mismo nivel y también lleva *."},{q:"Dentro del recorrido, el mensaje que usa el elemento b se numera…",a:"n.2* (hermano del next, también con *)",b:"n.2 (sin *)",w:"Todo lo que se repite en cada vuelta lleva *."},{q:"¿Para qué guardo b := next()?",a:"Para mandarle mensajes a ese elemento en cada vuelta",b:"Para que a lo guarde",w:"El resultado queda como local del recorrido: sirve de receptor o parámetro de los mensajes siguientes."}]),
+sw("p4","Patrón · Recorrer y filtrar · teoría",null,[{q:"Quiero el valor solo de las B activas. ¿Qué hago?",a:"Pido e := getEstado() y escribo [e == activa] antes del mensaje",b:"Escribo [activa] sin pedir el estado antes",w:"La condición usa variables que ya tengo: primero hay que pedir el dato.",th:"Filtrar = pedir el dato dentro de la vuelta, guardarlo (e := …) y poner la condición entre corchetes antes del mensaje que depende de ella."},{q:"¿Dónde se escribe la condición en la línea?",a:"Antes del mensaje: n*: [cond] v := op()",b:"Después de los parámetros",w:"La condición va entre el destino y el resultado: n*: a → b : [cond] v := op()."}]),
+sw("p4","Patrón · Obtener por un intermediario · teoría",null,[{q:"Tengo a y necesito una B de a. El Controlador no tiene flecha a B. ¿Qué hago?",a:"Pido b := getB(id) a a; a hace el find a :B * por dentro (n.1)",b:"El Controlador hace find a :B * directo",w:"Sin flecha no hay find directo: lo hace quien tiene la flecha.",th:"Si el objeto que necesito está detrás de otro, se lo pido con una operación del dominio. Esa operación no viene en la letra: la diseñás vos. El que tiene la flecha hace el find por dentro."},{q:"¿Qué número lleva el find que hace a por dentro?",a:"n.1: cuelga del getB (n)",b:"n+1: otro mensaje del Controlador",w:"Lo dispara a, mientras resuelve el mensaje n."},{q:"El Controlador, ¿ve el find de a?",a:"No: solo recibe b como resultado",b:"Sí: lo manda él",w:"El find es interno de a; el Controlador se queda con el resultado."}]),
+sw("p4","Patrón · Total en cascada · teoría",null,[{q:"El total de A depende de sus B y el de cada B de sus C. ¿Cómo se arma?",a:"Cada nivel recorre y le pide el total al siguiente; cada uno suma lo suyo",b:"El Controlador recorre todos los niveles",w:"Cada objeto trabaja con lo suyo: recorre su colección y delega.",th:"Cascada: A.calcularTotal recorre sus B y le pide a cada una calcularTotal; cada B recorre sus C, etc. Hay un [foreach] por nivel y la última capa pide el dato (getValor)."},{q:"¿Cuántos [foreach] tiene el diagrama?",a:"Uno por cada nivel de colección",b:"Uno solo",w:"Cada nivel recorre su propia colección."}]),
+sw("p4","Patrón · Crear y registrar · teoría",null,[{q:"Creé x con create. ¿Ya queda guardada en a?",a:"No: hay que agregarla con add a la colección",b:"Sí: create la guarda",w:"create solo crea el objeto: el link se hace con add.",th:"Crear y registrar = create y después add al objeto que debe guardarla; si el link es en los dos sentidos, add también del otro lado."},{q:"x relaciona a y b. ¿Cuántos add necesito?",a:"Uno por cada objeto que debe guardarla (a y b)",b:"Uno solo",w:"Cada lado guarda su referencia: se escribe un add por lado."}]),
+sw("p4","Patrón · Condición con un dato previo · teoría",null,[{q:"Quiero ejecutar cerrar() solo si la A está activa. ¿Cómo lo escribo?",a:"Pido e := getEstado() antes y escribo [e == activa] cerrar()",b:"Escribo [getEstado() == activa] cerrar()",w:"La condición usa variables ya guardadas, no mensajes.",th:"Un dato que decide se pide primero con un getter, se guarda en una variable y la condición se escribe con esa variable."}]),
+sw("p4","Patrón · Id único · teoría",null,[{q:"Un objeto nuevo necesita un id único. ¿De dónde sale?",a:"Del Controlador: getInstance() y después getIdUnico()",b:"Se inventa en el create",w:"El id único lo genera el Controlador.",th:"El Controlador es singleton: se obtiene con getInstance() y después se le pide el id."},{q:"¿Qué estereotipo lleva getInstance()?",a:"«global»",b:"«local»",w:"El Controlador se conoce globalmente (singleton)."}]),
+sw("p4","Patrón · Recorrer y eliminar · teoría",null,[{q:"Cortar el link y destruir el objeto: ¿qué va primero?",a:"Primero se corta el link y después destroy",b:"destroy primero",w:"Si destruís primero, las colecciones que lo tenían quedan con una referencia colgante.",th:"Eliminar = cortar los links (remove / desvincular) y recién después destroy."},{q:"El otro lado también guarda al objeto. ¿Qué hago?",a:"Pedirle a ese lado que lo saque de su colección",b:"Nada: se borra solo",w:"Cada lado debe borrar su referencia: los links van en los dos sentidos."},{q:"Para eliminar todos los elementos, ¿qué uso?",a:"Recorrer con next y repetir adentro",b:"Un solo find",w:"find trae uno; para todos hay que recorrer."}])
+);

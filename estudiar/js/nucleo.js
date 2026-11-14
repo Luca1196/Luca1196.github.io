@@ -153,7 +153,7 @@ try{const r=localStorage.getItem("sw1");if(r)S2=Object.assign(S2,JSON.parse(r))}
 let SK="sw1";const SV2=()=>{try{localStorage.setItem(SK,JSON.stringify(S2))}catch(e){}};
 let SLT="",SLK="";const swTop=c=>c.s+"|"+c.g.replace(/ · .*$/,"").replace(/ \d+\/\d+$/,"").replace(/ \(.*\)$/,"");
 /* Al fallar se rota de tema: comunicación → deducción natural → código C++ → clases/secuencia. */
-const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="",SPACK=[];
+const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="",SPACK=[],SPK=null;
 let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
 const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 /* Pendientes = pasos que fallaste alguna vez (registro de Errores) y todavía no acertaste 2 veces seguidas. Pesan más al elegir serie y forman el filtro "Mis errores". */
@@ -161,7 +161,7 @@ function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).
  E1.log.forEach(e=>{if(e.w!=(TAB==7?"bs":"sw")||!e.n)return;const c=(by[e.g]||[]).find(c=>c.steps[e.n-1]&&c.steps[e.n-1].q==e.q);if(!c)return;const i=e.n-1;if(swBox(c,i)<2)m.set(c.id+":"+i,{c,i})});return m}
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  if(SPACK.length&&TAB==3){const c=SPACK.shift();return{c,i:0,only:false,built:[],err:0}}
- const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&avail(c)&&(SF=="lin"?!!c.ln:(!c.ln||SF=="err")&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF])))),PD=swPend();
+ const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]||(typeof TOKSEED=="function"&&TOKSEED(t))),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&!c.hid&&avail(c)&&(SF=="lin"?!!c.ln:(!c.ln||SF=="err")&&(SF=="all"||SF=="err"||(SF=="lg"?c.s=="lg":area(c)==SAF[SF])))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
  const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
@@ -194,7 +194,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}
- if(b.p>=X.length){b.done=true;if(c.pack)SPACK=c.pack.slice();u.ans=b.e?"no":"ok";S2.n++;SUN++;
+ if(b.p>=X.length){b.done=true;{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)};if(c.pack){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad)tk(c.pk.toks||[])}else if(c.toks&&!b.e)tk(c.toks)}u.ans=b.e?"no":"ok";S2.n++;SUN++;
   if(!b.e){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)+2;S2.box[k]=Date.now()-(u.ts||0)>90000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,900)}}
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */
