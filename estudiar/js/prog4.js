@@ -9,16 +9,21 @@
       b. Alta en PATS ({id, msg: número del mensaje que enseña el patrón}) y, si depende de otro patrón, en PDEP (ej. eliminar → recorrer).
       c. Teoría: una serie sw("p4","Patrón · <nombre> · teoría",…) al final del archivo (2-3 pasos binarios; b = error tentador; th en el primero).
       d. Si el patrón se reconoce en las líneas, sumar su regla de detección (bloque «Packs por mensaje», conjunto P).
-   2. UNIDADES: un ejercicio se recorre en unidades; cada unidad = los mensajes sueltos previos (find…) + el mensaje del Controlador (o del objeto que ejecuta una operación de clase) con todo
-      lo que cuelga de él. NUNCA tarjetas de find sueltas ni de recorridos triviales: la unidad abre con «traducí la letra» (si hay letra y 2+ objetivos), luego «elegí el recorrido» solo si el camino tiene 2 o más saltos
-      (si no, sigue con su primera línea); siguen las tarjetas de sintaxis de cada línea en orden (SPACK) y, al acertar la unidad sin errores, sigue la unidad siguiente del mismo ejercicio.
-      Se generan solas desde las líneas X(...); lo único a escribir son las líneas con sus goal/have (la letra dice QUÉ, nunca por dónde se llega).
-   2b. DESARMAR LA RESOLUCIÓN EN ACCIONES (pauta, 14/11): al formar ejercicios nuevos, primero se descompone cómo se resuelve el ejercicio en las ACCIONES del estudiante
-      (leer letra/restricciones/firma/descripción/parámetros/pre/pos; derivar los objetivos intermedios y ordenarlos; elegir el recorrido = qué flechas/saltos hacen falta;
-      diseñar operaciones del dominio; recorridos y condiciones; guardar variables; retornos; escribir cada línea; revisar contra la letra; derivar el DCD) y DESPUÉS se arma
-      una tarjeta (o pack) por cada acción. Ya cubiertas: «Traducí la letra» (pre/pos → objetivos ordenados; el error cita la frase de la letra; LET.*.ops.*.ob mapea
-      objetivo → frase), «elegí el recorrido» (saltos A → B con * del modelo de dominio de la letra) y las líneas (sintaxis). Pendientes: «¿Qué falta?» (diagrama con un
-      mensaje menos → tocar la frase de la letra sin cubrir) y derivar el DCD. Al agregar un ejercicio, completar su mapeo ob en js/letras.js.
+      e. Su mini-letra (firma, descripción, pre/pos y mapeo ob) en LET.Patron de js/letras.js y sus dos objetivos equivocados en TDIS.
+   2. ORDEN LÓGICO DEL EXAMEN, SIN SPOILERS (pauta de Luca, 14/11): las tarjetas aparecen en el mismo orden en que se resuelve el ejercicio en el examen, y cada paso lo
+      resuelve el estudiante ANTES de que la tarjeta siguiente lo dé por sabido. Ninguna tarjeta muestra algo que todavía no se decidió (ni flechas de la solución, ni pasos
+      intermedios redactados por nosotros, ni la lista de operaciones de las clases, ni los mensajes que vienen después). Para armar ejercicios nuevos: primero DESARMAR LA
+      RESOLUCIÓN EN LAS ACCIONES del estudiante (leer letra/restricciones/firma/pre/pos; derivar objetivos; decidir flechas; desarmar cada mensaje en sub-mensajes y diseñar
+      las operaciones propias; escribir cada línea; revisar contra la letra; derivar el DCD) y después hacer una tarjeta (o pack) por acción. Hoy la cadena es:
+      a. «Traducí la letra» (una por ejercicio): objetivos de primer nivel sacados de pre/pos; el error marca la frase de la letra (LET.*.ops.*.ob en js/letras.js mapea
+         objetivo → frase). Objetivos equivocados tentadores a mano en TDIS (verificar una precondición, algo de la otra operación, etc.).
+      b. Por UNIDAD (= mensajes sueltos previos + un mensaje de primer nivel con todo lo que cuelga): «elegí el recorrido» (qué flechas hacen falta; solo si hay 2+ saltos;
+         muestra el modelo de dominio de la letra, nunca las flechas) → «desarmá el mensaje» (esqueleto: emisor → receptor : operación; el error típico es que el Controlador
+         haga directo lo que no alcanza) → las líneas (sintaxis), en SPACK. Al acertar la unidad sin errores sigue la unidad siguiente del mismo ejercicio.
+      c. Objetivos, saltos y mensajes son fichas de ORDEN LIBRE: vale cualquier orden que respete las dependencias (se calculan solas desde las líneas X(...)); no marcar
+         como error un orden alternativo válido. Los goal de las líneas dicen QUÉ se necesita, nunca quién lo hace ni por dónde se llega.
+      d. Pendientes: «¿Qué falta?» (revisar el diagrama contra la letra) y derivar el DCD (parte b del problema).
+      Lo único a escribir por ejercicio: las líneas X(...) con goal/have neutros, su letra + mapeo ob en js/letras.js y sus dos objetivos equivocados en TDIS.
    3. PREVIATURAS (automáticas, tokens en S2.bqok): un mensaje aparece solo si se acertó SIN errores el mensaje anterior del mismo ejercicio (m:<ejercicio>:<n>) y los
       patrones que usa (p:<id>, detectados por sus líneas + dependencias PDEP). Los mensajes ya acertados antes cuentan (TOKSEED). Si se agrega un patrón o un ejercicio,
       verificar con jsdom que haya tarjetas disponibles al empezar y que acertar el pack desbloquee lo siguiente.
@@ -364,55 +369,55 @@ const exNx=n=>{const p=n.replace("*","").split("."),k=+p.pop()+1;return p.concat
 /* ===== Patrones (mini-ejercicios genéricos A, B, C): cada uno es un ejercicio más para el motor (tarjeta de recorrido + líneas) ===== */
 EXAM.push(
 {g:"Patrón · Recorrer",op:"sumarValores(idA): int",clc:"Controlador→A* · A→B*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
-X("2",":Controlador","a:A","L","sumarValores","()","total",null,"Le pido a la A que sume el valor de todas sus B.","a (1)","A.sumarValores() → suma el valor de todas sus B"),
-X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta sumarValores()"),
-X("2.2*","a","b:B","L","getValor","()","v",null,"Para cada B, pido su valor.","a · b (2.1*, una por vuelta)","B.getValor() → devuelve el valor")]},
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA"),
+X("2",":Controlador","a:A","L","sumarValores","()","total",null,"Se necesita la suma del valor de todas las B de esa A.","a (1)","A.sumarValores() → suma el valor de todas sus B"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","Se recorren las B de la A.","a ejecuta sumarValores()"),
+X("2.2*","a","b:B","L","getValor","()","v",null,"De cada B se necesita su valor.","a · b (2.1*, una por vuelta)","B.getValor() → devuelve el valor")]},
 {g:"Patrón · Recorrer y filtrar",op:"sumarActivas(idA): int",clc:"Controlador→A* · A→B*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
-X("2",":Controlador","a:A","L","sumarActivas","()","total",null,"Le pido a la A que sume el valor de sus B activas.","a (1)","A.sumarActivas() → suma el valor de sus B activas"),
-X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta sumarActivas()"),
-X("2.2*","a","b:B","L","getEstado","()","e",null,"Para cada B, pido su estado.","a · b (2.1*, una por vuelta)","B.getEstado() → devuelve el estado"),
-X("2.3*","a","b:B","L","getValor","()","v","[e == activa]","Solo si e es activa: pido su valor.","a · b (2.1*) · e (2.2*)","B.getValor() → devuelve el valor")]},
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA"),
+X("2",":Controlador","a:A","L","sumarActivas","()","total",null,"Se necesita la suma del valor de las B activas de esa A.","a (1)","A.sumarActivas() → suma el valor de sus B activas"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","Se recorren las B de la A.","a ejecuta sumarActivas()"),
+X("2.2*","a","b:B","L","getEstado","()","e",null,"De cada B se necesita su estado.","a · b (2.1*, una por vuelta)","B.getEstado() → devuelve el estado"),
+X("2.3*","a","b:B","L","getValor","()","v","[e == activa]","Solo si e es activa: se necesita su valor.","a · b (2.1*) · e (2.2*)","B.getValor() → devuelve el valor")]},
 {g:"Patrón · Obtener por un intermediario",op:"cerrarB(idA, idB)",clc:"Controlador→A* · A→B*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA, idB"),
-X("2",":Controlador","a:A","L","getB","(idB)","b",null,"Necesito la B de esa A: se la pido a la A.","a (1) · firma: idB","A.getB(idB) → devuelve la B de la A"),
-X("2.1","a",":B *","A","find","(idB)","b",null,"La A busca la B entre las suyas.","a ejecuta getB(idB) · firma: idB"),
-X("3",":Controlador","b:B","L","cerrar","()",null,null,"Le pido a la B que se cierre.","a (1), b (2)","B.cerrar() → cierra la B")]},
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA, idB"),
+X("2",":Controlador","a:A","L","getB","(idB)","b",null,"Se necesita la B de id idB de esa A.","a (1) · firma: idB","A.getB(idB) → devuelve la B de la A"),
+X("2.1","a",":B *","A","find","(idB)","b",null,"Se localiza la B entre las de la A.","a ejecuta getB(idB) · firma: idB"),
+X("3",":Controlador","b:B","L","cerrar","()",null,null,"Se cierra la B.","a (1), b (2)","B.cerrar() → cierra la B")]},
 {g:"Patrón · Total en cascada",op:"totalA(idA): int",clc:"Controlador→A* · A→B* · B→C*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
-X("2",":Controlador","a:A","L","calcularTotal","()","totalA",null,"Le pido el total a la A.","a (1)","A.calcularTotal() → suma el total de todas sus B"),
-X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta calcularTotal()"),
-X("2.2*","a","b:B","L","calcularTotal","()","totalB",null,"Cada B calcula su total.","a · b (2.1*, una por vuelta)","B.calcularTotal() → suma el valor de todas sus C"),
-X("2.2.1*","b",":C *","A","next","()","c","[foreach]","La B recorre sus C.","b ejecuta calcularTotal()"),
-X("2.2.2*","b","c:C","L","getValor","()","v",null,"Para cada C, pido su valor.","b · c (2.2.1*, una por vuelta)","C.getValor() → devuelve el valor")]},
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA"),
+X("2",":Controlador","a:A","L","calcularTotal","()","totalA",null,"Se necesita el total de la A.","a (1)","A.calcularTotal() → suma el total de todas sus B"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","Se recorren las B de la A.","a ejecuta calcularTotal()"),
+X("2.2*","a","b:B","L","calcularTotal","()","totalB",null,"De cada B se necesita su total.","a · b (2.1*, una por vuelta)","B.calcularTotal() → suma el valor de todas sus C"),
+X("2.2.1*","b",":C *","A","next","()","c","[foreach]","Se recorren las C de la B.","b ejecuta calcularTotal()"),
+X("2.2.2*","b","c:C","L","getValor","()","v",null,"De cada C se necesita su valor.","b · c (2.2.1*, una por vuelta)","C.getValor() → devuelve el valor")]},
 {g:"Patrón · Crear y registrar",op:"altaX(idA, idB)",clc:"Controlador→A*, B* · A→X* · B→X*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA, idB"),
-X("2",":Controlador",":B *","A","find","(idB)","b",null,"Necesito la B a partir de su id.","a (1) · firma: idB"),
-X("3",":Controlador","a:A","L","altaX","(b)",null,null,"Le pido a la A que dé de alta la X con esa B.","a (1), b (2)","A.altaX(b) → crea la X y la registra"),
-X("3.1","a","x:X","L","create","(a, b)","x",null,"La A crea la X.","a ejecuta altaX(b) · firma: b",null,{new:1}),
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA, idB"),
+X("2",":Controlador",":B *","A","find","(idB)","b",null,"Se necesita la B de id idB.","a (1) · firma: idB"),
+X("3",":Controlador","a:A","L","altaX","(b)",null,null,"Con la A y la B ya obtenidas, se da de alta la X.","a (1), b (2)","A.altaX(b) → crea la X y la registra"),
+X("3.1","a","x:X","L","create","(a, b)","x",null,"Se crea la X.","a ejecuta altaX(b) · firma: b",null,{new:1}),
 X("3.2","a","b:B","P","agregarX","(x)",null,null,"La B debe registrar la X nueva.","a · x (3.1) · firma: b","B.agregarX(x) → guarda la X en su colección"),
 X("3.2.1","b",":X *","A","add","(x)",null,null,"La X queda guardada del lado de la B.","b ejecuta agregarX(x) · firma: x"),
 X("3.3","a",":X *","A","add","(x)",null,null,"La X queda guardada del lado de la A.","a · x (3.1)")]},
 {g:"Patrón · Condición con un dato previo",op:"cerrarSiActiva(idA)",clc:"Controlador→A*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
-X("2",":Controlador","a:A","L","getEstado","()","e",null,"Necesito el estado de la A para decidir.","a (1)","A.getEstado() → devuelve el estado"),
-X("3",":Controlador","a:A","L","cerrar","()",null,"[e == activa]","Solo si e es activa: se cierra.","a (1) · e (2)","A.cerrar() → cierra la A")]},
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA"),
+X("2",":Controlador","a:A","L","getEstado","()","e",null,"Se necesita el estado de la A para decidir.","a (1)","A.getEstado() → devuelve el estado"),
+X("3",":Controlador","a:A","L","cerrar","()",null,"[e == activa]","Solo si e es activa: se cierra la A.","a (1) · e (2)","A.cerrar() → cierra la A")]},
 {g:"Patrón · Id único",op:"altaB(idA)",clc:"Controlador (singleton) · Controlador→A* · A→B*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
-X("2",":Controlador","a:A","L","altaB","()",null,null,"Le pido a la A que dé de alta una B.","a (1)","A.altaB() → crea la B y la registra"),
-X("2.1","a","b:B","L","create","(a)","b",null,"La A crea la B.","a ejecuta altaB()",null,{new:1}),
-X("2.1.1","b",":Controlador","G","getInstance","()","cont",null,"La B nueva necesita un id único: obtiene el Controlador.","b ejecuta create(a)"),
-X("2.1.2","b","cont:Controlador","L","getIdUnico","()","id",null,"La B le pide el id al Controlador.","b · cont (2.1.1)"),
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA"),
+X("2",":Controlador","a:A","L","altaB","()",null,null,"Se da de alta una B en la A.","a (1)","A.altaB() → crea la B y la registra"),
+X("2.1","a","b:B","L","create","(a)","b",null,"Se crea la B.","a ejecuta altaB()",null,{new:1}),
+X("2.1.1","b",":Controlador","G","getInstance","()","cont",null,"La B nueva necesita un id único: se obtiene el Controlador.","b ejecuta create(a)"),
+X("2.1.2","b","cont:Controlador","L","getIdUnico","()","id",null,"Se le pide el id único al Controlador.","b · cont (2.1.1)"),
 X("2.2","a",":B *","A","add","(b)",null,null,"La B queda guardada en la A.","a · b (2.1)")]},
 {g:"Patrón · Recorrer y eliminar",op:"vaciar(idA)",clc:"Controlador→A* · A→B* · B→C (1) · C→B*",L:[
-X("1",":Controlador",":A *","A","find","(idA)","a",null,"Necesito la A a partir de su id.","firma: idA"),
-X("2",":Controlador","a:A","L","vaciar","()",null,null,"Le pido a la A que elimine todas sus B.","a (1)","A.vaciar() → elimina todas sus B"),
-X("2.1*","a",":B *","A","next","()","b","[foreach]","La A recorre sus B.","a ejecuta vaciar()"),
+X("1",":Controlador",":A *","A","find","(idA)","a",null,"Se necesita la A de id idA.","firma: idA"),
+X("2",":Controlador","a:A","L","vaciar","()",null,null,"Se eliminan todas las B de la A.","a (1)","A.vaciar() → elimina todas sus B"),
+X("2.1*","a",":B *","A","next","()","b","[foreach]","Se recorren las B de la A.","a ejecuta vaciar()"),
 X("2.2*","a","b:B","L","desvincular","()",null,null,"Cada B deja de estar enlazada con su C.","a · b (2.1*, una por vuelta)","B.desvincular() → pide a su C que la saque"),
-X("2.2.1*","b",":C","A","quitarB","(b)",null,null,"La B le pide a su C que la saque.","b ejecuta desvincular()","C.quitarB(b) → saca la B de su colección",{one:1}),
-X("2.2.1.1*",":C",":B *","A","remove","(b)",null,null,"La C saca la B de su colección.","C ejecuta quitarB(b) · firma: b"),
-X("2.3*","a","b:B","L","destroy","()",null,null,"Cada B se destruye.","a · b (2.1*)")]}
+X("2.2.1*","b",":C","A","quitarB","(b)",null,null,"La C debe sacar a la B de las suyas.","b ejecuta desvincular()","C.quitarB(b) → saca la B de su colección",{one:1}),
+X("2.2.1.1*",":C",":B *","A","remove","(b)",null,null,"Se quita la B de la colección de la C.","C ejecuta quitarB(b) · firma: b"),
+X("2.3*","a","b:B","L","destroy","()",null,null,"Cada B ya desenlazada se destruye.","a · b (2.1*)")]}
 );
 const PATS={"Patrón · Recorrer":{id:"rec",msg:"2"},"Patrón · Recorrer y filtrar":{id:"filtro",msg:"2"},"Patrón · Obtener por un intermediario":{id:"interm",msg:"2"},"Patrón · Total en cascada":{id:"cascada",msg:"2"},"Patrón · Crear y registrar":{id:"crear",msg:"3"},"Patrón · Condición con un dato previo":{id:"cond",msg:"3"},"Patrón · Id único":{id:"id",msg:"2"},"Patrón · Recorrer y eliminar":{id:"elim",msg:"2"}},PDEP={filtro:["rec","cond"],cascada:["rec"],elim:["rec"]};
 EXAM.forEach(setGoals);
@@ -668,64 +673,110 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
  {s:"p4",re:/(?!)/,t:"Notación de objetos",p:["El emisor es quien ejecuta el mensaje del que cuelga este (está en «Tengo» como «x ejecuta …»).","Si el receptor ya apareció antes (está en «Tengo»), se escribe solo su nombre (m, r, p): sin «:» ni clase. La primera vez, nombre:Clase (r:Reserva) o :Clase si es anónimo; una colección, :Clase *."]});
 
 window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{})[c.id+":0"]||0)>=1)};
-/* ===== Unidades: un ejercicio se recorre en unidades; cada unidad = mensajes sueltos previos (find…) + el mensaje del Controlador con todo lo que cuelga de él.
-   Si el camino pasa por 3 o más objetos, abre con la tarjeta «elegí el recorrido»; si no, abre con su primera línea. Siguen las tarjetas de sintaxis de cada línea en orden (SPACK)
-   y, al acertar la unidad sin errores, sigue la unidad siguiente del mismo ejercicio. ===== */
+/* ===== Unidades: las tarjetas siguen el orden lógico del examen y cada paso lo resuelve el estudiante antes de que el siguiente lo dé por sabido.
+   Por ejercicio: «Traducí la letra» (objetivos de primer nivel de TODA la operación, sacados de pre/pos).
+   Por unidad (= mensajes sueltos previos + un mensaje de primer nivel con todo lo que cuelga): «elegí el recorrido» (qué flechas hacen falta; solo si hay 2+ saltos) →
+   «desarmá el mensaje» (esqueleto: emisor → receptor : operación) → las líneas (sintaxis), en SPACK. Al acertar la unidad sin errores sigue la siguiente del ejercicio.
+   Objetivos, saltos y mensajes son fichas de ORDEN LIBRE (fr): vale cualquier orden que respete las dependencias (dp) calculadas desde las líneas. ===== */
+/* Objetivos equivocados (tentadores) para «Traducí la letra»: [texto, por qué no]. Si se agrega un ejercicio, sumar los suyos. */
+const TDIS={
+"postularse":[["Se verifica que el estudiante no tenga ya una postulación a esa oferta.","Es una precondición («No existe una instancia de Postulacion entre es y op»): se asume verdadera, no se verifica en el diagrama."],["Se calcula el beneficio de la postulación.","Eso lo pide aceptarPostulacion: la poscondición de postularse solo crea la postulación en estado pendiente y sus links."]],
+"aceptarPostulacion":[["Se crea la postulación.","Ya existe (precondición «Existe una Postulacion p entre es y op»): acá solo se actualiza."],["Se descuenta un cupo de la oferta.","La letra no modifica op.cupos: compara la cantidad de postulaciones aceptadas con los cupos."]],
+"Jul26 · bajaMascota":[["Se necesita al cuidador por su nickname.","La letra de bajaMascota no menciona al cuidador: solo recibe el nickname del dueño y el nombre de la mascota."],["Se verifica que la mascota no tenga reservas.","No es una condición: la poscondición dice que las reservas de la mascota se eliminan."]],
+"Jul26 · reservarHospedaje":[["Se verifica que no exista ya una reserva entre la mascota y el hospedaje.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se necesita el hospedaje desde una colección global de hospedajes.","No hay colección global de hospedajes (la letra solo permite la de usuarios): el hospedaje se alcanza a través de su cuidador."]],
+"Jul26 · Hotel.reservar":[["Se verifica que no exista ya una reserva entre la mascota y el hospedaje.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Basta con que exista una reserva en esa fecha para retornar false.","Esa regla es la de Casa. En Hotel se cuenta cuántas reservas hay en la fecha y se compara con los cupos."]],
+"Feb26 · iniciarMisionAplicacion":[["Se verifica que el robot esté vinculado al campo.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se crea el mapeo previo si no existe.","Si no hay un mapeo previo finalizado, la letra dice que se retorna False sin crear nada."]],
+"Feb26 · calcularHerbicidaTotal":[["Se verifica que el campo exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se crea una misión de aplicación.","Es una consulta: solo devuelve una suma, no crea nada."]],
+"Patrón · Recorrer":[["Se verifica que la A exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se necesita cada B a partir de su id.","No se buscan por id: la poscondición habla de todas las B asociadas a la A."]],
+"Patrón · Recorrer y filtrar":[["Se verifica que la A exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se necesita la suma del valor de todas las B, activas o no.","La poscondición solo suma las B con estado activa."]],
+"Patrón · Obtener por un intermediario":[["Se verifica que la B exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se necesita la B desde una colección global de B.","El Controlador solo tiene una colección global de A: la B se alcanza a través de su A."]],
+"Patrón · Total en cascada":[["Se verifica que la A exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se necesita cada C a partir de su id.","No se buscan por id: el total sale de todas las C de cada B."]],
+"Patrón · Crear y registrar":[["Se verifica que la A y la B existan.","Son precondiciones: se asumen verdaderas, no se verifican en el diagrama."],["Se necesita la X a partir de su id.","La X todavía no existe: la poscondición dice que se crea."]],
+"Patrón · Condición con un dato previo":[["Se verifica que la A exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se cierra la A, esté activa o no.","La poscondición lo condiciona a que la A esté activa."]],
+"Patrón · Id único":[["Se verifica que la A exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se necesita el id de la B, que llega por parámetro.","La firma solo trae idA: el id de la B lo genera el sistema."]],
+"Patrón · Recorrer y eliminar":[["Se verifica que la A exista.","Es una precondición: se asume verdadera, no se verifica en el diagrama."],["Se necesita cada B a partir de su id.","No se buscan por id: se eliminan todas las B de la A."]]},
+/* Objetivos que el ejercicio no trae como línea porque ya están dibujados (aceptarPostulacion empieza en el mensaje 3) */
+TPRE={"aceptarPostulacion":[{n:"1",from:":Controlador",to:":Estudiante *",op:"find",pa:"(ci)",res:"est",goal:"Se necesita el estudiante de cédula ci."},{n:"2",from:":Controlador",to:":Empresa *",op:"find",pa:"(rut)",res:"emp",goal:"Se necesita la empresa de rut rut."}]};
 {const G={};SWC.filter(c=>c.bld&&c.dg).forEach(c=>{const k=c.g.replace(/ · [^·]+$/,"");(G[k]=G[k]||[]).push(c)});
- const top=c=>c.dg.cur.n.replace("*","").split(".")[0],cl=(c,re)=>(c.ctx.split("\n").find(l=>re.test(l))||""),RE=/[A-ZÁÉÍÓÑÚ][A-Za-zÁÉÍÓÑÚáéíóñú_]*/g;
+ const top=c=>c.dg.cur.n.replace("*","").split(".")[0],cl=(c,re)=>(c.ctx.split("\n").find(l=>re.test(l))||""),RE=/[A-ZÁÉÍÓÑÚ][A-Za-zÁÉÍÓÑÚáéíóñú_]*/g,
+  nn=L=>L.n.replace("*",""),nm=t=>t.replace(/ \*$/,"").split(":")[0],par=n=>n.split(".").slice(0,-1).join("."),rc=L=>String(L.cond||"").replace(/\[for[Ee]ach\]/g,"").trim(),
+  wd=(s,v)=>new RegExp("(^|[^A-Za-z0-9_])"+v+"([^A-Za-z0-9_]|$)").test(String(s||"")),nlT=()=>({t:"",k:"a",auto:1,nl:1}),
+  /* Dependencias directas entre líneas: el mensaje del que cuelga; el que produce una variable que usa; destroy va después de todo lo que usa al objeto; un mensaje con condición va después de sus hermanos anteriores */
+  deps=Ls=>Ls.map((L,j)=>{const d=new Set();Ls.forEach((P,i)=>{if(i>=j)return;
+    if(nn(P)==par(nn(L)))d.add(i);
+    if(P.res&&(nm(L.from)==P.res||nm(L.to)==P.res||wd(L.pa,P.res)||wd(rc(L),P.res)))d.add(i);
+    if(L.op=="destroy"&&nm(L.to)&&(nm(P.to)==nm(L.to)||wd(P.pa,nm(L.to))))d.add(i);
+    if(rc(L)&&par(nn(P))==par(nn(L)))d.add(i)});return d}),
+  clo=D=>D.map((_,j)=>{const s=new Set(),go=k=>D[k].forEach(i=>{if(!s.has(i)){s.add(i);go(i)}});go(j);return s});
  Object.entries(G).forEach(([g,cs])=>{const Mg=[];cs.forEach(c=>{const m=Mg[Mg.length-1];if(m&&top(m[0])==top(c))m.push(c);else Mg.push([c])});
   const U=[];let pend=[];Mg.forEach(m=>{pend.push(m);if(m.length>1){U.push(pend);pend=[]}});if(pend.length){if(U.length)U[U.length-1].push(...pend);else U.push(pend)}
   const M={};cs.forEach(c=>{const L=c.dg.cur;[L.from,L.to].forEach(t=>{const v=t.replace(/ \*$/,"").split(":");if(v[0]&&v[1])M[v[0]]=v[1]})});
   if(cs[0].dg.ent){const[a,b]=cs[0].dg.ent.split(":");M[a]=b}
-  const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(M[k]||k)},mt=t=>"m:"+g+":"+t,pm=PATS[g],ent=[];
+  const cls=t=>{const k=t.replace(/ \*$/,"");return k.includes(":")?k.split(":")[1]:(M[k]||k)},mt=t=>"m:"+g+":"+t,pm=PATS[g],ent=[],
+   isL=/^(Jul26|Feb26) · |^(postularse|aceptarPostulacion)( |$)/.test(g),sig=cs[0].ctx.split("\n")[0],dgOf=c=>({sig:c.dg.sig,prev:c.dg.prev,cur:c.dg.cur,clc:c.dg.clc,ent:c.dg.ent}),
+   /* flechas que usa el ejercicio (clase→clase), para saber quién NO llega a quién */
+   hopOf=L=>{const t=L.to.replace(/ \*$/,"");if(L.op=="create"||!/^:/.test(t))return null;const a=cls(L.from),b=cls(t);return a==b||b=="Controlador"?null:{a,b,w:/ \*$/.test(L.to)}},
+   AH=new Set(cs.map(c=>hopOf(c.dg.cur)).filter(Boolean).map(e=>e.a+">"+e.b));
   Mg.forEach(m=>{TS[mt(top(m[0]))]=m});
-  U.forEach((u,ui)=>{const ch=u.flat(),first=ch[0],ix=cs.indexOf(first),tops=u.map(m=>top(m[0])),clc=first.dg.clc||"",arr=clc.split(" · "),R=[cls(first.dg.cur.from)];
-   ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!R.includes(x))R.push(x)});
-   const Ls=ch.map(c=>c.dg.cur),toks=tops.map(mt),req=[];
+  U.forEach((u,ui)=>{const ch=u.flat(),first=ch[0],ix=cs.indexOf(first),tops=u.map(m=>top(m[0])),rng=tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),clc=first.dg.clc||"",
+    Ls=ch.map(c=>c.dg.cur),toks=tops.map(mt),req=[],Dp=deps(Ls),Cl=clo(Dp);
    if(pm&&tops.includes(pm.msg))toks.push("p:"+pm.id);
    if(ui)req.push(mt(top(U[ui-1][U[ui-1].length-1][0])));
-   if(!ui&&g=="aceptarPostulacion")req.push("m:postularse:3");
-   if(ui==0&&g=="aceptarPostulacion")req.push("p:filtro");/* el mensaje 3 recorre y pide el estado de cada postulación *//* usa est y emp ya obtenidos en postularse */
+   if(!ui&&g=="aceptarPostulacion")req.push("m:postularse:3","p:filtro");/* usa est y emp ya obtenidos en postularse; el mensaje 3 recorre y pide el estado de cada postulación */
    if(!ui&&g=="Jul26 · Hotel.reservar")req.push("m:Jul26 · reservarHospedaje:4");/* es el sub-diagrama que sigue al mensaje 4 */
    {const P=new Set(),nx=Ls.filter(l=>l.op=="next").length,gen=/^(find|next|create|add|remove|destroy|getInstance)$/;
     if(nx)P.add("rec");if(nx>=2)P.add("cascada");
-    if(Ls.some(l=>/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("filtro");
-    if(Ls.some(l=>!/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("cond");
-    if(Ls.some(l=>l.t=="L"&&l.res&&!gen.test(l.op)&&Ls.some(m=>m.n==l.n+".1"&&m.op=="find"&&m.from==l.to.replace(/ \*$/,"").split(":")[0])))P.add("interm");
+    if(Ls.some(l=>/\*/.test(l.n)&&rc(l)))P.add("filtro");
+    if(Ls.some(l=>!/\*/.test(l.n)&&rc(l)))P.add("cond");
+    if(Ls.some(l=>l.t=="L"&&l.res&&!gen.test(l.op)&&Ls.some(m=>m.n==l.n+".1"&&m.op=="find"&&m.from==nm(l.to))))P.add("interm");
     if(Ls.some(l=>l.op=="create"))P.add("crear");
     if(Ls.some(l=>l.op=="destroy"||l.op=="remove"))P.add("elim");
     if(Ls.some(l=>l.op=="getInstance"))P.add("id");
     [...P].forEach(x=>(PDEP[x]||[]).forEach(d=>P.add(d)));
-    P.forEach(x=>{if(!(pm&&pm.id==x))req.push("p:"+x)})}
-   const mkT=en=>{if(!/^(Jul26|Feb26) · |^Patrón · |^(postularse|aceptarPostulacion)( |$)/.test(g))return en;
-    const dp=c=>c.dg.cur.n.replace("*","").split(".").length<=2,seen=new Set(),gl=[];
-    ch.forEach(c=>{const L=c.dg.cur;if(!dp(c)||!L.goal||seen.has(L.goal))return;seen.add(L.goal);gl.push({n:L.n.replace("*",""),t:L.goal})});
-    if(gl.length<2)return en;
-    const ds=[];cs.forEach(c=>{const L=c.dg.cur;if(dp(c)&&L.goal&&!seen.has(L.goal)&&!ds.some(z=>z.t==L.goal))ds.push({t:L.goal,why:"Ese objetivo es de otro mensaje del ejercicio: lo que pide la letra para este mensaje es otra cosa."})});
-    const ex=[],bank=[];gl.forEach((o,i)=>{if(i)ex.push({t:"",k:"a",auto:1,nl:1});ex.push({t:o.t,k:"ob",ob:o.n,w:"Sale de la letra (frase resaltada)."});bank.push({t:o.t,rt:1})});
-    const fm=k=>(/^(Jul26|Feb26)/.exec(k)||[])[0]||(/^(postularse|aceptarPostulacion)/.test(k)?"P":/^Patrón/.test(k)?"Pat":"");
-    Object.entries(G).filter(([k])=>k!=g&&fm(k)==fm(g)).forEach(([k,o])=>o.forEach(c=>{const L=c.dg.cur;if(dp(c)&&L.goal&&L.n.replace("*","").indexOf(".")<0&&!seen.has(L.goal)&&!ds.some(z=>z.t==L.goal)&&ds.length<6)ds.push({t:L.goal,why:"Ese objetivo es de otra operación ("+k.replace(/^(Jul26|Feb26|Patrón) · /,"")+"): esta operación pide otra cosa."})}));
-    ds.slice(0,3).forEach(x=>bank.push(x));
-    const T=Object.assign(sw("p4",g+" · traducí la letra "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),first.ctx.split("\n")[0],[Object.assign(st("Traducí la letra",gl.map(o=>o.t).join("\n"),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,ent:first.dg.ent},bld:{exp:ex,bank,n:ex.length},tra:1,req:en.req,then:en});
-    en.req=[];en.ln=1;SWC.push(T);return T};
-   const EG=[];ch.forEach(c=>{const L=c.dg.cur,t=L.to.replace(/ \*$/,"");if(L.op=="create"||!/^:/.test(t))return;const a=cls(L.from),b=cls(t),w=/ \*$/.test(L.to);if(a==b||b=="Controlador")return;const e=EG.find(z=>z.a==a&&z.b==b);if(e)e.w=e.w||w;else EG.push({a,b,w})});
-   if(EG.length<2){const rest=ch.slice(1);Object.assign(first,{req,toks,pack:rest.length?rest:null});rest.forEach(x=>{x.ln=1;x.pk=first});ent.push(mkT(first));return}
-   ch.forEach(c=>c.ln=1);
-   const held={},tg0=cl(first,/^Tengo:/);ch.forEach(c=>{const t=c.dg.cur.to.replace(/ \*$/,""),x=cls(t),nm=t.split(":")[0];if(nm&&!(x in held)&&(!/:/.test(t)||new RegExp("(^|[ ,:])"+nm+"( \\(| ·|,|$)").test(tg0.replace(/^Tengo: /,""))))held[x]=1});
-   const exp=[],bank=[],hp=e=>e.a+" → "+e.b+(e.w?" *":""),dr=[];
-   EG.forEach((e,i)=>{if(i)exp.push({t:"",k:"a",auto:1,nl:1});const pv=i?EG[i-1]:null;
-    exp.push({t:hp(e),k:"rt",w:e.a=="Controlador"?"El Controlador tiene la colección global: flecha Controlador → "+e.b+(e.w?" *":"")+".":"Para llegar a «"+e.b+"» hay que salir de «"+e.a+"»: necesita una flecha "+e.a+" → "+e.b+(e.w?" (con * porque guarda varios)":"")+"."});
-    const rv={t:e.b+" → "+e.a+(e.w?"":" *"),why:"La flecha va al revés: quien busca es «"+e.a+"», no «"+e.b+"». Tiene que ser "+e.a+" → "+e.b+"."};
-    if(e.a!="Controlador"&&!EG.some(z=>z.a==e.b&&z.b==e.a))dr.push(rv);
-    if(i&&e.a!="Controlador"&&!EG.some(z=>z.a=="Controlador"&&z.b==e.b))dr.push({t:"Controlador → "+e.b+(e.w?" *":""),why:"El Controlador solo tiene las colecciones globales que dice la letra: para llegar a «"+e.b+"» hay que pasar por «"+e.a+"»."})});
-   const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,2);
-   exp.filter(x=>x.k=="rt").forEach(x=>bank.push({t:x.t,rt:1}));
-   dr.sort((x,y)=>x.t<y.t?-1:1).slice(0,3).forEach(x=>bank.push(x));
-   D.forEach(x=>bank.push({t:EG[EG.length-1].b+" → "+x+" *",why:"«"+x+"» no interviene en lo que pide el ▶: se resuelve sin pasar por ahí."}));
-   const gls=u.map(m=>"▶ "+top(m[0])+": "+cl(m[0],/^▶/).replace(/^▶ /,"")).join("\n"),tg=cl(first,/^Tengo:/),
-    ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gls+(clc?"\n"+(/^(Jul26|Feb26) · |^(postularse|aceptarPostulacion)( |$)/.test(g)?"Clases: "+clc:"Modelo de dominio (asociaciones, sin dirección): "+EG.filter(e=>e.a!="Controlador").map(e=>e.a+" – "+e.b+(e.w?" *":"")).concat(D.map(x=>EG[EG.length-1].b+" – "+x)).join(" · ")+"\nEl Controlador tiene una colección global de "+EG[0].b+"."):""),
-    c=Object.assign(sw("p4",g+" · recorrido "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),ctx,[Object.assign(st("Elegí el recorrido",EG.map(e=>e.a+" → "+e.b+(e.w?" *":"")).join("\n"),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a:tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
-   ch.forEach(x=>x.pk=c);SWC.push(c);ent.push(mkT(c))});
+    P.forEach(x=>{if(!(pm&&pm.id==x)&&!req.includes("p:"+x))req.push("p:"+x)})}
+   /* saltos = flechas que hacen falta en el tramo */
+   const EG=[];Ls.forEach((L,j)=>{const h=hopOf(L);if(!h)return;const e=EG.find(z=>z.a==h.a&&z.b==h.b);if(e)e.w=e.w||h.w;else EG.push(Object.assign(h,{j}))});
+   const hp=e=>e.a+" → "+e.b+(e.w?" *":""),R=[...new Set([cls(Ls[0].from)].concat(Ls.map(L=>cls(L.to))))],
+    D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,2),
+    obj=u.map(m=>m[0].dg.cur.goal),tg=cl(first,/^Tengo:/),gc=EG.filter(e=>e.a=="Controlador").map(e=>e.b),as=EG.filter(e=>e.a!="Controlador").map(e=>e.a+" – "+e.b+(e.w?" *":"")).concat(D.length&&EG.length?D.map(x=>EG[EG.length-1].b+" – "+x):[]),
+    dom=isL?"":(as.length?"\nModelo de dominio (asociaciones, sin dirección): "+as.join(" · "):"")+(gc.length?"\nEl Controlador tiene una colección global de "+gc.join(" y otra de ")+".":""),
+    base=sig+"\n"+tg+"\n"+obj.map(o=>"▶ "+o).join("\n"),
+    com=()=>({dg:dgOf(first),ul:Ls.map(nn),obj,hops:EG.map(hp),bk:{a:rng,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur))}});
+   /* «Desarmá el mensaje»: el esqueleto del tramo, un mensaje por ficha (emisor → receptor : operación) */
+   const sk=L=>cls(L.from)+" → "+(nm(L.from)&&nm(L.from)==nm(L.to)?"sí mismo":cls(L.to)+(/ \*$/.test(L.to)?" *":""))+" : "+L.op,root=cls((Ls.find(L=>!nn(L).includes("."))||Ls[0]).from),
+    wy=L=>{const F=cls(L.from),T=cls(L.to);return"«"+L.goal+"» → "+({find:F=="Controlador"?"el Controlador tiene esa colección global: busca por clave con find.":"«"+F+"» tiene la flecha a su colección de «"+T+"»: busca por clave con find.",next:"«"+F+"» recorre su colección de «"+T+"» con next.",create:"«"+F+"» crea la instancia de «"+T+"».",add:"«"+F+"» guarda el objeto en su colección de «"+T+"» (así queda el link).",remove:"«"+F+"» saca el objeto de su colección de «"+T+"» (corta el link).",destroy:"«"+F+"» destruye esa instancia de «"+T+"».",getInstance:"el Controlador es singleton: se obtiene con getInstance."}[L.op]||"«"+F+"» se lo pide a «"+T+"» con una operación propia ("+L.op+"): no viene en la letra, la diseña quien resuelve.")},
+    dx=Ls.map((L,j)=>({t:sk(L),k:"ds",fr:1,tree:1,o:j,n:nn(L),w:wy(L)}));dx.forEach((x,j)=>x.dp=[...Dp[j]].map(i=>dx[i]));
+   const dd=[],dAdd=(t,why,pr)=>{if(!dx.some(x=>x.t==t)&&!dd.some(x=>x.t==t))dd.push({t,why,pr})};
+   Ls.forEach((L,j)=>{const t=L.to.replace(/ \*$/,"");if(!/^:/.test(t)||L.op=="create"||L.op=="getInstance")return;const F=cls(L.from),T=cls(t),s=/ \*$/.test(L.to)?" *":"",pi=Ls.findIndex(P=>nn(P)==par(nn(L)));
+    [root,pi>=0?cls(Ls[pi].from):null].forEach((S,q)=>{if(!S||S==F||S==T||AH.has(S+">"+T))return;
+     dAdd(S+" → "+T+s+" : "+L.op,"«"+S+"» no tiene flecha a «"+T+"»"+(S=="Controlador"?" (el Controlador solo llega a sus colecciones globales)":"")+". Ese mensaje lo manda «"+F+"», que es quien tiene la flecha; «"+S+"» llega hasta ahí delegando.",(/^(find|next)$/.test(L.op)?0:1)+q)});
+    if(s&&L.op=="find")dAdd(F+" → "+T+" * : next","Acá se busca uno solo por su clave: es find. next es para recorrerlos todos.",3);
+    if(s&&L.op=="next")dAdd(F+" → "+T+" * : find","Acá hay que pasar por todos: next con [foreach]. find trae uno solo, por clave.",3)});
+   dd.sort((a,b)=>a.pr-b.pr);
+   const dExp=[],dBank=dx.map(x=>({t:x.t,rt:1}));dx.forEach((x,i)=>{if(i)dExp.push(nlT());dExp.push(x)});dd.slice(0,3).forEach(x=>dBank.push({t:x.t,why:x.why}));
+   const Dc=Object.assign(sw("p4",g+" · desarmá "+rng,base+(EG.length?"\nFlechas: "+EG.map(hp).join(" · "):""),[Object.assign(st("Desarmá el mensaje",dx.map(x=>x.t).join("\n"),"—",""),{k:"bld"})],""),com(),{bld:{exp:dExp,bank:dBank,n:dExp.length},des:1});
+   SWC.push(Dc);
+   let own=Dc;
+   if(EG.length>=2){/* «Elegí el recorrido»: qué flechas hacen falta */
+    const hx=EG.map((e,i)=>({t:hp(e),k:"rt",fr:1,o:i,j:e.j,w:e.a=="Controlador"?"El Controlador tiene la colección global: flecha Controlador → "+e.b+(e.w?" *":"")+".":"Para llegar a «"+e.b+"» hay que salir de «"+e.a+"»: necesita una flecha "+e.a+" → "+e.b+(e.w?" (con * porque guarda varios)":"")+"."})),dr=[];
+    hx.forEach(x=>x.dp=hx.filter(y=>Cl[x.j].has(y.j)));
+    const drAdd=(t,why)=>{if(!hx.some(x=>x.t==t)&&!dr.some(x=>x.t==t))dr.push({t,why})};
+    EG.forEach((e,i)=>{if(e.a!="Controlador"&&!AH.has(e.b+">"+e.a))drAdd(e.b+" → "+e.a+(e.w?"":" *"),"En este tramo se navega de «"+e.a+"» a «"+e.b+"» (es «"+e.a+"» quien manda el mensaje): la flecha que hace falta es "+e.a+" → "+e.b+". La inversa no se usa acá.");
+     if(i&&e.a!="Controlador"&&!AH.has("Controlador>"+e.b))drAdd("Controlador → "+e.b+(e.w?" *":""),"El Controlador solo tiene las colecciones globales que dice la letra: para llegar a «"+e.b+"» hay que pasar por «"+e.a+"».")});
+    const rExp=[],rBank=hx.map(x=>({t:x.t,rt:1}));hx.forEach((x,i)=>{if(i)rExp.push(nlT());rExp.push(x)});
+    dr.sort((x,y)=>x.t<y.t?-1:1).slice(0,3).forEach(x=>rBank.push(x));
+    D.forEach(x=>rBank.push({t:EG[EG.length-1].b+" → "+x+" *",why:"«"+x+"» no interviene en lo que pide la letra para este tramo: se resuelve sin pasar por ahí."}));
+    own=Object.assign(sw("p4",g+" · recorrido "+rng,base+dom,[Object.assign(st("Elegí el recorrido",EG.map(hp).join("\n"),"—",""),{k:"bld"})],""),com(),{bld:{exp:rExp,bank:rBank,n:rExp.length},route:1});
+    SWC.push(own);Dc.ln=1;Dc.pk=own;own.pack=[Dc].concat(ch)}
+   else Dc.pack=ch;
+   Object.assign(own,{req,toks});ch.forEach(x=>{x.ln=1;x.pk=own});ent.push(own)});
+  /* «Traducí la letra»: una por ejercicio, antes de la primera unidad */
+  {const pre=TPRE[g]||[],Ls=pre.concat(cs.map(c=>c.dg.cur)),Cl=clo(deps(Ls)),seen=new Set(),gl=[];
+   Ls.forEach((L,j)=>{if(nn(L).includes(".")||!L.goal||seen.has(L.goal))return;seen.add(L.goal);gl.push({t:L.goal,k:"ob",fr:1,o:gl.length,j,ob:nn(L),w:"Sale de la letra (frase resaltada)."})});
+   if(gl.length>=2&&(isL||/^Patrón · /.test(g))){gl.forEach(x=>x.dp=gl.filter(y=>Cl[x.j].has(y.j)));
+    const ex=[],bank=gl.map(x=>({t:x.t,rt:1}));gl.forEach((x,i)=>{if(i)ex.push(nlT());ex.push(x)});(TDIS[g]||[]).forEach(([t,why])=>bank.push({t,why}));
+    const e0=ent[0],T=Object.assign(sw("p4",g+" · traducí la letra",sig,[Object.assign(st("Traducí la letra",gl.map(o=>o.t).join("\n"),"—",""),{k:"bld"})],""),{dg:dgOf(cs[0]),bld:{exp:ex,bank,n:ex.length},tra:1,req:e0.req,then:e0});
+    e0.req=[];e0.ln=1;SWC.push(T);ent[0]=T}}
   ent.forEach((e,i)=>{if(ent[i+1]){e.next=ent[i+1];if(e.then)e.then.next=ent[i+1]}})})}
 
 /* ===== Teoría de los patrones (tarjetas binarias, genéricas) ===== */
