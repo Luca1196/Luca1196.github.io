@@ -1,3 +1,25 @@
+/* RECETA PARA EJERCICIOS NUEVOS DE PROG4 (decidido con Luca el 14/11; repetir en cada ejercicio de examen nuevo)
+   0. NO se carga el ejercicio entero como una tarjeta larga. Se DIVIDE en patrones que se repiten y se PROGRESA de lo simple al ejercicio completo:
+      patrones genéricos → mensajes del Controlador de un ejercicio real → ejercicio completo (pestaña «Ejercicios Prog4»).
+   1. PATRONES (mini-ejercicios con nombres genéricos A, B, C, sin dominio real). Ya existen: Recorrer, Recorrer y filtrar, Obtener por un intermediario,
+      Total en cascada, Crear y registrar, Condición con un dato previo, Id único, Recorrer y eliminar. Ante un ejercicio nuevo, buscar primero qué patrones usa:
+      si ya está, no duplicar; si es nuevo, agregarlo:
+      a. Mini-ejercicio: una entrada más en EXAM.push(...) del bloque «Patrones» (mismos X(...) que los exámenes; 4-7 líneas; un solo mensaje del Controlador
+         que enseña el patrón; los mensajes previos son solo preparación).
+      b. Alta en PATS ({id, msg: número del mensaje que enseña el patrón}) y, si depende de otro patrón, en PDEP (ej. eliminar → recorrer).
+      c. Teoría: una serie sw("p4","Patrón · <nombre> · teoría",…) al final del archivo (2-3 pasos binarios; b = error tentador; th en el primero).
+      d. Si el patrón se reconoce en las líneas, sumar su regla de detección (bloque «Packs por mensaje», conjunto P).
+   2. MENSAJES: cada mensaje que sale del Controlador (o del objeto que ejecuta una operación de clase) con todo lo que cuelga de él es un PACK:
+      tarjeta 0 «elegí el recorrido» (objetos por los que pasa el mensaje; flechas del DCD a la vista) y después las tarjetas de sintaxis de cada línea en orden (SPACK).
+      Se generan solas desde las líneas X(...) del ejercicio; lo único a escribir son las líneas con sus goal/have (la letra dice QUÉ, nunca por dónde se llega).
+   3. PREVIATURAS (automáticas, tokens en S2.bqok): un mensaje aparece solo si se acertó SIN errores el mensaje anterior del mismo ejercicio (m:<ejercicio>:<n>) y los
+      patrones que usa (p:<id>, detectados por sus líneas + dependencias PDEP). Los mensajes ya acertados antes cuentan (TOKSEED). Si se agrega un patrón o un ejercicio,
+      verificar con jsdom que haya tarjetas disponibles al empezar y que acertar el pack desbloquee lo siguiente.
+   4. LETRA: el contexto va en el formato de la letra del examen (js/letras.js: enunciado, modelo de dominio, restricciones, operación con pre/pos plegadas). La información sale
+      SOLO de la letra; las operaciones de las clases no vienen en la letra (las diseña quien resuelve): no presentarlas como dato.
+   5. Atómico y corto: tarjetas chicas, distractores tentadores con su razón, marcar dónde estaba el dato en el error. Luca prefiere quedarse en el código, sin imágenes de
+      vista previa ni gastar tokens de más. Antes de cambiar la dinámica de una sección, discutirlo con Luca.
+   6. Cerrar: actualizar ?v= en index.html, probar con jsdom (tools de pack/previaturas), commit y push. */
 /* SECCIÓN PROG4: tarjetas de Repaso, cadenas de Deslizar (mensaje a mensaje), ejercicios línea por línea y de exámenes. */
 /* ---- Tarjetas (cortas): Prog4 ---- */
 const P4A=[

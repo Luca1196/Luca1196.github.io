@@ -6,6 +6,7 @@
    - Los ejercicios de examen se practican como árboles en Bloques, partidos en pasos intermedios con previas.
    - Los demás tipos de ejercicio de examen (semántica, modelos; todo menos el tipo 1) se pasan a series de Deslizar
      sacadas de exámenes reales (Feb 2026 primero). Más ejercicios salen de exámenes viejos que trae Luca: no inventarlos. */
+/* Mismo criterio que en Prog4 (ver «RECETA PARA EJERCICIOS NUEVOS» al inicio de prog4.js): partir el ejercicio en patrones/piezas que se repiten y progresar hasta el ejercicio completo. */
 /* RECETA: DE UN PDF DE EXAMEN A TARJETAS (Luca adjunta el PDF en el chat de Lógica; repetir esto para cada examen nuevo)
    1. Leer el PDF entero y separar los ejercicios por tipo. No inventar ejercicios ni cambiar enunciados: copiar las
       fórmulas tal cual (con los símbolos del examen: ⊥ ¬ ∧ ∨ → ∀ ∃ =′).
