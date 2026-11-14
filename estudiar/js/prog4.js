@@ -688,16 +688,23 @@ window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{
     if(Ls.some(l=>l.op=="getInstance"))P.add("id");
     [...P].forEach(x=>(PDEP[x]||[]).forEach(d=>P.add(d)));
     P.forEach(x=>{if(!(pm&&pm.id==x))req.push("p:"+x)})}
-   if(R.length<3){const rest=ch.slice(1);Object.assign(first,{req,toks,pack:rest.length?rest:null});rest.forEach(x=>{x.ln=1;x.pk=first});ent.push(first);return}
+   const EG=[];ch.forEach(c=>{const L=c.dg.cur,t=L.to.replace(/ \*$/,"");if(L.op=="create"||!/^:/.test(t))return;const a=cls(L.from),b=cls(t),w=/ \*$/.test(L.to);if(a==b||b=="Controlador")return;const e=EG.find(z=>z.a==a&&z.b==b);if(e)e.w=e.w||w;else EG.push({a,b,w})});
+   if(EG.length<2){const rest=ch.slice(1);Object.assign(first,{req,toks,pack:rest.length?rest:null});rest.forEach(x=>{x.ln=1;x.pk=first});ent.push(first);return}
    ch.forEach(c=>c.ln=1);
    const held={},tg0=cl(first,/^Tengo:/);ch.forEach(c=>{const t=c.dg.cur.to.replace(/ \*$/,""),x=cls(t),nm=t.split(":")[0];if(nm&&!(x in held)&&(!/:/.test(t)||new RegExp("(^|[ ,:])"+nm+"( \\(| ·|,|$)").test(tg0.replace(/^Tengo: /,""))))held[x]=1});
-   const exp=[],bank=[];R.forEach((x,i)=>{const pv=R[i-1],ar=arr.find(z=>pv&&z.includes(pv)&&z.includes(x));
-    if(!i)exp.push({t:x,k:"a",auto:1});else exp.push({t:"→",k:"a",auto:1},{t:x,k:"rt",pv,w:(held[x]?"«"+x+"» ya lo tenés (figura en «Tengo»): el mensaje se le manda directo.":"Se llega a «"+x+"» desde «"+pv+"»"+(ar?" (flecha en Clases: "+ar.trim()+")":" por una flecha del diagrama de clases")+".")});});
-   const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,3);
-   exp.filter(x=>x.k=="rt").forEach(x=>bank.push({t:x.t,rt:1}));D.forEach(x=>bank.push({t:x}));
+   const exp=[],bank=[],hp=e=>e.a+" → "+e.b+(e.w?" *":""),dr=[];
+   EG.forEach((e,i)=>{if(i)exp.push({t:"",k:"a",auto:1,nl:1});const pv=i?EG[i-1]:null;
+    exp.push({t:hp(e),k:"rt",w:e.a=="Controlador"?"El Controlador tiene la colección global: flecha Controlador → "+e.b+(e.w?" *":"")+".":"Para llegar a «"+e.b+"» hay que salir de «"+e.a+"»: necesita una flecha "+e.a+" → "+e.b+(e.w?" (con * porque guarda varios)":"")+"."});
+    const rv={t:e.b+" → "+e.a+(e.w?"":" *"),why:"La flecha va al revés: quien busca es «"+e.a+"», no «"+e.b+"». Tiene que ser "+e.a+" → "+e.b+"."};
+    if(e.a!="Controlador"&&!EG.some(z=>z.a==e.b&&z.b==e.a))dr.push(rv);
+    if(i&&e.a!="Controlador"&&!EG.some(z=>z.a=="Controlador"&&z.b==e.b))dr.push({t:"Controlador → "+e.b+(e.w?" *":""),why:"El Controlador solo tiene las colecciones globales que dice la letra: para llegar a «"+e.b+"» hay que pasar por «"+e.a+"»."})});
+   const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,2);
+   exp.filter(x=>x.k=="rt").forEach(x=>bank.push({t:x.t,rt:1}));
+   dr.sort((x,y)=>x.t<y.t?-1:1).slice(0,3).forEach(x=>bank.push(x));
+   D.forEach(x=>bank.push({t:EG[EG.length-1].b+" → "+x+" *",why:"«"+x+"» no interviene en lo que pide el ▶: se resuelve sin pasar por ahí."}));
    const gls=u.map(m=>"▶ "+top(m[0])+": "+cl(m[0],/^▶/).replace(/^▶ /,"")).join("\n"),tg=cl(first,/^Tengo:/),
     ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gls+(clc?"\nClases: "+clc:""),
-    c=Object.assign(sw("p4",g+" · recorrido "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),ctx,[Object.assign(st("Elegí el recorrido",R.join(" → "),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a:tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
+    c=Object.assign(sw("p4",g+" · recorrido "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),ctx,[Object.assign(st("Elegí el recorrido",EG.map(e=>e.a+" → "+e.b+(e.w?" *":"")).join("\n"),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a:tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
    ch.forEach(x=>x.pk=c);SWC.push(c);ent.push(c)});
   ent.forEach((e,i)=>{if(ent[i+1])e.next=ent[i+1]})})}
 
