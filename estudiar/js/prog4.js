@@ -598,6 +598,6 @@ THT.unshift({s:"p4",re:/(?!)/,t:"Guardar el resultado",p:["Si el mensaje devuelv
     if(!i)exp.push({t:x,k:"a",auto:1});else exp.push({t:"→",k:"a",auto:1},{t:x,k:"rt",pv,w:(held[x]?"«"+x+"» ya lo tenés (figura en «Tengo»): el mensaje se le manda directo.":"Se llega a «"+x+"» desde «"+pv+"»"+(ar?" (flecha en Clases: "+ar.trim()+")":" por una flecha del diagrama de clases")+".")});});
    const D=[...new Set(clc.match(RE)||[])].filter(x=>!R.some(r=>r==x||r.startsWith(x)||x.startsWith(r))&&x!="Controlador").slice(0,3);
    exp.filter(x=>x.k=="rt").forEach(x=>bank.push({t:x.t,rt:1}));D.forEach(x=>bank.push({t:x}));
-   const gl=cl(first,/^▶/),tg=cl(first,/^Tengo:/),ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gl+(/\nClases: /.test(first.ctx)?"":"\nClases: "+clc),
+   const gl=cl(first,/^▶/),tg=cl(first,/^Tengo:/),ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gl+(clc?"\nClases: "+clc:""),
     c=Object.assign(sw("p4",g+" · recorrido "+a,ctx,[Object.assign(st("Elegí el recorrido",R.join(" → "),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,bk:{a,before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
    SWC.push(c)})})}
