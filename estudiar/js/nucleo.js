@@ -183,10 +183,16 @@ function bldCtx(t,src,hl){const T=t.split("\n"),H=ctxH(t,src,hl).match(/<div[^>]
 const bldDisp=a=>a.map((x,i)=>x.nl?"<br>":(i&&!x.g&&!a[i-1].nl?" ":"")+esc(x.t)).join("");
 const blkCtx=c=>{const k=c.bk;return `<div class="lt"><b>Diagrama de la operación</b></div>`+k.before.map(x=>`<div>${esc(x)}</div>`).join("")+`<div class="gap">▢ mensaje ${esc(k.a)} y lo que cuelga de él: ¿por qué objetos pasa?</div>`+k.after.map(x=>`<div>${esc(x)}</div>`).join("")};
 const bsNew=c=>{const b={p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,m:null,src:null,hl:null,done:false},X=c.bld.exp;while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}return b};
+const bldPlain=(c,ln)=>c.bld.exp.filter(x=>(x.ln||0)==ln&&!x.nl).map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");
+/* «Ver la línea completa»: muestra la línea esperada; cuenta UN error por tarjeta (no uno por ficha) y después «No sé» ayuda sin penalizar */
+function swShow(){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs;if(b.show)return;b.show=1;
+ if(!b.e){b.e=1;SCOMBO=0;S2.box[c.id+":0"]=0;SRETRY.push({c,i:0,due:SUN+8});const ln=(c.bld.exp[b.p]||{}).ln||0;
+  logA("sw",c.s,c.g,false,{q:c.route?"Elegí el recorrido":"Armá la línea",x:c.ctx,a:bldPlain(c,ln),p:"Ver la línea completa",ns:1,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});NLE=E1.log[E1.log.length-1];SV2()}
+ swDraw()}
 function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X=c.bld.exp,e=X[b.p],ns=i<0;
  if(ns)i=c.bld.bank.findIndex((t,j)=>!b.used[j]&&t.t==e.t&&(t.ln==null||t.ln==e.ln));else if(b.used[i])return;
  const t=c.bld.bank[i],k=c.id+":0";
- if(t.t!=e.t||ns){const ph=b.pl.map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");b.e++;SCOMBO=0;S2.box[k]=0;
+ if((t.t!=e.t||ns)&&!(ns&&b.show)){const ph=b.pl.map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");b.e++;SCOMBO=0;S2.box[k]=0;
   if(b.e==1)SRETRY.push({c,i:0,due:SUN+8});
   logA("sw",c.s,c.g,false,{q:c.route?"Elegí el recorrido":"Armá la línea",x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
   NLE=E1.log[E1.log.length-1];
@@ -234,8 +240,8 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
   `<div class="sn">${((()=>{const t=c.ctx;return(typeof letraHtml!="undefined"&&letraHtml(c,t,b.hl,b.src))||bldCtx(t,b.src,b.hl)})())+(c.bk?`<details><summary>Diagrama hasta ahora</summary>${blkCtx(c)}</details>`:"")}</div>${c.route?"":swDg(c,0,b.done)}<div class="qt">${c.route?"Elegí los objetos por los que pasa el mensaje, en orden":"Armá la línea con las fichas"}</div>`+
   `<div class="bpl${b.done?" fin":""}">${b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
   (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div><div class="mut" style="margin-top:6px">${b.o||""}</div>${(()=>{const o=b.teo&&(window.THT||[]).find(x=>x.t==b.teo);return o?`<div class="th" style="margin-top:10px"><b>📘 ${esc(o.t)}</b>${o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join("")}</div>`:""})()}${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+(b.e?noteBox():"")+
-  (b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": esta línea vuelve en un rato.":"Línea correcta"}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
-   `<div class="bank">${b.ord.filter(i=>bk[i].ln==null||bk[i].ln==ln).map(i=>`<button class="btn tile${b.used[i]?" used":""}" data-w="tl" data-i="${i}"${b.used[i]?" disabled":""}>${esc(bk[i].t)}</button>`).join("")}</div><button class="btn ghost" data-w="tns" style="display:block;margin:10px auto 0">No sé qué sigue</button>`)+`</div></div>`;
+  (b.show&&!b.done?`<div class="fb"><b>Línea completa</b><div class="sn">${esc(bldPlain(c,ln))}</div></div>`:"")+(b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": esta línea vuelve en un rato.":"Línea correcta"}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
+   `<div class="bank">${b.ord.filter(i=>bk[i].ln==null||bk[i].ln==ln).map(i=>`<button class="btn tile${b.used[i]?" used":""}" data-w="tl" data-i="${i}"${b.used[i]?" disabled":""}>${esc(bk[i].t)}</button>`).join("")}</div>${b.show?"":`<button class="btn ghost" data-w="tsh" style="display:block;margin:10px auto 0">Ver la línea completa</button>`}<button class="btn ghost" data-w="tns" style="display:block;margin:10px auto 0">No sé qué sigue</button>`)+`</div></div>`;
   V.innerHTML=h;return}
  const s=c.steps[u.i],L=u.cl?s.a:s.b,R=u.cl?s.b:s.a,cs=u.ans?(u.cl?"L":"R"):"",pk=u.pick,
  cl=side=>u.ans?(side==cs?" ok":(side==pk?" no":"")):"";
@@ -276,7 +282,7 @@ function swMode(m){clearTimeout(STM);if(m==SWM)return;SPACK=[];SWX[SWM]={S2,SCOM
  if(x){({S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW}=x)}else{S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};try{const r=localStorage.getItem(SK);if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}SCOMBO=0;SRETRY=[];SLAST="";SLT="";SLK="";SERR="";SAX="";SUN=0;SW=null}}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if((TAB!=3&&TAB!=7))return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
- if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="tns")swTile(-1);else if(w=="sf"){SF=b.dataset.v;swNew()}});
+ if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="tns")swTile(-1);else if(w=="tsh")swShow();else if(w=="sf"){SF=b.dataset.v;swNew()}});
 document.addEventListener("keydown",e=>{if((TAB!=3&&TAB!=7)||!SW||(e.target&&e.target.tagName=="TEXTAREA")||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
  if(k=="ArrowDown"&&SW.ans==null&&!SW.recap){e.preventDefault();swChoose("NS")}
  else if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}

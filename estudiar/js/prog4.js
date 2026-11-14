@@ -407,7 +407,7 @@ X("2.2.1*","b",":C","A","quitarB","(b)",null,null,"La B le pide a su C que la sa
 X("2.2.1.1*",":C",":B *","A","remove","(b)",null,null,"La C saca la B de su colección.","C ejecuta quitarB(b) · firma: b"),
 X("2.3*","a","b:B","L","destroy","()",null,null,"Cada B se destruye.","a · b (2.1*)")]}
 );
-const PATS={"Patrón · Recorrer":{id:"rec",msg:"2"},"Patrón · Recorrer y filtrar":{id:"filtro",msg:"2"},"Patrón · Obtener por un intermediario":{id:"interm",msg:"2"},"Patrón · Total en cascada":{id:"cascada",msg:"2"},"Patrón · Crear y registrar":{id:"crear",msg:"3"},"Patrón · Condición con un dato previo":{id:"cond",msg:"3"},"Patrón · Id único":{id:"id",msg:"2"},"Patrón · Recorrer y eliminar":{id:"elim",msg:"2"}},PDEP={filtro:["rec"],cascada:["rec"],elim:["rec"]};
+const PATS={"Patrón · Recorrer":{id:"rec",msg:"2"},"Patrón · Recorrer y filtrar":{id:"filtro",msg:"2"},"Patrón · Obtener por un intermediario":{id:"interm",msg:"2"},"Patrón · Total en cascada":{id:"cascada",msg:"2"},"Patrón · Crear y registrar":{id:"crear",msg:"3"},"Patrón · Condición con un dato previo":{id:"cond",msg:"3",from:"2"},"Patrón · Id único":{id:"id",msg:"2"},"Patrón · Recorrer y eliminar":{id:"elim",msg:"2"}},PDEP={filtro:["rec"],cascada:["rec"],elim:["rec"]};
 EXAM.forEach(setGoals);
 /* Dominio de cada examen = las operaciones de las clases que usa el ejercicio (como en la letra), sin decir cuál va en cada línea. */
 const exDom=E=>{const m={},gen=/^(find|next|create|add|remove|destroy|getInstance)$/;E.L.forEach(L=>{if(gen.test(L.op))return;const s=L.sg&&/^(\w+)\.(\w+\([^)]*\)(?::\s*\w+)?)/.exec(L.sg),k=s?s[1]:(L.to.split(":")[1]||L.to).replace(/ \*$/,"").trim(),v=s?s[2]:L.op+L.pa;(m[k]=m[k]||[]);if(!m[k].includes(v))m[k].push(v)});return Object.entries(m).map(([k,v])=>k+": "+v.join(", ")).join("\n")};
@@ -672,8 +672,8 @@ window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{
    ch.forEach(c=>{const x=cls(c.dg.cur.to);if(!R.includes(x))R.push(x)});
    const Ls=ch.map(c=>c.dg.cur),mt=u=>"m:"+g+":"+top(u[0]),pm=PATS[g],toks=[mt(ch)],req=[];
    if(pm&&pm.msg==top(first))toks.push("p:"+pm.id);
-   if(pm&&+top(first)<+pm.msg){ch.forEach(c=>c.hid=1);return}
-   if(ui&&(!pm||+top(U[ui-1][0])>=+pm.msg))req.push(mt(U[ui-1]));
+   if(pm&&+top(first)<+(pm.from||pm.msg)){ch.forEach(c=>c.hid=1);return}
+   if(ui&&(!pm||+top(U[ui-1][0])>=+(pm.from||pm.msg)))req.push(mt(U[ui-1]));
    {const P=new Set(),nx=Ls.filter(l=>l.op=="next").length,gen=/^(find|next|create|add|remove|destroy|getInstance)$/;
     if(nx)P.add("rec");if(nx>=2)P.add("cascada");
     if(Ls.some(l=>/\*/.test(l.n)&&String(l.cond||"").replace(/\[for[Ee]ach\]/g,"").trim()))P.add("filtro");
