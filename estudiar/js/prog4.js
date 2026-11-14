@@ -10,9 +10,15 @@
       c. Teoría: una serie sw("p4","Patrón · <nombre> · teoría",…) al final del archivo (2-3 pasos binarios; b = error tentador; th en el primero).
       d. Si el patrón se reconoce en las líneas, sumar su regla de detección (bloque «Packs por mensaje», conjunto P).
    2. UNIDADES: un ejercicio se recorre en unidades; cada unidad = los mensajes sueltos previos (find…) + el mensaje del Controlador (o del objeto que ejecuta una operación de clase) con todo
-      lo que cuelga de él. NUNCA tarjetas de find sueltas ni de recorridos triviales: la unidad abre con la tarjeta «elegí el recorrido» solo si el camino pasa por 3 o más objetos
-      (si no, abre con su primera línea); siguen las tarjetas de sintaxis de cada línea en orden (SPACK) y, al acertar la unidad sin errores, sigue la unidad siguiente del mismo ejercicio.
+      lo que cuelga de él. NUNCA tarjetas de find sueltas ni de recorridos triviales: la unidad abre con «traducí la letra» (si hay letra y 2+ objetivos), luego «elegí el recorrido» solo si el camino tiene 2 o más saltos
+      (si no, sigue con su primera línea); siguen las tarjetas de sintaxis de cada línea en orden (SPACK) y, al acertar la unidad sin errores, sigue la unidad siguiente del mismo ejercicio.
       Se generan solas desde las líneas X(...); lo único a escribir son las líneas con sus goal/have (la letra dice QUÉ, nunca por dónde se llega).
+   2b. DESARMAR LA RESOLUCIÓN EN ACCIONES (pauta, 14/11): al formar ejercicios nuevos, primero se descompone cómo se resuelve el ejercicio en las ACCIONES del estudiante
+      (leer letra/restricciones/firma/descripción/parámetros/pre/pos; derivar los objetivos intermedios y ordenarlos; elegir el recorrido = qué flechas/saltos hacen falta;
+      diseñar operaciones del dominio; recorridos y condiciones; guardar variables; retornos; escribir cada línea; revisar contra la letra; derivar el DCD) y DESPUÉS se arma
+      una tarjeta (o pack) por cada acción. Ya cubiertas: «Traducí la letra» (pre/pos → objetivos ordenados; el error cita la frase de la letra; LET.*.ops.*.ob mapea
+      objetivo → frase), «elegí el recorrido» (saltos A → B con * del modelo de dominio de la letra) y las líneas (sintaxis). Pendientes: «¿Qué falta?» (diagrama con un
+      mensaje menos → tocar la frase de la letra sin cubrir) y derivar el DCD. Al agregar un ejercicio, completar su mapeo ob en js/letras.js.
    3. PREVIATURAS (automáticas, tokens en S2.bqok): un mensaje aparece solo si se acertó SIN errores el mensaje anterior del mismo ejercicio (m:<ejercicio>:<n>) y los
       patrones que usa (p:<id>, detectados por sus líneas + dependencias PDEP). Los mensajes ya acertados antes cuentan (TOKSEED). Si se agrega un patrón o un ejercicio,
       verificar con jsdom que haya tarjetas disponibles al empezar y que acertar el pack desbloquee lo siguiente.
@@ -688,8 +694,19 @@ window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{
     if(Ls.some(l=>l.op=="getInstance"))P.add("id");
     [...P].forEach(x=>(PDEP[x]||[]).forEach(d=>P.add(d)));
     P.forEach(x=>{if(!(pm&&pm.id==x))req.push("p:"+x)})}
+   const mkT=en=>{if(!/^(Jul26|Feb26) · |^(postularse|aceptarPostulacion)( |$)/.test(g))return en;
+    const dp=c=>c.dg.cur.n.replace("*","").split(".").length<=2,seen=new Set(),gl=[];
+    ch.forEach(c=>{const L=c.dg.cur;if(!dp(c)||!L.goal||seen.has(L.goal))return;seen.add(L.goal);gl.push({n:L.n.replace("*",""),t:L.goal})});
+    if(gl.length<2)return en;
+    const ds=[];cs.forEach(c=>{const L=c.dg.cur;if(dp(c)&&L.goal&&!seen.has(L.goal)&&!ds.some(z=>z.t==L.goal))ds.push({t:L.goal,why:"Ese objetivo es de otro mensaje del ejercicio: lo que pide la letra para este mensaje es otra cosa."})});
+    const ex=[],bank=[];gl.forEach((o,i)=>{if(i)ex.push({t:"",k:"a",auto:1,nl:1});ex.push({t:o.t,k:"ob",ob:o.n,w:"Sale de la letra (frase resaltada)."});bank.push({t:o.t,rt:1})});
+    const fm=k=>(/^(Jul26|Feb26)/.exec(k)||[])[0]||(/^(postularse|aceptarPostulacion)/.test(k)?"P":"");
+    Object.entries(G).filter(([k])=>k!=g&&fm(k)==fm(g)).forEach(([k,o])=>o.forEach(c=>{const L=c.dg.cur;if(dp(c)&&L.goal&&L.n.replace("*","").indexOf(".")<0&&!seen.has(L.goal)&&!ds.some(z=>z.t==L.goal)&&ds.length<6)ds.push({t:L.goal,why:"Ese objetivo es de otra operación ("+k.replace(/^(Jul26|Feb26) · /,"")+"): esta operación pide otra cosa."})}));
+    ds.slice(0,3).forEach(x=>bank.push(x));
+    const T=Object.assign(sw("p4",g+" · traducí la letra "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),first.ctx.split("\n")[0],[Object.assign(st("Traducí la letra",gl.map(o=>o.t).join("\n"),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,ent:first.dg.ent},bld:{exp:ex,bank,n:ex.length},tra:1,req:en.req,then:en});
+    en.req=[];en.ln=1;SWC.push(T);return T};
    const EG=[];ch.forEach(c=>{const L=c.dg.cur,t=L.to.replace(/ \*$/,"");if(L.op=="create"||!/^:/.test(t))return;const a=cls(L.from),b=cls(t),w=/ \*$/.test(L.to);if(a==b||b=="Controlador")return;const e=EG.find(z=>z.a==a&&z.b==b);if(e)e.w=e.w||w;else EG.push({a,b,w})});
-   if(EG.length<2){const rest=ch.slice(1);Object.assign(first,{req,toks,pack:rest.length?rest:null});rest.forEach(x=>{x.ln=1;x.pk=first});ent.push(first);return}
+   if(EG.length<2){const rest=ch.slice(1);Object.assign(first,{req,toks,pack:rest.length?rest:null});rest.forEach(x=>{x.ln=1;x.pk=first});ent.push(mkT(first));return}
    ch.forEach(c=>c.ln=1);
    const held={},tg0=cl(first,/^Tengo:/);ch.forEach(c=>{const t=c.dg.cur.to.replace(/ \*$/,""),x=cls(t),nm=t.split(":")[0];if(nm&&!(x in held)&&(!/:/.test(t)||new RegExp("(^|[ ,:])"+nm+"( \\(| ·|,|$)").test(tg0.replace(/^Tengo: /,""))))held[x]=1});
    const exp=[],bank=[],hp=e=>e.a+" → "+e.b+(e.w?" *":""),dr=[];
@@ -705,8 +722,8 @@ window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{
    const gls=u.map(m=>"▶ "+top(m[0])+": "+cl(m[0],/^▶/).replace(/^▶ /,"")).join("\n"),tg=cl(first,/^Tengo:/),
     ctx=first.ctx.split("\n").filter(l=>!/^(Tengo:|Clases:|▶)/.test(l)&&!/^Dominio:/.test(l)).slice(0,1).join("\n")+"\n"+tg+"\n"+gls+(clc?"\nClases: "+clc:""),
     c=Object.assign(sw("p4",g+" · recorrido "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),ctx,[Object.assign(st("Elegí el recorrido",EG.map(e=>e.a+" → "+e.b+(e.w?" *":"")).join("\n"),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,clc:first.dg.clc,ent:first.dg.ent},bld:{exp,bank,n:exp.length},route:1,pack:ch,req,toks,bk:{a:tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),before:cs.slice(0,ix).map(x=>lineStr(x.dg.cur)),after:cs.slice(ix+ch.length).map(x=>lineStr(x.dg.cur))}});
-   ch.forEach(x=>x.pk=c);SWC.push(c);ent.push(c)});
-  ent.forEach((e,i)=>{if(ent[i+1])e.next=ent[i+1]})})}
+   ch.forEach(x=>x.pk=c);SWC.push(c);ent.push(mkT(c))});
+  ent.forEach((e,i)=>{if(ent[i+1]){e.next=ent[i+1];if(e.then)e.then.next=ent[i+1]}})})}
 
 /* ===== Teoría de los patrones (tarjetas binarias, genéricas) ===== */
 SWC.push(
