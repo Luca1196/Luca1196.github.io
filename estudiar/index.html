@@ -18,7 +18,7 @@ DESLIZAR · PENDIENTES (nov 2026): swPend() en nucleo.js lee el registro de Erro
 NO SÉ → TEORÍA: al tocar «No sé», la tarjeta del error muestra la teoría del tema de esa pregunta: s.th del paso (si tiene) + la entrada de THT (window.THT en prog4.js/logica.js: {s, re, t, p:[párrafos]}) cuya re coincide con pregunta+respuesta, si no con el título, si no con el contexto. Al agregar un tema nuevo, sumar su entrada en THT. (THL ya no se usa.)
 TEORÍA EN DESLIZAR: un paso puede llevar th (texto de teoría, se muestra con 📘 antes de la pregunta). Para cada «No sé» de la exportación: serie nueva con th en los primeros pasos (base del tema) y pregunta fácil de comprobación.
 ÁRBOLES EN DESLIZAR: una tarjeta «Árbol · X» solo aparece cuando sus previas (req de X en bloques.js) se acertaron SIN errores en Deslizar (S2.bqok); en la pestaña Bloques todo está desbloqueado. bloques.js crea tarjetas «Árbol · …» (c.bqx) con los ejercicios intermedios de Bloques; nucleo.js las dibuja con BQ.bqEmbed. Reemplazan a las series largas Combinar…/Febrero 3a/3b (se quitan al final de logica.js).
-CACHÉ: los <script src> y <link> de js/ y css/ llevan ?v=202611150100AAAAMMDDhhmm. Al cambiar cualquier js/css, actualizar ese número en index.html (sed sobre '?v=202611150100') para que el navegador baje la versión nueva.
+CACHÉ: los <script src> y <link> de js/ y css/ llevan ?v=202611150130AAAAMMDDhhmm. Al cambiar cualquier js/css, actualizar ese número en index.html (sed sobre '?v=202611150130') para que el navegador baje la versión nueva.
 REGLAS: nunca reemplazar index.html entero; editar solo el archivo de la propia sección (con Edit, no reescribiendo todo);
 cada sección agrega sus cadenas con SWC.push(...). Orden de carga en index.html: base, prog4, logica, nucleo, musica, errores, inicio.
 El texto de más abajo (INSTRUCTIVO) describe el diseño original en un solo archivo: los nombres de funciones siguen valiendo.
@@ -143,20 +143,20 @@ a{color:var(--ac)}
 .ghost{background:transparent;border-bottom-width:1px;font-size:14px;margin-top:16px}
 @media(prefers-reduced-motion:reduce){.pb i{transition:none}.btn:active:not(:disabled){transform:none}}
 </style>
-<link rel="stylesheet" href="css/musica.css?v=202611150100">
+<link rel="stylesheet" href="css/musica.css?v=202611150130">
 <div class="wrap">
 <header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
 <nav class="tabs"><button id="t0" class="btn tab" hidden>Repaso</button><button id="t3" class="btn tab">Principal</button><button id="t7" class="btn tab">Básico</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t8" class="btn tab">Código</button><button id="t2" class="btn tab" hidden>Ejercicios Lógica</button><button id="t4" class="btn tab">Oído</button><button id="t6" class="btn tab">Bloques</button><button id="t5" class="btn tab">Errores</button></nav>
 <div id="v"></div>
 </div>
-<script src="js/base.js?v=202611150100"></script>
-<script src="js/prog4.js?v=202611150100"></script>
-<script src="js/logica.js?v=202611150100"></script>
-<script src="js/nucleo.js?v=202611150100"></script>
-<script src="js/musica.js?v=202611150100"></script>
-<script src="js/errores.js?v=202611150100"></script>
-<script src="js/bloques.js?v=202611150100"></script>
-<script src="js/letras.js?v=202611150100"></script><script src="js/codigo-datos.js?v=202611150100"></script>
-<script src="js/codigo.js?v=202611150100"></script>
-<script src="js/inicio.js?v=202611150100"></script>
+<script src="js/base.js?v=202611150130"></script>
+<script src="js/prog4.js?v=202611150130"></script>
+<script src="js/logica.js?v=202611150130"></script>
+<script src="js/nucleo.js?v=202611150130"></script>
+<script src="js/musica.js?v=202611150130"></script>
+<script src="js/errores.js?v=202611150130"></script>
+<script src="js/bloques.js?v=202611150130"></script>
+<script src="js/letras.js?v=202611150130"></script><script src="js/codigo-datos.js?v=202611150130"></script>
+<script src="js/codigo.js?v=202611150130"></script>
+<script src="js/inicio.js?v=202611150130"></script>
 </html>

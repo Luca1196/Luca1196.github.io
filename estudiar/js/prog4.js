@@ -621,7 +621,8 @@ window.THL=window.THL||[];THL.push({s:"p4",re:/secuencia del sistema|recordad|me
   objT(L.from,L.fw).forEach(x=>ex.push(x));ex.push({t:"→",k:"a",auto:1});
   objT(L.to,L.tw).forEach(x=>ex.push(Object.assign(x,sc(/objeto|receptor/i))));
   if(L.cond)ex.push(Object.assign({t:L.cond,k:"c",w:L.cw||"La condición va entre corchetes antes del mensaje."},sc(/condici/i)));
-  if(L.res)ex.push({t:L.res,k:"r",w:(L.rw||"Se guarda el resultado.")},{t:":=",k:"r",g:0,w:"El resultado se guarda con :=."});
+  /* variable y := van en UNA ficha («total :=»): el nombre es arbitrario, lo que se decide es si se guarda el resultado */
+  if(L.res)ex.push({t:L.res+" :=",k:"r",w:(L.rw||"Se guarda el resultado: se usa después (como receptor, parámetro, condición o retorno).")});
   ex.push(Object.assign({t:L.op,k:"m",w:L.ow||"Operación."},sc(/operaci/i)));
   ex.push({t:L.pa,k:"p",g:1,w:L.pw||"Parámetros."});
   ex.push({t:SS[L.t],k:"s",w:(old.filter(s=>/Estereotipo/.test(s.q)).pop()||{}).w||"Estereotipo."});
@@ -629,7 +630,7 @@ window.THL=window.THL||[];THL.push({s:"p4",re:/secuencia del sistema|recordad|me
   const cnt=t=>ex.filter(x=>x.t==t).length,D=[];
   const add=(t,w)=>{if(t&&!ex.some(x=>x.t==t)&&!D.some(x=>x.t==t))D.push({t,k:"d",w})};
   D.push({t:":",k:"d"},{t:"*",k:"d"});
-  if(L.res)D.push({t:"=",k:"d"});else D.push({t:":=",k:"d"},{t:"=",k:"d"});
+  if(L.res)D.push({t:L.res+" =",k:"d"});else D.push({t:"res :=",k:"d"});
   add(L.t=="A"||L.t=="G"?SL:SA);if(L.t=="P")add(SA);
   if(L.nd)add(L.nd+":");if(L.od)add(L.od);if(L.pd)add(L.pd);
   const dobj=s=>s?objT(s).map(x=>x.t):[];
