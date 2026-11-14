@@ -12,7 +12,7 @@
   else if((TAB==3||TAB==7)&&typeof SW!="undefined"&&SW&&SW.c)id=`serie ${SW.c.id} · ${SW.c.g||""}${SW.c.steps?" · paso "+(SW.i+1)+" de "+SW.c.steps.length:""}`;
   else if(TAB==0&&typeof Q!="undefined"&&Q&&Q.q&&Q.q[Q.i])id="tarjeta "+Q.q[Q.i].id;
   const el=(TAB==3||TAB==7)&&!(typeof OI!="undefined"&&OI)?(V.querySelector("#swc")||V.querySelector(".card")||V):V;
-  const cl=el.cloneNode(true);cl.querySelectorAll("#fbs,button").forEach(x=>x.remove());cl.style.cssText="position:fixed;left:-9999px;white-space:pre-wrap";document.body.appendChild(cl);let tx=(cl.innerText||"").replace(/\n{3,}/g,"\n\n").trim();cl.remove();
+  const cl=el.cloneNode(true);const nts=[...el.querySelectorAll("textarea")].map(t=>t.value.trim()).filter(Boolean);cl.querySelectorAll("#fbs,button,.nt").forEach(x=>x.remove());cl.style.cssText="position:fixed;left:-9999px;white-space:pre-wrap";document.body.appendChild(cl);let tx=(cl.innerText||"").replace(/\n{3,}/g,"\n\n").trim()+nts.map(n=>"\nNOTA DE LUCA: "+n).join("");cl.remove();
   if(TAB==1||TAB==2){try{tx=($("fr").contentDocument.querySelector("main")||$("fr").contentDocument.body).innerText.trim()}catch(e){}}
   cp(`[${TN[TAB]}${id?" · "+id:""}]\n${tx}`)}})();
 {const hm={repaso:0,prog4:1,logica:6,deslizar:3,musica:4,errores:5,bloques:6,basico:7,codigo:8},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
