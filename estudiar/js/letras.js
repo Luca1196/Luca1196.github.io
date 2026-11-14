@@ -29,13 +29,24 @@ LET.Jul26.ops.reservarHospedaje.ob={"1":["pr2"],"2":["pr3"],"3":["pr0"],"4":["po
 LET.Jul26.ops.reservarHospedaje.obH={"1":["po0"],"2":["po0"],"3":["po0"],"4":["po0"],"5":["po0"],"5.1":["po0"],"6":["po0"]};
 LET.Feb26.ops.iniciarMisionAplicacion.ob={"1":["pr0"],"2":["pr1"],"2.1":["pr1"],"3":["po0"],"3.1":["po0"],"3.2":["po0"],"4":["pr2","pr4"],"4.1":["pr4"],"4.2":["pr4"],"5":["po0"],"5.1":["po0"],"5.2":["po0"]};
 LET.Feb26.ops.calcularHerbicidaTotal.ob={"1":["pr0"],"2":["po0"],"2.1":["po0"],"2.2":["po0"]};
+/* Mini-letras de los patrones genéricos (solo para «Traducí la letra»; no tienen modelo de dominio ni restricciones). */
+{const O=(sig,d,pa,pr,po,ob)=>({sig,d,pa,pr,po,ob}),A="idA: identificador de la A.",eA="Existe una A a tal que a.id = idA.";
+LET.Patron={pat:1,tit:"Patrón",ops:{
+"Recorrer":O("sumarValores(idA:string): int","Suma el valor de todas las B de una A.",[A],[eA],["Se devuelve la suma de b.valor para cada B asociada a a."],{"1":["pr0"],"2":["po0"],"2.1":["po0"],"2.2":["po0"]}),
+"Recorrer y filtrar":O("sumarActivas(idA:string): int","Suma el valor de las B activas de una A.",[A],[eA],["Se devuelve la suma de b.valor para cada B asociada a a con b.estado = activa."],{"1":["pr0"],"2":["po0"],"2.1":["po0"],"2.2":["po0"],"2.3":["po0"]}),
+"Obtener por un intermediario":O("cerrarB(idA:string, idB:string)","Cierra una B de una A.",[A,"idB: identificador de la B."],[eA,"Existe una B b asociada a a tal que b.id = idB."],["Se cierra la B b."],{"1":["pr0"],"2":["pr1"],"2.1":["pr1"],"3":["po0"]}),
+"Total en cascada":O("totalA(idA:string): int","Calcula el total de una A.",[A],[eA],["Se devuelve la suma del total de cada B asociada a a.","El total de una B es la suma de c.valor para cada C asociada a b."],{"1":["pr0"],"2":["po0"],"2.1":["po0"],"2.2":["po1"]}),
+"Crear y registrar":O("altaX(idA:string, idB:string)","Da de alta una X que relaciona una A con una B.",[A,"idB: identificador de la B."],[eA,"Existe una B b tal que b.id = idB."],["Se crea una instancia x de X.","Se crean los links entre x y la A a y la B b."],{"1":["pr0"],"2":["pr1"],"3":["po0","po1"],"3.1":["po0"],"3.2":["po1"],"3.3":["po1"]}),
+"Condición con un dato previo":O("cerrarSiActiva(idA:string)","Cierra la A solo si está activa.",[A],[eA],["Si a.estado = activa: se cierra la A."],{"1":["pr0"],"2":["po0"],"3":["po0"]}),
+"Id único":O("altaB(idA:string)","Da de alta una B en una A, con un identificador único generado por el sistema.",[A],[eA],["Se crea una instancia b de B con b.id único.","Se crea el link entre a y b."],{"1":["pr0"],"2":["po0","po1"],"2.1":["po0"],"2.2":["po1"]}),
+"Recorrer y eliminar":O("vaciar(idA:string)","Elimina todas las B de una A.",[A],[eA],["Se eliminan los links entre cada B de a y su C.","Se eliminan todas las instancias de B de a."],{"1":["pr0"],"2":["po1"],"2.1":["po1"],"2.2":["po0"],"2.3":["po1"]})}}}
 const letraIds=(c,n)=>{const x=letraDe(c),m=x&&(x.sub?x.o.obH:x.o.ob);return m&&m[n]?m[n]:[]};
 const letraSent=(o,id)=>(id.startsWith("pr")?o.pr:o.po)[+id.slice(2)]||"";
 const letraCite=(c,n)=>{const x=letraDe(c);return x?letraIds(c,n).map(i=>letraSent(x.o,i).replace(/\s+/g," ").trim()).join(" · "):""};
 
 /* Tarjeta → (examen, operación de la letra). Hotel.reservar es una sub-operación de reservarHospedaje. */
-const letraDe=c=>{const g=c.g||"",m=/^(Jul26|Feb26) · (\w+)/.exec(g)||(/^(postularse|aceptarPostulacion)\b/.test(g)?["","Parcial",g.match(/^\w+/)[0]]:null);if(!m)return null;const E=LET[m[1]],k=m[2]=="Hotel"?"reservarHospedaje":m[2];return E&&E.ops[k]?{E,k,o:E.ops[k],sub:m[2]=="Hotel"}:null};
-const letraHtml=(c,t,hl,src)=>{const x=letraDe(c);if(!x)return null;const {E,o}=x,li=a=>a.map(s=>esc(s)).join("\n"),H=ctxH(t,src,hl).match(/<div[^>]*>.*?<\/div>/g)||[],T=t.split("\n"),
+const letraDe=c=>{const g=c.g||"",m=/^(Jul26|Feb26) · (\w+)/.exec(g)||(/^(postularse|aceptarPostulacion)\b/.test(g)?["","Parcial",g.match(/^\w+/)[0]]:null);if(!m&&/^Patrón · /.test(g)){const k=g.replace(/^Patrón · /,"").replace(/ · .*$/,""),o=LET.Patron.ops[k];return o?{E:LET.Patron,k,o,sub:false}:null}if(!m)return null;const E=LET[m[1]],k=m[2]=="Hotel"?"reservarHospedaje":m[2];return E&&E.ops[k]?{E,k,o:E.ops[k],sub:m[2]=="Hotel"}:null};
+const letraHtml=(c,t,hl,src)=>{const x=letraDe(c);if(!x||(x.E.pat&&!c.tra))return null;const {E,o}=x,li=a=>a.map(s=>esc(s)).join("\n"),H=ctxH(t,src,hl).match(/<div[^>]*>.*?<\/div>/g)||[],T=t.split("\n"),
  goal=H.filter((_,i)=>T[i].startsWith("▶")||T[i].startsWith("Tengo:")),
  hv=src&&src.includes("Dom")||hl&&hl!="ESC",he=c.route||src&&src.includes("Esc")||hl=="ESC",
  blk=(n,s)=>`<div class="lt"><b>${n}</b> ${s}</div>`;

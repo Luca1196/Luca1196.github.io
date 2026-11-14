@@ -694,14 +694,14 @@ window.TS={};window.TOKSEED=t=>{const a=TS[t];return !!a&&a.every(c=>((S2.box||{
     if(Ls.some(l=>l.op=="getInstance"))P.add("id");
     [...P].forEach(x=>(PDEP[x]||[]).forEach(d=>P.add(d)));
     P.forEach(x=>{if(!(pm&&pm.id==x))req.push("p:"+x)})}
-   const mkT=en=>{if(!/^(Jul26|Feb26) · |^(postularse|aceptarPostulacion)( |$)/.test(g))return en;
+   const mkT=en=>{if(!/^(Jul26|Feb26) · |^Patrón · |^(postularse|aceptarPostulacion)( |$)/.test(g))return en;
     const dp=c=>c.dg.cur.n.replace("*","").split(".").length<=2,seen=new Set(),gl=[];
     ch.forEach(c=>{const L=c.dg.cur;if(!dp(c)||!L.goal||seen.has(L.goal))return;seen.add(L.goal);gl.push({n:L.n.replace("*",""),t:L.goal})});
     if(gl.length<2)return en;
     const ds=[];cs.forEach(c=>{const L=c.dg.cur;if(dp(c)&&L.goal&&!seen.has(L.goal)&&!ds.some(z=>z.t==L.goal))ds.push({t:L.goal,why:"Ese objetivo es de otro mensaje del ejercicio: lo que pide la letra para este mensaje es otra cosa."})});
     const ex=[],bank=[];gl.forEach((o,i)=>{if(i)ex.push({t:"",k:"a",auto:1,nl:1});ex.push({t:o.t,k:"ob",ob:o.n,w:"Sale de la letra (frase resaltada)."});bank.push({t:o.t,rt:1})});
-    const fm=k=>(/^(Jul26|Feb26)/.exec(k)||[])[0]||(/^(postularse|aceptarPostulacion)/.test(k)?"P":"");
-    Object.entries(G).filter(([k])=>k!=g&&fm(k)==fm(g)).forEach(([k,o])=>o.forEach(c=>{const L=c.dg.cur;if(dp(c)&&L.goal&&L.n.replace("*","").indexOf(".")<0&&!seen.has(L.goal)&&!ds.some(z=>z.t==L.goal)&&ds.length<6)ds.push({t:L.goal,why:"Ese objetivo es de otra operación ("+k.replace(/^(Jul26|Feb26) · /,"")+"): esta operación pide otra cosa."})}));
+    const fm=k=>(/^(Jul26|Feb26)/.exec(k)||[])[0]||(/^(postularse|aceptarPostulacion)/.test(k)?"P":/^Patrón/.test(k)?"Pat":"");
+    Object.entries(G).filter(([k])=>k!=g&&fm(k)==fm(g)).forEach(([k,o])=>o.forEach(c=>{const L=c.dg.cur;if(dp(c)&&L.goal&&L.n.replace("*","").indexOf(".")<0&&!seen.has(L.goal)&&!ds.some(z=>z.t==L.goal)&&ds.length<6)ds.push({t:L.goal,why:"Ese objetivo es de otra operación ("+k.replace(/^(Jul26|Feb26|Patrón) · /,"")+"): esta operación pide otra cosa."})}));
     ds.slice(0,3).forEach(x=>bank.push(x));
     const T=Object.assign(sw("p4",g+" · traducí la letra "+tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),first.ctx.split("\n")[0],[Object.assign(st("Traducí la letra",gl.map(o=>o.t).join("\n"),"—",""),{k:"bld"})],""),{dg:{sig:first.dg.sig,prev:first.dg.prev,cur:first.dg.cur,ent:first.dg.ent},bld:{exp:ex,bank,n:ex.length},tra:1,req:en.req,then:en});
     en.req=[];en.ln=1;SWC.push(T);return T};
