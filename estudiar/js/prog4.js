@@ -617,9 +617,10 @@ window.THL=window.THL||[];THL.push({s:"p4",re:/secuencia del sistema|recordad|me
   if(star)r.push({t:"*",k:"o",w:"El receptor es la colección (flecha con * en «Clases»): find, next, add y remove se mandan a la colección, que lleva *."});return r};
  SWC.filter(c=>c.dg).forEach(c=>{const L=c.dg.cur,old=c.steps,ex=[];
   const sc=re=>{const s=old.find(s=>re.test(s.q)&&s.src);return s?{src:s.src,hl:s.hl}:{}};
-  ex.push({t:L.n+":",k:"n",w:L.nw||"Numeración."});
+  /* orden del examen: primero la flecha (origen → destino), después el mensaje que va escrito sobre ella (nº: [cond] var := operación(parámetros) «estereotipo») */
   objT(L.from,L.fw).forEach(x=>ex.push(x));ex.push({t:"→",k:"a",auto:1});
   objT(L.to,L.tw).forEach(x=>ex.push(Object.assign(x,sc(/objeto|receptor/i))));
+  ex.push({t:"｜",k:"a",auto:1},{t:L.n+":",k:"n",w:L.nw||"Numeración."});
   if(L.cond)ex.push(Object.assign({t:L.cond,k:"c",w:L.cw||"La condición va entre corchetes antes del mensaje."},sc(/condici/i)));
   /* variable y := van en UNA ficha («total :=»): el nombre es arbitrario, lo que se decide es si se guarda el resultado */
   if(L.res)ex.push({t:L.res+" :=",k:"r",w:(L.rw||"Se guarda el resultado: se usa después (como receptor, parámetro, condición o retorno).")});
