@@ -154,7 +154,7 @@ function P3M(t,cx){const R=[],add=(r,w,why)=>{if(w&&w!=t&&!R.some(z=>z[0]==w))R.
  else if(m=/^(.*?[\w\]])\.(\w+\(.*)$/.exec(t))add("pto",m[1]+"->"+m[2],`Lo que está a la izquierda es un objeto o una colección, no un puntero: sus operaciones se llaman con punto.`);
  return R}
 /* Introducción al tema: series que hay que completar sin errores antes de empezar cada cadena (más las de P3X.pre, según el patrón del examen) */
-const P3I=["Parcial P3 · Del DCD al código: la estructura","Parcial P3 · Del diagrama de comunicación al método"];
+const P3I=["Parcial P3 · Del DCD al código: la estructura","Parcial P3 · Constructores y destructores","Parcial P3 · Del diagrama de comunicación al método"];
 const P3Q="¿Qué se desprende de la letra y del DCD? Elegí todo lo que es cierto.";
 const P3X={
 feb26:{n:"Feb26",pre:["Parcial P3 · Composite"],T:{p:P3Q,
@@ -243,6 +243,12 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
   ["La asociación es navegable solo de A hacia B. ¿Quién lleva el pseudoatributo?","Solo A","A y B: cada uno apunta al otro","El pseudoatributo va en la clase de origen de la navegabilidad. B no conoce a A."],
   ["Una dependencia del DCD (flecha punteada), ¿en qué se convierte en C++?","En un #include del .h de la otra clase","En un atributo puntero","La dependencia solo pide que el tipo sea visible: se resuelve con #include. Los atributos son para las asociaciones. (En los exámenes suelen pedir no escribir los #include.)"],
   ["Generalización: Jornalero es un Empleado. ¿Cómo se declara?","class Jornalero : public Empleado { … }","class Jornalero { Empleado *base; … }","La herencia y la realización de una interfaz se escriben igual en C++: «: public Base»."]]],
+["Parcial P3 · Constructores y destructores","El constructor se llama igual que la clase y no tiene tipo de retorno: en el .h, Paquete(int, string, int); y en el .cpp, Paquete::Paquete(int idP, string desc, int idCli) { … }. El destructor es ~Paquete(). Una subclase llama al constructor de su base en la lista de inicialización. El destructor libera lo que la clase creó con new y es solo suyo.",
+ [["En el .h de la clase Paquete, ¿cómo se declara su constructor?","Paquete(int, string, int);","void Paquete(int, string, int);","El constructor se llama igual que la clase y NO lleva tipo de retorno, ni siquiera void."],
+  ["¿Y el destructor?","~Paquete();","delete Paquete();","El destructor es el nombre de la clase con ~ adelante, sin parámetros ni tipo de retorno."],
+  ["En el .cpp, el constructor de Paquete empieza con…","Paquete::Paquete(int idP, string desc, int idCli)","Paquete(int idP, string desc, int idCli)","En el .cpp todo lleva delante el nombre de la clase y ::, también el constructor: Clase::Clase(…)."],
+  ["Simple hereda de Paquete. ¿Cómo carga los atributos heredados?","Llamando al constructor de la base: Simple::Simple(…) : Paquete(idP, desc, idCli) { }","Asignándolos uno por uno en el cuerpo","Son privados de Paquete: la subclase no los toca; se los pasa al constructor de la base en la lista de inicialización."],
+  ["¿Cuándo hace falta escribir un destructor con código?","Cuando la clase creó objetos con new que son solo suyos","Siempre, para todos los punteros que guarda","Solo se libera lo propio. Los objetos compartidos (los que viven en la colección de otro) no se tocan."]]],
 ["Parcial P3 · Del diagrama de comunicación al método","El cuerpo de cada método sale del diagrama de comunicación: los mensajes que manda ese objeto, en orden, son las llamadas del método; un mensaje a todos los elementos de una colección es un recorrido. Se implementa empezando por las clases menos acopladas.",
  [["¿De dónde sale el cuerpo de un método?","Del diagrama de comunicación: los mensajes que manda ese objeto son sus llamadas","Del modelo de dominio","El DCD da la estructura (el .h); las interacciones dan el cuerpo de los métodos."],
   ["En el diagrama, Venta le manda subtotal() a cada LineaDeVenta de «lineas» y suma. ¿Cómo queda totalVenta()?","Un for que recorre lineas y acumula ldv->subtotal()","Una sola llamada: lineas->subtotal()","Un mensaje a todos los elementos de una colección es un recorrido: se itera y se le pide a cada elemento."],

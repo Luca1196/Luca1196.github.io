@@ -104,3 +104,9 @@ Las cadenas nuevas quedaban «sueltas» (cada tarjeta era su propia unidad). Aho
 
 ## Cuándo vuelve un paquete (16/11 18:50, pedido de Luca)
 nucleo.js: (1) lo nunca visto va SIEMPRE antes que lo ya visto (antes se sorteaba entre los 3 primeros y un paquete fallado podía adelantarse); (2) las tarjetas kit con error ya no vuelven sueltas a las 8 respuestas: el paquete vuelve entero; (3) ningún paquete terminado, aprobado o no, se repite antes de PKN = 15 respuestas (PKF), salvo que no haya otra cosa. Al sumar exámenes nuevos, sus paquetes salen antes que repetir los viejos.
+
+## Aprobar paquetes sin pasada perfecta (16/11 19:05, pedido de Luca con su exportación de errores)
+Estadística 14–16/11: 28/89 (31%); 14/11 14%, 15/11 7%, 16/11 64% (Principal 89%). Casi todos los fallos: «Patrón · Crear y registrar» y «Patrón · Recorrer»; 22 «No sé» (8 en la numeración 3.2.1 y 8 en el constructor de Paquete en la pestaña Código).
+Cambio en nucleo.js (S2.kok): cada tarjeta kit acertada sin errores queda hecha; el paquete fallado vuelve solo con las tarjetas que faltan y se aprueba cuando todas quedaron hechas. Un paquete a medias pesa más al elegir. Aprobado, si vuelve, vuelve entero.
+Teoría sumada por sus «No sé»: ejemplo de integridad circular (th del paso) y serie «Parcial P3 · Constructores y destructores» (previa de las cadenas de P3).
+Pendiente (defecto de tarjeta, js/prog4.js): en «Patrón · Crear y registrar» el alta se manda a A y no a B de forma arbitraria (nota de Luca: «¿por qué a A y no a B?»): debería aceptar las dos o explicar el criterio.

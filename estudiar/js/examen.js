@@ -32,7 +32,7 @@ const KIN={md:[],dss:[],dcd:[]};
 ["md","Modelo de dominio · qué restricciones se escriben","Se escribe en lenguaje natural lo que el diagrama no alcanza a decir: unicidad (global o «dentro de»), integridad circular (ciclos del diagrama), atributos calculados y reglas de negocio. Lo que ya dicen las multiplicidades no se repite.",
  [["«El código del producto es único»","Se escribe como restricción de unicidad","No se escribe: ya lo muestra el diagrama","El diagrama de dominio no marca identificadores: la unicidad va escrita."],
   ["«El número de sala es único dentro de su edificio»","Unicidad relativa: hay que escribir «dentro de su edificio»","Unicidad en todo el sistema","Dos edificios pueden tener una sala con el mismo número."],
-  ["El diagrama tiene un ciclo de asociaciones. ¿Qué reviso?","Si los dos caminos tienen que llegar al mismo objeto (integridad circular)","Nada: los ciclos no importan","El diagrama solo no garantiza que los dos caminos coincidan: si deben coincidir, se escribe."],
+  ["El diagrama tiene un ciclo de asociaciones. ¿Qué reviso?","Si los dos caminos tienen que llegar al mismo objeto (integridad circular)","Nada: los ciclos no importan","El diagrama solo no garantiza que los dos caminos coincidan: si deben coincidir, se escribe.","Integridad circular, con un ejemplo: Empleado trabaja en un Departamento, cada Departamento es de una Empresa y cada Empleado tiene un contrato con una Empresa. Las tres asociaciones forman un ciclo: desde un empleado se llega a una empresa por dos caminos (por su departamento y por su contrato). El diagrama permite que den empresas distintas; si en la realidad tienen que ser la misma, hay que escribirlo: «la empresa del contrato de un empleado es la empresa de su departamento». Cómo buscarlas: mirar cada ciclo del diagrama y preguntarse si los dos caminos tienen que llegar al mismo objeto."],
   ["«El total es la suma de los subtotales»","Se deja el atributo y se escribe cómo se calcula","Se saca el atributo total","Es un atributo calculado: va en la clase y su fórmula va como restricción."],
   ["«Cada factura es de un único cliente»","No se escribe: ya lo dice la multiplicidad 1","Se escribe como restricción","Lo que el diagrama ya expresa no se repite."],
   ["«La cantidad pedida no puede superar el stock»","Regla de negocio: se escribe","Se expresa con una multiplicidad","Relaciona atributos de dos clases: el diagrama no puede decirlo."]]],
@@ -55,7 +55,7 @@ const KIN={md:[],dss:[],dcd:[]};
   ["A le manda calcular() a B. ¿Dónde se declara calcular()?","En B, que la recibe","En A, que la manda","Las operaciones se declaran en la clase del receptor."],
   ["Los mensajes find, add y remove sobre una colección","No se declaran: son de la colección","Se declaran en la clase de los elementos","Vienen dadas con la colección."],
   ["La flecha llega a una colección de B","La asociación lleva * del lado de B","Lleva 1 del lado de B","Colección = muchos."]]]
-].forEach(z=>{KIN[z[0]].push(z[1]);SWC.push(Object.assign(sw("p4",z[1],null,z[3].map((s,i)=>Object.assign(st(s[0],s[1],s[2],s[3],""),i?{}:{th:z[2]}))),{tm:z[0],ar:"mod"}))});
+].forEach(z=>{KIN[z[0]].push(z[1]);SWC.push(Object.assign(sw("p4",z[1],null,z[3].map((s,i)=>Object.assign(st(s[0],s[1],s[2],s[3],""),s[4]?{th:s[4]}:i?{}:{th:z[2]}))),{tm:z[0],ar:"mod"}))});
 SWC.forEach(c=>{if(/^Parcial P1[ab] · /.test(c.g))c.hid=1});
 
 /* ===== Armadores genéricos (tarjetas «kit»: nucleo.js las dibuja con c.kq/c.kp/c.kv/c.ko) ===== */

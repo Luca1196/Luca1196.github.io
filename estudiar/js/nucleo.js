@@ -158,6 +158,9 @@ const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.
    respuestas: vuelve ENTERO. Ningún paquete (aprobado o no) se repite antes de PKN respuestas desde que se terminó (PKF: paquete → respuesta en que se
    terminó), y nunca antes que algo disponible que todavía no se vio (lo nunca visto tiene prioridad máxima). Si todo lo disponible está en espera, sale
    primero lo que hace más tiempo que no se ve, pesado por los errores. Al sumar exámenes nuevos, sus paquetes pasan adelante de los ya vistos. */
+/* APROBAR UN PAQUETE (pedido de Luca, 16/11: «es muy difícil hacer un paquete completo sin ningún error»): no hace falta una pasada perfecta. Cada tarjeta
+   acertada sin errores queda hecha (S2.kok); cuando el paquete vuelve, trae SOLO las tarjetas que faltan (las hechas se ven en «lo que ya resolviste») y se
+   aprueba cuando todas quedaron hechas. Un paquete a medias pesa más al elegir repaso. Ya aprobado, si vuelve como repaso, vuelve entero. */
 const PKF={},PKN=15;
 /* Filtros por tema (pedido de Luca, 16/11): cada tema de examen tiene su filtro. Las series binarias de teoría van DENTRO de su tema (c.tm) y son previas de sus cadenas: al completarlas sin errores queda S2.bqok[c.g]. */
 const tema=c=>c.tm?c.tm:c.s=="lg"?"lg3":/ · DCD/.test(c.g)?"dcd":/ · DSS|^Parcial P1b/.test(c.g)?"dss":/ · Modelo de dominio|^Parcial P1a/.test(c.g)?"md":area(c)=="cod"?"p3":area(c)=="mod"?"md":"com";
@@ -178,8 +181,10 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  if(!pool.length){const T=SWC.filter(c=>!c.ln&&!c.hid&&tema(c)==SF);pool=T.filter(c=>!(c.req||[]).some(t=>T.some(z=>(z.toks||[]).includes(t))));if(!pool.length){SF="all";pool=SWC.filter(ok)}}
  /* Prioridad (pedido 12/11, sin fechas): lo que hace MÁS TIEMPO que no ves. Nunca vista = máxima prioridad.
     El tiempo transcurrido se multiplica por lo flojo (cajas bajas) y por los pendientes de error; se elige al azar entre las 3 primeras para no ser predecible. */
- const SE=S2.seen||(S2.seen={}),now=Date.now(),sc=c=>{const st=SE[c.id];const weak=1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0)/c.steps.length;return(st?(now-st):1e12+Math.random()*1e9)*weak};
+ const SE=S2.seen||(S2.seen={}),now=Date.now(),sc=c=>{const st=SE[c.id];const weak=(c.kq&&c.pack&&S2.kok&&[c].concat(c.pack).some(x=>S2.kok[x.id])?4:0)+1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0)/c.steps.length;return(st?(now-st):1e12+Math.random()*1e9)*weak};
  const un=pool.filter(c=>!SE[c.id]),top=(un.length?un:pool).map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
+ /* paquete kit: si ya está aprobado se repasa entero; si quedó a medias, se retoma en la primera tarjeta que falta */
+ if(pk.kq&&pk.pack){const K=S2.kok=S2.kok||{},all=[pk].concat(pk.pack);if((pk.toks||[]).every(t=>(S2.bqok||{})[t]))all.forEach(x=>delete K[x.id]);else if(K[pk.id]){const pe=pk.pack.filter(x=>!K[x.id]);if(pe.length){SPACK=pe.slice(1);return{c:pe[0],i:0,only:false,built:[],err:0}}}}
  return{c:pk,i:0,only:false,built:[],err:0}}
 function swNew(){NLE=null;SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){NLE=null;SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
@@ -224,7 +229,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;if(e.fr)frSort(X,b.pl);while(b.p<X.length&&(X[b.p].auto||b.pl.includes(X[b.p]))){if(!b.pl.includes(X[b.p]))b.pl.push(X[b.p]);b.p++}
- if(b.p>=X.length){b.done=true;if(c.kq)PKF[(c.pk||c).id]=SUN;{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
+ if(b.p>=X.length){b.done=true;if(c.kq)PKF[(c.pk||c).id]=SUN;{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.kq){const own=c.pk||c,K=S2.kok=S2.kok||{};if(b.e)delete K[c.id];else K[c.id]=1;if(!c.pk)SPACK=(c.pack||[]).filter(x=>!K[x.id]);if(!SPACK.some(x=>x.pk===own)&&[own].concat(own.pack||[]).every(x=>K[x.id])){tk(own.toks||[]);adv(own)}}else if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
   if(!b.e){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)+2;S2.box[k]=Date.now()-(u.ts||0)>90000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,900)}}
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */
