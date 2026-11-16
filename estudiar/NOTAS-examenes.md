@@ -74,3 +74,6 @@ DCD probado solo con simulación jsdom (cadena completa en orden canónico); fal
 Transcripta tal cual en js/examen.js (const P1L: presentación, descripción de la realidad y caso de uso, una frase por línea; verificada palabra por palabra contra los PDF de la letra).
 Frases: a1… = realidad (Feb26 a1–a23, Jul26 a1–a19), u0… = caso de uso (Feb26 u0–u5, Jul26 u0–u10). Sirve para el DSS (P1b) y para el modelo de dominio (P1a): no hace falta volver a los PDF.
 Ojo letra Jul26: u9 dice «el recepcionista» pero el actor del caso de uso es el Cliente (la solución oficial usa Cliente).
+
+## Filtros por tema (16/11 16:40, pedido de Luca)
+Principal tiene un filtro por tema (nucleo.js: tema(c)): Modelo de dominio (1a), DSS (1b), Comunicación (2a), DCD (2b), Código C++ (P3), Teórico (series con teo:1), Lógica. Las series binarias viejas «Parcial P1a/P1b» van con 1a y 1b. Si el filtro elegido no tiene nada disponible (DCD sin sus diagramas aprobados) se entra igual por el comienzo de cada cadena del tema.

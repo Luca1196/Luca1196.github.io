@@ -229,7 +229,7 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
     Object.assign(o(bi,key),{ko:"Las líneas van en el orden del código; dos líneas seguidas que no dependen una de la otra valen en cualquier orden."}))]})})});
  kChain(G,U);window.P3D[id]={U,rep}});
 
-/* ===== Teórico «Patrones de diseño» e «Implementación y generación de código» (material de Luca, 16/11), en series binarias de Principal (filtro P3) =====
+/* ===== Teórico «Patrones de diseño» e «Implementación y generación de código» (material de Luca, 16/11), en series binarias de Principal (filtro «Teórico»: teo:1) =====
    [título de la serie, teoría del primer paso (se muestra con «No sé»), [[pregunta, correcta, error tentador, por qué]…]]. Solo lo que dice el teórico; los
    ejemplos (Venta, Jornalero, punto de venta, puerta) son los suyos y, donde ayuda, se conecta con los problemas 3 de los exámenes. */
 [["Parcial P3 · Del DCD al código: la estructura","Del DCD salen: interfaces (en C++, clase abstracta pura con destructor virtual), clases, generalizaciones y realizaciones (: public), asociaciones (pseudoatributo: puntero si la multiplicidad máxima es 1, colección si es mayor) y dependencias (#include).",
@@ -282,4 +282,4 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
   ["¿Qué operaciones tiene el Subject para manejar a sus observadores?","agregar(IObserver) y eliminar(IObserver)","new Deposito() y new Proveedor()","Los observadores se registran y se dan de baja; el sujeto no los crea ni sabe de qué clase son."],
   ["En C++, ¿qué pseudoatributo lleva el Subject?","Una colección de punteros a la interfaz: set<IObserver *>","Un puntero: IObserver *observer;","Son varios observadores (multiplicidad *): colección de punteros a IObserver."],
   ["¿Qué riesgo tiene Observer?","Notificaciones en cascada que nadie previó","No admite observadores nuevos","Un observador notificado puede provocar más cambios y más notificaciones; además se notifica en un orden fijo, uno tras otro."]]]
-].forEach(z=>SWC.push(sw("p4",z[0],null,z[2].map((s,i)=>Object.assign(st(s[0],s[1],s[2],s[3],""),i?{}:{th:z[1]})))));
+].forEach(z=>SWC.push(Object.assign(sw("p4",z[0],null,z[2].map((s,i)=>Object.assign(st(s[0],s[1],s[2],s[3],""),i?{}:{th:z[1]}))),{teo:1})));
