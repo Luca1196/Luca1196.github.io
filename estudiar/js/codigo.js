@@ -95,3 +95,136 @@ V.addEventListener("click",ev=>{if(TAB!=8)return;const b=ev.target.closest("[dat
  else if(c=="next")cdBlockEnd();else if(c=="rnext")cdRepNext();
  else if(c=="home"){CD={m:"home",open:CD.open};cdOpen()}});
 V.addEventListener("toggle",ev=>{if(TAB!=8)return;const d=ev.target;if(d&&d.dataset&&d.dataset.o)CD.open[d.dataset.o]=d.open},true);
+
+/* ===== Problema 3 dentro de Principal (16/11): la misma cadena de «tarjetas kit» que el DSS y el DCD (js/examen.js), derivada de CDX =====
+   DECISIONES DIDÁCTICAS (teórico «Implementación y generación de código» y «Patrones de diseño»)
+   - Acciones del estudiante, en el orden del examen: leer la letra y el DCD (qué patrón hay, qué se pide y qué no) → pasar cada clase del DCD al .h →
+     escribir cada operación del .cpp. Acá se practica la DECISIÓN, con fichas de línea entera; la escritura ficha por ficha sigue en la pestaña Código.
+   - «P3 · el diseño» (a mano por examen, P3X.T): qué se desprende del DCD y de la letra.
+   - .h (casilleros en orden): lo que el DCD ya trae va puesto; se elige la línea donde hay una regla que aplicar: herencia (: public), pseudoatributos
+     (multiplicidad máxima 1 → puntero; mayor → colección de punteros; buscado por clave → map), static (Singleton), virtual pura (= 0), destructor virtual, redefinición.
+   - .cpp: todas las líneas son fichas y van en el orden del código (dos líneas seguidas e independientes valen en cualquier orden), más líneas equivocadas.
+   - Las líneas equivocadas salen solas de reglas (P3M: Clase::, constructor de la base, -> y punto, new, ==, <=, acumular, inicializar, *it, this->, delete,
+     push_back / insert / map[clave]) y cada una muestra su regla. Las que dependen de la letra van a mano en P3X.hx (línea correcta → [[equivocada, por qué]]).
+   - P3X.ds: de dónde a dónde va, en la letra, la descripción de cada operación (se muestra tal cual). Los bloques de más de 8 líneas se parten en dos tarjetas.
+   - Se saltean los bloques de dos líneas sin nada que decidir (constructor o destructor vacío). Cada tarjeta es su propia unidad; área «cod» (filtro P3).
+   RECETA: sumar el examen a CDX (js/codigo-datos.js) y una entrada en P3X {n, T, hx, ds}; simular con jsdom y revisar la lista de líneas equivocadas. */
+const p3Nm=t=>{let m;return(m=/^this->(\w+)/.exec(t))?m[1]:(m=/^[\w<>:, \*]+?[ \*](\w+)(?: = .*)?;$/.exec(t))?m[1]:(m=/^(\w+)/.exec(t))?m[1]:""},
+ p3Ctl=t=>/^(for|if|while|else|return|delete)\b|\{$/.test(t),
+ p3Swap=(a,b)=>!b.sep&&a.ind==b.ind&&!p3Ctl(a.t)&&!p3Ctl(b.t)&&!new RegExp("\\b"+p3Nm(a.t)+"\\b").test(b.t)&&!new RegExp("\\b"+p3Nm(b.t)+"\\b").test(a.t);
+/* Bloque de código con fichas de línea entera. L = [{ind, t, k: 0 ya puesta | 1 casillero en orden fijo | 2 línea de orden libre dentro de su grupo, sn, w, sep}];
+   dis = [[línea equivocada, por qué, índice de la línea que reemplaza (solo casilleros)]] */
+function kCode(g,q,p,L,dis,o){const exp=[],it=[];
+ L.forEach((l,i)=>{if(i)exp.push(KNL());if(l.ind)exp.push({t:"   ".repeat(l.ind),k:"a",auto:1});
+  const x=l.k?{t:l.t,k:l.k==1?"kq":"ks",w:l.w||"",li:i}:{t:l.t,k:"a",auto:1};
+  if(l.k==1){x.sl=it.length+1;x.sn=l.sn}if(l.k==2){x.fr=1;x.o=i;x.ind=l.ind;x.sep=l.sep}if(l.k)it.push(x);exp.push(x)});
+ let G=[],P=[];it.filter(x=>x.fr).forEach(x=>{if(G.length&&G.every(y=>p3Swap(y,x)))G.push(x);else{P=G;G=[x]}x.dp=P.slice()});
+ return kCard(g,q,p,exp,it.map(x=>({t:x.t,sl:x.sl,rt:1})).concat(dis.map(d=>({t:d[0],why:d[1],sl:(it.find(x=>x.li==d[2])||{}).sl}))),o)}
+/* Líneas equivocadas de una línea correcta t: [[línea, regla que rompe, clave de la regla]] */
+function P3M(t,cx){const R=[],add=(r,w,why)=>{if(w&&w!=t&&!R.some(z=>z[0]==w))R.push([w,why,r])};let m;
+ (cx.hx[t]||[]).forEach(d=>add("hx",d[0],d[1]));
+ if(cx.k=="decl"){const C=cx.C,B=cx.B;
+  if(m=/^class (\w+) : public (\w+) \{$/.exec(t)){add("her","class "+C+" {",`${C} hereda de ${B} (en el DCD, generalización o realización): en C++ va «: public ${B}».`);add("her","class "+C+" : "+B+" {",`Sin public la herencia es privada: desde afuera ya no se podría usar un ${C} donde se espera un ${B}.`)}
+  else if(m=/^(vector|set|list|map)<(.*?)(\w+) \*> (\w+);$/.exec(t)){
+   if(m[1]=="map")add("map","vector<"+m[3]+" *> "+m[4]+";",`Los elementos se buscan por su identificador: con un map la clave lleva directo al objeto.`);
+   else add("col",m[3]+" *"+m[4]+";",`La asociación hacia ${m[3]} tiene multiplicidad mayor que 1: el pseudoatributo es una colección, no un solo puntero.`);
+   add("ptr",m[1]+"<"+m[2]+m[3]+"> "+m[4]+";",`Se guardan punteros (${m[3]} *), no copias: el objeto es uno solo y, si es de una subclase, tiene que seguir siéndolo.`)}
+  else if(m=/^static (.*\(.*\));$/.exec(t))add("st",m[1]+";",`Se llama sin tener todavía ningún objeto (${C}::…()): es una operación de clase, static.`);
+  else if(m=/^static (.*);$/.exec(t))add("st",m[1]+";",`Es un dato de la clase, uno solo para todos, no de cada objeto: static.`);
+  else if(m=/^virtual (.*\)) = 0;$/.exec(t)){add("pura",m[1]+";",`Es abstracta: cada subclase la implementa a su manera y se llama a través de un puntero a ${C}. Va virtual y pura (= 0).`);add("pura","virtual "+m[1]+";",`Sin «= 0» habría que implementarla también en ${C}. Como acá no tiene implementación, es pura.`)}
+  else if(m=/^virtual (~\w+\(\));$/.exec(t))add("vd",m[1]+";",`Los objetos se destruyen a través de un puntero a la base (${C} *): si el destructor no es virtual, delete no llama al de la subclase.`);
+  else if(m=/^([A-Z]\w*) \*(\w+);$/.exec(t))add("uno","vector<"+m[1]+" *> "+m[2]+";",`La asociación hacia ${m[1]} tiene multiplicidad máxima 1: alcanza con un puntero.`);
+  else if(B&&(m=/^(.*\b(\w+)\(.*\));$/.exec(t))&&(cx.pure[B]||[]).includes(m[2]))add("red","virtual "+m[1]+" = 0;",`Acá sí se implementa. «= 0» va solo en la clase base abstracta: si ${C} la dejara pura, tampoco se podría instanciar.`);
+  return R}
+ if(cx.sig){if(m=/^(.*?)(\w+)::(~?\w+\(.*)$/.exec(t))add("cls",m[1]+m[3],`En el .cpp cada operación lleva delante el nombre de su clase (${m[2]}::). Sin eso es una función suelta, no la operación de ${m[2]}.`);
+  if(m=/^(.*\)) : ([A-Z]\w*)\(.*\) \{$/.exec(t))add("base",m[1]+" {",`Lo heredado de ${m[2]} es privado de ${m[2]}: se inicializa llamando a su constructor en la lista de inicialización (: ${m[2]}(…)).`);return R}
+ if(cx.k=="stat"){if(m=/^(.*?)(\w+)::(\w+ = .*;)$/.exec(t)){add("cls",m[1]+m[3],`Es el atributo static de ${m[2]}: en el .cpp se define con el nombre de la clase delante (${m[2]}::).`);add("st","static "+t,`static va solo en la declaración (.h): en la definición del .cpp no se repite.`)}return R}
+ if(m=/^this->(\w+) = \1;$/.exec(t))add("this",m[1]+" = "+m[1]+";",`El parámetro se llama igual que el atributo y lo tapa: sin this-> se asigna el parámetro a sí mismo.`);
+ if(m=/^(\w+) = \1 \+ (.+);$/.exec(t))add("acum",m[1]+" = "+m[2]+";",`Así el total se pisa en cada vuelta: hay que acumular (${m[1]} = ${m[1]} + …).`);
+ if(m=/^delete (\w+)\[\w+\];$/.exec(t))add("del","delete "+m[1]+";",`${m[1]} es una colección, no un puntero: se libera cada elemento, uno por uno.`);
+ if(t.includes("[*it]"))add("it",t.replace("[*it]","[it]"),`it es un iterador: el elemento al que apunta se obtiene con *it.`);
+ if(/\bnew /.test(t))add("new",t.replace("new ",""),`El objeto tiene que seguir existiendo cuando la operación termina: se crea en memoria dinámica con new, que devuelve el puntero.`);
+ if((m=/^(\w+)\.push_back\(/.exec(t))&&cx.cont[m[1]]=="vector")add("cont",t.replace(".push_back(",".insert("),`${m[1]} es un vector: se agrega al final con push_back.`);
+ if((m=/^(\w+)\.insert\(/.exec(t))&&cx.cont[m[1]]=="set")add("cont",t.replace(".insert(",".push_back("),`${m[1]} es un set: se agrega con insert (push_back es de vector).`);
+ if((m=/^(\w+)\[.+?\] = (.+);$/.exec(t))&&cx.cont[m[1]]=="map")add("cont",m[1]+".push_back("+m[2]+");",`${m[1]} es un map: cada elemento se guarda con su clave (${m[1]}[clave] = …). push_back es de vector.`);
+ if(/^if \(.* == /.test(t))add("eq",t.replace(" == "," = "),`Con un solo = se asigna; para comparar va ==.`);
+ if(m=/^(for \(int \w+=0; \w+)<(.*\.size\(\); .*)$/.exec(t))add("lim",m[1]+"<="+m[2],`Los índices válidos van de 0 a size()-1: con <= el último acceso se pasa del final.`);
+ if(m=/^(int|float) (\w+) = 0;$/.exec(t))add("ini",m[1]+" "+m[2]+";",`Sin valor inicial el acumulador arranca con basura: se inicializa en 0.`);
+ if(t.includes("->"))add("fle",t.replace("->","."),`Lo que está a la izquierda es un puntero: sus operaciones se llaman con ->, no con punto.`);
+ else if(m=/^(.*?[\w\]])\.(\w+\(.*)$/.exec(t))add("pto",m[1]+"->"+m[2],`Lo que está a la izquierda es un objeto o una colección, no un puntero: sus operaciones se llaman con punto.`);
+ return R}
+const P3Q="¿Qué se desprende de la letra y del DCD? Elegí todo lo que es cierto.";
+const P3X={
+feb26:{n:"Feb26",T:{p:P3Q,
+  ok:[["Paquete es abstracta: cantArticulos se resuelve distinto en Simple y en Multiparte","Es la estructura del patrón Composite: Paquete = componente, Simple = hoja, Multiparte = compuesto. Por eso cantArticulos es virtual pura en Paquete."],
+   ["Un Multiparte está hecho de paquetes Simple que son suyos: los libera en su destructor","Las partes se crean solo para ese multiparte y no se registran en la colección global: nadie más las puede liberar."],
+   ["El Controlador guarda todos los paquetes en una colección global, buscados por su id","Por eso el pseudoatributo es un map de id a puntero a Paquete."],
+   ["Hay que escribir constructores y destructores donde hagan falta, pero no los get ni los set","Lo dicen las observaciones de la letra."]],
+  no:[["El Controlador es Singleton: lleva instancia estática y getInstance","En este DCD el Controlador no tiene el estereotipo «singleton» ni getInstance: no se agrega lo que el diseño no pide."],
+   ["Simple libera sus artículos en el destructor","Los artículos viven en la colección global del Controlador y pueden estar en varios paquetes: Simple solo guarda punteros."],
+   ["Hay que escribir los #include de cada clase","La letra dice: «No incluya directivas al precompilador»."]]},
+ hx:{"~Multiparte();":[["// (sin destructor)","Las partes se crean con new solo para este Multiparte y no están en la colección global: si no las libera él en su destructor, nadie lo hace."]],
+  "paquetes[idPaq] = m;":[["paquetes[0] = s;","«Los paquetes simples que forman parte de un paquete multiparte no se dan de alta en la colección global de paquetes»."]],
+  "Simple *s = new Simple(0, \"parte\", idCli);":[["Simple *s = new Simple(idPaq, desc, idCli);","Las partes de un multiparte se crean con idPaquete = 0 y descripción \"parte\": el id y la descripción recibidos son del multiparte."]],
+  "s->agregarArticulo(articulos[partes[0].at(i)]);":[["s->agregarArticulo(new Articulo(partes[0].at(i)));","Los artículos ya existen en la colección global del controlador: se busca el puntero por su id, no se crean de nuevo."]],
+  "return paquetes[idPaq]->cantArticulos();":[["return ((Simple *) paquetes[idPaq])->cantArticulos();","No hace falta saber de qué tipo es el paquete: cantArticulos es virtual y cada uno responde con su versión."]]},
+ ds:{"Controlador::altaPaquete":["Da de alta un nuevo paquete","paquete multiparte correspondiente."],"Controlador::cantArticulos":["Devuelve la cantidad de artículos","todas sus partes."],"Multiparte::cantArticulos":["Para un paquete de tipo multiparte, se cuentan","todas sus partes."]}},
+jul26:{n:"Jul26",T:{p:P3Q,
+  ok:[["ControladorRepartos es Singleton: instancia estática privada, constructor privado y getInstancia estática","Es lo que pide el estereotipo: una única instancia, a la que se llega por una operación de clase."],
+   ["IRepartidor es una interfaz: en C++, una clase con sus operaciones virtuales puras y destructor virtual","C++ no tiene «interface»: se implementa como clase abstracta pura."],
+   ["GeneradorRepartidores decide qué repartidor crear; el Controlador solo conoce IRepartidor","Es el mecanismo de fábrica: quien usa al repartidor no se acopla a las clases concretas."],
+   ["Artículos y tandas se buscan por id; los pedidos de una tanda forman una secuencia ordenada","Por eso van un map para cada colección global y un vector para los pedidos."]],
+  no:[["Donde el DCD dice Set(int) hay que usar set<int>","La letra lo aclara: Set(T) no implica set<T>. Los montos van «en orden» (y pueden repetirse): corresponde una colección con orden."],
+   ["Hay que implementar RepartidorBicicleta","La letra dice que se puede asumir que ya existe."],
+   ["El Controlador elige si el repartidor va en moto o en bicicleta","La letra dice que esa selección «es responsabilidad de GeneradorRepartidores»."]]},
+ hx:{"vector<Pedido *> pedidos;":[["set<Pedido *> pedidos;","Los pedidos de una tanda son una «secuencia ordenada»: un set no respeta el orden en que llegan."]],
+  "vector<int> ControladorRepartos::calcularMontosPorPedido(DTTandaReparto datos) {":[["set<int> ControladorRepartos::calcularMontosPorPedido(DTTandaReparto datos) {","Set(T) en el DCD no obliga a usar set<T>. Los montos van en el orden de los pedidos y pueden repetirse: un set los reordena y saca los repetidos."]],
+  "vector<int> calcularMontosPorPedido(DTTandaReparto);":[["set<int> calcularMontosPorPedido(DTTandaReparto);","Set(T) en el DCD no obliga a usar set<T>. Los montos van en el orden de los pedidos y pueden repetirse: un set los reordena y saca los repetidos."]],
+  "if (distanciaTotal <= 5)":[["if (distanciaTotal < 5)","La letra dice «menor o igual a 5»: con < una distancia de 5 iría en moto."]],
+  "tiempoTotal = tiempoTotal + pedidos[i].getDistanciaDesdeAnterior() * 5;":[["tiempoTotal = tiempoTotal + pedidos[i].getDistanciaDesdeAnterior() * 10;","10 es el factor de la bicicleta: la moto usa distancia * 5."]],
+  "delete repartidor;":[["delete generador;","El generador es del controlador y se sigue usando. Lo que hay que liberar es el repartidor creado solo para este cálculo."]],
+  "IRepartidor *repartidor = generador->obtenerRepartidor(datos);":[["RepartidorMoto *repartidor = new RepartidorMoto();","Elegir el tipo de repartidor es responsabilidad de GeneradorRepartidores: el controlador solo conoce la interfaz IRepartidor."]]},
+ ds:{"ControladorRepartos::registrarArticulo":["Crea dinámicamente un Articulo","entero no negativo."],"ControladorRepartos::registrarTanda":["Recorre los pedidos del datatype","no son vacías."],
+  "ControladorRepartos::calcularTiempoTotal":["Solicita al generador","retorna el resultado."],"ControladorRepartos::calcularMontosPorPedido":["Busca en la colección global la tanda","representar el resultado."],
+  "GeneradorRepartidores::obtenerRepartidor":["Suma las distancias","retorna un RepartidorMoto."],"RepartidorMoto::calcularTiempoTotal":["Cada implementación concreta","distancia * 5."]}},
+par26:{n:"Parcial 2026",T:{p:P3Q,
+  ok:[["Viaje es abstracta: darCostoTotal se resuelve distinto en Directo y en ConEscalas","Es la estructura del patrón Composite: Viaje = componente, Directo = hoja, ConEscalas = compuesto. Por eso darCostoTotal es virtual pura en Viaje."],
+   ["Un viaje con escalas está formado por otros viajes de cualquier tipo, en orden","Por eso guarda un vector de punteros a Viaje (la clase base), no a Directo."],
+   ["El Controlador es Singleton y además genera los identificadores de los viajes","Instancia estática, getInstance estática y constructor privado; el último id usado también es un dato de la clase."],
+   ["Todos los viajes, directos o con escalas, van en una colección global buscada por id","Por eso el pseudoatributo es un map de id a puntero a Viaje."]],
+  no:[["Hay que implementar la clase Directo","La letra dice que no se pide implementar Directo ni DTViaje."],
+   ["ConEscalas libera sus partes en el destructor","La letra dice que no se pide implementar destructores; además las partes son viajes que siguen en la colección global del controlador."],
+   ["ConEscalas guarda sus partes en un set<Viaje *>","Las partes son una «secuencia ordenada» de viajes: un set no respeta el orden recibido."]]},
+ hx:{"viajes[nuevoId] = new Directo(nuevoId, dtv.getOrigen(), dtv.getDestino(), dtv.getCosto());":[["viajes[nuevoId] = new Viaje(nuevoId, dtv.getOrigen(), dtv.getDestino());","Viaje es abstracta (darCostoTotal es pura): no se puede instanciar. El viaje nuevo es un Directo."]],
+  "viajes[nuevoId] = new ConEscalas(nuevoId, comps[0]->getOrigen(), comps[comps.size()-1]->getDestino(), comps);":[["viajes[nuevoId] = new ConEscalas(nuevoId, comps[0]->getDestino(), comps[comps.size()-1]->getOrigen(), comps);","El origen es el de la primera parte y el destino es el de la última."]],
+  "vector<Viaje *> partes;":[["set<Viaje *> partes;","Las partes son una «secuencia ordenada» de viajes: un set no respeta el orden recibido."]],
+  "comps.push_back(viajes[ids[i]]);":[["comps.push_back(new Viaje(ids[i]));","Las partes son viajes que ya existen en el sistema: se buscan por su id en la colección global, no se crean."]],
+  "return viajes[idV]->darCostoTotal();":[["return viajes[idV]->getCosto();","Solo los directos tienen el atributo costo. darCostoTotal es virtual: cada viaje responde con su versión (el de escalas suma sus partes)."]]},
+ ds:{"Controlador::agregarViaje":["Da de alta un nuevo viaje directo","el nuevo viaje directo."],"Controlador::componerViaje":["Da de alta un nuevo viaje con escalas","en el orden recibido."],
+  "Controlador::calcularCostoViaje":["Devuelve el costo total","viaje existente en el sistema."],"ConEscalas::darCostoTotal":["El costo de un viaje con escalas","atributo costo."]}}};
+window.P3D={};
+Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typeof kSet!="function")return;
+ const G=H.n+" · P3",cont={},pure={},U=[],PR=["hx","base","this","acum","del","it","new","cont","eq","lim","ini","st","cls","fle","pto"],rep=[];
+ X.blocks.forEach(b=>b.lines.forEach(l=>{let m;const re=/(vector|set|map)<[^;()=]*> (\w+)\b/g;while(m=re.exec(l[1]))cont[m[2]]=m[1]}));
+ X.blocks.forEach(b=>{const m=/^class (\w+)/.exec(b.lines[0][1]);if(b.kind=="decl"&&m)pure[m[1]]=b.lines.map(l=>/^virtual .*\b(\w+)\(.*\) = 0;$/.exec(l[1])).filter(Boolean).map(z=>z[1])});
+ const code=b=>`<div style="font-family:var(--m);font-size:13px;margin-bottom:6px">`+b.lines.map(l=>`<div style="padding-left:${l[0]*14}px">${esc(l[1])}</div>`).join("")+`</div>`,
+  desc=k=>{const a=H.ds[k];if(!a)return"";const i=X.letra.indexOf(a[0]),j=X.letra.indexOf(a[1],i);return i<0||j<0?"":X.letra.slice(i,j+a[1].length)},
+  o=(bi,k,x)=>Object.assign({ctx:H.n+" · Problema 3",ar:"cod",kv:()=>`<div class="lt"><b>${esc(X.t)}</b></div>`+kFold("Letra",`<div class="lt">${esc(X.letra).replace(/\n/g,"<br>")}</div>`,bi<0)+
+   kFold("Diagrama de clases (DCD)",`<img class="ltim" src="${X.img}" alt="DCD">`,bi<0)+(k&&desc(k)?`<div class="lt"><b>Qué tiene que hacer:</b> ${esc(desc(k))}</div>`:"")+(bi>0?kFold("Tu código hasta ahora",X.blocks.slice(0,bi).map(code).join(""),0):"")},x||{});
+ U.push({id:"dis",cards:[kSet(G+" · el diseño","P3 · el diseño",H.T.p,H.T.ok.map(z=>({t:z[0],w:z[1]})),H.T.no,o(-1))]});
+ X.blocks.forEach((b,bi)=>{const t0=b.lines[0][1],C=(/^class (\w+)/.exec(t0)||/(\w+)::/.exec(t0)||[])[1],B=(/: public (\w+)/.exec(t0)||[])[1],key=b.title.replace(/ \(.*\)$/,"");
+  if(b.kind=="decl"){const cx={k:"decl",C,B,pure,cont,hx:H.hx},L=[],dis=[];
+   b.lines.forEach((l,i)=>{const c=P3M(l[1],cx).slice(0,2),t=l[1];if(!c.length)return L.push({ind:l[0],t});
+    L.push({ind:l[0],t,k:1,w:c[0][1],sn:/^class /.test(t)?"el encabezado de la clase":/~/.test(t)?"el destructor":/(\w+)\(/.test(t)?"la operación "+/(\w+)\(/.exec(t)[1]:"el atributo "+(/(\w+);$/.exec(t)||[0,""])[1]});
+    c.forEach(d=>{dis.push([d[0],d[1],i]);rep.push(key+" ✗ "+d[0])})});
+   if(dis.length)U.push({id:"b"+bi,cards:[kCode(G+" · .h de "+C,"P3 · .h de "+C,"Pasá "+C+" del DCD al .h. Lo que el DCD ya trae está puesto: elegí la línea correcta en cada lugar que falta.",L,dis,o(bi))]});return}
+  const cx={k:b.kind,cont,hx:H.hx},isIt=l=>!/^\}/.test(l[1]),cand=b.lines.map((l,i)=>isIt(l)?P3M(l[1],Object.assign({sig:b.kind=="def"&&!i},cx)):[]);
+  if(b.lines.length<3&&b.kind=="def"&&!cand[0].some(c=>c[2]!="cls"))return;
+  const its=b.lines.map((l,i)=>i).filter(i=>isIt(b.lines[i])),cut=its.length>8?its[Math.ceil(its.length/2)]:0;
+  (cut?[[0,cut],[cut,b.lines.length]]:[[0,b.lines.length]]).forEach((pr,pi)=>{const L=[],dis=[],pool=[];let prev=0;
+   b.lines.forEach((l,i)=>{if(i>=pr[1])return;const it=i>=pr[0]&&isIt(l);L.push({ind:l[0],t:l[1],k:it?2:0,sep:!prev});prev=it;if(it)cand[i].forEach(c=>pool.push(c))});
+   PR.forEach(r=>pool.filter(c=>c[2]==r).slice(0,r=="hx"?9:1).forEach(c=>{if((r=="hx"||dis.length<4)&&!L.some(l=>l.t==c[0])&&!dis.some(d=>d[0]==c[0])){dis.push([c[0],c[1]]);rep.push(key+" ✗ "+c[0])}}));
+   const nm=key+(cut?" "+(pi+1)+"/2":"");
+   U.push({id:"b"+bi+(pi?"b":""),cards:[kCode(G+" · "+nm,"P3 · "+nm,b.kind=="stat"?"¿Cómo se define en el .cpp este atributo estático?":"Armá la operación línea por línea"+(pi?" (sigue).":"."),L,dis,
+    Object.assign(o(bi,key),{ko:"Las líneas van en el orden del código; dos líneas seguidas que no dependen una de la otra valen en cualquier orden."}))]})})});
+ kChain(G,U);window.P3D[id]={U,rep}});
