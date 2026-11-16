@@ -7,7 +7,7 @@
    - Fichas: «conjunto» (kSet: elegir todas las correctas, orden libre) y «casilleros» (kSeq: decisiones en orden fijo, con lo arbitrario ya puesto).
      Los nombres inventados (operaciones del DSS, DataTypes, clases) nunca se piden: van puestos o unidos a la decisión.
    - Cada ficha equivocada es un error real y tentador, con su razón defendible; al fallar se resalta la frase de la letra de donde sale el dato.
-   - Solo material real: letra tal cual y solución oficial (Feb26 y Jul26). El Problema 1 del Parcial 2026 no tiene solución oficial: no se carga.
+   - Solo material real: letra tal cual y solución oficial (Feb26 y Jul26). El Parcial 2026 se sumó después, con su solución oficial (los fragmentos del DSS pueden ir anidados).
    - Previaturas: dentro de un ejercicio cada unidad pide la anterior sin errores (token m:<ejercicio>:<unidad>); el DCD pide los dos diagramas de su examen.
    - Una ficha equivocada puede llevar la frase de la letra que la desmiente (último dato de cada dis: "S:u1"); al tocarla se resalta esa frase.
    - La letra del Problema 1 (realidad + caso de uso) de Feb26 y Jul26 está transcripta tal cual en P1L (más abajo): no hace falta volver a los PDF.
@@ -204,7 +204,43 @@ A continuación, el cliente puede seleccionar un equipamiento indicando su códi
 El sistema agrega el equipamiento a la reserva y muestra el precio calculado hasta el momento.
 Esto puede repetirse hasta que no se desee agregar más equipamiento.
 Finalmente, el recepcionista puede confirmar o cancelar la reserva.
-Si confirma, el sistema registra la reserva con estado confirmada.`}};
+Si confirma, el sistema registra la reserva con estado confirmada.`},
+"Parcial 2026":{i:"Se desea crear un sistema para gestionar la operativa logística de una empresa de transporte ferroviario nacional.",
+pa:"Realizar el Modelo de Dominio de la realidad planteada, incluyendo todas las restricciones que considere necesarias en lenguaje natural.",
+pb:"Realizar el Diagrama de Secuencia del Sistema (DSS) para el caso de uso Planificar Viaje, indicando el uso de memoria del Sistema y los datatypes que sean necesarios.",
+R:`El sistema registra información de sus empleados, de los cuales se conoce su número de CI (que es único), nombre completo y fecha de ingreso.
+Los empleados se clasifican según su rol en: conductores, de los que se registra la categoría de su licencia (A, B o C) y las ciudades en las que se encuentran habilitados para operar; y mecánicos, de los que interesa conocer su especialidad (eléctrica o general).
+El sistema mantiene un registro de las ciudades operativas del país, de las cuales se guarda su nombre y ubicación geográfica.
+
+La empresa cuenta con una flota de trenes, identificados por un número de matrícula.
+De ellos también se registra su año de fabricación.
+Existen dos tipos de trenes operativos: los trenes de pasajeros, de los cuales se registra la cantidad máxima de pasajeros y si cuentan con servicio a bordo; y los trenes de carga, de los que se almacena su capacidad máxima en toneladas y si puede transportar carga peligrosa o no.
+
+El sistema administra las distintas rutas que recorren los trenes.
+Cada ruta se identifica por un código único y tiene un nombre descriptivo.
+Una ruta está conformada por una colección de estaciones.
+De cada estación se conoce su nombre y la ciudad donde se ubica.
+Para establecer correctamente el trayecto de la ruta, es necesario registrar el orden secuencial en el que las estaciones son visitadas dentro de la misma.
+Además, se desea registrar la publicidad que se emite por pantallas electrónicas en cada estación, la cual depende de la ruta correspondiente.
+Por lo tanto, para cada estación dentro de una ruta, se registra el nombre de la única empresa con los derechos de anunciante y el costo de emisión.
+
+Para garantizar la seguridad de la flota, los mecánicos realizan revisiones periódicas a los trenes.
+La revisión es realizada por un único mecánico, y este debe registrar la fecha de la misma, un detalle textual de las tareas ejecutadas y el resultado final (aprobado o no).
+
+La operativa diaria del servicio se organiza mediante la planificación de viajes.
+Un viaje vincula a un tren específico con un conductor asignado para recorrer una ruta determinada.
+De cada viaje planificado se registra una fecha y hora de salida, un código identificador único (autogenerado por el sistema), y su estado actual (programado, en curso, finalizado).
+Por normativas de la empresa, un conductor solo puede ser asignado a un viaje si todas las estaciones de la ruta a recorrer se ubican en ciudades donde el conductor está habilitado para operar.`,
+cu:"Planificar Viaje",act:"Despachador",
+U:`El caso de uso comienza cuando se desea planificar un nuevo viaje.
+El sistema solicita el código de la ruta.
+Una vez ingresado, el sistema muestra una lista con los trenes registrados en el sistema, mostrando para cada uno su matrícula y el tipo de tren.
+Se selecciona un tren indicando su matrícula.
+A continuación, el sistema lista los empleados que son conductores.
+Se selecciona un conductor por su número de CI y, a continuación, se ingresa la fecha y hora de salida estimadas.
+El sistema autogenera un código único para el viaje y muestra un resumen a planificar (código y nombre de la ruta, matrícula del tren, nombre del conductor, fecha, hora y código generado) dando la opción de confirmar o cancelar.
+En caso de confirmar, el viaje queda registrado con estado "programado".
+El sistema permite entonces planificar otro viaje o finalizar el caso de uso.`}};
 Object.values(P1L).forEach(L=>{L.S={};let n=0;L.P=L.R.split("\n\n").map(p=>p.split("\n").map(s=>{const k="a"+(++n);L.S[k]=s;return k}));L.Uk=L.U.split("\n").map((s,i)=>(L.S["u"+i]=s,"u"+i))});
 
 /* ===== Problema 1b: Diagrama de secuencia del sistema (DSS) =====
@@ -304,15 +340,51 @@ const DSSX=[
    at:["numero: int","nombre: string","tipo: TipoCentro («enum» Auditorio, SalaReuniones, OficinaPrivada)","capacidad: int","precio: float"],
    x:[["videoconferencia: bool","Es un dato propio de las salas de reuniones. La letra pide mostrar solo el tipo de espacio, no los datos de cada tipo.","a5"],["equipamientos: Set(DTEquipamento)","Los equipamientos se muestran después, al seleccionar un espacio.","u4"],["centro: Centro","Dentro de un DataType no van objetos del dominio; y el centro ya se eligió."]]},
   {n:"DTEquipamento",d:"cada equipamiento habilitado",hl:"u5",w:"La letra enumera lo que se muestra de cada equipamiento.",at:["codigo: int","descripcion: string","precio: float","cantDisp: int","cantMax: int","asistencia: bool"],
-   x:[["cantSolicitada: int","Eso lo ingresa el cliente después (es un parámetro de AñadirEquipamento): no es un dato que el Sistema muestre.","u6"],["espacio: DTEspacio","El espacio ya se eligió: la letra no pide volver a mostrarlo."]]}]}];
+   x:[["cantSolicitada: int","Eso lo ingresa el cliente después (es un parámetro de AñadirEquipamento): no es un dato que el Sistema muestre.","u6"],["espacio: DTEspacio","El espacio ya se eligió: la letra no pide volver a mostrarlo."]]}]},
+{id:"Parcial 2026",
+ ev:[["solicita el código de la ruta","El Sistema no le manda mensajes al actor: solo le responde. El mensaje es el del actor cuando ingresa el código.","u1"],
+  ["muestra la lista de trenes","Eso lo hace el Sistema: no es un mensaje, es lo que DEVUELVE el mensaje en el que el actor ingresa la ruta.","u2"],
+  ["ingresa el código del viaje","Ese código lo autogenera el Sistema: el actor no lo ingresa.","u6"],
+  ["avisa que no quiere planificar otro viaje","Para eso no hace falta un mensaje: es la condición de salida de la repetición (la guarda del loop).","u8"]],
+ M:[
+ {op:"IngresarRuta",d:"ingresa el código de la ruta",hl:"u1",
+  pa:["cod: String","El actor le da al Sistema el dato que identifica a la ruta: su código.",["r: Ruta","El actor no tiene objetos del dominio: le da al Sistema el dato que identifica a la ruta (su código)."],["cod: String, mat: String","El tren se elige después, cuando el Sistema ya mostró la lista de trenes.","u3"]],
+  rt:["Set(DTTren)","«el sistema muestra una lista con los trenes registrados»: una colección de DataTypes.",["DTTren","Muestra una lista con todos los trenes: es una colección."],["Set(Tren)","Del Sistema no salen objetos del dominio: se devuelven DataTypes con los datos a mostrar."],["nada","La letra dice que, una vez ingresado el código, el Sistema muestra la lista de trenes."]],rh:"u2",
+  mem:["recuerda la ruta","El viaje se da de alta recién al confirmar, y ningún mensaje vuelve a mandar el código de la ruta."]},
+ {op:"SeleccionarTren",d:"selecciona un tren",hl:"u3",
+  pa:["mat: String","«indicando su matrícula».",["cod: String, mat: String","La ruta ya la recuerda el Sistema desde el mensaje anterior: no se vuelve a mandar.","u1"],["t: DTTren","Alcanza con el dato que identifica al tren (su matrícula): es lo que la letra dice que indica."]],
+  rt:["Set(DTConductor)","«el sistema lista los empleados que son conductores».",["Set(DTTren)","Los trenes ya se listaron en el mensaje anterior; ahora lista los conductores."],["Set(Conductor)","Del Sistema no salen objetos del dominio: se devuelven DataTypes con los datos a mostrar."]],rh:"u4",
+  mem:["recuerda el tren","Se usa recién al confirmar, y Confirmar no lo vuelve a mandar."]},
+ {op:"IngresarDatos",d:"selecciona un conductor e ingresa la fecha y hora de salida",hl:"u5",
+  pa:["ci: Int, fechaS: Date","La CI del conductor y la fecha y hora de salida.",["ci: Int","Falta la fecha y hora de salida, que se ingresa en este mismo mensaje."],["ci: Int, fechaS: Date, codigoViaje: String","El código del viaje lo autogenera el Sistema: el actor no lo ingresa.","u6"]],
+  rt:["DTResumenViaje (ruta, tren, conductor, fecha y código generado)","«muestra un resumen a planificar».",["nada","La letra dice que el Sistema muestra un resumen, para que el actor confirme o cancele."],["Viaje","Del Sistema no salen objetos del dominio. Además el viaje todavía no está dado de alta."],["String (solo el código generado)","El resumen trae más que el código: ruta, tren, conductor, fecha y hora."]],rh:"u6",
+  mem:["recuerda los datos del viaje","Conductor, fecha y código generado se usan al confirmar, y Confirmar no lleva parámetros."],mh:"u6"},
+ {op:"Confirmar",d:"confirma el viaje",hl:"u6",w:"Confirmar y cancelar son dos decisiones distintas del actor: un mensaje para cada una.",fin:1,
+  pa:["sin parámetros","Todo lo que hace falta ya lo recuerda el Sistema.",["codigoViaje: String","El Sistema ya recuerda todo, incluido el código que él mismo generó: no se le vuelve a mandar."]],
+  mem:["da de alta el viaje y libera la memoria","«En caso de confirmar, el viaje queda registrado»: con lo recordado se crea el viaje."],mh:"u7"},
+ {op:"Cancelar",d:"cancela el viaje",hl:"u6",w:"Confirmar y cancelar son dos decisiones distintas del actor: un mensaje para cada una.",fin:1,j:1,pa:"",
+  mem:["libera la memoria","Si cancela no se registra nada, pero lo que el Sistema venía recordando hay que liberarlo igual."]}],
+ fr:[{k:"loop",g:"quiere planificar otro viaje",a:0,b:4,hl:"u8",w:"«El sistema permite entonces planificar otro viaje»: todo el caso de uso puede repetirse, incluida la confirmación."},
+  {k:"alt",g:["quiere confirmar","quiere cancelar"],a:3,b:4,hl:"u6",w:"Confirmar o cancelar: dos caminos excluyentes, cada uno con su mensaje."}],
+ fd:[["loop [quiere planificar otro viaje]: mensajes 1 a 3","Confirmar o cancelar es parte de cada viaje: recién después se puede planificar otro.","u8"],
+  ["opt [quiere planificar otro viaje]: mensajes 1 a 5","opt alcanza para «una vez o ninguna». Se pueden planificar varios viajes: es loop.","u8"],
+  ["opt [quiere confirmar]: mensaje 4","opt es para algo que puede pasar o no. Acá hay dos caminos, cada uno con su mensaje: es alt.","u6"],
+  ["4 y 5 seguidos, sin fragmento","Así el diagrama diría que el actor confirma y después cancela. Son caminos excluyentes: van en un alt.","u6"]],
+ DT:[{n:"DTTren",d:"cada tren de la lista",hl:"u2",w:"La letra dice qué muestra de cada tren: su matrícula y el tipo de tren. En el dominio el tipo es una subclase; en el DataType va como un dato (la solución oficial usa String).",at:["matricula: String","tipo: String"],
+   x:[["fabricacion: Int","La letra pide mostrar solo la matrícula y el tipo de tren.","a5"],["maxPersonas: Int","Es un dato propio de los trenes de pasajeros: la letra pide mostrar solo el tipo.","a6"]]},
+  {n:"DTConductor",d:"cada conductor de la lista",hl:"u4",w:"La letra no detalla qué se muestra; la solución oficial pone lo que permite elegirlo: CI y nombre.",at:["ci: Int","nombr: String"],
+   x:[["ciudades: Set(Ciudad)","Dentro de un DataType no van objetos del dominio: van datos u otros DataTypes."],["esp: Especialidad","La especialidad es un dato de los mecánicos, no de los conductores.","a2"]]},
+  {n:"DTResumenViaje",d:"el resumen a confirmar",hl:"u6",w:"La letra enumera el resumen: código y nombre de la ruta, matrícula del tren, nombre del conductor, fecha, hora y código generado.",
+   at:["codigoRuta: String","nombreRuta: String","matricula: String","nombre: String","fechaSalida: Date","codigo: String"],
+   x:[["estado: Estado","El resumen no lo incluye: el viaje todavía no está registrado (queda «programado» recién al confirmar).","u7"],["ci: Int","El resumen muestra el nombre del conductor, no su CI.","u6"]]}]}];
 window.DSSD={};
 DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:"+h:undefined,dz=a=>(a||[]).map(d=>[d[0],d[1],hl(d[2])]),
  ln=m=>m.op+"("+(typeof m.pa=="string"?m.pa:m.pa[0]).replace("sin parámetros","")+")"+(m.rt&&m.rt[0]!="nada"?": "+m.rt[0].replace(/ \(.*\)$/,""):""),
  /* el DSS en texto: los primeros k mensajes completos y el resto solo con lo decidido en «mensajes»; fr = ya se eligieron los fragmentos */
- dss=(k,fr)=>M.map((m,i)=>{const f=fr&&X.fr.find(f=>i>=f.a&&i<=f.b),h=!f?"":i==f.a?`<div><b>${f.k} [${esc(f.k=="alt"?f.g[0]:f.g)}]</b></div>`:f.k=="alt"&&i==f.b?`<div><b>[${esc(f.g[1])}]</b></div>`:"";
-  return h+`<div style="padding-left:${f?14:0}px">${i+1}. ${esc(i<k?ln(m):m.op+" — "+m.d)}${i<k&&m.mem?` <span class="mut">· nota: ${esc(m.mem[0])}</span>`:""}</div>`}).join(""),
+ dss=(k,fr)=>M.map((m,i)=>{const F=fr?X.fr.filter(f=>i>=f.a&&i<=f.b):[],h=F.map((f,q)=>{const p=`<div style="padding-left:${q*14}px"><b>`;return i==f.a?p+`${f.k} [${esc(f.k=="alt"?f.g[0]:f.g)}]</b></div>`:f.k=="alt"&&i==f.b?p+`[${esc(f.g[1])}]</b></div>`:""}).join("");
+  return h+`<div style="padding-left:${F.length*14}px">${i+1}. ${esc(i<k?ln(m):m.op+" — "+m.d)}${i<k&&m.mem?` <span class="mut">· nota: ${esc(m.mem[0])}</span>`:""}</div>`}).join(""),
  /* contexto: lo que se pide + el caso de uso (frases resaltables) + la realidad plegada + el DSS ya decidido (st: 0 no se muestra, 1 abierto, 2 plegado) */
- o=(k,fr,st)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(P1P.b)}</div><div class="lt"><b>Caso de uso:</b> ${esc(L.cu)} · <b>Actor:</b> ${esc(L.act)}</div>`+kSent(L.S,L.Uk,hs)+
+ o=(k,fr,st)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pb||P1P.b)}</div><div class="lt"><b>Caso de uso:</b> ${esc(L.cu)} · <b>Actor:</b> ${esc(L.act)}</div>`+kSent(L.S,L.Uk,hs)+
   kFold("Descripción de la realidad",`<div class="lt">${esc(L.i)}</div>`+L.P.map(p=>kSent(L.S,p,hs)).join("<br>"),hs.some(h=>h[0]=="a"))+(st?kFold("Tu DSS hasta ahora",dss(k,fr),st<2):"")}}),U=[];
  /* 1) qué mensajes hay */
  U.push({id:"msj",cards:[kSet(G+" · mensajes","DSS · mensajes","Leé el caso de uso: ¿qué le da o le pide el actor al Sistema? Cada cosa es un mensaje.",M.map(m=>({t:m.d,w:m.w||"El actor le da un dato al Sistema o le comunica una decisión: es un mensaje.",hl:hl(m.hl)})),dz(X.ev),o(0,0,0))]});
@@ -445,9 +517,53 @@ const MDX=[
    ["La cantidad máxima de un Equipamento en un Espacio no supera sus unidades disponibles","La agrega la solución oficial: no tiene sentido permitir en un espacio más unidades de las que el centro tiene.","a9,a11"]],
   no:[["Toda Reserva incluye al menos un equipamiento","«cada reserva puede incluir…»: es opcional (por eso la multiplicidad es *).","a17"],
    ["Una Reserva cancelada no puede volver a confirmarse","La letra no dice nada de eso: no se inventan reglas."],
-   ["Cada Reserva tiene exactamente un Espacio","Ya lo dice el diagrama (multiplicidad 1 del lado de Espacio)."]]}]}];
+   ["Cada Reserva tiene exactamente un Espacio","Ya lo dice el diagrama (multiplicidad 1 del lado de Espacio)."]]}]},
+{id:"Parcial 2026",pt:["Empleados y ciudades","Trenes","Rutas, estaciones y publicidad","Revisiones","Viajes"],C:[
+ {id:"cls",g:"clases",t:"Clases",p:"¿Qué conceptos de la realidad son clases del modelo?",pp:[0,1,2,3,4],
+  ok:[["Empleado","Tiene datos propios (CI, nombre, fecha de ingreso).","a1"],["Conductor","Tipo de empleado con datos y relaciones propias (licencia, ciudades habilitadas).","a2"],["Mecanico","Tipo de empleado con datos propios (especialidad).","a2"],
+   ["Ciudad","Tiene datos propios (nombre, ubicación) y relaciones.","a3"],["Tren","Tiene datos propios (matrícula, año de fabricación).","a4,a5"],["Pasajeros","Tipo de tren con datos propios.","a6"],["Carga","Tipo de tren con datos propios.","a6"],
+   ["Ruta","Tiene datos propios (código, nombre) y está formada por estaciones.","a8"],["Estacion","Tiene datos propios y se ubica en una ciudad.","a10"],["Revision","Tiene datos propios (fecha, detalle, resultado).","a15"],["Viaje","Tiene datos propios y vincula tren, conductor y ruta.","a17,a18"]],
+  no:[["Empresa (de transporte)","Es el contexto: hay una sola y la letra no registra ningún dato de ella. No se modela."],
+   ["Publicidad","No tiene identidad propia: son dos datos (empresa anunciante y costo) de cada estación dentro de una ruta.","a12,a13"],
+   ["Licencia","Solo interesa su categoría (A, B o C): es un atributo de tipo enumerado del conductor.","a2"],
+   ["Flota","Es el conjunto de todos los trenes, no un concepto con datos propios.","a4"],
+   ["Despachador","Es el actor del caso de uso: la realidad no registra ningún dato de él."]]},
+ {id:"tip",g:"tipos",t:"Jerarquías y enumerados",p:"¿Cómo se modelan los «tipos de…» y los conjuntos fijos de valores?",pp:[],
+  ok:[["«abstracta» Empleado ◁ Conductor, Mecanico","Cada rol registra datos propios: subclases. Y todo empleado es de uno de los dos roles: Empleado es abstracta.","a2"],
+   ["«abstracta» Tren ◁ Pasajeros, Carga","Cada tipo de tren registra datos propios: subclases; «existen dos tipos de trenes operativos».","a6"],
+   ["«enum» Categoria {A, B, C}","Tres valores fijos: enumerado, tipo del atributo licencia del conductor.","a2"],
+   ["«enum» Especialidad {eléctrica, general}","Dos valores fijos: enumerado, tipo de un atributo del mecánico.","a2"],
+   ["«enum» Estado {Programado, EnCurso, Finalizado}","Tres valores fijos: enumerado, tipo del atributo estado del viaje.","a18"]],
+  no:[["«enum» Rol {Conductor, Mecanico}","Con un enumerado no se pueden poner los datos propios de cada rol (licencia y ciudades; especialidad): van subclases.","a2"],
+   ["«enum» TipoTren {Pasajeros, Carga}","Con un enumerado no se pueden poner los datos propios de cada tipo de tren: van subclases.","a6"],
+   ["Viaje ◁ Programado, EnCurso, Finalizado","El estado no agrega datos propios y cambia con el tiempo (un objeto no cambia de clase): es un atributo de tipo enumerado.","a18"]]},
+ {id:"atr",g:"atributos",t:"Atributos",p:"¿Dónde va cada dato? Elegí las clases con sus atributos bien puestos.",pp:[],
+  xt:["Mecanico: esp: Especialidad","Ciudad: nombre, ubicacion","Tren: matricula, fabricacion","Pasajeros: maxPersonas, servicios: Bool","Carga: maxCarga, peligrosa: Bool","Ruta: codigo, nombre"],
+  ok:[["Empleado: ci, nombre, fechaIngreso","","a1"],["Conductor: licencia: Categoria","Las ciudades habilitadas no son un atributo: son objetos de otra clase.","a2"],["Estacion: nombre","La ciudad y los datos de publicidad no van acá.","a10"],
+   ["Revision: fecha, detalle, res: Bool","","a15"],["Viaje: codigoV, fechaSalida, estado: Estado","","a18"]],
+  no:[["Estacion: nombre, ciudad","La ciudad es un objeto de otra clase: se relaciona con una asociación, no con un atributo.","a10"],
+   ["Estacion: nombre, empresa, costoEmision","La publicidad «depende de la ruta»: se registra para cada estación dentro de una ruta. Depende del par.","a12,a13"],
+   ["Conductor: licencia: Categoria, ciudades: Set(Ciudad)","Las ciudades son objetos de otra clase: se relacionan con una asociación, no con un atributo.","a2"],
+   ["Viaje: codigoV, fechaSalida, estado: Estado, matricula, ci","El tren y el conductor se vinculan con asociaciones: en el modelo de dominio no se ponen «claves foráneas» como atributos.","a17"]]},
+ {id:"aso",g:"asociaciones",t:"Asociaciones",p:"¿Qué asociaciones hay y con qué multiplicidades?",pp:[],mo:1,
+  ok:[["Conductor * — * Ciudad (habilitado)","Un conductor está habilitado en varias ciudades y en una ciudad hay varios conductores habilitados.","a2"],
+   ["Ciudad 1 — * Estacion","Cada estación se ubica en una ciudad.","a10"],
+   ["Ruta * — * Estacion {ordered}, con clase de asociación EstacionEnRuta (empresa, costoEmision)","Una ruta tiene varias estaciones en orden, y por cada estación dentro de una ruta se registran datos: clase de asociación.","a9,a11,a13"],
+   ["Mecanico * — * Tren, con clase de asociación MecanicoTren, y MecanicoTren 1 — * Revision","Así lo modela la solución oficial: las revisiones cuelgan del par mecánico–tren, y puede haber varias por par.","a14,a15"],
+   ["Conductor 1 — * Viaje","Cada viaje tiene un conductor asignado.","a17"],["Tren 1 — * Viaje","Cada viaje usa un tren específico.","a17"],["Ruta 1 — * Viaje","Cada viaje recorre una ruta determinada.","a17"]],
+  no:[["Mecanico * — * Tren, con clase de asociación Revision","Con una clase de asociación hay a lo sumo UN vínculo por par: un mecánico no podría revisar dos veces el mismo tren, y las revisiones son «periódicas».","a14"],
+   ["Ruta 1 — * Estacion {ordered}","Una estación puede estar en varias rutas: por eso su publicidad «depende de la ruta correspondiente».","a12"],
+   ["Tren * — * Conductor, con clase de asociación Viaje","Con una clase de asociación hay a lo sumo UN vínculo por par: el mismo conductor no podría hacer dos viajes con el mismo tren."],
+   ["Ruta * — * Estacion (sin {ordered})","«es necesario registrar el orden secuencial en el que las estaciones son visitadas».","a11"]]},
+ {id:"res",g:"restricciones",t:"Restricciones",p:"¿Qué restricciones hay que escribir en lenguaje natural? (lo que el diagrama no alcanza a decir)",pp:[],mo:1,
+  ok:[["La CI de Empleado, la matrícula de Tren, el código de Ruta y el código de Viaje son únicos","Unicidad: los identificadores se escriben como restricción, el diagrama no los marca.","a1,a4,a8,a18"],
+   ["Para todo Viaje, las ciudades de las estaciones de su ruta están entre las ciudades en que su conductor está habilitado","Integridad circular: hay un ciclo Viaje–Ruta–Estacion–Ciudad–Conductor–Viaje y los dos caminos tienen que ser compatibles.","a19"]],
+  no:[["Cada revisión la realiza un único mecánico","Ya lo dice el diagrama (multiplicidad 1): no se repite como restricción.","a15"],
+   ["Cada viaje tiene un único tren, un único conductor y una única ruta","Ya lo dicen las multiplicidades 1 del diagrama."],
+   ["Las estaciones de una ruta están ordenadas","Ya lo dice el diagrama, con {ordered}.","a11"],
+   ["El nombre de la estación es único","La letra no lo dice: no se inventan reglas.","a10"]]}]}];
 MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",U=[];
- X.C.forEach((c,i)=>{const prev=X.C.slice(0,i),kv=b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(P1P.a)}</div><div class="lt">${esc(L.i)}</div>`+
+ X.C.forEach((c,i)=>{const prev=X.C.slice(0,i),kv=b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pa||P1P.a)}</div><div class="lt">${esc(L.i)}</div>`+
    L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),c.pp.includes(q)||p.some(k=>hs.includes(k)))).join("")+
    kFold("Tu modelo hasta ahora",prev.map(z=>`<div><b>${esc(z.t)}</b></div>`+z.ok.map(o=>o[0]).concat(z.xt||[]).map(t=>`<div style="padding-left:14px">${esc(t)}</div>`).join("")).join(""),c.mo)};
   U.push({id:c.id,cards:[kSet(G+" · "+c.g,"Modelo de dominio · "+c.g,c.p,c.ok.map(o=>({t:o[0],w:o[1],hl:kHl(o[2])})),kDz(c.no),{kv,ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod"})]})});
