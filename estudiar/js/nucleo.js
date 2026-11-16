@@ -154,6 +154,11 @@ let SK="sw1";const SV2=()=>{try{localStorage.setItem(SK,JSON.stringify(S2))}catc
 let SLT="",SLK="";const swTop=c=>c.s+"|"+c.g.replace(/ · .*$/,"").replace(/ \d+\/\d+$/,"").replace(/ \(.*\)$/,"");
 /* Al fallar se rota de tema: comunicación → deducción natural → código C++ → clases/secuencia. */
 const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.ar?c.ar:c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="",SPACK=[],SPK=null;
+/* PAQUETES QUE VUELVEN (pedido de Luca, 16/11): un paquete de ejercicio (tarjetas kit, c.kq) con errores no trae de vuelta sus tarjetas sueltas a las 8
+   respuestas: vuelve ENTERO. Ningún paquete (aprobado o no) se repite antes de PKN respuestas desde que se terminó (PKF: paquete → respuesta en que se
+   terminó), y nunca antes que algo disponible que todavía no se vio (lo nunca visto tiene prioridad máxima). Si todo lo disponible está en espera, sale
+   primero lo que hace más tiempo que no se ve, pesado por los errores. Al sumar exámenes nuevos, sus paquetes pasan adelante de los ya vistos. */
+const PKF={},PKN=15;
 /* Filtros por tema (pedido de Luca, 16/11): cada tema de examen tiene su filtro. Las series binarias de teoría van DENTRO de su tema (c.tm) y son previas de sus cadenas: al completarlas sin errores queda S2.bqok[c.g]. */
 const tema=c=>c.tm?c.tm:c.s=="lg"?"lg3":/ · DCD/.test(c.g)?"dcd":/ · DSS|^Parcial P1b/.test(c.g)?"dss":/ · Modelo de dominio|^Parcial P1a/.test(c.g)?"md":area(c)=="cod"?"p3":area(c)=="mod"?"md":"com";
 let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
@@ -168,13 +173,13 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
  if(SF=="err"){let a=[...PD.values()];if(SAX&&a.some(r=>arF(r.c)))a=a.filter(r=>arF(r.c));if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
- let pool=SWC.filter(c=>ok(c)&&arF(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(c=>ok(c)&&arF(c));if(!pool.length)pool=SWC.filter(ok);
+ const cool=c=>!(c.kq&&PKF[c.id]!=null&&SUN-PKF[c.id]<PKN);let pool=SWC.filter(c=>ok(c)&&arF(c)&&cool(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(c=>ok(c)&&cool(c));if(!pool.length)pool=SWC.filter(c=>ok(c)&&arF(c));if(!pool.length)pool=SWC.filter(ok);
  /* filtro de un tema sin nada disponible (p. ej. DCD antes de aprobar sus diagramas): se entra igual por el comienzo de cada cadena de ese tema */
  if(!pool.length){const T=SWC.filter(c=>!c.ln&&!c.hid&&tema(c)==SF);pool=T.filter(c=>!(c.req||[]).some(t=>T.some(z=>(z.toks||[]).includes(t))));if(!pool.length){SF="all";pool=SWC.filter(ok)}}
  /* Prioridad (pedido 12/11, sin fechas): lo que hace MÁS TIEMPO que no ves. Nunca vista = máxima prioridad.
     El tiempo transcurrido se multiplica por lo flojo (cajas bajas) y por los pendientes de error; se elige al azar entre las 3 primeras para no ser predecible. */
  const SE=S2.seen||(S2.seen={}),now=Date.now(),sc=c=>{const st=SE[c.id];const weak=1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0)/c.steps.length;return(st?(now-st):1e12+Math.random()*1e9)*weak};
- const top=pool.map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
+ const un=pool.filter(c=>!SE[c.id]),top=(un.length?un:pool).map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
  return{c:pk,i:0,only:false,built:[],err:0}}
 function swNew(){NLE=null;SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){NLE=null;SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
@@ -201,7 +206,7 @@ const bsNew=c=>{const b={p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,
 const bldPlain=(c,ln)=>c.bld.exp.filter(x=>(x.ln||0)==ln&&!x.nl).map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");
 /* «Ver la línea completa»: muestra la línea esperada; cuenta UN error por tarjeta (no uno por ficha) y después «No sé» ayuda sin penalizar */
 function swShow(){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs;if(b.show)return;b.show=1;
- if(!b.e){b.e=1;SCOMBO=0;S2.box[c.id+":0"]=0;SRETRY.push({c,i:0,due:SUN+8});const ln=(c.bld.exp[b.p]||{}).ln||0;
+ if(!b.e){b.e=1;SCOMBO=0;S2.box[c.id+":0"]=0;if(!c.kq)SRETRY.push({c,i:0,due:SUN+8});const ln=(c.bld.exp[b.p]||{}).ln||0;
   logA("sw",c.s,c.g,false,{q:bldQ(c),x:c.ctx,a:bldPlain(c,ln),p:"Ver la línea completa",ns:1,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});NLE=E1.log[E1.log.length-1];SV2()}
  swDraw()}
 function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X=c.bld.exp,ns=i<0;let e=X[b.p];
@@ -212,14 +217,14 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
   if(nt&&nt.t==t.t){b.used[i]=1;b.pl.unshift(nt);b.m=null;b.src=null;b.hl=null;SV2();swDraw();return}if(nt)e=nt}
  if(!ns&&e.fr&&t.t!=e.t){const j=X.findIndex((x,q)=>q>b.p&&x.fr&&x.t==t.t&&!frChk(x,b.pl,X));if(j>=0){X[b.p]=X[j];X[j]=e;e=X[b.p]}}
  if((t.t!=e.t||ns)&&!(ns&&b.show)){const ph=b.pl.map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");b.e++;SCOMBO=0;S2.box[k]=0;
-  if(b.e==1)SRETRY.push({c,i:0,due:SUN+8});
+  if(b.e==1&&!c.kq)SRETRY.push({c,i:0,due:SUN+8});
   logA("sw",c.s,c.g,false,{q:bldQ(c),x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
   NLE=E1.log[E1.log.length-1];
   b.teo=ns?({rt:"Camino al receptor",n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.src=e.src||null;b.hl=(!ns&&t.hl)||e.hl||(e.ob&&typeof letraIds=="function"?"S:"+letraIds(c,e.ob).join(","):null);try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;if(e.fr)frSort(X,b.pl);while(b.p<X.length&&(X[b.p].auto||b.pl.includes(X[b.p]))){if(!b.pl.includes(X[b.p]))b.pl.push(X[b.p]);b.p++}
- if(b.p>=X.length){b.done=true;{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
+ if(b.p>=X.length){b.done=true;if(c.kq)PKF[(c.pk||c).id]=SUN;{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
   if(!b.e){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)+2;S2.box[k]=Date.now()-(u.ts||0)>90000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,900)}}
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */

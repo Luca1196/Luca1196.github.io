@@ -101,3 +101,6 @@ Ocultas por redundantes con los filtros de Principal (atributo hidden en index.h
 
 ## Paquetes por ejercicio (16/11 18:35, pedido de Luca)
 Las cadenas nuevas quedaban «sueltas» (cada tarjeta era su propia unidad). Ahora van como los diagramas de comunicación: las tarjetas de un ejercicio salen seguidas y en orden aunque haya errores; el paquete se aprueba sin errores y, si no, vuelve entero. Lógica: un paquete por ejercicio (token m:<G>:ej). Modelo de dominio: un paquete (md). DSS: dos (dss = mensajes, fragmentos y cada mensaje; dt = DataTypes). P3: «el diseño» y un paquete por clase (bloques seguidos de la misma clase). DCD ya era un paquete. Cambiaron los nombres de los tokens: el progreso de estas cadenas (creadas hoy) arranca de nuevo.
+
+## Cuándo vuelve un paquete (16/11 18:50, pedido de Luca)
+nucleo.js: (1) lo nunca visto va SIEMPRE antes que lo ya visto (antes se sorteaba entre los 3 primeros y un paquete fallado podía adelantarse); (2) las tarjetas kit con error ya no vuelven sueltas a las 8 respuestas: el paquete vuelve entero; (3) ningún paquete terminado, aprobado o no, se repite antes de PKN = 15 respuestas (PKF), salvo que no haya otra cosa. Al sumar exámenes nuevos, sus paquetes salen antes que repetir los viejos.
