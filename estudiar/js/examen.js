@@ -164,3 +164,76 @@ Esto puede repetirse hasta que no se desee agregar más equipamiento.
 Finalmente, el recepcionista puede confirmar o cancelar la reserva.
 Si confirma, el sistema registra la reserva con estado confirmada.`}};
 Object.values(P1L).forEach(L=>{L.S={};let n=0;L.P=L.R.split("\n\n").map(p=>p.split("\n").map(s=>{const k="a"+(++n);L.S[k]=s;return k}));L.Uk=L.U.split("\n").map((s,i)=>(L.S["u"+i]=s,"u"+i))});
+
+/* ===== Problema 1b: Diagrama de secuencia del sistema (DSS) =====
+   Acciones del estudiante, en el orden del examen: leer el caso de uso y marcar los MENSAJES (cada cosa que el actor le da o le pide al Sistema; lo que el
+   Sistema muestra es el retorno de un mensaje, nunca un mensaje) → encerrarlos en loop / alt con su guarda → completar cada mensaje: parámetros (datos, no
+   objetos del dominio, y nada que el Sistema ya recuerde), lo que devuelve (solo si la letra dice que muestra algo) y la nota de memoria → definir los DataTypes.
+   Una tarjeta por acción y cada tarjeta es su propia unidad (pide la anterior sin errores). Los nombres de operaciones y DataTypes son los de la solución
+   oficial y nunca se piden: se elige por lo que hacen. «Tu DSS hasta ahora» muestra solo lo ya decidido, en el formato en que se escribe.
+   DSSX por examen: M = mensajes en orden {op, d: qué hace el actor (ficha de «mensajes»), hl: frases de la letra, w: por qué es un mensaje,
+   pa / rt / mem: [correcta, por qué, [equivocada, por qué no, frase]…] (pa como texto = ya puesto, no se pide; sin rt o sin mem = no se pide), ph / rh / mh: sus
+   frases, j:1 = va en la misma tarjeta que el mensaje anterior, fin:1 = cierra el caso de uso}; ev = fichas equivocadas de «mensajes»;
+   fr = fragmentos {k, g: guarda (alt: las dos), a, b: primer y último mensaje (desde 0), w, hl}; fd = fragmentos equivocados; DT = DataTypes {n, d, hl, w, at, x}.
+   La nota de memoria se pide solo donde la solución oficial la tiene (en los otros mensajes es discutible); «sin nota» y «libera la memoria» se agregan solas. */
+const DSN=["la lista de parámetros","el retorno","la nota de memoria"],
+ DSW=["Lo que llega o se decide en este mensaje se usa más adelante y ningún mensaje lo vuelve a mandar: el Sistema tiene que recordarlo. La letra pide indicar el uso de memoria.",
+  "El Sistema viene recordando datos desde el primer mensaje: cuando el caso de uso termina (también si se cancela) hay que liberarlos, y decirlo en una nota.",
+  "La memoria se libera cuando el caso de uso termina (al confirmar o cancelar), no antes."];
+const DSSX=[
+{id:"Feb26",
+ ev:[["muestra los datos del paso y los usuarios válidos","Eso lo hace el Sistema: no es un mensaje, es lo que DEVUELVE el mensaje con el que el actor se lo pide.","u2"],
+  ["solicita el email al administrador","El Sistema no le manda mensajes al actor: solo le responde. El mensaje es el del actor cuando ingresa el email.","u2"],
+  ["retorna los datos de la asignación","Es la respuesta al email ingresado: va como retorno de ese mismo mensaje, no como mensaje aparte.","u3"],
+  ["indica si el expediente es activo o borrador","Ese dato lo indica al confirmar: es un parámetro del mensaje de confirmar, no un mensaje aparte.","u5"]],
+ M:[
+ {op:"iniciarExpediente",d:"ingresa el código del proceso",hl:"u1",
+  pa:["codProceso: String","El actor le da al Sistema el dato que identifica al proceso: su código.",["p: Proceso","El actor no tiene objetos del dominio: le da al Sistema el dato que identifica al proceso (su código)."],["nombre: String","El nombre no identifica al proceso: el identificador (único) es el código, y es lo que la letra dice que ingresa.","a2"]],
+  rt:["nada","La letra no dice que el Sistema muestre algo al ingresar el código.",["Set(DTPaso)","La letra no muestra todos los pasos juntos: los muestra de a uno, cada uno con sus usuarios válidos, dentro de la repetición.","u2"],["DTProceso","La letra no dice que el Sistema muestre datos del proceso."]],
+  mem:["recuerda el proceso","Los mensajes que siguen no vuelven a mandar el código: el Sistema tiene que recordar con qué proceso está trabajando."]},
+ {op:"datosDelPaso",d:"pide los datos del paso que sigue",hl:"u2",w:"El Sistema muestra los datos de cada paso, pero solo responde a mensajes: en cada vuelta el actor se los tiene que pedir.",
+  pa:["sin parámetros","El actor no ingresa nada: el Sistema ya recuerda el proceso y va recorriendo sus pasos.",["codProceso: String","El Sistema ya recuerda el proceso desde el primer mensaje: no se vuelve a mandar.","u1"],["paso: Paso","El actor no tiene objetos del dominio ni elige el paso: el Sistema recorre los pasos del proceso."]],
+  rt:["DTUsuariosDisponibles (el paso + sus usuarios válidos)","Muestra las dos cosas y el retorno es uno solo: un DataType que las junta.",["Set(DTUsuario)","Faltan los datos del paso: la letra dice que muestra «los datos del paso y los usuarios válidos». El retorno es uno solo y tiene que traer las dos cosas."],["Set(Usuario)","Del Sistema no salen objetos del dominio: se devuelven DataTypes con los datos a mostrar."],["nada","Este mensaje está justamente para que el Sistema muestre los datos del paso y los usuarios válidos."]]},
+ {op:"asignacionUsuario",d:"ingresa el email del usuario responsable",hl:"u2",
+  pa:["email: string","La letra dice que ingresa el email del usuario responsable.",["u: Usuario","El actor no tiene objetos del dominio: le da el dato que identifica al usuario (su email, único).","a12"],["email: string, paso: DTPaso","El paso no lo elige el actor: es el que el Sistema está mostrando en esta vuelta."]],
+  rt:["DTAsignacion (datos del usuario + datos del paso)","«el sistema retorna los datos de la asignación, que incluye datos del usuario y datos del paso asociado».",["DTUsuario","Faltan los datos del paso: la asignación incluye «datos del usuario y datos del paso asociado»."],["Asignacion","Del Sistema no salen objetos del dominio. Además la asignación todavía no está confirmada."],["nada","La letra dice que el Sistema retorna los datos de la asignación, para que el actor la confirme."]],rh:"u3"},
+ {op:"confirmarAsignacion",d:"confirma la asignación",hl:"u3",
+  pa:["sin parámetros","El usuario ya se indicó en el mensaje anterior y el paso es el de esta vuelta: no hay datos nuevos.",["email: string","El usuario ya se indicó en el mensaje anterior: no se vuelve a mandar."]],
+  rt:["nada","La letra no dice que el Sistema muestre algo al confirmar la asignación.",["DTAsignacion","Los datos de la asignación ya se devolvieron en el mensaje anterior, justamente para poder confirmarla."]],
+  mem:["recuerda la asociación entre el paso y el usuario","El expediente se crea recién al final, con todas sus asignaciones: cada asignación confirmada se recuerda hasta entonces."]},
+ {op:"confirmar",d:"confirma la operación",hl:"u5",w:"Confirmar y cancelar son dos decisiones distintas del actor: un mensaje para cada una.",fin:1,
+  pa:["estado: Boolean","Al confirmar indica si el expediente es activo o borrador: ese dato viaja en el mensaje.",["sin parámetros","Al confirmar indica si el expediente es activo o borrador: ese dato viaja en el mensaje."],["codProceso: String, estado: Boolean","El proceso ya lo recuerda el Sistema desde el primer mensaje: no se vuelve a mandar.","u1"]],
+  mem:["libera la memoria","Con lo recordado se crea el expediente y el caso de uso termina: lo que el Sistema venía recordando se libera.",["recuerda el estado","Al confirmar se crea el expediente con lo que el Sistema venía recordando; después ya no queda nada por recordar: se libera."]]},
+ {op:"cancela",d:"cancela el proceso",hl:"u5",w:"Confirmar y cancelar son dos decisiones distintas del actor: un mensaje para cada una.",fin:1,j:1,pa:"",
+  mem:["libera la memoria","También al cancelar: lo que el Sistema venía recordando ya no se necesita."]}],
+ fr:[{k:"loop",g:"para cada paso del proceso sin asignar",a:1,b:3,hl:"u2,u4",w:"«para cada paso del proceso… Esto se repite hasta completar todos los pasos»: los tres mensajes de un paso se repiten."},
+  {k:"alt",g:["confirma","cancela"],a:4,b:5,hl:"u5",w:"Confirmar o cancelar: dos caminos excluyentes, cada uno con su mensaje."}],
+ fd:[["loop [para cada paso del proceso sin asignar]: mensajes 3 a 4","Los datos se muestran para CADA paso: el mensaje 2 también se repite.","u2"],
+  ["loop [para cada paso del proceso sin asignar]: mensajes 1 a 4","El código del proceso se ingresa una sola vez («Primero…»): el mensaje 1 queda fuera del loop.","u1"],
+  ["loop [para cada paso del proceso sin asignar]: mensajes 2 a 5","«Finalmente»: la operación se confirma una sola vez, después de asignar todos los pasos.","u5"],
+  ["opt [confirma]: mensaje 5","opt es para algo que puede pasar o no. Acá hay dos caminos, cada uno con su mensaje (confirmar o cancelar): es alt.","u5"]]}];
+window.DSSD={};
+DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:"+h:undefined,dz=a=>(a||[]).map(d=>[d[0],d[1],hl(d[2])]),
+ ln=m=>m.op+"("+(typeof m.pa=="string"?m.pa:m.pa[0]).replace("sin parámetros","")+")"+(m.rt&&m.rt[0]!="nada"?": "+m.rt[0].replace(/ \(.*\)$/,""):""),
+ /* el DSS en texto: los primeros k mensajes completos y el resto solo con lo decidido en «mensajes»; fr = ya se eligieron los fragmentos */
+ dss=(k,fr)=>M.map((m,i)=>{const f=fr&&X.fr.find(f=>i>=f.a&&i<=f.b),h=!f?"":i==f.a?`<div><b>${f.k} [${esc(f.k=="alt"?f.g[0]:f.g)}]</b></div>`:f.k=="alt"&&i==f.b?`<div><b>[${esc(f.g[1])}]</b></div>`:"";
+  return h+`<div style="padding-left:${f?14:0}px">${i+1}. ${esc(i<k?ln(m):m.op+" — "+m.d)}${i<k&&m.mem?` <span class="mut">· nota: ${esc(m.mem[0])}</span>`:""}</div>`}).join(""),
+ /* contexto: lo que se pide + el caso de uso (frases resaltables) + la realidad plegada + el DSS ya decidido (st: 0 no se muestra, 1 abierto, 2 plegado) */
+ o=(k,fr,st)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(P1P.b)}</div><div class="lt"><b>Caso de uso:</b> ${esc(L.cu)} · <b>Actor:</b> ${esc(L.act)}</div>`+kSent(L.S,L.Uk,hs)+
+  kFold("Descripción de la realidad",`<div class="lt">${esc(L.i)}</div>`+L.P.map(p=>kSent(L.S,p,hs)).join("<br>"),hs.some(h=>h[0]=="a"))+(st?kFold("Tu DSS hasta ahora",dss(k,fr),st<2):"")}}),U=[];
+ /* 1) qué mensajes hay */
+ U.push({id:"msj",cards:[kSet(G+" · mensajes","DSS · mensajes","Leé el caso de uso: ¿qué le da o le pide el actor al Sistema? Cada cosa es un mensaje.",M.map(m=>({t:m.d,w:m.w||"El actor le da un dato al Sistema o le comunica una decisión: es un mensaje.",hl:hl(m.hl)})),dz(X.ev),o(0,0,0))]});
+ /* 2) fragmentos */
+ U.push({id:"frag",cards:[kSet(G+" · fragmentos","DSS · fragmentos","¿Qué fragmentos hacen falta y qué mensajes encierra cada uno?",X.fr.map(f=>({t:f.k=="alt"?`alt [${f.g[0]}]: ${f.a+1} / [${f.g[1]}]: ${f.b+1}`:`${f.k} [${f.g}]: mensaje${f.a==f.b?" "+(f.a+1):"s "+(f.a+1)+" a "+(f.b+1)}`,w:f.w,hl:hl(f.hl)})),dz(X.fd),o(0,0,1))]});
+ /* 3) cada mensaje: parámetros → retorno → nota de memoria (los j:1 comparten tarjeta con el anterior) */
+ for(let i=0;i<N;){let j=i+1;while(j<N&&M[j].j)j++;const gr=M.slice(i,j),mu=gr.length>1,sl=[],dis=[],ps=[];let n=0;
+  const slot=(m,a,k,h)=>{n++;if(!ps.includes(k))ps.push(k);sl.push({t:a[0],w:a[1],sn:DSN[k]+(mu?" de "+m.op:""),own:1,hl:hl(h||m.hl)});
+   a.slice(2).concat(k<2?[]:[["sin nota",DSW[m.fin?1:0]]].concat(m.fin?[]:[["libera la memoria",DSW[2]]])).forEach(d=>{const e=dis.find(z=>z[0]==d[0]);if(e)e[2]=undefined;else dis.push([d[0],d[1],n,hl(d[2])])})};
+  gr.forEach((m,q)=>{if(q)sl.push("\n");if(typeof m.pa=="string")sl.push(m.op+"("+m.pa+")");else{sl.push(m.op+"(");slot(m,m.pa,0,m.ph);sl.push(")")}
+   if(m.rt){sl.push("devuelve");slot(m,m.rt,1,m.rh)}if(m.mem){sl.push("\n","nota:");slot(m,m.mem,2,m.mh)}});
+  const pq=ps.sort().map(k=>["qué datos lleva","qué devuelve","qué tiene que recordar el Sistema"][k]);
+  U.push({id:"m"+(i+1),cards:[kSeq(G+" · "+gr.map(m=>m.op).join(" y "),"DSS · mensaje"+(mu?"s "+(i+1)+" y "+j:" "+(i+1)),"Completá "+(mu?"los mensajes":"el mensaje")+": ¿"+(pq.length>1?pq.slice(0,-1).join(", ")+" y "+pq[pq.length-1]:pq[0])+"?",sl,dis,
+   Object.assign(o(i,1,1),{ko:"Orden: "+ps.map(k=>["parámetros","lo que devuelve","nota de memoria"][k]).join(" → ")+(mu?", mensaje por mensaje.":".")}))]});i=j}
+ /* 4) DataTypes */
+ (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),o(N,1,2))]}));
+ kChain(G,U);window.DSSD[X.id]=U});
