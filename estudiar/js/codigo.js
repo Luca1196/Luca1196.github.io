@@ -153,9 +153,11 @@ function P3M(t,cx){const R=[],add=(r,w,why)=>{if(w&&w!=t&&!R.some(z=>z[0]==w))R.
  if(t.includes("->"))add("fle",t.replace("->","."),`Lo que está a la izquierda es un puntero: sus operaciones se llaman con ->, no con punto.`);
  else if(m=/^(.*?[\w\]])\.(\w+\(.*)$/.exec(t))add("pto",m[1]+"->"+m[2],`Lo que está a la izquierda es un objeto o una colección, no un puntero: sus operaciones se llaman con punto.`);
  return R}
+/* Introducción al tema: series que hay que completar sin errores antes de empezar cada cadena (más las de P3X.pre, según el patrón del examen) */
+const P3I=["Parcial P3 · Del DCD al código: la estructura","Parcial P3 · Del diagrama de comunicación al método"];
 const P3Q="¿Qué se desprende de la letra y del DCD? Elegí todo lo que es cierto.";
 const P3X={
-feb26:{n:"Feb26",T:{p:P3Q,
+feb26:{n:"Feb26",pre:["Parcial P3 · Composite"],T:{p:P3Q,
   ok:[["Paquete es abstracta: cantArticulos se resuelve distinto en Simple y en Multiparte","Es la estructura del patrón Composite: Paquete = componente, Simple = hoja, Multiparte = compuesto. Por eso cantArticulos es virtual pura en Paquete."],
    ["Un Multiparte está hecho de paquetes Simple que son suyos: los libera en su destructor","Las partes se crean solo para ese multiparte y no se registran en la colección global: nadie más las puede liberar."],
    ["El Controlador guarda todos los paquetes en una colección global, buscados por su id","Por eso el pseudoatributo es un map de id a puntero a Paquete."],
@@ -169,7 +171,7 @@ feb26:{n:"Feb26",T:{p:P3Q,
   "s->agregarArticulo(articulos[partes[0].at(i)]);":[["s->agregarArticulo(new Articulo(partes[0].at(i)));","Los artículos ya existen en la colección global del controlador: se busca el puntero por su id, no se crean de nuevo."]],
   "return paquetes[idPaq]->cantArticulos();":[["return ((Simple *) paquetes[idPaq])->cantArticulos();","No hace falta saber de qué tipo es el paquete: cantArticulos es virtual y cada uno responde con su versión."]]},
  ds:{"Controlador::altaPaquete":["Da de alta un nuevo paquete","paquete multiparte correspondiente."],"Controlador::cantArticulos":["Devuelve la cantidad de artículos","todas sus partes."],"Multiparte::cantArticulos":["Para un paquete de tipo multiparte, se cuentan","todas sus partes."]}},
-jul26:{n:"Jul26",T:{p:P3Q,
+jul26:{n:"Jul26",pre:["Parcial P3 · Singleton","Parcial P3 · Clase abstracta e interfaz"],T:{p:P3Q,
   ok:[["ControladorRepartos es Singleton: instancia estática privada, constructor privado y getInstancia estática","Es lo que pide el estereotipo: una única instancia, a la que se llega por una operación de clase."],
    ["IRepartidor es una interfaz: en C++, una clase con sus operaciones virtuales puras y destructor virtual","C++ no tiene «interface»: se implementa como clase abstracta pura."],
    ["GeneradorRepartidores decide qué repartidor crear; el Controlador solo conoce IRepartidor","Es el mecanismo de fábrica: quien usa al repartidor no se acopla a las clases concretas."],
@@ -187,7 +189,7 @@ jul26:{n:"Jul26",T:{p:P3Q,
  ds:{"ControladorRepartos::registrarArticulo":["Crea dinámicamente un Articulo","entero no negativo."],"ControladorRepartos::registrarTanda":["Recorre los pedidos del datatype","no son vacías."],
   "ControladorRepartos::calcularTiempoTotal":["Solicita al generador","retorna el resultado."],"ControladorRepartos::calcularMontosPorPedido":["Busca en la colección global la tanda","representar el resultado."],
   "GeneradorRepartidores::obtenerRepartidor":["Suma las distancias","retorna un RepartidorMoto."],"RepartidorMoto::calcularTiempoTotal":["Cada implementación concreta","distancia * 5."]}},
-par26:{n:"Parcial 2026",T:{p:P3Q,
+par26:{n:"Parcial 2026",pre:["Parcial P3 · Composite","Parcial P3 · Singleton"],T:{p:P3Q,
   ok:[["Viaje es abstracta: darCostoTotal se resuelve distinto en Directo y en ConEscalas","Es la estructura del patrón Composite: Viaje = componente, Directo = hoja, ConEscalas = compuesto. Por eso darCostoTotal es virtual pura en Viaje."],
    ["Un viaje con escalas está formado por otros viajes de cualquier tipo, en orden","Por eso guarda un vector de punteros a Viaje (la clase base), no a Directo."],
    ["El Controlador es Singleton y además genera los identificadores de los viajes","Instancia estática, getInstance estática y constructor privado; el último id usado también es un dato de la clase."],
@@ -227,9 +229,9 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
    const nm=key+(cut?" "+(pi+1)+"/2":"");
    U.push({id:"b"+bi+(pi?"b":""),cards:[kCode(G+" · "+nm,"P3 · "+nm,b.kind=="stat"?"¿Cómo se define en el .cpp este atributo estático?":"Armá la operación línea por línea"+(pi?" (sigue).":"."),L,dis,
     Object.assign(o(bi,key),{ko:"Las líneas van en el orden del código; dos líneas seguidas que no dependen una de la otra valen en cualquier orden."}))]})})});
- kChain(G,U);window.P3D[id]={U,rep}});
+ kChain(G,U,{req:P3I.concat(H.pre)});window.P3D[id]={U,rep}});
 
-/* ===== Teórico «Patrones de diseño» e «Implementación y generación de código» (material de Luca, 16/11), en series binarias de Principal (filtro «Teórico»: teo:1) =====
+/* ===== Teórico «Patrones de diseño» e «Implementación y generación de código» (material de Luca, 16/11), en series binarias de Principal (dentro del filtro P3; las de P3I son previas de las cadenas) =====
    [título de la serie, teoría del primer paso (se muestra con «No sé»), [[pregunta, correcta, error tentador, por qué]…]]. Solo lo que dice el teórico; los
    ejemplos (Venta, Jornalero, punto de venta, puerta) son los suyos y, donde ayuda, se conecta con los problemas 3 de los exámenes. */
 [["Parcial P3 · Del DCD al código: la estructura","Del DCD salen: interfaces (en C++, clase abstracta pura con destructor virtual), clases, generalizaciones y realizaciones (: public), asociaciones (pseudoatributo: puntero si la multiplicidad máxima es 1, colección si es mayor) y dependencias (#include).",
@@ -282,4 +284,6 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
   ["¿Qué operaciones tiene el Subject para manejar a sus observadores?","agregar(IObserver) y eliminar(IObserver)","new Deposito() y new Proveedor()","Los observadores se registran y se dan de baja; el sujeto no los crea ni sabe de qué clase son."],
   ["En C++, ¿qué pseudoatributo lleva el Subject?","Una colección de punteros a la interfaz: set<IObserver *>","Un puntero: IObserver *observer;","Son varios observadores (multiplicidad *): colección de punteros a IObserver."],
   ["¿Qué riesgo tiene Observer?","Notificaciones en cascada que nadie previó","No admite observadores nuevos","Un observador notificado puede provocar más cambios y más notificaciones; además se notifica en un orden fijo, uno tras otro."]]]
-].forEach(z=>SWC.push(Object.assign(sw("p4",z[0],null,z[2].map((s,i)=>Object.assign(st(s[0],s[1],s[2],s[3],""),i?{}:{th:z[1]}))),{teo:1})));
+].forEach(z=>SWC.push(Object.assign(sw("p4",z[0],null,z[2].map((s,i)=>Object.assign(st(s[0],s[1],s[2],s[3],""),i?{}:{th:z[1]}))),{tm:"p3"})));
+/* Obsoletas: daban las respuestas de la cadena de Feb26 (ahora se deciden ahí) */
+SWC.forEach(c=>{if(/^Parcial P3 · (Herencia y constructores|Controlador: de datos a objetos)$/.test(c.g))c.hid=1});

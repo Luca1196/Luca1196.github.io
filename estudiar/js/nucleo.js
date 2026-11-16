@@ -154,8 +154,8 @@ let SK="sw1";const SV2=()=>{try{localStorage.setItem(SK,JSON.stringify(S2))}catc
 let SLT="",SLK="";const swTop=c=>c.s+"|"+c.g.replace(/ · .*$/,"").replace(/ \d+\/\d+$/,"").replace(/ \(.*\)$/,"");
 /* Al fallar se rota de tema: comunicación → deducción natural → código C++ → clases/secuencia. */
 const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.ar?c.ar:c.s=="lg"?"ded":/^Parcial P3/.test(c.g)?"cod":/^Parcial P1/.test(c.g)?"mod":"com";let SERR="",SAX="",SPACK=[],SPK=null;
-/* Filtros por tema (pedido de Luca, 16/11): cada tema de examen tiene su filtro. c.teo = serie del teórico. */
-const tema=c=>c.s=="lg"?"lg":/ · DCD/.test(c.g)?"dcd":/ · DSS|^Parcial P1b/.test(c.g)?"dss":/ · Modelo de dominio|^Parcial P1a/.test(c.g)?"md":c.teo?"teo":area(c)=="cod"?"p3":area(c)=="mod"?"md":"com";
+/* Filtros por tema (pedido de Luca, 16/11): cada tema de examen tiene su filtro. Las series binarias de teoría van DENTRO de su tema (c.tm) y son previas de sus cadenas: al completarlas sin errores queda S2.bqok[c.g]. */
+const tema=c=>c.tm?c.tm:c.s=="lg"?"lg":/ · DCD/.test(c.g)?"dcd":/ · DSS|^Parcial P1b/.test(c.g)?"dss":/ · Modelo de dominio|^Parcial P1a/.test(c.g)?"md":area(c)=="cod"?"p3":area(c)=="mod"?"md":"com";
 let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
 const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 /* Pendientes = pasos que fallaste alguna vez (registro de Errores) y todavía no acertaste 2 veces seguidas. Pesan más al elegir serie y forman el filtro "Mis errores". */
@@ -248,7 +248,7 @@ function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
- (TAB==7?"":`<div class="row" style="margin-top:8px">${[["all","Mezclado"],["md","Modelo de dominio (1a)"],["dss","Secuencia · DSS (1b)"],["com","Comunicación (2a)"],["dcd","DCD (2b)"],["p3","Código C++ (P3)"],["teo","Teórico"],["lg","Lógica"],["lin","Líneas sueltas"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`);
+ (TAB==7?"":`<div class="row" style="margin-top:8px">${[["all","Mezclado"],["md","Modelo de dominio (1a)"],["dss","Secuencia · DSS (1b)"],["com","Comunicación (2a)"],["dcd","DCD (2b)"],["p3","Código C++ (P3)"],["lg","Lógica"],["lin","Líneas sueltas"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`);
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;

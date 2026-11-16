@@ -77,3 +77,8 @@ Ojo letra Jul26: u9 dice «el recepcionista» pero el actor del caso de uso es e
 
 ## Filtros por tema (16/11 16:40, pedido de Luca)
 Principal tiene un filtro por tema (nucleo.js: tema(c)): Modelo de dominio (1a), DSS (1b), Comunicación (2a), DCD (2b), Código C++ (P3), Teórico (series con teo:1), Lógica. Las series binarias viejas «Parcial P1a/P1b» van con 1a y 1b. Si el filtro elegido no tiene nada disponible (DCD sin sus diagramas aprobados) se entra igual por el comienzo de cada cadena del tema.
+
+## Teoría dentro de cada tema, como previa (16/11 17:25, pedido de Luca)
+No hay filtro «Teórico»: las series binarias de teoría van dentro del filtro de su tema (c.tm) y son la introducción obligatoria: cada cadena pide completar sin errores las series de su tema (KIN en js/examen.js para 1a, 1b y 2b; P3I + P3X.pre en js/codigo.js para P3). Series nuevas con ejemplos neutros: «Modelo de dominio · qué es cada cosa», «… · qué restricciones se escriben», «DSS · mensajes, parámetros y retornos», «DSS · memoria y fragmentos», «DCD · de los diagramas de comunicación al DCD».
+Ocultas por obsoletas (hid; adelantaban respuestas que ahora se deciden en las cadenas): las 6 «Parcial P1a/P1b · …» y «Parcial P3 · Herencia y constructores» y «… · Controlador: de datos a objetos». State, Observer y las dos de patrones en general quedan en P3 sin ser previa.
+Probado con jsdom: con progreso vacío cada filtro muestra solo su introducción; al completarla aparecen las cadenas; las cadenas siguen pasando.

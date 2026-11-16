@@ -14,6 +14,47 @@
    RECETA PARA SUMAR UN EXAMEN: DCD → una entrada en DCDX (los datos salen solos de las líneas de comunicación); DSS → letra en P1L + una entrada en DSSX;
    Modelo de dominio → una entrada en MDX. Después: actualizar ?v= en index.html, simular las cadenas con jsdom, commit y push. */
 
+/* INTRODUCCIÓN A CADA TEMA (pedido de Luca, 16/11): series binarias cortas con las reglas, DENTRO del filtro de su tema (tm) y como previa de sus cadenas
+   (hay que completarlas sin errores). Usan ejemplos neutros para no adelantar respuestas de los exámenes. Las series viejas «Parcial P1a/P1b» quedaron
+   ocultas (hid): daban respuestas de Feb26 y Jul26 que ahora se deciden en las cadenas. */
+const KIN={md:[],dss:[],dcd:[]};
+[["md","Modelo de dominio · qué es cada cosa","Clase: concepto con datos propios y relaciones. Enumerado: conjunto fijo de valores. Subclases: tipos con datos propios. DataType: valor compuesto sin identidad. Clase de asociación: datos que dependen de un par. Las relaciones van como asociaciones, nunca como atributos.",
+ [["Un concepto de la realidad que tiene datos propios y se relaciona con otros","Clase","Atributo","Si tiene datos propios o relaciones, es una clase. Un atributo es un dato simple de una clase."],
+  ["«El color puede ser rojo, verde o azul»","Enumerado, usado como tipo de un atributo","Clase Color","Un conjunto fijo de valores sin datos propios es un enumerado."],
+  ["«Hay tres tipos de cuenta y de cada tipo se registran datos distintos»","Subclases de Cuenta","Un enumerado TipoCuenta","Si cada tipo tiene datos (o relaciones) propios hacen falta subclases; con un enumerado no hay dónde ponerlos."],
+  ["«Una cuenta puede estar activa o bloqueada» (sin más datos)","Atributo de tipo enumerado","Subclases Activa y Bloqueada","El estado no agrega datos y cambia con el tiempo; un objeto no cambia de clase."],
+  ["Una fecha (día, mes, año)","«DataType»","Clase con asociaciones","Es un valor compuesto, sin identidad: dos fechas iguales son la misma."],
+  ["La nota de un estudiante en un curso","Clase de asociación entre Estudiante y Curso","Atributo nota en Estudiante","La nota no es del estudiante solo ni del curso solo: depende del par."],
+  ["Para decir que un libro es de una editorial","Una asociación Libro–Editorial","Un atributo codigoEditorial en Libro","En el modelo de dominio no se ponen «claves foráneas»: el vínculo es la asociación."]]],
+["md","Modelo de dominio · qué restricciones se escriben","Se escribe en lenguaje natural lo que el diagrama no alcanza a decir: unicidad (global o «dentro de»), integridad circular (ciclos del diagrama), atributos calculados y reglas de negocio. Lo que ya dicen las multiplicidades no se repite.",
+ [["«El código del producto es único»","Se escribe como restricción de unicidad","No se escribe: ya lo muestra el diagrama","El diagrama de dominio no marca identificadores: la unicidad va escrita."],
+  ["«El número de sala es único dentro de su edificio»","Unicidad relativa: hay que escribir «dentro de su edificio»","Unicidad en todo el sistema","Dos edificios pueden tener una sala con el mismo número."],
+  ["El diagrama tiene un ciclo de asociaciones. ¿Qué reviso?","Si los dos caminos tienen que llegar al mismo objeto (integridad circular)","Nada: los ciclos no importan","El diagrama solo no garantiza que los dos caminos coincidan: si deben coincidir, se escribe."],
+  ["«El total es la suma de los subtotales»","Se deja el atributo y se escribe cómo se calcula","Se saca el atributo total","Es un atributo calculado: va en la clase y su fórmula va como restricción."],
+  ["«Cada factura es de un único cliente»","No se escribe: ya lo dice la multiplicidad 1","Se escribe como restricción","Lo que el diagrama ya expresa no se repite."],
+  ["«La cantidad pedida no puede superar el stock»","Regla de negocio: se escribe","Se expresa con una multiplicidad","Relaciona atributos de dos clases: el diagrama no puede decirlo."]]],
+["dss","DSS · mensajes, parámetros y retornos","En el DSS hay un actor y una sola línea de vida, :Sistema. Cada cosa que el actor le da o le pide al Sistema es un mensaje; lo que el Sistema muestra es el retorno de ese mensaje. Viajan datos y DataTypes, nunca objetos del dominio.",
+ [["¿Quiénes aparecen en un DSS?","El actor y :Sistema, como una sola línea de vida","El actor y las clases del dominio","El sistema es una caja negra: todavía no se muestra qué objetos hay adentro."],
+  ["«El usuario ingresa su nombre»","Un mensaje del actor al Sistema, con el nombre como parámetro","Una nota","Cada dato que el actor le da al Sistema viaja en un mensaje."],
+  ["«El sistema muestra los productos»","El retorno del mensaje anterior","Un mensaje del Sistema al actor","El Sistema no manda mensajes: responde. Lo que muestra es lo que devuelve."],
+  ["¿Qué puede ir como parámetro?","Datos: identificadores, valores, DataTypes","Objetos del dominio (p: Producto)","El actor no tiene objetos: indica cuál con el dato que lo identifica."],
+  ["El Sistema devuelve varios datos de un producto","Un DataType: DTProducto","El objeto Producto","Del Sistema no salen objetos del dominio: se arma un DataType con lo que hay que mostrar."],
+  ["«lista todos los productos»","Set(DTProducto)","DTProducto","Son varios: una colección de DataTypes."]]],
+["dss","DSS · memoria y fragmentos","Memoria: si un dato se usa en un mensaje posterior que no lo vuelve a mandar, se anota que el Sistema lo recuerda; al terminar (confirmar o cancelar) se libera. Fragmentos: loop para lo que se repite, alt para caminos excluyentes, opt para algo que puede pasar una vez o ninguna; todos con su guarda.",
+ [["Un dato llega en un mensaje y se usa en otro posterior","Nota: el Sistema lo recuerda","Se vuelve a mandar en cada mensaje","El Sistema guarda lo que va a necesitar; repetir parámetros es un error típico."],
+  ["El caso de uso termina (confirma o cancela)","Nota: se libera la memoria","No se anota nada","Lo que se venía recordando se libera siempre, también si se cancela."],
+  ["«Esto se repite para cada ítem»","loop con su guarda","alt","Repetición: loop, con la condición entre corchetes."],
+  ["«Finalmente confirma o cancela»","alt con una guarda por camino","opt","Son dos caminos excluyentes, cada uno con su mensaje."],
+  ["«Si quiere, puede agregar una observación» (una vez o ninguna)","opt","loop","Un solo camino opcional es opt; si pudiera repetirse sería loop."]]],
+["dcd","DCD · de los diagramas de comunicación al DCD","El DCD sale de los diagramas: una asociación navegable por cada flecha que se recorre por un atributo propio (con * si llega a una colección), una dependencia cuando se usa algo conocido solo por parámetro, variable local o global, y cada operación declarada en la clase que la recibe.",
+ [["A le manda un mensaje a un B al que llega por un atributo propio","Asociación navegable A → B","Dependencia A ⇢ B","Visibilidad por atributo = asociación."],
+  ["A usa un B que le llegó por parámetro o guardó en una variable local","Dependencia A ⇢ B (punteada)","Asociación A → B","Si no hay un atributo que lo sostenga, es solo una dependencia."],
+  ["A le manda calcular() a B. ¿Dónde se declara calcular()?","En B, que la recibe","En A, que la manda","Las operaciones se declaran en la clase del receptor."],
+  ["Los mensajes find, add y remove sobre una colección","No se declaran: son de la colección","Se declaran en la clase de los elementos","Vienen dadas con la colección."],
+  ["La flecha llega a una colección de B","La asociación lleva * del lado de B","Lleva 1 del lado de B","Colección = muchos."]]]
+].forEach(z=>{KIN[z[0]].push(z[1]);SWC.push(Object.assign(sw("p4",z[1],null,z[3].map((s,i)=>Object.assign(st(s[0],s[1],s[2],s[3],""),i?{}:{th:z[2]}))),{tm:z[0],ar:"mod"}))});
+SWC.forEach(c=>{if(/^Parcial P1[ab] · /.test(c.g))c.hid=1});
+
 /* ===== Armadores genéricos (tarjetas «kit»: nucleo.js las dibuja con c.kq/c.kp/c.kv/c.ko) ===== */
 const KNL=()=>({t:"",k:"a",auto:1,nl:1});
 function kCard(g,q,p,exp,bank,o){const c=Object.assign(sw("p4",g,(o&&o.ctx)||null,[Object.assign(st(q,exp.filter(x=>!x.auto).map(x=>x.t).join("\n"),"—",""),{k:"bld"})],""),{bld:{exp,bank,n:exp.length},kq:q,kp:p},o||{});SWC.push(c);return c}
@@ -89,7 +130,7 @@ DCDX.forEach(X=>{if(!window.P4EX||X.gs.some(g=>!P4EX[g]))return;
    ch.filter(x=>x.from&&x.from!=x.c).slice(0,2).forEach(x=>dis.push([x.from+" :: "+x.op+x.pa,"«"+x.op+"» la MANDA «"+x.from+"», pero la recibe «"+x.c+"»: la operación se declara en la clase del receptor ("+x.ref+")."]));
    if(fnd&&!k)dis.push([fnd.cls(fnd.L.to)+" :: find"+fnd.L.pa,"find, next, add y remove son operaciones de la colección (ya vienen dadas): no se declaran en la clase."]);
    cards.push(kSet(G+" · operaciones"+(n>1?" "+(k+1)+"/"+n:""),"DCD · operaciones","¿Qué operaciones se declaran, y en qué clase?",ch.map(x=>({t:x.t,w:"La recibe «"+x.c+"»: "+x.ref+"."})),dis.filter(d=>!O.some(z=>z.t==d[0])),o()))}}
- kChain(G,[{id:"dcd",cards}],{req:X.gs.map(g=>P4EX[g].last)})});
+ kChain(G,[{id:"dcd",cards}],{req:X.gs.map(g=>P4EX[g].last).concat(KIN.dcd)})});
 
 /* ===== Letra del Problema 1 (modelo de dominio + DSS), tal cual. i = presentación; R = descripción de la realidad (una frase por línea; línea en blanco =
    párrafo); cu / act / U = caso de uso (una frase por línea). De ahí salen las frases S: a1, a2… (realidad) y u0, u1… (caso de uso), que se resaltan con
@@ -288,7 +329,7 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
    Object.assign(o(i,1,1),{ko:"Orden: "+ps.map(k=>["parámetros","lo que devuelve","nota de memoria"][k]).join(" → ")+(mu?", mensaje por mensaje.":".")}))]});i=j}
  /* 4) DataTypes */
  (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),o(N,1,2))]}));
- kChain(G,U);window.DSSD[X.id]=U});
+ kChain(G,U,{req:KIN.dss});window.DSSD[X.id]=U});
 
 /* ===== Problema 1a: Modelo de dominio y restricciones =====
    Acciones del estudiante, en el orden del examen: leer la realidad y decidir qué conceptos son CLASES (y cuáles son solo un valor, un sinónimo o el propio
@@ -410,4 +451,4 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",U=[];
    L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),c.pp.includes(q)||p.some(k=>hs.includes(k)))).join("")+
    kFold("Tu modelo hasta ahora",prev.map(z=>`<div><b>${esc(z.t)}</b></div>`+z.ok.map(o=>o[0]).concat(z.xt||[]).map(t=>`<div style="padding-left:14px">${esc(t)}</div>`).join("")).join(""),c.mo)};
   U.push({id:c.id,cards:[kSet(G+" · "+c.g,"Modelo de dominio · "+c.g,c.p,c.ok.map(o=>({t:o[0],w:o[1],hl:kHl(o[2])})),kDz(c.no),{kv,ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod"})]})});
- kChain(G,U)});
+ kChain(G,U,{req:KIN.md})});
