@@ -95,3 +95,6 @@ Cadenas: Feb26 Ej. 1 inducción sobre listas (6 tarjetas) · Jul26 Ej. 1 inducci
 Filtros de Lógica (c.tm): lg1 inducción, lg2 semántica, lg3 deducción, lg4 modelos y consistencia, más «Lógica (todo)». Introducciones nuevas: «Inducción · conjuntos inductivos y PIP» y «Consistencia · definiciones»; las series genéricas de Semántica y Modelos que ya existían son previas de sus cadenas. Ocultas (hid): «Semántica · Feb 2026 2a–2d» y «Modelos · Feb 2026 4a–4c»; «Semántica · Variantes» ahora pide la cadena de Feb26 Ej. 2.
 Notas: en Feb26 Ej. 1 la solución oficial escribe mergeOrd/insertOrd; se usaron los nombres de la letra (merge, insOrd). En Jul26 Ej. 4 d, ¬p0 también serviría como ψ: no se puso como ficha equivocada.
 Probado con jsdom: las 6 cadenas (errores a propósito, «No sé», cadena limpia, previas) y los filtros. Falta navegador.
+
+## Pestañas (16/11 18:10, pedido de Luca)
+Ocultas por redundantes con los filtros de Principal (atributo hidden en index.html; el código sigue): «Ejercicios Prog4» (t1) y «Bloques» (t6). Quedan: Principal, Básico (teoría de comunicación con progreso propio, no está en Principal), Código (escritura del P3 ficha por ficha), Oído y Errores.
