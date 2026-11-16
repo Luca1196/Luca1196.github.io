@@ -58,7 +58,16 @@ HECHO y subido (16/11 15:30): DSS (P1b) de Feb26 (11 tarjetas) y Jul26 (10), dat
 Decisiones DSS: los nombres oficiales nunca se piden; la nota de memoria se pide solo donde la oficial la tiene; una ficha equivocada resalta su propia frase (nucleo.js usa t.hl).
 DSS probado con jsdom en las dos cadenas: cada ficha equivocada a propósito (razón, resaltado, sin token), «No sé», conjuntos en orden inverso, cadena limpia de punta a punta y disponibilidad al empezar. Falta verlo en el navegador.
 Dudas del DSS para confirmar con la imagen oficial: (1) Feb26: la nota «recuerda la asociación entre el paso y el usuario» se puso en confirmarAsignacion (como dicen estas notas); la serie binaria vieja de js/prog4.js la pone en asignacionUsuario. (2) Jul26: la oficial escribe AñadirEquipamento(codigo: string…) pero DTEquipamento.codigo: int; se dejó tal cual. (3) Feb26: DTPaso oficial lleva solo descripcion (sin el rol).
-PENDIENTE: Modelo de dominio (P1a) de Feb26 y Jul26 en js/examen.js (MDX; la letra ya está en P1L); P3 C++ en Principal desde js/codigo-datos.js.
+
+## Estado al 16/11 16:10 — plan completo (Luca, 15:40: «tomá vos las decisiones para que yo pueda aprender a resolver los exámenes practicando»)
+HECHO y subido, todo en Principal:
+- Modelo de dominio (P1a) de Feb26 (5 tarjetas) y Jul26 (6), datos en MDX (js/examen.js): clases → tipos (jerarquías, enumerados, DataTypes) → atributos → asociaciones → restricciones. Área «mod» (filtro P1).
+- Problema 3 en Principal (final de js/codigo.js: kCode, P3M, P3X): Feb26 15 tarjetas, Jul26 14, Parcial 2026 13. Por examen: «el diseño» (a mano: patrón, qué se pide) → .h de cada clase (se elige la línea donde hay una regla) → cada operación del .cpp con fichas de línea entera. Las líneas equivocadas salen de reglas (P3M) y, las que dependen de la letra, de P3X.hx. Área «cod» (filtro P3). La pestaña Código sigue igual (escritura ficha por ficha).
+- Teórico de patrones e implementación (material de Luca): 8 series binarias «Parcial P3 · …» al final de js/codigo.js (del DCD al código, del diagrama al método, qué es un patrón, qué problema resuelve cada uno, Singleton, Composite, State, Observer).
+Decisiones: en todas las cadenas nuevas cada tarjeta es su propia unidad (pide la anterior sin errores). Solo se piden decisiones que salen de la letra; donde la oficial elige algo que la letra no fija, no hay ficha equivocada. En el .cpp dos líneas seguidas e independientes valen en cualquier orden.
+Probado con jsdom en todas las cadenas (DSS, modelo de dominio, P3 y, como regresión, DCD): cada ficha equivocada a propósito, «No sé», orden inverso donde el orden es libre, cadena limpia de punta a punta, disponibilidad al empezar; se revisó a ojo la lista completa de líneas equivocadas del P3. Las series del teórico: se dibuja cada paso. Falta verlo en el navegador.
+Dudas para confirmar con las imágenes oficiales: las tres del DSS (arriba) y, en el modelo de dominio de Jul26, Centro 1 ◆— 1..* Espacio (la letra dice «uno o más espacios»; estas notas transcriben * del lado de Espacio).
+PENDIENTE: nada del plan original. Ideas: tarjeta «¿Qué falta?» (revisar el diagrama contra la letra), P1 del Parcial 2026 si aparece la solución oficial, y más exámenes viejos (receta: una entrada en DSSX / MDX / P3X).
 DCD probado solo con simulación jsdom (cadena completa en orden canónico); falta probar errores a propósito y verlo en el navegador.
 
 ## Letra del Problema 1 (Feb26 y Jul26) — 16/11 15:20

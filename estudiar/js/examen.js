@@ -1,5 +1,6 @@
 /* SECCIÓN EXAMEN: los demás problemas de las pruebas de Prog4, dentro de Principal (pedido de Luca, 16/11).
    Problema 2b (DCD), Problema 1b (DSS) y Problema 1a (Modelo de dominio). El Problema 3 (C++) está en js/codigo.js.
+   Las tres cadenas están hechas (DCDX, DSSX, MDX). El Problema 3 en Principal (P3X) y las series del teórico están al final de js/codigo.js, que usa estos mismos armadores.
    DECISIONES DIDÁCTICAS (mismo método que los diagramas de comunicación; ver RECETA al inicio de js/prog4.js)
    - Cada tema se desarma en las ACCIONES del estudiante y hay una tarjeta (o pack) por acción, en el orden en que se resuelve en el examen.
    - Sin spoilers: una tarjeta solo muestra la letra y lo que el estudiante ya decidió en tarjetas anteriores («… hasta ahora»).
