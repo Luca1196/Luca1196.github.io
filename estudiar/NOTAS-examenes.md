@@ -54,7 +54,11 @@ Dependencias punteadas hacia Mascota desde: Controlador, Cuidador y Hospedaje (l
 
 ## Estado al 16/11 14:35
 HECHO y subido: motor genérico de tarjetas «kit» (nucleo.js: c.kq/c.kp/c.kv/c.ko/c.ar; js/examen.js: kSet, kSeq, kChain) y cadena DCD (P2b) de los 3 exámenes.
-PENDIENTE (diseño ya pensado, sin código): DSS (P1b) y Modelo de dominio (P1a) de Feb26 y Jul26 en js/examen.js; P3 C++ en Principal desde js/codigo-datos.js.
+HECHO y subido (16/11 15:30): DSS (P1b) de Feb26 (11 tarjetas) y Jul26 (10), datos en DSSX (js/examen.js). Cadena: mensajes → fragmentos → cada mensaje (parámetros, retorno, nota de memoria; confirmar y cancelar juntos) → un DataType por tarjeta. Cada tarjeta es su propia unidad; área «mod» (filtro P1).
+Decisiones DSS: los nombres oficiales nunca se piden; la nota de memoria se pide solo donde la oficial la tiene; una ficha equivocada resalta su propia frase (nucleo.js usa t.hl).
+DSS probado con jsdom en las dos cadenas: cada ficha equivocada a propósito (razón, resaltado, sin token), «No sé», conjuntos en orden inverso, cadena limpia de punta a punta y disponibilidad al empezar. Falta verlo en el navegador.
+Dudas del DSS para confirmar con la imagen oficial: (1) Feb26: la nota «recuerda la asociación entre el paso y el usuario» se puso en confirmarAsignacion (como dicen estas notas); la serie binaria vieja de js/prog4.js la pone en asignacionUsuario. (2) Jul26: la oficial escribe AñadirEquipamento(codigo: string…) pero DTEquipamento.codigo: int; se dejó tal cual. (3) Feb26: DTPaso oficial lleva solo descripcion (sin el rol).
+PENDIENTE: Modelo de dominio (P1a) de Feb26 y Jul26 en js/examen.js (MDX; la letra ya está en P1L); P3 C++ en Principal desde js/codigo-datos.js.
 DCD probado solo con simulación jsdom (cadena completa en orden canónico); falta probar errores a propósito y verlo en el navegador.
 
 ## Letra del Problema 1 (Feb26 y Jul26) — 16/11 15:20
