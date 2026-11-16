@@ -56,3 +56,8 @@ Dependencias punteadas hacia Mascota desde: Controlador, Cuidador y Hospedaje (l
 HECHO y subido: motor genérico de tarjetas «kit» (nucleo.js: c.kq/c.kp/c.kv/c.ko/c.ar; js/examen.js: kSet, kSeq, kChain) y cadena DCD (P2b) de los 3 exámenes.
 PENDIENTE (diseño ya pensado, sin código): DSS (P1b) y Modelo de dominio (P1a) de Feb26 y Jul26 en js/examen.js; P3 C++ en Principal desde js/codigo-datos.js.
 DCD probado solo con simulación jsdom (cadena completa en orden canónico); falta probar errores a propósito y verlo en el navegador.
+
+## Falta para DSS (P1b) y Modelo de dominio (P1a) — 16/11 15:00
+Estas notas y el repo tienen las SOLUCIONES de P1, pero no la LETRA del Problema 1 (descripción de la realidad + caso de uso) de Feb26 ni de Jul26; en js/prog4.js solo hay resúmenes (series binarias «Parcial P1…»).
+Sin la letra tal cual no se pueden armar las frases S (kSent) ni justificar parámetros, retornos y guardas: las tarjetas pedirían adivinar.
+Pedir los enunciados a Luca, transcribir acá el texto del Problema 1 de cada examen y recién después codificar DSSX y MDX.
