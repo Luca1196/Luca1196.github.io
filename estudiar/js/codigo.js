@@ -229,7 +229,8 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
    const nm=key+(cut?" "+(pi+1)+"/2":"");
    U.push({id:"b"+bi+(pi?"b":""),cards:[kCode(G+" · "+nm,"P3 · "+nm,b.kind=="stat"?"¿Cómo se define en el .cpp este atributo estático?":"Armá la operación línea por línea"+(pi?" (sigue).":"."),L,dis,
     Object.assign(o(bi,key),{ko:"Las líneas van en el orden del código; dos líneas seguidas que no dependen una de la otra valen en cualquier orden."}))]})})});
- kChain(G,U,{req:P3I.concat(H.pre)});window.P3D[id]={U,rep}});
+ const GR=[];U.forEach(u=>{const g=u.cards[0].g.split(" · P3 · ")[1],k=u.id=="dis"?"dis":(/^\.h de (\w+)/.exec(g)||/(\w+)::/.exec(g)||[0,g])[1],l=GR[GR.length-1];if(l&&l.k==k)l.cards.push(u.cards[0]);else GR.push({k,id:u.id=="dis"?"dis":"g"+GR.length,cards:[u.cards[0]]})});
+ kChain(G,GR,{req:P3I.concat(H.pre)});window.P3D[id]={U,rep,GR}});
 
 /* ===== Teórico «Patrones de diseño» e «Implementación y generación de código» (material de Luca, 16/11), en series binarias de Principal (dentro del filtro P3; las de P3I son previas de las cadenas) =====
    [título de la serie, teoría del primer paso (se muestra con «No sé»), [[pregunta, correcta, error tentador, por qué]…]]. Solo lo que dice el teórico; los

@@ -1,8 +1,9 @@
 /* SECCIÓN LÓGICA · EXÁMENES COMPLETOS (16/11, pedido de Luca): el mismo método tipo Duolingo que en Prog4, para los ejercicios que no son de deducción natural
    (esos ya están como árboles en js/logica.js y js/bloques.js). Material: exámenes de febrero y julio de 2026 con su propuesta de solución (letra tal cual).
    DECISIONES DIDÁCTICAS
-   - Cada ejercicio se desarma en las ACCIONES del estudiante, en el orden en que se resuelve, y hay una tarjeta por acción; cada tarjeta es su propia unidad
-     (pide la anterior sin errores) y la primera pide las series de introducción de su tema.
+   - Cada ejercicio se desarma en las ACCIONES del estudiante, en el orden en que se resuelve, y hay una tarjeta por acción. El ejercicio entero es UN paquete
+     (pedido de Luca, 16/11): sus tarjetas salen seguidas, de la a a la d, aunque haya errores; se aprueba si no hubo ninguno y, si no, vuelve entero.
+     Pide antes las series de introducción de su tema.
    - Tres formatos (armadores de js/examen.js y kCode de js/codigo.js): «set» = elegir todas las correctas (cláusulas de una definición, plan de una prueba);
      «seq» = casilleros en orden (veredicto → cómo se justifica → testigo o estructura); «cad» = cadena de pasos, cada ficha es «justificación + lo que queda»,
      en orden fijo: el error típico es usar una justificación que no corresponde (la HI donde no vale, ⇔ donde solo vale ⇐, completitud por corrección).
@@ -16,7 +17,7 @@ function lgEx(G,tm,req,L,C){const U=[],fin=c=>c.k=="set"?c.ok.map(o=>o[0]):c.k==
   else if(c.k=="seq"){let n=0;const dis=[];x=kSeq(g,q,c.p,c.sl.map(s=>{if(typeof s=="string")return s;n++;s.slice(3).forEach(d=>dis.push([d[0],d[1],n]));return{t:s[0],w:s[1],sn:s[2],own:1}}),dis,o)}
   else x=kCode(g,q,c.p,[{ind:0,t:c.ini}].concat(c.st.map(t=>({ind:0,t,k:2,sep:true}))),c.no,Object.assign(o,{ko:"Los pasos van en orden: cada uno sale del anterior, con su justificación."}));
   x.s="lg";U.push({id:c.id,cards:[x]})});
- kChain(G,U,{req});return U}
+ kChain(G,[{id:"ej",cards:U.map(u=>u.cards[0])}],{req});return U}
 /* Introducciones nuevas (previas de sus cadenas) */
 [["lg1","Inducción · conjuntos inductivos y PIP","Un conjunto inductivo se define con cláusulas base y cláusulas inductivas. Una función sobre él se define con un caso por cláusula. El PIP: para probar (∀x)P(x) alcanza con probar P en cada cláusula base y, en cada cláusula inductiva, probar P del elemento nuevo suponiendo P de sus partes (HI).",
  [["Para definir un conjunto inductivo hace falta…","Cláusulas base y cláusulas inductivas","Listar todos sus elementos","Las base dicen quién está de entrada; las inductivas, cómo armar elementos nuevos a partir de otros."],
@@ -133,5 +134,5 @@ lgEx("Jul26 · Ej. 4 (consistencia)","lg4",LGI.con,["Examen de Lógica, 29 de ju
    ["Cons(∆ ∪ {ψ}) es consistente maximal si y solo si ∆ ∪ {ψ} es completo, y lo es por la parte c","Resultado del práctico 5 más la parte c.","la justificación",["∆ ∪ {ψ} es consistente, y todo conjunto consistente tiene Cons maximal","No alcanza con consistente: ∆ es consistente y Cons(∆) no decide p0. Hace falta que sea completo."]]]}]);
 
 /* Series viejas del mismo examen: adelantaban las respuestas que ahora se deciden en las cadenas. «Variantes» pasa a pedir la cadena completa de Feb26 Ej. 2. */
-SWC.forEach(c=>{if(/^(Semántica · Feb 2026 2[a-d]|Modelos · Feb 2026 4[a-c])$/.test(c.g))c.hid=1;if(c.g=="Semántica · Variantes")c.req=["m:Feb26 · Ej. 2 (semántica):d"]});
+SWC.forEach(c=>{if(/^(Semántica · Feb 2026 2[a-d]|Modelos · Feb 2026 4[a-c])$/.test(c.g))c.hid=1;if(c.g=="Semántica · Variantes")c.req=["m:Feb26 · Ej. 2 (semántica):ej"]});
 SWC.forEach(c=>{if(c.s=="lg"&&!c.tm)c.tm=/^Semántica/.test(c.g)?"lg2":/^Modelos/.test(c.g)?"lg4":"lg3"});

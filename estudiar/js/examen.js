@@ -14,7 +14,10 @@
    RECETA PARA SUMAR UN EXAMEN: DCD → una entrada en DCDX (los datos salen solos de las líneas de comunicación); DSS → letra en P1L + una entrada en DSSX;
    Modelo de dominio → una entrada en MDX. Después: actualizar ?v= en index.html, simular las cadenas con jsdom, commit y push. */
 
-/* INTRODUCCIÓN A CADA TEMA (pedido de Luca, 16/11): series binarias cortas con las reglas, DENTRO del filtro de su tema (tm) y como previa de sus cadenas
+/* PAQUETES (pedido de Luca, 16/11): las tarjetas de un ejercicio salen seguidas y en orden, como los pasos de un diagrama de comunicación, aunque haya
+   errores; el paquete se aprueba si no hubo ninguno y, si no, vuelve entero. Modelo de dominio = un paquete; DSS = dos (el diagrama y sus DataTypes);
+   P3 = el diseño y después un paquete por clase (su .h o sus operaciones seguidas); Lógica = un paquete por ejercicio.
+   INTRODUCCIÓN A CADA TEMA (pedido de Luca, 16/11): series binarias cortas con las reglas, DENTRO del filtro de su tema (tm) y como previa de sus cadenas
    (hay que completarlas sin errores). Usan ejemplos neutros para no adelantar respuestas de los exámenes. Las series viejas «Parcial P1a/P1b» quedaron
    ocultas (hid): daban respuestas de Feb26 y Jul26 que ahora se deciden en las cadenas. */
 const KIN={md:[],dss:[],dcd:[]};
@@ -401,7 +404,7 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
    Object.assign(o(i,1,1),{ko:"Orden: "+ps.map(k=>["parámetros","lo que devuelve","nota de memoria"][k]).join(" → ")+(mu?", mensaje por mensaje.":".")}))]});i=j}
  /* 4) DataTypes */
  (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),o(N,1,2))]}));
- kChain(G,U,{req:KIN.dss});window.DSSD[X.id]=U});
+ kChain(G,[{id:"dss",cards:U.filter(u=>!/^dt/.test(u.id)).map(u=>u.cards[0])},{id:"dt",cards:U.filter(u=>/^dt/.test(u.id)).map(u=>u.cards[0])}].filter(u=>u.cards.length),{req:KIN.dss});window.DSSD[X.id]=U});
 
 /* ===== Problema 1a: Modelo de dominio y restricciones =====
    Acciones del estudiante, en el orden del examen: leer la realidad y decidir qué conceptos son CLASES (y cuáles son solo un valor, un sinónimo o el propio
@@ -567,4 +570,4 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",U=[];
    L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),c.pp.includes(q)||p.some(k=>hs.includes(k)))).join("")+
    kFold("Tu modelo hasta ahora",prev.map(z=>`<div><b>${esc(z.t)}</b></div>`+z.ok.map(o=>o[0]).concat(z.xt||[]).map(t=>`<div style="padding-left:14px">${esc(t)}</div>`).join("")).join(""),c.mo)};
   U.push({id:c.id,cards:[kSet(G+" · "+c.g,"Modelo de dominio · "+c.g,c.p,c.ok.map(o=>({t:o[0],w:o[1],hl:kHl(o[2])})),kDz(c.no),{kv,ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod"})]})});
- kChain(G,U,{req:KIN.md})});
+ kChain(G,[{id:"md",cards:U.map(u=>u.cards[0])}],{req:KIN.md})});

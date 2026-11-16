@@ -98,3 +98,6 @@ Probado con jsdom: las 6 cadenas (errores a propósito, «No sé», cadena limpi
 
 ## Pestañas (16/11 18:10, pedido de Luca)
 Ocultas por redundantes con los filtros de Principal (atributo hidden en index.html; el código sigue): «Ejercicios Prog4» (t1) y «Bloques» (t6). Quedan: Principal, Básico (teoría de comunicación con progreso propio, no está en Principal), Código (escritura del P3 ficha por ficha), Oído y Errores.
+
+## Paquetes por ejercicio (16/11 18:35, pedido de Luca)
+Las cadenas nuevas quedaban «sueltas» (cada tarjeta era su propia unidad). Ahora van como los diagramas de comunicación: las tarjetas de un ejercicio salen seguidas y en orden aunque haya errores; el paquete se aprueba sin errores y, si no, vuelve entero. Lógica: un paquete por ejercicio (token m:<G>:ej). Modelo de dominio: un paquete (md). DSS: dos (dss = mensajes, fragmentos y cada mensaje; dt = DataTypes). P3: «el diseño» y un paquete por clase (bloques seguidos de la misma clase). DCD ya era un paquete. Cambiaron los nombres de los tokens: el progreso de estas cadenas (creadas hoy) arranca de nuevo.
