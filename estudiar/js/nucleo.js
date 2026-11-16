@@ -191,7 +191,7 @@ const frChk=(x,pl,X)=>{const d=(x.dp||[]).find(d=>!pl.includes(d));if(d)return{d
  return null};
 const frSort=(X,pl)=>{const pos=[],rem=[];X.forEach((x,q)=>{if(x.fr&&!pl.includes(x)){pos.push(q);rem.push(x)}});rem.sort((a,c)=>a.o-c.o);const sim=pl.slice(),out=[];
  while(rem.length){let i=rem.findIndex(x=>!frChk(x,sim,X));if(i<0)i=0;const x=rem.splice(i,1)[0];out.push(x);sim.push(x)}pos.forEach((q,i)=>X[q]=out[i])};
-/* Tarjetas «kit» (otros problemas del examen: js/examen.js y js/codigo.js): c.kq = título de la consigna, c.kp = consigna, c.kv(b) = contexto en HTML (b.hl = ids a resaltar), c.ko = regla de orden, c.ar = área del filtro. */
+/* Tarjetas «kit» (otros problemas del examen: js/examen.js y js/codigo.js): c.kq = título de la consigna, c.kp = consigna, c.kv(b) = contexto en HTML (b.hl = ids a resaltar), c.ko = regla de orden, c.ar = área del filtro. Una ficha equivocada puede traer su propia frase a resaltar (hl). */
 const bldQ=c=>c.kq||(c.tra?"Traducí la letra":c.des?"Desarmá el mensaje":c.route?"Elegí el recorrido":"Armá la línea"),bldMulti=c=>!!(c.tra||c.des||c.route||c.kq);
 const bsNew=c=>{const b={p:0,pl:[],used:{},ord:sh(c.bld.bank.map((_,i)=>i)),e:0,m:null,src:null,hl:null,done:false},X=c.bld.exp;if(X.some(x=>x.fr))frSort(X,[]);while(b.p<X.length&&X[b.p].auto){b.pl.push(X[b.p]);b.p++}return b};
 const bldPlain=(c,ln)=>c.bld.exp.filter(x=>(x.ln||0)==ln&&!x.nl).map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");
@@ -211,7 +211,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
   if(b.e==1)SRETRY.push({c,i:0,due:SUN+8});
   logA("sw",c.s,c.g,false,{q:bldQ(c),x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
   NLE=E1.log[E1.log.length-1];
-  b.teo=ns?({rt:"Camino al receptor",n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.src=e.src||null;b.hl=e.hl||(e.ob&&typeof letraIds=="function"?"S:"+letraIds(c,e.ob).join(","):null);try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
+  b.teo=ns?({rt:"Camino al receptor",n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.src=e.src||null;b.hl=(!ns&&t.hl)||e.hl||(e.ob&&typeof letraIds=="function"?"S:"+letraIds(c,e.ob).join(","):null);try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;if(e.fr)frSort(X,b.pl);while(b.p<X.length&&(X[b.p].auto||b.pl.includes(X[b.p]))){if(!b.pl.includes(X[b.p]))b.pl.push(X[b.p]);b.p++}

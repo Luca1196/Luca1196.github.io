@@ -57,7 +57,7 @@ HECHO y subido: motor genérico de tarjetas «kit» (nucleo.js: c.kq/c.kp/c.kv/c
 PENDIENTE (diseño ya pensado, sin código): DSS (P1b) y Modelo de dominio (P1a) de Feb26 y Jul26 en js/examen.js; P3 C++ en Principal desde js/codigo-datos.js.
 DCD probado solo con simulación jsdom (cadena completa en orden canónico); falta probar errores a propósito y verlo en el navegador.
 
-## Falta para DSS (P1b) y Modelo de dominio (P1a) — 16/11 15:00
-Estas notas y el repo tienen las SOLUCIONES de P1, pero no la LETRA del Problema 1 (descripción de la realidad + caso de uso) de Feb26 ni de Jul26; en js/prog4.js solo hay resúmenes (series binarias «Parcial P1…»).
-Sin la letra tal cual no se pueden armar las frases S (kSent) ni justificar parámetros, retornos y guardas: las tarjetas pedirían adivinar.
-Pedir los enunciados a Luca, transcribir acá el texto del Problema 1 de cada examen y recién después codificar DSSX y MDX.
+## Letra del Problema 1 (Feb26 y Jul26) — 16/11 15:20
+Transcripta tal cual en js/examen.js (const P1L: presentación, descripción de la realidad y caso de uso, una frase por línea; verificada palabra por palabra contra los PDF de la letra).
+Frases: a1… = realidad (Feb26 a1–a23, Jul26 a1–a19), u0… = caso de uso (Feb26 u0–u5, Jul26 u0–u10). Sirve para el DSS (P1b) y para el modelo de dominio (P1a): no hace falta volver a los PDF.
+Ojo letra Jul26: u9 dice «el recepcionista» pero el actor del caso de uso es el Cliente (la solución oficial usa Cliente).
