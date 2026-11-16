@@ -9,6 +9,7 @@ ESTRUCTURA POR ARCHIVOS (nov 2026): una sección = un archivo, para que cada cha
   js/logica.js   Lógica: tarjetas de Repaso, cadenas de Deslizar, combinaciones de examen, LGX/LGR (contexto por paso), TRS (árboles)
   js/musica.js + css/musica.css   Oído (pestaña 4 + tarjetas intercaladas en Principal; ver DECISIONES en musica.js). El Simon de canciones se quitó (nov 2026).
   js/bloques.js  Bloques (pestaña 6): reemplaza a Ejercicios Lógica (botón t2 oculto; #logica abre Bloques; logica.html se conserva): árbol de deducción armado con bloques; motor copiado de logica.html
+  js/examen.js   Los demás problemas de la prueba en Principal: DCD (P2b), DSS (P1b) y Modelo de dominio (P1a); carga después de letras.js
   js/errores.js  Errores (resumen, lista, exportación)
   js/nucleo.js   Núcleo: estado, Repaso, motor de Deslizar, pestañas (tocar solo si afecta a todas las secciones)
   js/base.js     Utilidades compartidas y SWC (idem)
@@ -143,20 +144,20 @@ a{color:var(--ac)}
 .ghost{background:transparent;border-bottom-width:1px;font-size:14px;margin-top:16px}
 @media(prefers-reduced-motion:reduce){.pb i{transition:none}.btn:active:not(:disabled){transform:none}}
 </style>
-<link rel="stylesheet" href="css/musica.css?v=202611152230">
+<link rel="stylesheet" href="css/musica.css?v=202611161435">
 <div class="wrap">
 <header class="top"><h1>Estudio</h1><div id="hd" class="mut"></div></header>
 <nav class="tabs"><button id="t0" class="btn tab" hidden>Repaso</button><button id="t3" class="btn tab">Principal</button><button id="t7" class="btn tab">Básico</button><button id="t1" class="btn tab">Ejercicios Prog4</button><button id="t8" class="btn tab">Código</button><button id="t2" class="btn tab" hidden>Ejercicios Lógica</button><button id="t4" class="btn tab">Oído</button><button id="t6" class="btn tab">Bloques</button><button id="t5" class="btn tab">Errores</button></nav>
 <div id="v"></div>
 </div>
-<script src="js/base.js?v=202611152230"></script>
-<script src="js/prog4.js?v=202611152230"></script>
-<script src="js/logica.js?v=202611152230"></script>
-<script src="js/nucleo.js?v=202611152230"></script>
-<script src="js/musica.js?v=202611152230"></script>
-<script src="js/errores.js?v=202611152230"></script>
-<script src="js/bloques.js?v=202611152230"></script>
-<script src="js/letras.js?v=202611152230"></script><script src="js/codigo-datos.js?v=202611152230"></script>
-<script src="js/codigo.js?v=202611152230"></script>
-<script src="js/inicio.js?v=202611152230"></script>
+<script src="js/base.js?v=202611161435"></script>
+<script src="js/prog4.js?v=202611161435"></script>
+<script src="js/logica.js?v=202611161435"></script>
+<script src="js/nucleo.js?v=202611161435"></script>
+<script src="js/musica.js?v=202611161435"></script>
+<script src="js/errores.js?v=202611161435"></script>
+<script src="js/bloques.js?v=202611161435"></script>
+<script src="js/letras.js?v=202611161435"></script><script src="js/examen.js?v=202611161435"></script><script src="js/codigo-datos.js?v=202611161435"></script>
+<script src="js/codigo.js?v=202611161435"></script>
+<script src="js/inicio.js?v=202611161435"></script>
 </html>

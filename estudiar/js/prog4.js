@@ -720,6 +720,8 @@ TPRE={"aceptarPostulacion":[{n:"1",from:":Controlador",to:":Estudiante *",op:"fi
    hopOf=L=>{const t=L.to.replace(/ \*$/,"");if(L.op=="create"||!/^:/.test(t))return null;const a=cls(L.from),b=cls(t);return a==b||b=="Controlador"?null:{a,b,w:/ \*$/.test(L.to)}},
    AH=new Set(cs.map(c=>hopOf(c.dg.cur)).filter(Boolean).map(e=>e.a+">"+e.b));
   Mg.forEach(m=>{TS[mt(top(m[0]))]=m});
+  /* datos del ejercicio para otras secciones (el DCD de js/examen.js se deriva de estas líneas) */
+  (window.P4EX=window.P4EX||{})[g]={cs,cls,hopOf,M,last:mt(top(U[U.length-1][U[U.length-1].length-1][0]))};
   U.forEach((u,ui)=>{const ch=u.flat(),first=ch[0],ix=cs.indexOf(first),tops=u.map(m=>top(m[0])),rng=tops[0]+(tops.length>1?"–"+tops[tops.length-1]:""),clc=first.dg.clc||"",
     Ls=ch.map(c=>c.dg.cur),toks=tops.map(mt),req=[],Dp=deps(Ls),Cl=clo(Dp);
    if(pm&&tops.includes(pm.msg))toks.push("p:"+pm.id);
