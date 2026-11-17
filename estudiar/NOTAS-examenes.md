@@ -119,3 +119,8 @@ Revisado tema por tema y corregido:
 - P3 mal formado: los paquetes seguían el orden de la solución (todos los .h y después los .cpp) y quedaban paquetes de una sola tarjeta. Ahora va clase por clase, de la menos acoplada a la más acoplada (P3X.ord), cada clase con su .h y sus operaciones juntas. Cambian los tokens de P3: su progreso arranca de nuevo.
 - Sin cambios porque ya estaban bien formados: modelo de dominio (1 paquete), DSS (2), DCD (1), Lógica (1 por ejercicio), tramos de comunicación.
 No revisado: pestaña Código (escritura ficha por ficha) y Oído.
+
+## DCD rehecho con fichas (16/11 23:55)
+Luca (23:44): lo nuevo «no se parece al trabajo de fichas estilo Duolingo»: quería un sistema como el de los diagramas de comunicación o los árboles, donde CON FICHAS SE VA ARMANDO el diagrama; el DCD tenía pocas tarjetas y no resolvía un ejercicio. Las tarjetas «elegí todas las correctas» (kSet) y de respuesta entera (kSeq con frases) NO son el formato pedido.
+DCD rehecho como piloto: se recorre cada diagrama mensaje por mensaje y, en cada mensaje que agrega algo, se arma con fichas chicas la relación (clase de origen, → o ⇢, clase de destino, * o 1) y la operación (clase :: operación). Un paquete por diagrama: Parcial 13 tarjetas, Jul26 15, Feb26 15. Cada casillero explica su regla.
+PENDIENTE, mismo criterio (fichas que arman el artefacto, paso por paso): modelo de dominio, DSS, P3 en Principal y Lógica (inducción, semántica, modelos). Esperando que Luca valide el piloto.

@@ -103,37 +103,43 @@ DCDX.forEach(X=>{if(!window.P4EX||X.gs.some(g=>!P4EX[g]))return;
   const ty=v=>E.M[v]||VT[v];E.cs.forEach(c=>LL.push({g,L:c.dg.cur,cls:E.cls,ty,hop:E.hopOf(c.dg.cur),ref:"mensaje "+c.dg.cur.n+" de "+opn(g)}))});
  const skp=(a,b)=>(X.skip||[]).includes(a+">"+b);
  /* asociaciones navegables (una subclase que navega igual que su base se dibuja en la base) */
- let H=[];LL.forEach(x=>{const h=x.hop;if(!h)return;const e=H.find(z=>z.a==h.a&&z.b==h.b);if(e)e.w=e.w||h.w;else H.push({a:h.a,b:h.b,w:h.w,ref:x.ref})});
+ let H=[];LL.forEach(x=>{const h=x.hop;if(!h)return;const e=H.find(z=>z.a==h.a&&z.b==h.b);if(e)e.w=e.w||h.w;else H.push({a:h.a,b:h.b,w:h.w,ref:x.ref,li:LL.indexOf(x)})});
  H=H.filter(h=>!(sup[h.a]&&H.some(z=>z.a==sup[h.a]&&z.b==h.b)));
  const hasA=(s,t)=>H.some(h=>(h.a==s||h.a==sup[s])&&(h.b==t||h.b==sup[t])),hp=h=>h.a+" → "+h.b+(h.w?" *":"");
  /* dependencias: s usa a t sin tener asociación hacia t */
- let D=[];const use=(s,t,why)=>{if(!s||!t||s==t||sup[s]==t||sup[t]==s||hasA(s,t)||skp(s,t)||D.some(d=>d.a==s&&d.b==t))return;D.push({a:s,b:t,why})};
- LL.forEach(x=>{const L=x.L,S=x.cls(L.from),T=x.cls(L.to);
+ let D=[];const use=(s,t,why)=>{if(!s||!t||s==t||sup[s]==t||sup[t]==s||hasA(s,t)||skp(s,t)||D.some(d=>d.a==s&&d.b==t))return;D.push({a:s,b:t,why,li:CUR})};let CUR=0;
+ LL.forEach((x,xi)=>{CUR=xi;const L=x.L,S=x.cls(L.from),T=x.cls(L.to);
   if(L.t!="A")use(S,T,"«"+S+"» le manda un mensaje a un objeto «"+T+"» que conoce por "+({L:"variable local",P:"parámetro",G:"visibilidad global"})[L.t]+" ("+x.ref+")");
   if(L.res&&x.ty(L.res))use(S,x.ty(L.res),"«"+S+"» recibe un objeto «"+x.ty(L.res)+"» como resultado y lo guarda en una variable local ("+x.ref+")");
   String(L.pa||"").replace(/[()]/g,"").split(",").map(v=>v.trim()).forEach(v=>{if(x.ty(v))use(T,x.ty(v),"«"+T+"» recibe un objeto «"+x.ty(v)+"» por parámetro ("+x.ref+")")})});
  D=D.filter(d=>!(sup[d.a]&&D.some(z=>z.a==sup[d.a]&&z.b==d.b)));
  /* operaciones: se declaran en la clase del receptor */
- const O=[];X.gs.forEach(g=>{const c0=P4EX[g].cs[0],e=c0.dg.ent,sg=String(c0.dg.sig||"").replace(/^[A-Za-z]+\./,"");O.push({c:e?e.split(":")[1]:"Controlador",t:(e?e.split(":")[1]:"Controlador")+" :: "+sg,ref:"es la operación que resuelve ese diagrama",from:null})});
- LL.forEach(x=>{const L=x.L;if(GEN.test(L.op)||/^get[A-Z]/.test(L.op)&&L.pa=="()")return;const C=x.cls(L.to),t=C+" :: "+L.op+L.pa;if(!O.some(o=>o.t==t))O.push({c:C,op:L.op,pa:L.pa,t,ref:x.ref,from:x.cls(L.from)})});
+ const O=[];X.gs.forEach(g=>{const c0=P4EX[g].cs[0],e=c0.dg.ent,sg=String(c0.dg.sig||"").replace(/^[A-Za-z]+\./,"");O.push({c:e?e.split(":")[1]:"Controlador",t:(e?e.split(":")[1]:"Controlador")+" :: "+sg,ref:"es la operación que resuelve ese diagrama",from:null,top:1,li:LL.findIndex(x=>x.g==g)})});
+ LL.forEach(x=>{const L=x.L;if(GEN.test(L.op)||/^get[A-Z]/.test(L.op)&&L.pa=="()")return;const C=x.cls(L.to),t=C+" :: "+L.op+L.pa;if(!O.some(o=>o.t==t))O.push({c:C,op:L.op,pa:L.pa,t,ref:x.ref,from:x.cls(L.from),li:LL.indexOf(x)})});
  window.DCDD[X.id]={H,D,O};
- const G=X.id+" · DCD",view=b=>`<div class="lt"><b>${esc(X.id)} · Problema 2</b> ${esc(X.pide)}</div>`+(X.nota&&SW&&/dependencias/.test(SW.c.g)?`<div class="lt mut">${esc(X.nota)}</div>`:"")+X.gs.map(g=>kFold("Tu diagrama de "+opn(g)+" ("+P4EX[g].cs.length+" mensajes)",P4EX[g].cs.map(c=>`<div>${esc(lineStr(c.dg.cur))}</div>`).join(""))).join(""),
-  o=x=>Object.assign({kv:view,ctx:X.id+" · Problema 2 b) DCD"},x||{}),cards=[];
- /* 1) asociaciones */
- {const dis=[];D.slice(0,2).forEach(d=>dis.push([d.a+" → "+d.b,"«"+d.a+"» conoce a «"+d.b+"» solo por parámetro, variable local o global, no por un atributo propio: eso se dibuja como dependencia (punteada), no como asociación."]));
-  H.filter(h=>h.a!="Controlador"&&!H.some(z=>z.a==h.b&&z.b==h.a)&&!skp(h.b,h.a)).slice(0,2).forEach(h=>dis.push([h.b+" → "+h.a+(h.w?"":" *"),"En ningún mensaje se navega de «"+h.b+"» hacia «"+h.a+"»: solo se dibuja la navegabilidad que usan los diagramas."]));
-  cards.push(kSet(G+" · asociaciones","DCD · asociaciones","¿Qué asociaciones navegables quedan en el DCD? (las que usan los dos diagramas)",H.map(h=>({t:hp(h),w:"Se navega por esa flecha en el "+h.ref+"."})),dis.filter((d,i)=>!H.some(h=>hp(h)==d[0])&&dis.findIndex(z=>z[0]==d[0])==i),o({th:"Asociación navegable A → B: en algún mensaje, un objeto A le manda algo a un B al que llega por un atributo propio (visibilidad por asociación). Si llega a una colección de B lleva *. Solo se dibujan las que los diagramas usan, y con la navegabilidad en que se usan."})))}
- /* 2) dependencias */
- if(D.length){const dis=[];H.filter(h=>h.a!="Controlador").slice(0,2).forEach(h=>dis.push([h.a+" ⇢ "+h.b,"Ya hay una asociación "+h.a+" → "+h.b+" (se llega por un atributo propio): la dependencia sobra."]));
-  D.filter(d=>!hasA(d.b,d.a)&&!skp(d.b,d.a)&&!D.some(z=>z.a==d.b&&z.b==d.a)).slice(0,1).forEach(d=>dis.push([d.b+" ⇢ "+d.a,"«"+d.b+"» no usa a «"+d.a+"» en ningún mensaje: la dependencia va de quien usa hacia lo que usa."]));
-  cards.push(kSet(G+" · dependencias","DCD · dependencias","¿Qué dependencias (flecha punteada) hacen falta?",D.map(d=>({t:d.a+" ⇢ "+d.b,w:d.why+" y no tiene asociación hacia esa clase: es una dependencia."})),dis.filter(d=>!D.some(z=>z.a+" ⇢ "+z.b==d[0])),o({th:"Dependencia A ⇢ B (flecha punteada): A usa un B que conoce solo por parámetro, por una variable local (un resultado que guardó) o por visibilidad global, y no tiene una asociación hacia B. Si ya hay asociación, la dependencia sobra."})))}
- /* 3) operaciones, de a 6 */
- {const n=Math.ceil(O.length/6),sz=Math.ceil(O.length/n),fnd=LL.find(x=>x.L.op=="find");
-  for(let k=0;k<n;k++){const ch=O.slice(k*sz,k*sz+sz),dis=[];
-   ch.filter(x=>x.from&&x.from!=x.c).slice(0,2).forEach(x=>dis.push([x.from+" :: "+x.op+x.pa,"«"+x.op+"» la MANDA «"+x.from+"», pero la recibe «"+x.c+"»: la operación se declara en la clase del receptor ("+x.ref+")."]));
-   if(fnd&&!k)dis.push([fnd.cls(fnd.L.to)+" :: find"+fnd.L.pa,"find, next, add y remove son operaciones de la colección (ya vienen dadas): no se declaran en la clase."]);
-   cards.push(kSet(G+" · operaciones"+(n>1?" "+(k+1)+"/"+n:""),"DCD · operaciones","¿Qué operaciones se declaran, y en qué clase?",ch.map(x=>({t:x.t,w:"La recibe «"+x.c+"»: "+x.ref+"."})),dis.filter(d=>!O.some(z=>z.t==d[0])),o({th:"Cada operación se declara en la clase del objeto que RECIBE el mensaje, no en la del que lo manda. Las operaciones de las colecciones (find, next, add, remove) y create no se declaran."})))}}
- kChain(G,[{id:"dcd",cards}],{req:X.gs.map(g=>P4EX[g].last).concat(KIN.dcd)})});
+ /* EL DCD SE ARMA CON FICHAS, MENSAJE POR MENSAJE (pedido de Luca, 16/11: «como los diagramas de comunicación: con fichas se va armando el diagrama»).
+    Se recorre cada diagrama de comunicación y, en cada mensaje que le agrega algo al DCD, se arma con fichas lo que agrega: la relación (clase de origen,
+    flecha llena o punteada, clase de destino y multiplicidad) y la operación (clase que la declara y operación). Los mensajes que no agregan nada se saltean.
+    Un paquete por diagrama; «Tu DCD hasta ahora» junta lo armado. Cada casillero explica su regla al fallar o con «No sé». */
+ const G=X.id+" · DCD",CL=[...new Set(H.flatMap(h=>[h.a,h.b]).concat(D.flatMap(d=>[d.a,d.b]),O.map(o=>o.c)))],units=[];
+ const dcdTxt=li=>{const r=H.filter(h=>h.li<li).map(hp).concat(D.filter(d=>d.li<li).map(d=>d.a+" ⇢ "+d.b)),ops=O.filter(o=>o.li<li);
+   return(r.length?`<div><b>Relaciones</b></div>`+r.map(t=>`<div style="padding-left:14px">${esc(t)}</div>`).join(""):"")+(ops.length?`<div><b>Operaciones</b></div>`+ops.map(o=>`<div style="padding-left:14px">${esc(o.t)}</div>`).join(""):"")};
+ X.gs.forEach(g=>{const cards=[],first=LL.findIndex(x=>x.g==g);
+  LL.forEach((x,li)=>{if(x.g!=g)return;const hs=H.filter(h=>h.li==li),ds=D.filter(d=>d.li==li),os=O.filter(o=>o.li==li&&!o.top),tp=li==first?O.filter(o=>o.li==li&&o.top):[];
+   if(!hs.length&&!ds.length&&!os.length&&!tp.length)return;const sl=[],nl=()=>{if(sl.length)sl.push("\n")};
+   tp.forEach(o=>{nl();sl.push("operación del diagrama:",{t:o.c,sn:"la clase que declara la operación del diagrama",w:"La operación que resuelve todo el diagrama la recibe «"+o.c+"»: se declara ahí."},"::",{t:o.t.split(" :: ")[1],sn:"la operación del diagrama",w:"Es la operación que la letra pide resolver con este diagrama."})});
+   hs.forEach(h=>{nl();sl.push("relación:",{t:h.a,sn:"la clase de origen",w:"La relación sale de la clase del objeto que MANDA el mensaje: «"+h.a+"»."},{t:"→",sn:"el tipo de flecha",w:"«"+h.a+"» llega a ese objeto por un atributo propio (su colección o su enlace): es una asociación, flecha llena (→). La punteada (⇢) es para lo que se conoce solo por parámetro, variable local o global."},
+     {t:h.b,sn:"la clase de destino",w:"La flecha llega a la clase del objeto que RECIBE el mensaje: «"+h.b+"»."},{t:h.w?"*":"1",sn:"la multiplicidad",w:h.w?"El mensaje va a la colección de «"+h.b+"»: son muchos (*).":"El mensaje va a un solo «"+h.b+"»: 1."})});
+   ds.forEach(d=>{nl();sl.push("relación:",{t:d.a,sn:"la clase que usa",w:"La dependencia sale de la clase que USA al otro objeto: «"+d.a+"»."},{t:"⇢",sn:"el tipo de flecha",w:d.why+" y no tiene asociación hacia esa clase: es una dependencia, flecha punteada (⇢)."},{t:d.b,sn:"la clase usada",w:"La dependencia llega a la clase del objeto usado: «"+d.b+"»."})});
+   os.forEach(o=>{nl();sl.push("operación:",{t:o.c,sn:"la clase que declara la operación",w:"La operación se declara en la clase que RECIBE el mensaje («"+o.c+"»), no en la que lo manda."},"::",{t:o.op+o.pa,sn:"la operación",w:"Es la operación que pide este mensaje."})});
+   const use=sl.filter(z=>typeof z!="string"&&z!="\n").map(z=>z.t),dis=[];CL.filter(c=>!use.includes(c)).slice(0,2).concat(use.includes("→")?[]:["→"],use.includes("⇢")?[]:["⇢"],use.includes("*")?[]:["*"],use.includes("1")?[]:["1"]).forEach(t=>dis.push([t]));
+   const sn=x.cls(x.L.from);if(!dis.some(d=>d[0]==sn)&&use.filter(t=>t==sn).length<2)dis.push([sn]);
+   cards.push(kSeq(G+" · "+opn(g)+" · mensaje "+x.L.n,"DCD · mensaje "+x.L.n+" de "+opn(g),"¿Qué le agrega este mensaje al DCD? Armalo con las fichas.",sl,dis,{ctx:X.id+" · Problema 2 b) DCD",ko:"Orden: clase de origen → flecha → clase de destino → multiplicidad; y la operación: clase → operación.",
+    th:"El DCD se arma recorriendo los diagramas de comunicación, mensaje por mensaje. Cada mensaje puede agregar: (1) una asociación navegable, si el emisor llega al receptor por un atributo propio (flecha llena →, con * si llega a una colección); (2) una dependencia, si usa un objeto que conoce solo por parámetro, variable local o global (flecha punteada ⇢); (3) una operación, que se declara en la clase que RECIBE el mensaje. find, next, add, remove y create no se declaran.",
+    kv:()=>`<div class="lt"><b>${esc(X.id)} · Problema 2</b> ${esc(X.pide)}</div>`+(X.nota?`<div class="lt mut">${esc(X.nota)}</div>`:"")+`<div class="lt"><b>Diagrama de ${esc(opn(g))}</b> (${esc(String(P4EX[g].cs[0].dg.sig||""))})</div>`+P4EX[g].cs.map(c=>`<div class="lt${c.dg.cur===x.L?" hl":""}">${c.dg.cur===x.L?"▶ ":""}${esc(lineStr(c.dg.cur))}</div>`).join("")+kFold("Tu DCD hasta ahora",dcdTxt(li),1)}))});
+  if(cards.length)units.push({id:"d"+units.length,cards})});
+ window.DCDD[X.id].units=units;
+ kChain(G,units,{req:X.gs.map(g=>P4EX[g].last).concat(KIN.dcd)})});
 
 /* ===== Letra del Problema 1 (modelo de dominio + DSS), tal cual. i = presentación; R = descripción de la realidad (una frase por línea; línea en blanco =
    párrafo); cu / act / U = caso de uso (una frase por línea). De ahí salen las frases S: a1, a2… (realidad) y u0, u1… (caso de uso), que se resaltan con
