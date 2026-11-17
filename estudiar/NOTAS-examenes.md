@@ -110,3 +110,12 @@ Estadística 14–16/11: 28/89 (31%); 14/11 14%, 15/11 7%, 16/11 64% (Principal 
 Cambio en nucleo.js (S2.kok): cada tarjeta kit acertada sin errores queda hecha; el paquete fallado vuelve solo con las tarjetas que faltan y se aprueba cuando todas quedaron hechas. Un paquete a medias pesa más al elegir. Aprobado, si vuelve, vuelve entero.
 Teoría sumada por sus «No sé»: ejemplo de integridad circular (th del paso) y serie «Parcial P3 · Constructores y destructores» (previa de las cadenas de P3).
 Pendiente (defecto de tarjeta, js/prog4.js): en «Patrón · Crear y registrar» el alta se manda a A y no a B de forma arbitraria (nota de Luca: «¿por qué a A y no a B?»): debería aceptar las dos o explicar el criterio.
+
+## Revisión general: paquetes y «No sé» (16/11 22:30, pedido de Luca)
+Revisado tema por tema y corregido:
+- «No sé» en TODAS las tarjetas kit (86+30): muestra la respuesta, su porqué y la teoría de esa acción (c.th): DCD (3 textos), DSS (DTH: mensajes, fragmentos, mensaje, DataType), modelo de dominio (MTH: clases, tipos, atributos, asociaciones, restricciones), P3 (P3T: diseño, .h, .cpp, static) y Lógica (LTH: inducción, semántica, modelos, consistencia). En el .cpp de P3 cada línea trae además su regla.
+- Series binarias: si el paso no tiene teoría propia, «No sé» muestra la de la serie (antes solo el primer paso).
+- Comunicación (2a): «Traducí la letra» y «Desarmá el mensaje» no mostraban teoría con «No sé»; ahora sí (KTH en nucleo.js). Las líneas y los árboles de deducción ya la tenían.
+- P3 mal formado: los paquetes seguían el orden de la solución (todos los .h y después los .cpp) y quedaban paquetes de una sola tarjeta. Ahora va clase por clase, de la menos acoplada a la más acoplada (P3X.ord), cada clase con su .h y sus operaciones juntas. Cambian los tokens de P3: su progreso arranca de nuevo.
+- Sin cambios porque ya estaban bien formados: modelo de dominio (1 paquete), DSS (2), DCD (1), Lógica (1 por ejercicio), tramos de comunicación.
+No revisado: pestaña Código (escritura ficha por ficha) y Oído.

@@ -107,6 +107,8 @@ V.addEventListener("toggle",ev=>{if(TAB!=8)return;const d=ev.target;if(d&&d.data
    - Las líneas equivocadas salen solas de reglas (P3M: Clase::, constructor de la base, -> y punto, new, ==, <=, acumular, inicializar, *it, this->, delete,
      push_back / insert / map[clave]) y cada una muestra su regla. Las que dependen de la letra van a mano en P3X.hx (línea correcta → [[equivocada, por qué]]).
    - P3X.ds: de dónde a dónde va, en la letra, la descripción de cada operación (se muestra tal cual). Los bloques de más de 8 líneas se parten en dos tarjetas.
+   - ORDEN Y PAQUETES: clase por clase, de la menos acoplada a la más acoplada (teórico: así lo que usa cada clase ya está escrito), y de cada clase primero
+     su .h y después sus operaciones; cada clase es un paquete. «No sé» muestra la línea, la regla de esa línea y la teoría (P3T).
    - Se saltean los bloques de dos líneas sin nada que decidir (constructor o destructor vacío). Cada tarjeta es su propia unidad; área «cod» (filtro P3).
    RECETA: sumar el examen a CDX (js/codigo-datos.js) y una entrada en P3X {n, T, hx, ds}; simular con jsdom y revisar la lista de líneas equivocadas. */
 const p3Nm=t=>{let m;return(m=/^this->(\w+)/.exec(t))?m[1]:(m=/^[\w<>:, \*]+?[ \*](\w+)(?: = .*)?;$/.exec(t))?m[1]:(m=/^(\w+)/.exec(t))?m[1]:""},
@@ -155,9 +157,13 @@ function P3M(t,cx){const R=[],add=(r,w,why)=>{if(w&&w!=t&&!R.some(z=>z[0]==w))R.
  return R}
 /* Introducción al tema: series que hay que completar sin errores antes de empezar cada cadena (más las de P3X.pre, según el patrón del examen) */
 const P3I=["Parcial P3 · Del DCD al código: la estructura","Parcial P3 · Constructores y destructores","Parcial P3 · Del diagrama de comunicación al método"];
+const P3T=["Antes de escribir: reconocer qué patrón trae el DCD (Composite: una clase abstracta con una hoja y un compuesto hecho de otras; Singleton: instancia única y getInstancia; una interfaz con una fábrica que elige la clase concreta), qué colecciones guarda cada clase y qué pide exactamente la letra: qué clases hay que implementar y qué se puede asumir.",
+ "Del DCD al .h: los atributos van privados. Una asociación navegable es un pseudoatributo: multiplicidad máxima 1 → puntero; mayor → colección de punteros (vector si hay orden, set si no, map si se busca por clave). Generalización o realización → «: public Base». Operación abstracta → virtual … = 0; la subclase la declara sin = 0. Clase base usada por puntero → destructor virtual. Singleton → instancia y getInstancia con static, constructor privado.",
+ "En el .cpp cada operación lleva Clase:: delante. Los objetos se crean con new y se guarda su puntero; con un puntero se usa ->, con un objeto o una colección se usa punto. Recorrer: for con índice de 0 a size()-1, o un iterador (el elemento es *it). Acumular: variable en 0 y total = total + …. Guardar: vector.push_back(x), set.insert(x), map[clave] = x. Lo que la clase creó con new y es solo suyo se libera con delete. Una subclase pasa los datos heredados al constructor de su base (: Base(…)).",
+ "Un atributo static se declara en el .h con static y se define una sola vez en el .cpp, fuera de la clase, con el nombre de la clase delante y sin repetir static: Tipo Clase::atributo = valor;"];
 const P3Q="¿Qué se desprende de la letra y del DCD? Elegí todo lo que es cierto.";
 const P3X={
-feb26:{n:"Feb26",pre:["Parcial P3 · Composite"],T:{p:P3Q,
+feb26:{n:"Feb26",ord:["Paquete","Simple","Multiparte","Controlador"],pre:["Parcial P3 · Composite"],T:{p:P3Q,
   ok:[["Paquete es abstracta: cantArticulos se resuelve distinto en Simple y en Multiparte","Es la estructura del patrón Composite: Paquete = componente, Simple = hoja, Multiparte = compuesto. Por eso cantArticulos es virtual pura en Paquete."],
    ["Un Multiparte está hecho de paquetes Simple que son suyos: los libera en su destructor","Las partes se crean solo para ese multiparte y no se registran en la colección global: nadie más las puede liberar."],
    ["El Controlador guarda todos los paquetes en una colección global, buscados por su id","Por eso el pseudoatributo es un map de id a puntero a Paquete."],
@@ -171,7 +177,7 @@ feb26:{n:"Feb26",pre:["Parcial P3 · Composite"],T:{p:P3Q,
   "s->agregarArticulo(articulos[partes[0].at(i)]);":[["s->agregarArticulo(new Articulo(partes[0].at(i)));","Los artículos ya existen en la colección global del controlador: se busca el puntero por su id, no se crean de nuevo."]],
   "return paquetes[idPaq]->cantArticulos();":[["return ((Simple *) paquetes[idPaq])->cantArticulos();","No hace falta saber de qué tipo es el paquete: cantArticulos es virtual y cada uno responde con su versión."]]},
  ds:{"Controlador::altaPaquete":["Da de alta un nuevo paquete","paquete multiparte correspondiente."],"Controlador::cantArticulos":["Devuelve la cantidad de artículos","todas sus partes."],"Multiparte::cantArticulos":["Para un paquete de tipo multiparte, se cuentan","todas sus partes."]}},
-jul26:{n:"Jul26",pre:["Parcial P3 · Singleton","Parcial P3 · Clase abstracta e interfaz"],T:{p:P3Q,
+jul26:{n:"Jul26",ord:["IRepartidor","RepartidorMoto","GeneradorRepartidores","ControladorRepartos"],pre:["Parcial P3 · Singleton","Parcial P3 · Clase abstracta e interfaz"],T:{p:P3Q,
   ok:[["ControladorRepartos es Singleton: instancia estática privada, constructor privado y getInstancia estática","Es lo que pide el estereotipo: una única instancia, a la que se llega por una operación de clase."],
    ["IRepartidor es una interfaz: en C++, una clase con sus operaciones virtuales puras y destructor virtual","C++ no tiene «interface»: se implementa como clase abstracta pura."],
    ["GeneradorRepartidores decide qué repartidor crear; el Controlador solo conoce IRepartidor","Es el mecanismo de fábrica: quien usa al repartidor no se acopla a las clases concretas."],
@@ -189,7 +195,7 @@ jul26:{n:"Jul26",pre:["Parcial P3 · Singleton","Parcial P3 · Clase abstracta e
  ds:{"ControladorRepartos::registrarArticulo":["Crea dinámicamente un Articulo","entero no negativo."],"ControladorRepartos::registrarTanda":["Recorre los pedidos del datatype","no son vacías."],
   "ControladorRepartos::calcularTiempoTotal":["Solicita al generador","retorna el resultado."],"ControladorRepartos::calcularMontosPorPedido":["Busca en la colección global la tanda","representar el resultado."],
   "GeneradorRepartidores::obtenerRepartidor":["Suma las distancias","retorna un RepartidorMoto."],"RepartidorMoto::calcularTiempoTotal":["Cada implementación concreta","distancia * 5."]}},
-par26:{n:"Parcial 2026",pre:["Parcial P3 · Composite","Parcial P3 · Singleton"],T:{p:P3Q,
+par26:{n:"Parcial 2026",ord:["Viaje","ConEscalas","Controlador"],pre:["Parcial P3 · Composite","Parcial P3 · Singleton"],T:{p:P3Q,
   ok:[["Viaje es abstracta: darCostoTotal se resuelve distinto en Directo y en ConEscalas","Es la estructura del patrón Composite: Viaje = componente, Directo = hoja, ConEscalas = compuesto. Por eso darCostoTotal es virtual pura en Viaje."],
    ["Un viaje con escalas está formado por otros viajes de cualquier tipo, en orden","Por eso guarda un vector de punteros a Viaje (la clase base), no a Directo."],
    ["El Controlador es Singleton y además genera los identificadores de los viajes","Instancia estática, getInstance estática y constructor privado; el último id usado también es un dato de la clase."],
@@ -211,24 +217,27 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
  X.blocks.forEach(b=>{const m=/^class (\w+)/.exec(b.lines[0][1]);if(b.kind=="decl"&&m)pure[m[1]]=b.lines.map(l=>/^virtual .*\b(\w+)\(.*\) = 0;$/.exec(l[1])).filter(Boolean).map(z=>z[1])});
  const code=b=>`<div style="font-family:var(--m);font-size:13px;margin-bottom:6px">`+b.lines.map(l=>`<div style="padding-left:${l[0]*14}px">${esc(l[1])}</div>`).join("")+`</div>`,
   desc=k=>{const a=H.ds[k];if(!a)return"";const i=X.letra.indexOf(a[0]),j=X.letra.indexOf(a[1],i);return i<0||j<0?"":X.letra.slice(i,j+a[1].length)},
-  o=(bi,k,x)=>Object.assign({ctx:H.n+" · Problema 3",ar:"cod",kv:()=>`<div class="lt"><b>${esc(X.t)}</b></div>`+kFold("Letra",`<div class="lt">${esc(X.letra).replace(/\n/g,"<br>")}</div>`,bi<0)+
-   kFold("Diagrama de clases (DCD)",`<img class="ltim" src="${X.img}" alt="DCD">`,bi<0)+(k&&desc(k)?`<div class="lt"><b>Qué tiene que hacer:</b> ${esc(desc(k))}</div>`:"")+(bi>0?kFold("Tu código hasta ahora",X.blocks.slice(0,bi).map(code).join(""),0):"")},x||{});
+  o=(bi,k,x)=>Object.assign({ctx:H.n+" · Problema 3",ar:"cod",th:P3T[bi<0?0:1],kv:()=>`<div class="lt"><b>${esc(X.t)}</b></div>`+kFold("Letra",`<div class="lt">${esc(X.letra).replace(/\n/g,"<br>")}</div>`,bi<0)+
+   kFold("Diagrama de clases (DCD)",`<img class="ltim" src="${X.img}" alt="DCD">`,bi<0)+(k&&desc(k)?`<div class="lt"><b>Qué tiene que hacer:</b> ${esc(desc(k))}</div>`:"")+(bi>0?kFold("Tu código hasta ahora",ordB.slice(0,bi).map(i=>code(X.blocks[i])).join(""),0):"")},x||{});
  U.push({id:"dis",cards:[kSet(G+" · el diseño","P3 · el diseño",H.T.p,H.T.ok.map(z=>({t:z[0],w:z[1]})),H.T.no,o(-1))]});
- X.blocks.forEach((b,bi)=>{const t0=b.lines[0][1],C=(/^class (\w+)/.exec(t0)||/(\w+)::/.exec(t0)||[])[1],B=(/: public (\w+)/.exec(t0)||[])[1],key=b.title.replace(/ \(.*\)$/,"");
+ const cl=b=>(/^class (\w+)/.exec(b.lines[0][1])||/(\w+)::/.exec(b.lines[0][1])||[])[1],ordB=[];
+ /* orden: clase por clase, de la menos acoplada a la más acoplada (P3X.ord), y de cada una primero su .h y después sus operaciones */
+ H.ord.concat(X.blocks.map(cl)).forEach(k=>X.blocks.forEach((b,i)=>{if(cl(b)==k&&!ordB.includes(i))ordB.push(i)}));
+ ordB.forEach((bi,pos)=>{const b=X.blocks[bi],t0=b.lines[0][1],C=cl(b),B=(/: public (\w+)/.exec(t0)||[])[1],key=b.title.replace(/ \(.*\)$/,"");
   if(b.kind=="decl"){const cx={k:"decl",C,B,pure,cont,hx:H.hx},L=[],dis=[];
    b.lines.forEach((l,i)=>{const c=P3M(l[1],cx).slice(0,2),t=l[1];if(!c.length)return L.push({ind:l[0],t});
     L.push({ind:l[0],t,k:1,w:c[0][1],sn:/^class /.test(t)?"el encabezado de la clase":/~/.test(t)?"el destructor":/(\w+)\(/.test(t)?"la operación "+/(\w+)\(/.exec(t)[1]:"el atributo "+(/(\w+);$/.exec(t)||[0,""])[1]});
     c.forEach(d=>{dis.push([d[0],d[1],i]);rep.push(key+" ✗ "+d[0])})});
-   if(dis.length)U.push({id:"b"+bi,cards:[kCode(G+" · .h de "+C,"P3 · .h de "+C,"Pasá "+C+" del DCD al .h. Lo que el DCD ya trae está puesto: elegí la línea correcta en cada lugar que falta.",L,dis,o(bi))]});return}
+   if(dis.length)U.push({id:"b"+bi,cards:[kCode(G+" · .h de "+C,"P3 · .h de "+C,"Pasá "+C+" del DCD al .h. Lo que el DCD ya trae está puesto: elegí la línea correcta en cada lugar que falta.",L,dis,o(pos))]});return}
   const cx={k:b.kind,cont,hx:H.hx},isIt=l=>!/^\}/.test(l[1]),cand=b.lines.map((l,i)=>isIt(l)?P3M(l[1],Object.assign({sig:b.kind=="def"&&!i},cx)):[]);
   if(b.lines.length<3&&b.kind=="def"&&!cand[0].some(c=>c[2]!="cls"))return;
   const its=b.lines.map((l,i)=>i).filter(i=>isIt(b.lines[i])),cut=its.length>8?its[Math.ceil(its.length/2)]:0;
   (cut?[[0,cut],[cut,b.lines.length]]:[[0,b.lines.length]]).forEach((pr,pi)=>{const L=[],dis=[],pool=[];let prev=0;
-   b.lines.forEach((l,i)=>{if(i>=pr[1])return;const it=i>=pr[0]&&isIt(l);L.push({ind:l[0],t:l[1],k:it?2:0,sep:!prev});prev=it;if(it)cand[i].forEach(c=>pool.push(c))});
+   b.lines.forEach((l,i)=>{if(i>=pr[1])return;const it=i>=pr[0]&&isIt(l);L.push({ind:l[0],t:l[1],k:it?2:0,sep:!prev,w:it&&cand[i][0]?cand[i][0][1]:""});prev=it;if(it)cand[i].forEach(c=>pool.push(c))});
    PR.forEach(r=>pool.filter(c=>c[2]==r).slice(0,r=="hx"?9:1).forEach(c=>{if((r=="hx"||dis.length<4)&&!L.some(l=>l.t==c[0])&&!dis.some(d=>d[0]==c[0])){dis.push([c[0],c[1]]);rep.push(key+" ✗ "+c[0])}}));
    const nm=key+(cut?" "+(pi+1)+"/2":"");
    U.push({id:"b"+bi+(pi?"b":""),cards:[kCode(G+" · "+nm,"P3 · "+nm,b.kind=="stat"?"¿Cómo se define en el .cpp este atributo estático?":"Armá la operación línea por línea"+(pi?" (sigue).":"."),L,dis,
-    Object.assign(o(bi,key),{ko:"Las líneas van en el orden del código; dos líneas seguidas que no dependen una de la otra valen en cualquier orden."}))]})})});
+    Object.assign(o(pos,key),{th:P3T[b.kind=="stat"?3:2],ko:"Las líneas van en el orden del código; dos líneas seguidas que no dependen una de la otra valen en cualquier orden."}))]})})});
  const GR=[];U.forEach(u=>{const g=u.cards[0].g.split(" · P3 · ")[1],k=u.id=="dis"?"dis":(/^\.h de (\w+)/.exec(g)||/(\w+)::/.exec(g)||[0,g])[1],l=GR[GR.length-1];if(l&&l.k==k)l.cards.push(u.cards[0]);else GR.push({k,id:u.id=="dis"?"dis":"g"+GR.length,cards:[u.cards[0]]})});
  kChain(G,GR,{req:P3I.concat(H.pre)});window.P3D[id]={U,rep,GR}});
 

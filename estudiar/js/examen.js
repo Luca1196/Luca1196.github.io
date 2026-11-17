@@ -122,17 +122,17 @@ DCDX.forEach(X=>{if(!window.P4EX||X.gs.some(g=>!P4EX[g]))return;
  /* 1) asociaciones */
  {const dis=[];D.slice(0,2).forEach(d=>dis.push([d.a+" → "+d.b,"«"+d.a+"» conoce a «"+d.b+"» solo por parámetro, variable local o global, no por un atributo propio: eso se dibuja como dependencia (punteada), no como asociación."]));
   H.filter(h=>h.a!="Controlador"&&!H.some(z=>z.a==h.b&&z.b==h.a)&&!skp(h.b,h.a)).slice(0,2).forEach(h=>dis.push([h.b+" → "+h.a+(h.w?"":" *"),"En ningún mensaje se navega de «"+h.b+"» hacia «"+h.a+"»: solo se dibuja la navegabilidad que usan los diagramas."]));
-  cards.push(kSet(G+" · asociaciones","DCD · asociaciones","¿Qué asociaciones navegables quedan en el DCD? (las que usan los dos diagramas)",H.map(h=>({t:hp(h),w:"Se navega por esa flecha en el "+h.ref+"."})),dis.filter((d,i)=>!H.some(h=>hp(h)==d[0])&&dis.findIndex(z=>z[0]==d[0])==i),o()))}
+  cards.push(kSet(G+" · asociaciones","DCD · asociaciones","¿Qué asociaciones navegables quedan en el DCD? (las que usan los dos diagramas)",H.map(h=>({t:hp(h),w:"Se navega por esa flecha en el "+h.ref+"."})),dis.filter((d,i)=>!H.some(h=>hp(h)==d[0])&&dis.findIndex(z=>z[0]==d[0])==i),o({th:"Asociación navegable A → B: en algún mensaje, un objeto A le manda algo a un B al que llega por un atributo propio (visibilidad por asociación). Si llega a una colección de B lleva *. Solo se dibujan las que los diagramas usan, y con la navegabilidad en que se usan."})))}
  /* 2) dependencias */
  if(D.length){const dis=[];H.filter(h=>h.a!="Controlador").slice(0,2).forEach(h=>dis.push([h.a+" ⇢ "+h.b,"Ya hay una asociación "+h.a+" → "+h.b+" (se llega por un atributo propio): la dependencia sobra."]));
   D.filter(d=>!hasA(d.b,d.a)&&!skp(d.b,d.a)&&!D.some(z=>z.a==d.b&&z.b==d.a)).slice(0,1).forEach(d=>dis.push([d.b+" ⇢ "+d.a,"«"+d.b+"» no usa a «"+d.a+"» en ningún mensaje: la dependencia va de quien usa hacia lo que usa."]));
-  cards.push(kSet(G+" · dependencias","DCD · dependencias","¿Qué dependencias (flecha punteada) hacen falta?",D.map(d=>({t:d.a+" ⇢ "+d.b,w:d.why+" y no tiene asociación hacia esa clase: es una dependencia."})),dis.filter(d=>!D.some(z=>z.a+" ⇢ "+z.b==d[0])),o()))}
+  cards.push(kSet(G+" · dependencias","DCD · dependencias","¿Qué dependencias (flecha punteada) hacen falta?",D.map(d=>({t:d.a+" ⇢ "+d.b,w:d.why+" y no tiene asociación hacia esa clase: es una dependencia."})),dis.filter(d=>!D.some(z=>z.a+" ⇢ "+z.b==d[0])),o({th:"Dependencia A ⇢ B (flecha punteada): A usa un B que conoce solo por parámetro, por una variable local (un resultado que guardó) o por visibilidad global, y no tiene una asociación hacia B. Si ya hay asociación, la dependencia sobra."})))}
  /* 3) operaciones, de a 6 */
  {const n=Math.ceil(O.length/6),sz=Math.ceil(O.length/n),fnd=LL.find(x=>x.L.op=="find");
   for(let k=0;k<n;k++){const ch=O.slice(k*sz,k*sz+sz),dis=[];
    ch.filter(x=>x.from&&x.from!=x.c).slice(0,2).forEach(x=>dis.push([x.from+" :: "+x.op+x.pa,"«"+x.op+"» la MANDA «"+x.from+"», pero la recibe «"+x.c+"»: la operación se declara en la clase del receptor ("+x.ref+")."]));
    if(fnd&&!k)dis.push([fnd.cls(fnd.L.to)+" :: find"+fnd.L.pa,"find, next, add y remove son operaciones de la colección (ya vienen dadas): no se declaran en la clase."]);
-   cards.push(kSet(G+" · operaciones"+(n>1?" "+(k+1)+"/"+n:""),"DCD · operaciones","¿Qué operaciones se declaran, y en qué clase?",ch.map(x=>({t:x.t,w:"La recibe «"+x.c+"»: "+x.ref+"."})),dis.filter(d=>!O.some(z=>z.t==d[0])),o()))}}
+   cards.push(kSet(G+" · operaciones"+(n>1?" "+(k+1)+"/"+n:""),"DCD · operaciones","¿Qué operaciones se declaran, y en qué clase?",ch.map(x=>({t:x.t,w:"La recibe «"+x.c+"»: "+x.ref+"."})),dis.filter(d=>!O.some(z=>z.t==d[0])),o({th:"Cada operación se declara en la clase del objeto que RECIBE el mensaje, no en la del que lo manda. Las operaciones de las colecciones (find, next, add, remove) y create no se declaran."})))}}
  kChain(G,[{id:"dcd",cards}],{req:X.gs.map(g=>P4EX[g].last).concat(KIN.dcd)})});
 
 /* ===== Letra del Problema 1 (modelo de dominio + DSS), tal cual. i = presentación; R = descripción de la realidad (una frase por línea; línea en blanco =
@@ -257,6 +257,10 @@ Object.values(P1L).forEach(L=>{L.S={};let n=0;L.P=L.R.split("\n\n").map(p=>p.spl
    frases, j:1 = va en la misma tarjeta que el mensaje anterior, fin:1 = cierra el caso de uso}; ev = fichas equivocadas de «mensajes»;
    fr = fragmentos {k, g: guarda (alt: las dos), a, b: primer y último mensaje (desde 0), w, hl}; fd = fragmentos equivocados; DT = DataTypes {n, d, hl, w, at, x}.
    La nota de memoria se pide solo donde la solución oficial la tiene (en los otros mensajes es discutible); «sin nota» y «libera la memoria» se agregan solas. */
+const DTH=["Un mensaje del DSS es algo que el ACTOR le da o le pide al Sistema (ingresa un dato, elige, confirma, cancela). Lo que el Sistema muestra, lista o retorna no es un mensaje: es el retorno del mensaje anterior. El Sistema nunca le manda mensajes al actor. Si el Sistema tiene que mostrar algo en cada vuelta de una repetición, hace falta un mensaje del actor en cada vuelta.",
+ "Fragmentos: loop [guarda] encierra los mensajes que se repiten («para cada…», «puede repetirse»); alt [guarda 1] / [guarda 2] separa caminos excluyentes, cada uno con su mensaje (confirmar o cancelar); opt [guarda] es un solo camino que puede darse una vez o ninguna. Lo que la letra hace «primero» o «finalmente» queda fuera del loop.",
+ "Parámetros: los datos que el actor ingresa en ese paso (identificadores, valores o DataTypes; nunca objetos del dominio) y nada que el Sistema ya recuerde. Retorno: solo si la letra dice que el Sistema muestra, lista o retorna algo; es un DataType o Set(DataType). Memoria: si lo que llega se usa en un mensaje posterior que no lo vuelve a mandar, va una nota «el Sistema recuerda…»; cuando el caso de uso termina (confirmar o cancelar), «se libera la memoria».",
+ "Un DataType lleva exactamente lo que la letra dice que el Sistema muestra: atributos simples, enumerados u otros DataTypes (Set si son varios). Nunca objetos del dominio. Si un dato es «el tipo» y en el dominio es una subclase, en el DataType va como un dato (enumerado o texto)."];
 const DSN=["la lista de parámetros","el retorno","la nota de memoria"],
  DSW=["Lo que llega o se decide en este mensaje se usa más adelante y ningún mensaje lo vuelve a mandar: el Sistema tiene que recordarlo. La letra pide indicar el uso de memoria.",
   "El Sistema viene recordando datos desde el primer mensaje: cuando el caso de uso termina (también si se cancela) hay que liberarlos, y decirlo en una nota.",
@@ -390,9 +394,9 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
  o=(k,fr,st)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pb||P1P.b)}</div><div class="lt"><b>Caso de uso:</b> ${esc(L.cu)} · <b>Actor:</b> ${esc(L.act)}</div>`+kSent(L.S,L.Uk,hs)+
   kFold("Descripción de la realidad",`<div class="lt">${esc(L.i)}</div>`+L.P.map(p=>kSent(L.S,p,hs)).join("<br>"),hs.some(h=>h[0]=="a"))+(st?kFold("Tu DSS hasta ahora",dss(k,fr),st<2):"")}}),U=[];
  /* 1) qué mensajes hay */
- U.push({id:"msj",cards:[kSet(G+" · mensajes","DSS · mensajes","Leé el caso de uso: ¿qué le da o le pide el actor al Sistema? Cada cosa es un mensaje.",M.map(m=>({t:m.d,w:m.w||"El actor le da un dato al Sistema o le comunica una decisión: es un mensaje.",hl:hl(m.hl)})),dz(X.ev),o(0,0,0))]});
+ U.push({id:"msj",cards:[kSet(G+" · mensajes","DSS · mensajes","Leé el caso de uso: ¿qué le da o le pide el actor al Sistema? Cada cosa es un mensaje.",M.map(m=>({t:m.d,w:m.w||"El actor le da un dato al Sistema o le comunica una decisión: es un mensaje.",hl:hl(m.hl)})),dz(X.ev),Object.assign(o(0,0,0),{th:DTH[0]}))]});
  /* 2) fragmentos */
- U.push({id:"frag",cards:[kSet(G+" · fragmentos","DSS · fragmentos","¿Qué fragmentos hacen falta y qué mensajes encierra cada uno?",X.fr.map(f=>({t:f.k=="alt"?`alt [${f.g[0]}]: ${f.a+1} / [${f.g[1]}]: ${f.b+1}`:`${f.k} [${f.g}]: mensaje${f.a==f.b?" "+(f.a+1):"s "+(f.a+1)+" a "+(f.b+1)}`,w:f.w,hl:hl(f.hl)})),dz(X.fd),o(0,0,1))]});
+ U.push({id:"frag",cards:[kSet(G+" · fragmentos","DSS · fragmentos","¿Qué fragmentos hacen falta y qué mensajes encierra cada uno?",X.fr.map(f=>({t:f.k=="alt"?`alt [${f.g[0]}]: ${f.a+1} / [${f.g[1]}]: ${f.b+1}`:`${f.k} [${f.g}]: mensaje${f.a==f.b?" "+(f.a+1):"s "+(f.a+1)+" a "+(f.b+1)}`,w:f.w,hl:hl(f.hl)})),dz(X.fd),Object.assign(o(0,0,1),{th:DTH[1]}))]});
  /* 3) cada mensaje: parámetros → retorno → nota de memoria (los j:1 comparten tarjeta con el anterior) */
  for(let i=0;i<N;){let j=i+1;while(j<N&&M[j].j)j++;const gr=M.slice(i,j),mu=gr.length>1,sl=[],dis=[],ps=[];let n=0;
   const slot=(m,a,k,h)=>{n++;if(!ps.includes(k))ps.push(k);sl.push({t:a[0],w:a[1],sn:DSN[k]+(mu?" de "+m.op:""),own:1,hl:hl(h||m.hl)});
@@ -401,9 +405,9 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
    if(m.rt){sl.push("devuelve");slot(m,m.rt,1,m.rh)}if(m.mem){sl.push("\n","nota:");slot(m,m.mem,2,m.mh)}});
   const pq=ps.sort().map(k=>["qué datos lleva","qué devuelve","qué tiene que recordar el Sistema"][k]);
   U.push({id:"m"+(i+1),cards:[kSeq(G+" · "+gr.map(m=>m.op).join(" y "),"DSS · mensaje"+(mu?"s "+(i+1)+" y "+j:" "+(i+1)),"Completá "+(mu?"los mensajes":"el mensaje")+": ¿"+(pq.length>1?pq.slice(0,-1).join(", ")+" y "+pq[pq.length-1]:pq[0])+"?",sl,dis,
-   Object.assign(o(i,1,1),{ko:"Orden: "+ps.map(k=>["parámetros","lo que devuelve","nota de memoria"][k]).join(" → ")+(mu?", mensaje por mensaje.":".")}))]});i=j}
+   Object.assign(o(i,1,1),{th:DTH[2],ko:"Orden: "+ps.map(k=>["parámetros","lo que devuelve","nota de memoria"][k]).join(" → ")+(mu?", mensaje por mensaje.":".")}))]});i=j}
  /* 4) DataTypes */
- (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),o(N,1,2))]}));
+ (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),Object.assign(o(N,1,2),{th:DTH[3]}))]}));
  kChain(G,[{id:"dss",cards:U.filter(u=>!/^dt/.test(u.id)).map(u=>u.cards[0])},{id:"dt",cards:U.filter(u=>/^dt/.test(u.id)).map(u=>u.cards[0])}].filter(u=>u.cards.length),{req:KIN.dss});window.DSSD[X.id]=U});
 
 /* ===== Problema 1a: Modelo de dominio y restricciones =====
@@ -415,6 +419,11 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
    MDX por examen: pt = título de cada párrafo de la realidad (se pliegan; se abren los de pp y el de la frase resaltada); C = tarjetas {id, g, t: título en el
    modelo, p: consigna, pp, mo:1 = modelo abierto, ok: [correcta, por qué, frases], no: [equivocada, por qué no, frases], xt: líneas que se suman al modelo sin
    pedirse}. Solo se piden decisiones que salen de la letra: donde la solución oficial elige algo que la letra no fija (p. ej. 1..* o *), no hay ficha equivocada. */
+const MTH={cls:"Es clase un concepto de la realidad que tiene datos propios o se relaciona con otros. No son clases: un dato simple (atributo), un conjunto fijo de valores (enumerado), otro nombre del mismo concepto, el actor del caso de uso si no se registran datos de él, ni el sistema o la empresa que lo usa.",
+ tip:"«Tipos de X»: si cada tipo registra datos o relaciones propias van subclases (y X es abstracta si todo X es de algún tipo); si solo interesa cuál es, va un enumerado como tipo de un atributo. Un estado que cambia con el tiempo es un atributo enumerado, no subclases. Un valor compuesto sin identidad (fecha, hora) es un DataType.",
+ atr:"Cada dato va en la clase de la que es propio: lo común a todos los tipos en la clase base, lo de un tipo en su subclase, y lo que depende de un par de objetos en la clase de asociación. No van como atributos ni las «claves foráneas» (el vínculo es la asociación) ni las colecciones de objetos de otra clase.",
+ aso:"Multiplicidad: al lado de cada clase va cuántos objetos de ESA clase se vinculan con uno de la otra. Clase de asociación: cuando el vínculo tiene datos propios y hay a lo sumo un vínculo por par; si puede haber varios por par, es una clase común. {ordered} si la letra habla de secuencia u orden. No se agregan asociaciones que se alcanzan por otro camino.",
+ res:"Se escribe en lenguaje natural solo lo que el diagrama no alcanza a decir: unicidad (identificadores; «dentro de» si es relativa), integridad circular (cada ciclo del diagrama: ¿los dos caminos tienen que llegar al mismo objeto?), atributos calculados (la fórmula) y reglas de negocio. Lo que ya dicen las multiplicidades, {ordered} o una clase abstracta no se repite, y no se inventan reglas que la letra no da."};
 const kHl=h=>h?"S:"+h:undefined,kDz=a=>(a||[]).map(d=>[d[0],d[1],kHl(d[2])]);
 const MDX=[
 {id:"Feb26",pt:["Procesos y pasos","Usuarios y certificados","Expedientes y asignaciones"],C:[
@@ -569,5 +578,5 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",U=[];
  X.C.forEach((c,i)=>{const prev=X.C.slice(0,i),kv=b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pa||P1P.a)}</div><div class="lt">${esc(L.i)}</div>`+
    L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),c.pp.includes(q)||p.some(k=>hs.includes(k)))).join("")+
    kFold("Tu modelo hasta ahora",prev.map(z=>`<div><b>${esc(z.t)}</b></div>`+z.ok.map(o=>o[0]).concat(z.xt||[]).map(t=>`<div style="padding-left:14px">${esc(t)}</div>`).join("")).join(""),c.mo)};
-  U.push({id:c.id,cards:[kSet(G+" · "+c.g,"Modelo de dominio · "+c.g,c.p,c.ok.map(o=>({t:o[0],w:o[1],hl:kHl(o[2])})),kDz(c.no),{kv,ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod"})]})});
+  U.push({id:c.id,cards:[kSet(G+" · "+c.g,"Modelo de dominio · "+c.g,c.p,c.ok.map(o=>({t:o[0],w:o[1],hl:kHl(o[2])})),kDz(c.no),{kv,ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod",th:MTH[c.id.replace(/\d$/,"")]})]})});
  kChain(G,[{id:"md",cards:U.map(u=>u.cards[0])}],{req:KIN.md})});
