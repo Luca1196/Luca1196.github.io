@@ -124,3 +124,10 @@ No revisado: pestaña Código (escritura ficha por ficha) y Oído.
 Luca (23:44): lo nuevo «no se parece al trabajo de fichas estilo Duolingo»: quería un sistema como el de los diagramas de comunicación o los árboles, donde CON FICHAS SE VA ARMANDO el diagrama; el DCD tenía pocas tarjetas y no resolvía un ejercicio. Las tarjetas «elegí todas las correctas» (kSet) y de respuesta entera (kSeq con frases) NO son el formato pedido.
 DCD rehecho como piloto: se recorre cada diagrama mensaje por mensaje y, en cada mensaje que agrega algo, se arma con fichas chicas la relación (clase de origen, → o ⇢, clase de destino, * o 1) y la operación (clase :: operación). Un paquete por diagrama: Parcial 13 tarjetas, Jul26 15, Feb26 15. Cada casillero explica su regla.
 PENDIENTE, mismo criterio (fichas que arman el artefacto, paso por paso): modelo de dominio, DSS, P3 en Principal y Lógica (inducción, semántica, modelos). Esperando que Luca valide el piloto.
+
+## Diagramas con fichas (17/11 00:10)
+Luca: «cada tema que se basa en armar diagramas debe hacerse con el sistema de fichas correspondiente». Hecho, con el armador kTok (js/examen.js: texto puesto, casilleros en orden y grupos de fichas en cualquier orden):
+- DCD: mensaje por mensaje (relación y operación con fichas). 43 tarjetas.
+- Modelo de dominio: clases (conjunto de nombres) → cada clase (hereda / subclases / abstracta y sus atributos ficha por ficha) → cada asociación (la otra clase, multiplicidad de cada lado, orden, clase de asociación) → restricciones (frases, se eligen). Feb26 14 tarjetas, Jul26 17, Parcial 21. Sale todo de los datos MDX que ya estaban. * y 1..* no se enfrentan como error.
+- DSS: cada tarjeta arma la línea que sigue: fragmento (abre / sigue / cierra, con su guarda) → qué hace el actor → parámetros ficha por ficha → retorno → nota. Se eliminaron las tarjetas «mensajes» y «fragmentos». Después, los DataTypes atributo por atributo. Feb26 10, Jul26 9, Parcial 8.
+Siguen con el formato anterior porque no son diagramas: P3 en Principal (líneas de código) y Lógica (pruebas). Tokens nuevos (md2, dss3): el progreso de 1a y 1b arranca de nuevo.

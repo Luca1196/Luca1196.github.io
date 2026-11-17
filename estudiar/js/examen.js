@@ -394,27 +394,35 @@ window.DSSD={};
 DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:"+h:undefined,dz=a=>(a||[]).map(d=>[d[0],d[1],hl(d[2])]),
  ln=m=>m.op+"("+(typeof m.pa=="string"?m.pa:m.pa[0]).replace("sin parámetros","")+")"+(m.rt&&m.rt[0]!="nada"?": "+m.rt[0].replace(/ \(.*\)$/,""):""),
  /* el DSS en texto: los primeros k mensajes completos y el resto solo con lo decidido en «mensajes»; fr = ya se eligieron los fragmentos */
- dss=(k,fr)=>M.map((m,i)=>{const F=fr?X.fr.filter(f=>i>=f.a&&i<=f.b):[],h=F.map((f,q)=>{const p=`<div style="padding-left:${q*14}px"><b>`;return i==f.a?p+`${f.k} [${esc(f.k=="alt"?f.g[0]:f.g)}]</b></div>`:f.k=="alt"&&i==f.b?p+`[${esc(f.g[1])}]</b></div>`:""}).join("");
+ dss=(k,fr)=>M.slice(0,k).map((m,i)=>{const F=fr?X.fr.filter(f=>i>=f.a&&i<=f.b):[],h=F.map((f,q)=>{const p=`<div style="padding-left:${q*14}px"><b>`;return i==f.a?p+`${f.k} [${esc(f.k=="alt"?f.g[0]:f.g)}]</b></div>`:f.k=="alt"&&i==f.b?p+`[${esc(f.g[1])}]</b></div>`:""}).join("");
   return h+`<div style="padding-left:${F.length*14}px">${i+1}. ${esc(i<k?ln(m):m.op+" — "+m.d)}${i<k&&m.mem?` <span class="mut">· nota: ${esc(m.mem[0])}</span>`:""}</div>`}).join(""),
  /* contexto: lo que se pide + el caso de uso (frases resaltables) + la realidad plegada + el DSS ya decidido (st: 0 no se muestra, 1 abierto, 2 plegado) */
  o=(k,fr,st)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pb||P1P.b)}</div><div class="lt"><b>Caso de uso:</b> ${esc(L.cu)} · <b>Actor:</b> ${esc(L.act)}</div>`+kSent(L.S,L.Uk,hs)+
   kFold("Descripción de la realidad",`<div class="lt">${esc(L.i)}</div>`+L.P.map(p=>kSent(L.S,p,hs)).join("<br>"),hs.some(h=>h[0]=="a"))+(st?kFold("Tu DSS hasta ahora",dss(k,fr),st<2):"")}}),U=[];
- /* 1) qué mensajes hay */
- U.push({id:"msj",cards:[kSet(G+" · mensajes","DSS · mensajes","Leé el caso de uso: ¿qué le da o le pide el actor al Sistema? Cada cosa es un mensaje.",M.map(m=>({t:m.d,w:m.w||"El actor le da un dato al Sistema o le comunica una decisión: es un mensaje.",hl:hl(m.hl)})),dz(X.ev),Object.assign(o(0,0,0),{th:DTH[0]}))]});
- /* 2) fragmentos */
- U.push({id:"frag",cards:[kSet(G+" · fragmentos","DSS · fragmentos","¿Qué fragmentos hacen falta y qué mensajes encierra cada uno?",X.fr.map(f=>({t:f.k=="alt"?`alt [${f.g[0]}]: ${f.a+1} / [${f.g[1]}]: ${f.b+1}`:`${f.k} [${f.g}]: mensaje${f.a==f.b?" "+(f.a+1):"s "+(f.a+1)+" a "+(f.b+1)}`,w:f.w,hl:hl(f.hl)})),dz(X.fd),Object.assign(o(0,0,1),{th:DTH[1]}))]});
- /* 3) cada mensaje: parámetros → retorno → nota de memoria (los j:1 comparten tarjeta con el anterior) */
- for(let i=0;i<N;){let j=i+1;while(j<N&&M[j].j)j++;const gr=M.slice(i,j),mu=gr.length>1,sl=[],dis=[],ps=[];let n=0;
-  const slot=(m,a,k,h)=>{n++;if(!ps.includes(k))ps.push(k);sl.push({t:a[0],w:a[1],sn:DSN[k]+(mu?" de "+m.op:""),own:1,hl:hl(h||m.hl)});
-   a.slice(2).concat(k<2?[]:[["sin nota",DSW[m.fin?1:0]]].concat(m.fin?[]:[["libera la memoria",DSW[2]]])).forEach(d=>{const e=dis.find(z=>z[0]==d[0]);if(e)e[2]=undefined;else dis.push([d[0],d[1],n,hl(d[2])])})};
-  gr.forEach((m,q)=>{if(q)sl.push("\n");if(typeof m.pa=="string")sl.push(m.op+"("+m.pa+")");else{sl.push(m.op+"(");slot(m,m.pa,0,m.ph);sl.push(")")}
-   if(m.rt){sl.push("devuelve");slot(m,m.rt,1,m.rh)}if(m.mem){sl.push("\n","nota:");slot(m,m.mem,2,m.mh)}});
-  const pq=ps.sort().map(k=>["qué datos lleva","qué devuelve","qué tiene que recordar el Sistema"][k]);
-  U.push({id:"m"+(i+1),cards:[kSeq(G+" · "+gr.map(m=>m.op).join(" y "),"DSS · mensaje"+(mu?"s "+(i+1)+" y "+j:" "+(i+1)),"Completá "+(mu?"los mensajes":"el mensaje")+": ¿"+(pq.length>1?pq.slice(0,-1).join(", ")+" y "+pq[pq.length-1]:pq[0])+"?",sl,dis,
-   Object.assign(o(i,1,1),{th:DTH[2],ko:"Orden: "+ps.map(k=>["parámetros","lo que devuelve","nota de memoria"][k]).join(" → ")+(mu?", mensaje por mensaje.":".")}))]});i=j}
+ /* EL DSS SE ARMA CON FICHAS, MENSAJE POR MENSAJE (pedido de Luca, 16/11). Cada tarjeta es la línea que sigue del diagrama: si abre, sigue o cierra un
+    fragmento (y su guarda) → qué hace el actor ahora (el paso del caso de uso que es un mensaje) → sus parámetros, ficha por ficha → qué devuelve → la nota de
+    memoria. No hay tarjetas aparte de «qué mensajes hay» ni de «qué fragmentos»: se decide al armar cada línea. */
+ const FL=["sin fragmento","abre loop","abre alt","abre opt","sigue dentro del loop","otra rama del alt"],GU=X.fr.flatMap(f=>[].concat(f.g));
+ M.forEach((m,i)=>{const F=X.fr.filter(f=>i>=f.a&&i<=f.b),st=F.find(f=>f.a==i),br=F.find(f=>f.k=="alt"&&f.b==i&&f.a!=i),cl=X.fr.find(f=>f.b==i-1&&!(f.k=="alt"&&br)&&!F.includes(f)),out=F.find(f=>f!=st&&f.a<i),parts=[],dis=[];
+  const add=d=>{if(d[0]&&!dis.some(z=>z[0]==d[0]))dis.push(d)};
+  const lab=st?(cl?"cierra el "+cl.k+" y ":"")+"abre "+st.k+(out?" (dentro del "+out.k+")":""):br?"otra rama del alt":F.length?"sigue dentro del "+F[F.length-1].k:"sin fragmento";
+  parts.push({t:lab,sn:"qué pasa con los fragmentos",hl:hl((st||br||F[0]||{}).hl),w:st?st.w:br?"Confirmar y cancelar son caminos excluyentes: cada uno va en su rama del alt, con su guarda.":F.length?"Este mensaje también forma parte de lo que se repite: sigue dentro del fragmento.":"Este paso se hace una sola vez y siempre: va fuera de todo fragmento."});
+  (st&&cl?["abre "+st.k+" (dentro del "+cl.k+")"]:st&&out?["cierra el "+out.k+" y abre "+st.k]:[]).concat(FL).filter(t=>!lab.includes(t)).slice(0,3).forEach(t=>add([t]));
+  if(st||br){const g=st?(st.k=="alt"?st.g[0]:st.g):br.g[1];parts.push("[",{t:g,sn:"la guarda",hl:hl((st||br).hl),w:"La guarda dice cuándo se entra a esa parte del fragmento: «"+g+"»."},"]");GU.filter(t=>t!=g).slice(0,2).forEach(t=>add([t]))}
+  parts.push("\n",(i+1)+".",{t:m.d,sn:"qué hace el actor ahora",hl:hl(m.hl),w:(m.w||"El actor le da un dato al Sistema o le comunica una decisión: es un mensaje.")+" Es el paso que sigue en el caso de uso."},"→ "+m.op+"(");
+  M.filter((z,q)=>q>i).slice(0,2).forEach(z=>add([z.d]));X.ev.filter(d=>(d[2]||"").split(",").some(k=>(m.hl+","+(m.rh||"")).split(",").includes(k))).concat(X.ev).slice(0,2).forEach(d=>add([d[0],d[1],hl(d[2])]));
+  if(typeof m.pa=="string")parts.push(m.pa+")");
+  else{const ok=m.pa[0]=="sin parámetros"?[]:m.pa[0].split(", "),ph=hl(m.ph||m.hl);
+   if(ok.length)parts.push({set:ok.map(t=>({t})),w:m.pa[1],hl:ph},")");else parts.push({t:"sin parámetros",sn:"los parámetros",w:m.pa[1],hl:ph},")");
+   m.pa.slice(2).forEach(d=>d[0].split(", ").filter(t=>!ok.includes(t)).forEach(t=>add([t,d[1],hl(d[2])])))}
+  if(m.rt){parts.push("devuelve",{t:m.rt[0],sn:"lo que devuelve",w:m.rt[1],hl:hl(m.rh||m.hl)});m.rt.slice(2).forEach(d=>add([d[0],d[1],hl(d[2])]))}
+  if(m.mem){parts.push("\n","nota:",{t:m.mem[0],sn:"la nota de memoria",w:m.mem[1],hl:hl(m.mh||m.hl)});m.mem.slice(2).concat([["sin nota",DSW[m.fin?1:0]]],m.fin?[]:[["libera la memoria",DSW[2]]]).forEach(d=>add([d[0],d[1],hl(d[2])]))}
+  const use=parts.flatMap(z=>typeof z=="string"?[]:z.set?z.set.map(y=>y.t):[z.t]);
+  U.push({id:"m"+(i+1),cards:[kTok(G+" · mensaje "+(i+1),"DSS · mensaje "+(i+1),"Armá con las fichas la línea que sigue del DSS.",parts,dis.filter(d=>!use.includes(d[0])),
+   Object.assign(o(i,1,i?1:0),{th:DTH[2]+" "+DTH[1],ko:"Orden: fragmento (y guarda) → qué hace el actor → parámetros → lo que devuelve → nota de memoria."}))]})});
  /* 4) DataTypes */
  (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),Object.assign(o(N,1,2),{th:DTH[3]}))]}));
- kChain(G,[{id:"dss",cards:U.filter(u=>!/^dt/.test(u.id)).map(u=>u.cards[0])},{id:"dt",cards:U.filter(u=>/^dt/.test(u.id)).map(u=>u.cards[0])}].filter(u=>u.cards.length),{req:KIN.dss});window.DSSD[X.id]=U});
+ kChain(G,[{id:"dss3",cards:U.filter(u=>!/^dt/.test(u.id)).map(u=>u.cards[0])},{id:"dt",cards:U.filter(u=>/^dt/.test(u.id)).map(u=>u.cards[0])}].filter(u=>u.cards.length),{req:KIN.dss});window.DSSD[X.id]=U});
 
 /* ===== Problema 1a: Modelo de dominio y restricciones =====
    Acciones del estudiante, en el orden del examen: leer la realidad y decidir qué conceptos son CLASES (y cuáles son solo un valor, un sinónimo o el propio
