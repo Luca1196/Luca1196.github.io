@@ -163,6 +163,12 @@ const SAF={com:"com",p1:"mod",p3:"cod"},SAO=["com","ded","cod","mod"],area=c=>c.
    aprueba cuando todas quedaron hechas. Un paquete a medias pesa más al elegir repaso. Ya aprobado, si vuelve como repaso, vuelve entero. */
 /* «NO SÉ» CON TEORÍA (pedido de Luca, 16/11): en una tarjeta kit, «No sé» muestra la respuesta, su porqué (e.w) y la teoría de esa acción (c.th); en una
    serie binaria, si el paso no trae teoría propia se muestra la de la serie (th del primer paso). */
+/* ESTADO DE CADA BLOQUE (pedido de Luca, 17/11: «estoy resolviendo siempre los mismos»). Bloque = lo que se elige del pozo: un paquete (su dueño),
+   una serie, un árbol. S2.bst[id]: 2 = terminado (o cortado) con errores, 1 = terminado sin errores; sin estado y sin ver = nuevo.
+   Orden estricto: (1) lo nuevo que esté disponible: mientras quede, no vuelve NINGÚN bloque visto, ni siquiera los reintentos de pasos fallados;
+   (2) los bloques con errores; (3) los terminados sin errores. Dentro de cada grupo, lo que hace más tiempo que no se ve (pesado por lo flojo).
+   Un bloque visto antes de este cambio, sin estado, cuenta como «con errores» si tiene algún paso en caja 0 y como «sin errores» si no. */
+const BST=()=>S2.bst||(S2.bst={}),blkTier=c=>{const B=BST(),b=B[c.id]||(c.then&&B[c.then.id]);if(b==2)return 1;if(b==1)return 2;if(!(S2.seen||{})[c.id])return 0;return c.steps.some((_,i)=>!swBox(c,i))?1:2};
 const PKF={},PKN=15,KTH={tra:"Traducir la letra: cada objetivo dice QUÉ necesita el sistema, y sale de la firma, las precondiciones y las poscondiciones: qué objetos hay que obtener (a partir de los datos que llegan) y qué hay que hacer con ellos (crear, vincular, eliminar, calcular). No son objetivos verificar una precondición (se asume cumplida) ni lo que resuelve otra operación.",
  des:"Desarmar el tramo: quién le pide qué a quién. El Controlador hace directo solo lo que alcanza (buscar en sus colecciones); el resto se lo pide, con una operación propia, al objeto que tiene la información, y ese objeto sigue con los suyos. Crear (create) lo hace quien va a quedar vinculado al objeto nuevo; agregar o quitar de una colección (add, remove) lo hace el dueño de esa colección."};
 /* Filtros por tema (pedido de Luca, 16/11): cada tema de examen tiene su filtro. Las series binarias de teoría van DENTRO de su tema (c.tm) y son previas de sus cadenas: al completarlas sin errores queda S2.bqok[c.g]. */
@@ -176,16 +182,18 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  if(SPACK.length&&TAB==3){const c=SPACK.shift();return{c,i:0,only:false,built:[],err:0}}
  const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]||(typeof TOKSEED=="function"&&TOKSEED(t))),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&!c.hid&&avail(c)&&(SF=="lin"?!!c.ln&&!bldMulti(c):(!c.ln||SF=="err")&&(SF=="all"||SF=="err"||tema(c)==SF||(SF=="lg"&&c.s=="lg")))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
- const arF=c=>!SAX||area(c)==SAX,di=SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
+ const arF=c=>!SAX||area(c)==SAX,nu=SF!="err"&&SWC.some(c=>ok(c)&&!blkTier(c)),di=nu?-1:SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
  if(SF=="err"){let a=[...PD.values()];if(SAX&&a.some(r=>arF(r.c)))a=a.filter(r=>arF(r.c));if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
- const cool=c=>!(c.kq&&PKF[c.id]!=null&&SUN-PKF[c.id]<PKN);let pool=SWC.filter(c=>ok(c)&&arF(c)&&cool(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=SWC.filter(c=>ok(c)&&cool(c));if(!pool.length)pool=SWC.filter(c=>ok(c)&&arF(c));if(!pool.length)pool=SWC.filter(ok);
+ /* primero el nivel (nuevo → con errores → sin errores), después la variedad (otra área tras un error, no repetir el último, espera de los paquetes) */
+ const cool=c=>!(c.kq&&PKF[c.id]!=null&&SUN-PKF[c.id]<PKN),C0=SWC.filter(ok),CW=C0.filter(cool).length?C0.filter(cool):C0;let pool=[];
+ if(CW.length){const tm=Math.min(...CW.map(blkTier)),L=CW.filter(c=>blkTier(c)==tm);pool=L.filter(c=>arF(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=L.filter(c=>c.id!=SLAST);if(!pool.length)pool=L}
  /* filtro de un tema sin nada disponible (p. ej. DCD antes de aprobar sus diagramas): se entra igual por el comienzo de cada cadena de ese tema */
  if(!pool.length){const T=SWC.filter(c=>!c.ln&&!c.hid&&tema(c)==SF);pool=T.filter(c=>!(c.req||[]).some(t=>T.some(z=>(z.toks||[]).includes(t))));if(!pool.length){SF="all";pool=SWC.filter(ok)}}
  /* Prioridad (pedido 12/11, sin fechas): lo que hace MÁS TIEMPO que no ves. Nunca vista = máxima prioridad.
     El tiempo transcurrido se multiplica por lo flojo (cajas bajas) y por los pendientes de error; se elige al azar entre las 3 primeras para no ser predecible. */
  const SE=S2.seen||(S2.seen={}),now=Date.now(),sc=c=>{const st=SE[c.id];const weak=(c.kq&&c.pack&&S2.kok&&[c].concat(c.pack).some(x=>S2.kok[x.id])?4:0)+1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0)/c.steps.length;return(st?(now-st):1e12+Math.random()*1e9)*weak};
- const un=pool.filter(c=>!SE[c.id]),top=(un.length?un:pool).map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
+ const tm=Math.min(...pool.map(blkTier)),un=pool.filter(c=>blkTier(c)==tm),top=un.map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
  /* paquete kit: si ya está aprobado se repasa entero; si quedó a medias, se retoma en la primera tarjeta que falta */
  if(pk.kq&&pk.pack){const K=S2.kok=S2.kok||{},all=[pk].concat(pk.pack);if((pk.toks||[]).every(t=>(S2.bqok||{})[t]))all.forEach(x=>delete K[x.id]);else if(K[pk.id]){const pe=pk.pack.filter(x=>!K[x.id]);if(pe.length){SPACK=pe.slice(1);return{c:pe[0],i:0,only:false,built:[],err:0}}}}
  return{c:pk,i:0,only:false,built:[],err:0}}
@@ -232,7 +240,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;if(e.fr)frSort(X,b.pl);while(b.p<X.length&&(X[b.p].auto||b.pl.includes(X[b.p]))){if(!b.pl.includes(X[b.p]))b.pl.push(X[b.p]);b.p++}
- if(b.p>=X.length){b.done=true;if(c.kq)PKF[(c.pk||c).id]=SUN;{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.kq){const own=c.pk||c,K=S2.kok=S2.kok||{};if(b.e)delete K[c.id];else K[c.id]=1;if(!c.pk)SPACK=(c.pack||[]).filter(x=>!K[x.id]);if(!SPACK.some(x=>x.pk===own)&&[own].concat(own.pack||[]).every(x=>K[x.id])){tk(own.toks||[]);adv(own)}}else if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
+ if(b.p>=X.length){b.done=true;if(c.kq)PKF[(c.pk||c).id]=SUN;{const own=c.pk||c;if(b.e||c.tErr)BST()[own.id]=2;else if(!c.pk&&!(c.pack&&c.pack.length)&&!c.then)BST()[c.id]=1}{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.kq){const own=c.pk||c,K=S2.kok=S2.kok||{};if(b.e)delete K[c.id];else K[c.id]=1;if(!c.pk)SPACK=(c.pack||[]).filter(x=>!K[x.id]);if(!SPACK.some(x=>x.pk===own)&&[own].concat(own.pack||[]).every(x=>K[x.id])){tk(own.toks||[]);BST()[own.id]=1;adv(own)}}else if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);BST()[c.pk.id]=1;adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
   if(!b.e){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)+2;S2.box[k]=Date.now()-(u.ts||0)>90000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,900)}}
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */
@@ -266,7 +274,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;
    BQ.bqEmbed(c.bqx,$("bqemb"),(err,ns,th)=>{u.bqd=1;u.bqe=err;u.bqh=th||"";u.ans=err?"no":"ok";S2.n++;SUN++;const k=c.id+":0";
-    if(!err){(S2.bqok=S2.bqok||{})[c.bqx]=1;logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=3;S2.box[k]=Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,3500)}
+    BST()[c.id]=err?2:1;if(!err){(S2.bqok=S2.bqok||{})[c.bqx]=1;logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=3;S2.box[k]=Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,3500)}
     else{SCOMBO=0;S2.box[k]=0;SRETRY.push({c,i:0,due:SUN+8});logA("sw",c.s,c.g,false,{q:"Armá el árbol",x:c.bqx,a:"árbol completo sin errores",p:err+(err==1?" error":" errores")+(ns?" ("+ns+" «No sé»)":""),ns:ns?1:0,n:1})}
     NLE=E1.log[E1.log.length-1];SV2();swDraw()});return}
   h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${esc(c.g)}</div>${u.bqh||""}<div class="fb ${u.bqe?"no":"ok"}"><b>${u.bqe?u.bqe+(u.bqe==1?" error":" errores")+": este árbol vuelve en un rato.":"¡Árbol completo sin errores!"}</b></div>${u.bqe?noteBox():""}<button class="btn pri big" data-w="go">Continuar</button></div></div>`;V.innerHTML=h;return}
@@ -296,7 +304,7 @@ function swBind(){const el=$("swc");if(!el||SW.ans)return;
 function swChoose(side){if(!SW||SW.ans||SW.recap||SW.c.bld||SW.c.bqx)return;const u=SW,c=u.c,s=c.steps[u.i],ok=side!="NS"&&(side=="L")==u.cl,k=c.id+":"+u.i;
  u.ans=ok?"ok":"no";u.pick=side;logA("sw",c.s,c.g,ok,{q:s.q,x:s.x||c.ctx||"",a:s.a,p:side=="NS"?"No sé ("+s.b+")":s.b,ns:side=="NS"?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:u.i+1});if(!ok)NLE=E1.log[E1.log.length-1];S2.box[k]=ok?(Date.now()-(u.ts||0)>25000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1)):0;S2.n++;SUN++;
  if(ok){S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)}
- else{SCOMBO=0;u.err++;SRETRY.push({c,i:u.i,due:SUN+8});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
+ else{SCOMBO=0;u.err++;BST()[c.id]=2;SRETRY.push({c,i:u.i,due:SUN+8});try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}}
  SV2();swDraw();if(ok)STM=setTimeout(swAdvance,420)}
 function swAdvance(){clearTimeout(STM);if(!SW||(TAB!=3&&TAB!=7))return;const u=SW,s=u.c.steps[u.i];
  SLK=u.c.id+":"+u.i;
@@ -306,7 +314,7 @@ function swAdvance(){clearTimeout(STM);if(!SW||(TAB!=3&&TAB!=7))return;const u=S
  if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);SERR=area(u.c);
   swNew();return}
  if(s&&s.f)u.built.push(s.f);u.i++;
- if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;if(!u.err&&!u.only)(S2.bqok=S2.bqok||{})[u.c.g]=1;/* serie completa sin errores: abre las que la tienen de previa (c.req) */S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
+ if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;if(!u.err&&!u.only){(S2.bqok=S2.bqok||{})[u.c.g]=1;BST()[u.c.id]=1}/* serie completa sin errores: abre las que la tienen de previa (c.req) */S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
  swStep()}
 /* Principal y Básico son secciones separadas: cada una con su propio progreso, racha, repasos y almacenamiento (sw1 / sw1b). */
 /* Nota en cada error: textarea bajo el aviso; se guarda sola en la entrada del registro (e.note) y sale en el export */
