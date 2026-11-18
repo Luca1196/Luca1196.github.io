@@ -421,9 +421,13 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
  const FL=["sin fragmento","abre loop","abre alt","abre opt","sigue dentro del loop","otra rama del alt"],GU=X.fr.flatMap(f=>[].concat(f.g));
  M.forEach((m,i)=>{const F=X.fr.filter(f=>i>=f.a&&i<=f.b),st=F.find(f=>f.a==i),br=F.find(f=>f.k=="alt"&&f.b==i&&f.a!=i),cl=X.fr.find(f=>f.b==i-1&&!(f.k=="alt"&&br)&&!F.includes(f)),out=F.find(f=>f!=st&&f.a<i),parts=[],dis=[];
   const add=d=>{if(d[0]&&!dis.some(z=>z[0]==d[0]))dis.push(d)};
-  const lab=st?(cl?"cierra el "+cl.k+" y ":"")+"abre "+st.k+(out?" (dentro del "+out.k+")":""):br?"otra rama del alt":F.length?"sigue dentro del "+F[F.length-1].k:"sin fragmento";
-  parts.push({t:lab,r:"fr",sn:"qué pasa con los fragmentos",hl:hl((st||br||F[0]||{}).hl),w:st?st.w:br?"Confirmar y cancelar son caminos excluyentes: cada uno va en su rama del alt, con su guarda.":F.length?"Este mensaje también forma parte de lo que se repite: sigue dentro del fragmento.":"Este paso se hace una sola vez y siempre: va fuera de todo fragmento."});
-  (st&&cl?["abre "+st.k+" (dentro del "+cl.k+")"]:st&&out?["cierra el "+out.k+" y abre "+st.k]:[]).concat(FL).filter(t=>!lab.includes(t)).slice(0,3).forEach(t=>add([t]));
+  /* FRAGMENTOS EN DOS DECISIONES (18/11, nota de Luca: «esperaba primero una ficha de sigue en el loop»): primero qué pasa con el fragmento que ya
+     estaba abierto (sigue dentro / se cierra / otra rama del alt) y después si este mensaje abre uno nuevo. */
+  const op=X.fr.filter(f=>f.a<i&&f.b>=i-1).sort((a,b)=>b.a-a.a)[0],A=op?(br&&br===op?"otra rama del alt":op.b>=i?"sigue dentro del "+op.k:"cierra el "+op.k):null;
+  if(A){parts.push({t:A,r:"fa",sn:"qué pasa con el "+op.k+" que estaba abierto",hl:hl((br||op).hl),w:/^otra/.test(A)?"Confirmar y cancelar son caminos excluyentes: cada uno va en su rama del alt, con su guarda.":/^sigue/.test(A)?"Este mensaje también es parte de lo que se repite: sigue dentro del "+op.k+".":"Lo que se repite ya terminó: este paso se hace una sola vez, fuera del "+op.k+"."});
+   ["sigue dentro del "+op.k,"cierra el "+op.k].concat(op.k=="alt"?["otra rama del alt"]:[]).filter(t=>t!=A).forEach(t=>add([t]))}
+  if(!/^otra/.test(A||"")){const B=st?"abre "+st.k:"no abre ningún fragmento";parts.push({t:B,r:"fb",sn:"si abre un fragmento",hl:hl((st||{}).hl||m.hl),w:st?st.w:"Este paso no se repite ni es un camino alternativo: no abre ningún fragmento."});
+   ["abre loop","abre alt","abre opt","no abre ningún fragmento"].filter(t=>t!=B).slice(0,3).forEach(t=>add([t]))}
   if(st||br){const g=st?(st.k=="alt"?st.g[0]:st.g):br.g[1];parts.push("[",{t:g,r:"g",sn:"la guarda",hl:hl((st||br).hl),w:"La guarda dice cuándo se entra a esa parte del fragmento: «"+g+"»."},"]");GU.filter(t=>t!=g).slice(0,2).forEach(t=>add([t]))}
   parts.push("\n",(i+1)+".",{t:m.d,r:"d",sn:"qué hace el actor ahora",hl:hl(m.hl),w:(m.w||"El actor le da un dato al Sistema o le comunica una decisión: es un mensaje.")+" Es el paso que sigue en el caso de uso."},"→ "+m.op+"(");
   M.filter((z,q)=>q>i).slice(0,2).forEach(z=>add([z.d]));X.ev.filter(d=>(d[2]||"").split(",").some(k=>(m.hl+","+(m.rh||"")).split(",").includes(k))).concat(X.ev).slice(0,2).forEach(d=>add([d[0],d[1],hl(d[2])]));
@@ -435,7 +439,7 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
   if(m.mem){parts.push("\n","nota:",{t:m.mem[0],r:"nt",sn:"la nota de memoria",w:m.mem[1],hl:hl(m.mh||m.hl)});m.mem.slice(2).concat([["sin nota",DSW[m.fin?1:0]]],m.fin?[]:[["libera la memoria",DSW[2]]]).forEach(d=>add([d[0],d[1],hl(d[2])]))}
   const use=parts.flatMap(z=>typeof z=="string"?[]:z.set?z.set.map(y=>y.t):[z.t]);
   U.push({id:"m"+(i+1),cards:[kTok(G+" · mensaje "+(i+1),"DSS · mensaje "+(i+1),"Armá con las fichas la línea que sigue del DSS.",parts,dis.filter(d=>!use.includes(d[0])),
-   Object.assign(o(i,1,i?1:0),{th:DTH[2]+" "+DTH[1],ko:"Orden: fragmento (y guarda) → qué hace el actor → parámetros → lo que devuelve → nota de memoria."}))]})});
+   Object.assign(o(i,1,i?1:0),{th:DTH[2]+" "+DTH[1],ko:"Orden: el fragmento que estaba abierto → si abre uno nuevo (y su guarda) → qué hace el actor → parámetros → lo que devuelve → nota de memoria."}))]})});
  /* DIBUJO DEL DSS (17/11): actor y :Sistema con sus líneas de vida, cada mensaje como flecha con su nota, y loop / alt / opt como marcos.
     seqDraw(k) = los k primeros mensajes ya decididos; con cur (la tarjeta del mensaje k) se agrega ese mensaje según las fichas puestas. */
  /* un DataType como recuadro; si sus fichas son «Clase (hereda de Base): atributos», como jerarquía con △ */
@@ -445,14 +449,16 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
   return`<div class="umx">${UM.gen(b?UM.box(esc(b[1]),{st:"«datatype»",at:b[3].split(", ").map(esc)}):UM.box(esc(d.n),{st:"«datatype»",at:[]}),ks.concat(pend?[UM.q(null,1)]:[]))}</div>`}
  function seqDraw(k,cur){const rows=[],fr=X.fr.filter(f=>f.a<k).map(f=>Object.assign({},f,{b:Math.min(f.b,k-1),br:f.k=="alt"&&f.b<k&&f.b>f.a?f.b:null}));
   for(let i=0;i<k;i++){const m=M[i];rows.push(`<div class="sqm"><div class="sql">${i+1}. ${esc(ln(m))}</div><div class="sqa"></div>${m.mem?`<span class="sqn">${esc(m.mem[0])}</span>`:""}</div>`)}
-  if(cur){const {v,q}=cur,lab=v("fr"),F=X.fr.find(f=>f.a==k),out=X.fr.find(f=>f.a<k&&f.b>=k),i=k,m=M[i];
+  if(cur){const {v,q}=cur,vA=v("fa"),vB=v("fb"),F=X.fr.find(f=>f.a==k),op=X.fr.filter(f=>f.a<k&&f.b>=k-1).sort((a,b)=>b.a-a.a)[0],i=k,m=M[i];
    const pa=cur.X.filter(x=>x.r=="p"),pp=pa.filter(x=>cur.pl.includes(x)).map(x=>esc(x.t=="sin parámetros"?"":x.t)),ppend=pa.some(x=>!cur.pl.includes(x));
    const lbl=`${i+1}. ${esc(m.op)}(${pp.join(", ")}${ppend?(pp.length?", ":"")+UM.q(null,cur.cu&&cur.cu.r=="p"):""})${m.rt?": "+q("rt"):""}`;
    rows.push(`<div class="sqm"><div class="sqd">el actor: ${q("d")}</div><div class="sql">${lbl}</div><div class="sqa"></div>${m.mem?`<span class="sqn">${q("nt")}</span>`:""}</div>`);
-   if(lab==null)rows[k]=`<div class="mut" style="font-size:11px">fragmento: ${q("fr")}</div>`+rows[k];
-   else if(/^sigue/.test(lab)&&out){const f=fr.find(z=>z.a==out.a);if(f)f.b=k}
-   else if(/^otra rama/.test(lab)&&out){const f=fr.find(z=>z.a==out.a);if(f){f.b=k;f.br=k;f.g2=q("g")}}
-   else if(/^(abre|cierra)/.test(lab)&&F){fr.push({k:F.k,a:k,b:k,gq:q("g")});if(/dentro del/.test(lab)&&out){const f=fr.find(z=>z.a==out.a);if(f)f.b=k}}}
+   const pA=vA===null,pB=vB===null&&!/^otra/.test(vA||"");if(pA||pB)rows[k]=`<div class="mut" style="font-size:11px">fragmento: ${pA?q("fa"):q("fb")}</div>`+rows[k];
+   const of=op&&fr.find(z=>z.a==op.a);
+   /* decidido lo del fragmento abierto, los marcos que siguen abiertos (el decidido y los que lo contienen) acompañan al mensaje */
+   if(vA)fr.forEach(f=>{const r=X.fr.find(z=>z.a==f.a&&z.k==f.k);if(r&&r.b>=k)f.b=k});
+   if(vA&&/^otra/.test(vA)&&of){of.br=k;of.g2=q("g")}
+   if(vB&&/^abre/.test(vB)&&F)fr.push({k:F.k,a:k,b:k,gq:q("g")})}
   const draw=(lo,hi,FS)=>{let h="",i=lo;while(i<=hi){const f=FS.filter(z=>z.a==i).sort((a,b)=>b.b-a.b)[0];
     if(f){const inner=FS.filter(z=>z!==f&&z.a>=f.a&&z.b<=f.b),g1=f.gq!=null?f.gq:esc(f.k=="alt"?f.g[0]:f.g);
      const body=f.br!=null?draw(f.a,f.br-1,inner)+`<div class="sqs">[${f.g2!=null?f.g2:esc(f.g[1])}]</div>`+draw(f.br,f.b,inner):draw(f.a,f.b,inner);
