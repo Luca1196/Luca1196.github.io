@@ -110,6 +110,9 @@ V.addEventListener("toggle",ev=>{if(TAB!=8)return;const d=ev.target;if(d&&d.data
    - ORDEN Y PAQUETES: clase por clase, de la menos acoplada a la más acoplada (teórico: así lo que usa cada clase ya está escrito), y de cada clase primero
      su .h y después sus operaciones; cada clase es un paquete. «No sé» muestra la línea, la regla de esa línea y la teoría (P3T).
    - Se saltean los bloques de dos líneas sin nada que decidir (constructor o destructor vacío). Cada tarjeta es su propia unidad; área «cod» (filtro P3).
+   - Solo conceptos (18/11, nota de Luca: «no es un aprendizaje relevante que esta evaluación no pida implementar ciertas clases»): nada de fichas sobre
+     lo que una consigna en particular pide o deja asumir (qué clases implementar, #include, getters); solo lo que enseña el tema (patrón, colecciones,
+     quién libera qué, quién decide qué).
    RECETA: sumar el examen a CDX (js/codigo-datos.js) y una entrada en P3X {n, T, hx, ds}; simular con jsdom y revisar la lista de líneas equivocadas. */
 const p3Nm=t=>{let m;return(m=/^this->(\w+)/.exec(t))?m[1]:(m=/^[\w<>:, \*]+?[ \*](\w+)(?: = .*)?;$/.exec(t))?m[1]:(m=/^(\w+)/.exec(t))?m[1]:""},
  p3Ctl=t=>/^(for|if|while|else|return|delete)\b|\{$/.test(t),
@@ -167,10 +170,10 @@ feb26:{n:"Feb26",ord:["Paquete","Simple","Multiparte","Controlador"],pre:["Parci
   ok:[["Paquete es abstracta: cantArticulos se resuelve distinto en Simple y en Multiparte","Es la estructura del patrón Composite: Paquete = componente, Simple = hoja, Multiparte = compuesto. Por eso cantArticulos es virtual pura en Paquete."],
    ["Un Multiparte está hecho de paquetes Simple que son suyos: los libera en su destructor","Las partes se crean solo para ese multiparte y no se registran en la colección global: nadie más las puede liberar."],
    ["El Controlador guarda todos los paquetes en una colección global, buscados por su id","Por eso el pseudoatributo es un map de id a puntero a Paquete."],
-   ["Hay que escribir constructores y destructores donde hagan falta, pero no los get ni los set","Lo dicen las observaciones de la letra."]],
+   ],
   no:[["El Controlador es Singleton: lleva instancia estática y getInstance","En este DCD el Controlador no tiene el estereotipo «singleton» ni getInstance: no se agrega lo que el diseño no pide."],
    ["Simple libera sus artículos en el destructor","Los artículos viven en la colección global del Controlador y pueden estar en varios paquetes: Simple solo guarda punteros."],
-   ["Hay que escribir los #include de cada clase","La letra dice: «No incluya directivas al precompilador»."]]},
+   ]},
  hx:{"~Multiparte();":[["// (sin destructor)","Las partes se crean con new solo para este Multiparte y no están en la colección global: si no las libera él en su destructor, nadie lo hace."]],
   "paquetes[idPaq] = m;":[["paquetes[0] = s;","«Los paquetes simples que forman parte de un paquete multiparte no se dan de alta en la colección global de paquetes»."]],
   "Simple *s = new Simple(0, \"parte\", idCli);":[["Simple *s = new Simple(idPaq, desc, idCli);","Las partes de un multiparte se crean con idPaquete = 0 y descripción \"parte\": el id y la descripción recibidos son del multiparte."]],
@@ -183,7 +186,7 @@ jul26:{n:"Jul26",ord:["IRepartidor","RepartidorMoto","GeneradorRepartidores","Co
    ["GeneradorRepartidores decide qué repartidor crear; el Controlador solo conoce IRepartidor","Es el mecanismo de fábrica: quien usa al repartidor no se acopla a las clases concretas."],
    ["Artículos y tandas se buscan por id; los pedidos de una tanda forman una secuencia ordenada","Por eso van un map para cada colección global y un vector para los pedidos."]],
   no:[["Donde el DCD dice Set(int) hay que usar set<int>","La letra lo aclara: Set(T) no implica set<T>. Los montos van «en orden» (y pueden repetirse): corresponde una colección con orden."],
-   ["Hay que implementar RepartidorBicicleta","La letra dice que se puede asumir que ya existe."],
+   
    ["El Controlador elige si el repartidor va en moto o en bicicleta","La letra dice que esa selección «es responsabilidad de GeneradorRepartidores»."]]},
  hx:{"vector<Pedido *> pedidos;":[["set<Pedido *> pedidos;","Los pedidos de una tanda son una «secuencia ordenada»: un set no respeta el orden en que llegan."]],
   "vector<int> ControladorRepartos::calcularMontosPorPedido(DTTandaReparto datos) {":[["set<int> ControladorRepartos::calcularMontosPorPedido(DTTandaReparto datos) {","Set(T) en el DCD no obliga a usar set<T>. Los montos van en el orden de los pedidos y pueden repetirse: un set los reordena y saca los repetidos."]],
@@ -200,8 +203,8 @@ par26:{n:"Parcial 2026",ord:["Viaje","ConEscalas","Controlador"],pre:["Parcial P
    ["Un viaje con escalas está formado por otros viajes de cualquier tipo, en orden","Por eso guarda un vector de punteros a Viaje (la clase base), no a Directo."],
    ["El Controlador es Singleton y además genera los identificadores de los viajes","Instancia estática, getInstance estática y constructor privado; el último id usado también es un dato de la clase."],
    ["Todos los viajes, directos o con escalas, van en una colección global buscada por id","Por eso el pseudoatributo es un map de id a puntero a Viaje."]],
-  no:[["Hay que implementar la clase Directo","La letra dice que no se pide implementar Directo ni DTViaje."],
-   ["ConEscalas libera sus partes en el destructor","La letra dice que no se pide implementar destructores; además las partes son viajes que siguen en la colección global del controlador."],
+  no:[
+   ["ConEscalas libera sus partes en el destructor","Las partes son viajes que siguen en la colección global del controlador (y pueden ser parte de otros viajes): no son solo suyas, así que no las libera."],
    ["ConEscalas guarda sus partes en un set<Viaje *>","Las partes son una «secuencia ordenada» de viajes: un set no respeta el orden recibido."]]},
  hx:{"viajes[nuevoId] = new Directo(nuevoId, dtv.getOrigen(), dtv.getDestino(), dtv.getCosto());":[["viajes[nuevoId] = new Viaje(nuevoId, dtv.getOrigen(), dtv.getDestino());","Viaje es abstracta (darCostoTotal es pura): no se puede instanciar. El viaje nuevo es un Directo."]],
   "viajes[nuevoId] = new ConEscalas(nuevoId, comps[0]->getOrigen(), comps[comps.size()-1]->getDestino(), comps);":[["viajes[nuevoId] = new ConEscalas(nuevoId, comps[0]->getDestino(), comps[comps.size()-1]->getOrigen(), comps);","El origen es el de la primera parte y el destino es el de la última."]],
