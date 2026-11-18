@@ -673,7 +673,7 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",C=k=>X.C.find(c
   const card=cards[cards.length-1],XX=card.bld.exp;card.kd=(pl,cur)=>{const v=kQ(pl,cur,XX);const vs=XX.filter(x=>x.r=="v"&&pl.includes(x)).map(x=>esc(x.t)),pend=XX.some(x=>x.r=="v"&&!pl.includes(x));return`<div class="umx">${UM.box(esc(m[2]),{st:v("st"),at:vs.concat(pend?[UM.q(null,cur&&cur.r=="v")]:[])})}</div>`};
   meta.push({k:"enum",n:m[2],st:m[1],vals})});
  /* 3) cada clase */
- cls.forEach(c=>{const B=sub[c.n],S=bas[c.n],NS=nosub[c.n],parts=[],dis=[],h=kHl(c.hl);
+ const mkClass=c=>{const B=sub[c.n],S=bas[c.n],NS=nosub[c.n],parts=[],dis=[],h=kHl(c.hl);
   if(B){parts.push({t:"hereda de "+B,sn:"de quién hereda",r:"par",w:"«"+c.n+"» es un tipo de «"+B+"» con datos propios: es una subclase (△ hacia «"+B+"»).",hl:kHl(bas[B].hl)});dis.push(["no hereda de ninguna"])}
   if(S){parts.push({t:"con subclases "+S.subs.join(" y "),sn:"si tiene subclases",r:"sub",w:"Cada tipo de «"+c.n+"» registra datos propios: hacen falta subclases, no alcanza con un atributo.",hl:kHl(S.hl)});dis.push(["sin subclases (un atributo «tipo»)"]);
    if(S.abs){parts.push({t:"«abstracta»",sn:"si es abstracta",r:"abs",w:"Todo «"+c.n+"» es de alguno de sus tipos: no hay un «"+c.n+"» a secas, por eso es abstracta.",hl:kHl(S.hl)});dis.push(["concreta"])}}
@@ -687,9 +687,9 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",C=k=>X.C.find(c
    const par=XX.some(x=>x.r=="par")&&!hid("par")?(v("par")==null?`<div class="umg">${UM.box(q("par"))}<div class="umt">△</div></div>`:v("par").startsWith("hereda de ")?`<div class="umg">${UM.box(esc(v("par").slice(10)))}<div class="umt">△</div></div>`:""):"";
    const sb=XX.some(x=>x.r=="sub")&&!hid("sub")?(v("sub")==null?`<div class="umt">△</div><div class="umk">${UM.box(q("sub"))}</div>`:v("sub").startsWith("con subclases ")?`<div class="umt">△</div><div class="umk">${v("sub").slice(14).split(" y ").map(n=>UM.box(esc(n))).join("")}</div>`:""):"";
    return`<div class="umx"><div class="umg">${par}${box}${sb}</div></div>`};
-  cards.push(card);meta.push({k:"class",n:c.n,B,abs:!!(S&&S.abs),at:c.at})});
+  cards.push(card);meta.push({k:"class",n:c.n,B,abs:!!(S&&S.abs),at:c.at})};
  /* 4) cada asociación */
- C("aso").ok.forEach(z=>{const m=/^(\w+) (\S+) (◆?—) (\S+) (\w+)(.*)$/.exec(z[0]);if(!m)return;const A=m[1],ma=m[2],mb=m[4],Bc=m[5],ord=/\{ordered\}/.test(m[6]),acm=/con clase de asociación (\w+)(?: \(([^)]*)\))?/.exec(m[6]),ac=acm&&acm[1],h=kHl(z[2]),all=cls.map(c=>c.n);
+ const mkAso=z=>{const m=/^(\w+) (\S+) (◆?—) (\S+) (\w+)(.*)$/.exec(z[0]);if(!m)return;const A=m[1],ma=m[2],mb=m[4],Bc=m[5],ord=/\{ordered\}/.test(m[6]),acm=/con clase de asociación (\w+)(?: \(([^)]*)\))?/.exec(m[6]),ac=acm&&acm[1],h=kHl(z[2]),all=cls.map(c=>c.n);
   const parts=[{t:Bc,sn:"la otra clase",r:"B",w:z[1],hl:h},{t:ma,sn:"la multiplicidad del lado de "+A,r:"ma",w:"Al lado de «"+A+"» va cuántos «"+A+"» se vinculan con UN «"+Bc+"». "+z[1],hl:h},{t:mb,sn:"la multiplicidad del lado de "+Bc,r:"mb",w:"Al lado de «"+Bc+"» va cuántos «"+Bc+"» se vinculan con UN «"+A+"». "+z[1],hl:h},
    {t:ord?"{ordered}":"sin orden",sn:"si lleva orden",r:"ord",w:ord?"La letra habla de una secuencia o de un orden: se indica con {ordered}.":"La letra no pide ningún orden entre ellos.",hl:h},
    {t:ac?"con clase de asociación "+ac:"sin clase de asociación",sn:"si lleva clase de asociación",r:"ac",w:ac?"El vínculo tiene datos propios (o algo que cuelga de cada par): va una clase de asociación.":"El vínculo no tiene datos propios: no hace falta una clase de asociación.",hl:h}];
@@ -697,7 +697,13 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",C=k=>X.C.find(c
   const card=kTok(G+" · asociación "+A+"–"+Bc,"Modelo de dominio · una asociación","Armá la asociación de "+A+" que sale de las frases marcadas.",parts,dis,Object.assign(o("aso",z[2]),{ko:"Orden: la otra clase → multiplicidad de cada lado → orden → clase de asociación."}));const XX=card.bld.exp;
   card.kd=(pl,cur)=>{const v=kV(pl,cur,XX),q0=kQ(pl,cur,XX),hid=kOp(pl,cur,XX),q=r=>hid(r)?"":q0(r),o2=v("ord"),a2=v("ac"),acB=hid("ac")?"":a2==null?UM.box(q("ac")):a2.startsWith("con ")?UM.box(esc(ac),{at:(acm[2]||"").split(", ").filter(Boolean).map(esc)}):"";
    return UM.aso(esc(A)+(m[3]=="◆—"?" ◆":""),q("ma"),q("mb"),q("B"),o2==null?q("ord"):o2=="{ordered}"?"{ordered}":"",acB)};
-  cards.push(card);meta.push({k:"aso",A,B:Bc,ma,mb,ord,ac:ac?{n:ac,at:(acm[2]||"").split(", ").filter(Boolean)}:null})});
+  cards.push(card);meta.push({k:"aso",A,B:Bc,ma,mb,ord,ac:ac?{n:ac,at:(acm[2]||"").split(", ").filter(Boolean)}:null})};
+ /* ORDEN DE LECTURA (17/11, nota de Luca: «la letra dice que el conductor tiene ciudades habilitadas y no aparece»): las clases en el orden de la letra
+    y cada asociación apenas están armadas sus dos clases (o la clase de asociación de la que cuelga). */
+ {const nm=C("cls").ok.map(z=>z[0]),pos=n=>{const i=nm.indexOf(n);return i<0?99:i},done=new Set(),pend=C("aso").ok.slice();
+  const ends=z=>{const m=/^(\w+) \S+ ◆?— \S+ (\w+)/.exec(z[0]);return m?[m[1],m[2]]:[]},acOf=z=>(/con clase de asociación (\w+)/.exec(z[0])||[])[1];
+  const flush=()=>{let k;do{k=pend.findIndex(z=>ends(z).every(e=>done.has(e)));if(k>=0){const z=pend.splice(k,1)[0];mkAso(z);if(acOf(z))done.add(acOf(z))}}while(k>=0)};
+  cls.slice().sort((a,b)=>pos(a.n)-pos(b.n)).forEach(c=>{mkClass(c);done.add(c.n);flush()});pend.forEach(mkAso)}
  /* 5) restricciones */
  X.C.filter(c=>/^res/.test(c.id)).forEach(c=>{cards.push(kSet(G+" · "+c.g,"Modelo de dominio · "+c.g,c.p,c.ok.map(z=>({t:z[0],w:z[1],hl:kHl(z[2])})),kDz(c.no),o("res")));meta.push({k:"res"})});
  kChain(G,[{id:"md2",cards}],{req:KIN.md})});

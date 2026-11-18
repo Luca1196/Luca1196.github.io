@@ -141,3 +141,4 @@ nucleo.js: una tarjeta kit con c.kd(puestas, actual) dibuja lo armado en vez de 
 - Modelo de dominio: cada tarjeta dibuja su clase o su asociación; «Tu modelo hasta ahora» es el diagrama completo. Se sumó una tarjeta por enumerado o DataType (estereotipo y valores; el nombre no se pide). Lo opcional (abstracta, hereda, orden, clase de asociación) no se muestra como «?» hasta que es su turno.
 - DSS: diagrama de secuencia (actor y :Sistema con líneas de vida, flechas numeradas con su nota, loop/alt/opt como marcos con guarda y ramas). Los DataTypes como recuadros (DTPaso con △).
 - DCD: recuadros de clase con sus operaciones y flechas → (con multiplicidad) y ⇢ punteadas.
+- 17/11 23:10: modelo de dominio en orden de lectura: clases como en la lista de la letra y cada asociación apenas están armadas sus dos clases (nota de Luca: Conductor–Ciudad no aparecía al armar Estacion porque todas las asociaciones iban al final).
