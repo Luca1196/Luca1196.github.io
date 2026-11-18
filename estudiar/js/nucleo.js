@@ -268,9 +268,29 @@ const bldIsCls=x=>/^[A-Z]/.test(x);
 /* «No sé» → explicación teórica del tema de ESA pregunta, en la misma tarjeta (THT en prog4.js/logica.js: {re, t, p}; se busca en pregunta+respuesta, después título y contexto) */
 function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o=T.find(x=>x.re.test(q))||T.find(x=>x.re.test(c.g))||T.find(x=>x.re.test(s.x||c.ctx||""));
  const th=s.th||((c.steps||[])[0]||{}).th;/* bqNS (Bloques) llama sin steps */if(!o&&!th)return"";return`<div class="th" style="margin-top:10px"><b>📘 ${esc(o?o.t:"Teoría")}</b>${th?`<div style="margin-top:4px">${esc(th)}</div>`:""}${o?o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join(""):""}</div>`}
+/* META DIARIA Y RACHA (pedido de Luca, 18/11: «tengo que adquirir todos los conocimientos de la web en 2 semanas, poneme una meta diaria y una racha como tiktok»).
+   Unidad = bloque de Principal (paquete, serie o árbol; sin líneas sueltas, ocultas ni Básico). Un bloque cuenta cuando queda TERMINADO, con o sin errores
+   (S2.bst con estado; pedido de Luca, 18/11: «si sale todo sin errar no estoy aprendiendo»; los errores ya lo hacen volver como repaso).
+   Meta del día = bloques que faltan al empezar el día / días que quedan hasta META_FIN. Se fija al empezar el día (no cambia mientras estudiás) y se
+   recalcula cada día: si un día no llegás, lo que faltó se reparte entre los días que quedan. Estudiar más allá de la meta no tiene tope.
+   Hecho hoy = cuántos bloques menos faltan que al empezar el día. Racha 🔥 = días seguidos cumpliendo la meta; si hoy todavía no la cumpliste, la racha
+   sigue viva pero gris («en riesgo») hasta medianoche, como en TikTok. Se guarda en S2.mt (localStorage "sw1"). */
+const META_FIN="2026-12-02";/* fin de las 2 semanas (exámenes: Lógica 4/12, Prog4 5/12); cambiar acá para mover el plazo */
+const mtBlq=()=>{const bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com");return SWC.filter(c=>!c.pk&&!c.hid&&!c.ln&&!bas(c))};
+const dAdd=(t,n)=>{const d=new Date(t+"T12:00:00");d.setDate(d.getDate()+n);return d.toLocaleDateString("en-CA")};
+let MTCEL=0;
+function mtHoy(){if(SWM!=3)return null;const t=TD(),M=S2.mt||(S2.mt={rd:{}}),B=BST(),f=mtBlq().filter(c=>!(B[c.id]||(c.then&&B[c.then.id]))).length;
+ if(M.day!=t){M.day=t;M.f0=f;M.dl=Math.max(1,Math.round((new Date(META_FIN+"T12:00:00")-new Date(t+"T12:00:00"))/864e5));M.goal=Math.ceil(f/M.dl);SV2()}
+ const done=Math.max(0,M.f0-f);if(done>=M.goal&&!M.rd[t]){M.rd[t]=1;MTCEL=1;SV2()}
+ let k=0,d=M.rd[t]?t:dAdd(t,-1);while(M.rd[d]){k++;d=dAdd(d,-1)}
+ return{done,goal:M.goal,ok:!!M.rd[t],stk:k,falta:f,dl:M.dl}}
+function mtBar(){const m=mtHoy();if(!m)return"";const pc=m.goal?Math.min(100,m.done/m.goal*100):100;
+ if(MTCEL){MTCEL=0;setTimeout(()=>{const x=document.createElement("div");x.className="card";x.style.cssText="position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:60;text-align:center;font-size:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)";x.innerHTML=`🔥 <b>¡Meta de hoy cumplida!</b><br>Racha: ${m.stk} ${m.stk==1?"día":"días"}`;document.body.appendChild(x);try{navigator.vibrate&&navigator.vibrate([40,60,40])}catch(_){}setTimeout(()=>x.remove(),3500)},50)}
+ return`<div class="row" style="margin-top:8px;gap:10px"><b title="Racha: días seguidos cumpliendo la meta" style="font-size:20px;white-space:nowrap;${m.ok?"":"filter:grayscale(1);opacity:.55"}">🔥 ${m.stk}</b><div class="pb" style="flex:1"><i style="width:${pc}%"></i></div><span class="mut cnt" style="white-space:nowrap">${m.done}/${m.goal} hoy</span></div>`+
+ `<div class="mut" style="font-size:12px;margin-top:2px">${m.ok?"Meta de hoy cumplida ✓ (podés seguir sin tope)":m.stk?"Racha en riesgo: cumplí la meta antes de medianoche":"Cumplí la meta de hoy para arrancar la racha"} · faltan ${m.falta} bloques por terminar · ${m.dl} ${m.dl==1?"día":"días"}</div>`}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
- `<div class="row between mut" style="margin-top:6px"><span>Racha ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
+ (TAB==3?mtBar():"")+`<div class="row between mut" style="margin-top:6px"><span>Seguidas ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
  (TAB==7?"":`<div class="row" style="margin-top:8px">${[["all","Mezclado"],["md","Modelo de dominio (1a)"],["dss","Secuencia · DSS (1b)"],["com","Comunicación (2a)"],["dcd","DCD (2b)"],["p3","Código C++ (P3)"],["lg","Lógica (todo)"],["lg1","Lóg. · inducción"],["lg2","Lóg. · semántica"],["lg3","Lóg. · deducción"],["lg4","Lóg. · modelos y consistencia"],["lg5","Lóg. · tableaux"],["lin","Líneas sueltas"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div>`);
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
