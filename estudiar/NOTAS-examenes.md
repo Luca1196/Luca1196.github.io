@@ -135,3 +135,9 @@ Siguen con el formato anterior porque no son diagramas: P3 en Principal (líneas
 ## Orden de los bloques: nuevos → con errores → sin errores (17/11, pedido de Luca)
 nucleo.js (S2.bst, blkTier): cada bloque (paquete, serie o árbol) queda «terminado sin errores» (1) o «con errores» (2); sin estado y sin ver = nuevo. Mientras quede un bloque nuevo disponible no vuelve ninguno visto, tampoco los reintentos de pasos fallados (SRETRY queda en espera). Después van los con errores y al final los limpios. El nivel manda sobre la variedad (cambio de área tras un error, no repetir el último, espera de 15 de los paquetes). Bloques vistos antes del cambio: «con errores» si tienen algún paso en caja 0.
 Probado con jsdom en sesiones simuladas (Mezclado 250 elecciones, 1a, inducción, Lógica, comunicación; 30–50% de errores): 0 repeticiones con nuevos disponibles y 0 limpios antes que con errores.
+
+## Los diagramas se dibujan como en el examen (17/11, pedido de Luca: «el diagrama no se va armando como en el pdf, que es un recuadro con cierta estructura»)
+nucleo.js: una tarjeta kit con c.kd(puestas, actual) dibuja lo armado en vez de la línea de fichas (también en «Respuesta»). examen.js: helper UM (recuadro UML con estereotipo, nombre, atributos y operaciones; △ y subclases; asociación con multiplicidades y clase de asociación) y estilos .um*/.sq*.
+- Modelo de dominio: cada tarjeta dibuja su clase o su asociación; «Tu modelo hasta ahora» es el diagrama completo. Se sumó una tarjeta por enumerado o DataType (estereotipo y valores; el nombre no se pide). Lo opcional (abstracta, hereda, orden, clase de asociación) no se muestra como «?» hasta que es su turno.
+- DSS: diagrama de secuencia (actor y :Sistema con líneas de vida, flechas numeradas con su nota, loop/alt/opt como marcos con guarda y ramas). Los DataTypes como recuadros (DTPaso con △).
+- DCD: recuadros de clase con sus operaciones y flechas → (con multiplicidad) y ⇢ punteadas.
