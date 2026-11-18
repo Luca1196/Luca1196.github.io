@@ -447,7 +447,7 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
   for(let i=0;i<k;i++){const m=M[i];rows.push(`<div class="sqm"><div class="sql">${i+1}. ${esc(ln(m))}</div><div class="sqa"></div>${m.mem?`<span class="sqn">${esc(m.mem[0])}</span>`:""}</div>`)}
   if(cur){const {v,q}=cur,lab=v("fr"),F=X.fr.find(f=>f.a==k),out=X.fr.find(f=>f.a<k&&f.b>=k),i=k,m=M[i];
    const pa=cur.X.filter(x=>x.r=="p"),pp=pa.filter(x=>cur.pl.includes(x)).map(x=>esc(x.t=="sin parámetros"?"":x.t)),ppend=pa.some(x=>!cur.pl.includes(x));
-   const lbl=`${i+1}. ${esc(m.op)}(${pp.join(", ")}${ppend?(pp.length?", ":"")+q("p"):""})${m.rt?": "+q("rt"):""}`;
+   const lbl=`${i+1}. ${esc(m.op)}(${pp.join(", ")}${ppend?(pp.length?", ":"")+UM.q(null,cur.cu&&cur.cu.r=="p"):""})${m.rt?": "+q("rt"):""}`;
    rows.push(`<div class="sqm"><div class="sqd">el actor: ${q("d")}</div><div class="sql">${lbl}</div><div class="sqa"></div>${m.mem?`<span class="sqn">${q("nt")}</span>`:""}</div>`);
    if(lab==null)rows[k]=`<div class="mut" style="font-size:11px">fragmento: ${q("fr")}</div>`+rows[k];
    else if(/^sigue/.test(lab)&&out){const f=fr.find(z=>z.a==out.a);if(f)f.b=k}
@@ -458,7 +458,7 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
      const body=f.br!=null?draw(f.a,f.br-1,inner)+`<div class="sqs">[${f.g2!=null?f.g2:esc(f.g[1])}]</div>`+draw(f.br,f.b,inner):draw(f.a,f.b,inner);
      h+=`<div class="sqf"><span class="sqk">${f.k}</span>[${g1}]${body}</div>`;i=f.b+1}else{h+=rows[i]||"";i++}}return h};
   return`<div class="sqh"><span>🧍 ${esc(L.act)}</span><span>:Sistema</span></div><div class="sqb">${rows.length?draw(0,rows.length-1,fr):'<div class="mut" style="text-align:center">(todavía sin mensajes)</div>'}</div>`}
- U.forEach(u=>{const mm=/^m(\d+)$/.exec(u.id);if(!mm)return;const c=u.cards[0],k=+mm[1]-1,XX=c.bld.exp;c.kd=(pl,cur)=>seqDraw(k,{X:XX,pl,v:kV(pl,cur,XX),q:kQ(pl,cur,XX)})});
+ U.forEach(u=>{const mm=/^m(\d+)$/.exec(u.id);if(!mm)return;const c=u.cards[0],k=+mm[1]-1,XX=c.bld.exp;c.kd=(pl,cur)=>seqDraw(k,{X:XX,pl,cu:cur,v:kV(pl,cur,XX),q:kQ(pl,cur,XX)})});
  /* 4) DataTypes */
  (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[(z=>(z.kd=pl=>dtDraw(d,pl),z))(kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),Object.assign(o(N,1,2),{th:DTH[3]})))]}));
  kChain(G,[{id:"dss3",cards:U.filter(u=>!/^dt/.test(u.id)).map(u=>u.cards[0])},{id:"dt",cards:U.filter(u=>/^dt/.test(u.id)).map(u=>u.cards[0])}].filter(u=>u.cards.length),{req:KIN.dss});window.DSSD[X.id]=U});
