@@ -343,7 +343,7 @@ function bqTxt(){const S=D.S,e=E[ex],cu=D.S.G[0].s=="d"?null:curG(),L=[],rl=(r,l
 ${L.join("\n")}
 `+(cu?`Meta seleccionada: ${P(cu.g)} · Tengo: ${cu.ctx.map(x=>x.d.l?"["+P(x.f)+"]"+x.d.l:P(x.f)).join(", ")||"nada"}\n`:"Árbol completo.\n")+(fb?`Último mensaje: ${fb}\n`:"")}
 function bqCopy(){const t=bqTxt();D.cp=t;try{navigator.clipboard.writeText(t).then(()=>{D.cp="";D.cpOk=1;bqDraw()},()=>bqDraw())}catch(_){bqDraw()}}
-function bqNS(){if(EMB){EMB.err++;EMB.ns++}const o=curG(),hn=bqHint(o),th=typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"";
+function bqNS(){if(EMB){EMB.err++;EMB.ns++}const o=curG(),hn=bqHint(o),th=(typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"")+(window.TEMATEO?TEMATEO("lg3"):"");/* 18/11: + la teoría de las series de deducción */
  D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});bqDraw()}
 V.addEventListener("click",ev=>{if(EMB?!EMB.el.contains(ev.target):TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.m=[];D.fb="";bqDraw()}
