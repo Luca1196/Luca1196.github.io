@@ -11,6 +11,10 @@
    - Previaturas: dentro de un ejercicio cada unidad pide la anterior sin errores (token m:<ejercicio>:<unidad>); el DCD pide los dos diagramas de su examen.
    - Una ficha equivocada puede llevar la frase de la letra que la desmiente (último dato de cada dis: "S:u1"); al tocarla se resalta esa frase.
    - La letra del Problema 1 (realidad + caso de uso) de Feb26 y Jul26 está transcripta tal cual en P1L (más abajo): no hace falta volver a los PDF.
+   - REVISIÓN FRASE POR FRASE (18/11, tras la nota de Luca sobre las ciudades del conductor): antes de dar por terminado un tema, recorrer cada frase de
+     la letra y preguntar (1) ¿qué ficha la representa en el diagrama? y (2) ¿cuál es la forma equivocada más tentadora de escribirla (otra notación
+     posible del mismo dato: atributo en vez de asociación, enumerado en vez de subclases, parámetro de más)? Las dos tienen que ser fichas de la MISMA
+     tarjeta, frente a frente. Si una frase no tiene ficha, falta una tarjeta o una decisión.
    RECETA PARA SUMAR UN EXAMEN: DCD → una entrada en DCDX (los datos salen solos de las líneas de comunicación); DSS → letra en P1L + una entrada en DSSX;
    Modelo de dominio → una entrada en MDX. Después: actualizar ?v= en index.html, simular las cadenas con jsdom, commit y push. */
 
@@ -679,14 +683,23 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",C=k=>X.C.find(c
    if(S.abs){parts.push({t:"«abstracta»",sn:"si es abstracta",r:"abs",w:"Todo «"+c.n+"» es de alguno de sus tipos: no hay un «"+c.n+"» a secas, por eso es abstracta.",hl:kHl(S.hl)});dis.push(["concreta"])}}
   if(NS){parts.push({t:"sin subclases",sn:"si tiene subclases",r:"sub",w:NS.why,hl:kHl(NS.hl)});dis.push(["con subclases "+NS.subs.join(" y "),NS.why,kHl(NS.hl)])}
   parts.push({set:c.at.map(t=>({t})),r:"at",w:c.w||"Son los datos propios de «"+c.n+"» que da la letra.",hl:h});
+  /* CONEXIONES (18/11, pedido de Luca): lo que la letra dice de la clase y es OTRA clase se dibuja como conexión (línea), no como atributo. Ficha correcta
+     «conexión con X» y, enfrente, la ficha tentadora del mismo dato escrito como atributo («ciudades: Set(Ciudad)»). La multiplicidad se arma después,
+     en la tarjeta de la asociación. */
+  const RL=C("aso").ok.map(z=>{const m=/^(\w+) (\S+) ◆?— (\S+) (\w+)/.exec(z[0]);return m&&(m[1]==c.n?{o:m[4],mu:m[3],z}:m[4]==c.n?{o:m[1],mu:m[2],z}:null)}).filter(Boolean).filter((r,i,a)=>a.findIndex(y=>y.o==r.o)==i);
+  if(RL.length){parts.push({set:RL.map(r=>({t:"conexión con "+r.o,w:"«"+r.o+"» es otra clase del modelo: lo que vincula a «"+c.n+"» con ella se dibuja como una línea entre los dos recuadros (una asociación). "+r.z[1],hl:kHl(r.z[2])})),r:"cx"});
+   const lc=n=>n[0].toLowerCase()+n.slice(1),pl=n=>/[aeiou]$/i.test(n)?n+"s":n+"es";
+   RL.forEach(r=>{const t=/\*/.test(r.mu)?pl(lc(r.o))+": Set("+r.o+")":lc(r.o)+": "+r.o;if(!dis.some(d=>d[0]==t))dis.push([t,"«"+r.o+"» es otra clase: no va como atributo de «"+c.n+"». El vínculo se dibuja como una asociación (una línea entre los recuadros), con su multiplicidad en cada punta.",kHl(r.z[2])])});
+   const oth=cls.map(z=>z.n).filter(n=>n!=c.n&&!RL.some(r=>r.o==n)&&n!=B&&sub[n]!=c.n);if(oth.length)dis.push(["conexión con "+oth[cards.length%oth.length],"La letra no vincula «"+c.n+"» con esa clase."])}
   atr.no.filter(z=>z[0].startsWith(c.n+": ")&&!/\(sin /.test(z[0])).forEach(z=>z[0].slice(c.n.length+2).split(", ").filter(t=>!c.at.includes(t)).forEach(t=>dis.push([t,z[1],kHl(z[2])])));
   cls.filter(z=>z.n!=c.n&&z.n!=B&&sub[z.n]!=c.n).flatMap(z=>z.at.map(t=>[t,z.n])).filter(z=>!c.at.includes(z[0])&&!dis.some(d=>d[0]==z[0])).slice(cards.length%3,cards.length%3+2).forEach(z=>dis.push([z[0],"Ese dato es de «"+z[1]+"», no de «"+c.n+"»."]));
-  const card=kTok(G+" · clase "+c.n,"Modelo de dominio · clase "+c.n,"Armá la clase "+c.n+" con las fichas.",parts,dis,o("atr"));const XX=card.bld.exp;
+  const card=kTok(G+" · clase "+c.n,"Modelo de dominio · clase "+c.n,"Armá la clase "+c.n+" con las fichas: lo que es un dato va como atributo y lo que es otra clase, como conexión.",parts,dis.filter((d,i)=>dis.findIndex(z=>z[0]==d[0])==i),o("atr"));const XX=card.bld.exp;
   card.kd=(pl,cur)=>{const v=kV(pl,cur,XX),q0=kQ(pl,cur,XX),hid=kOp(pl,cur,XX),q=r=>hid(r)?"":q0(r),at=XX.filter(x=>x.r=="at"&&pl.includes(x)).map(x=>esc(x.t)),pend=XX.some(x=>x.r=="at"&&!pl.includes(x));
    const abs=XX.some(x=>x.r=="abs")&&!hid("abs")?(v("abs")==null?q("abs"):v("abs")=="«abstracta»"?"«abstracta»":""):"",box=UM.box(esc(c.n),{st:abs,at:at.concat(pend?[UM.q(null,cur&&cur.r=="at")]:[])});
    const par=XX.some(x=>x.r=="par")&&!hid("par")?(v("par")==null?`<div class="umg">${UM.box(q("par"))}<div class="umt">△</div></div>`:v("par").startsWith("hereda de ")?`<div class="umg">${UM.box(esc(v("par").slice(10)))}<div class="umt">△</div></div>`:""):"";
    const sb=XX.some(x=>x.r=="sub")&&!hid("sub")?(v("sub")==null?`<div class="umt">△</div><div class="umk">${UM.box(q("sub"))}</div>`:v("sub").startsWith("con subclases ")?`<div class="umt">△</div><div class="umk">${v("sub").slice(14).split(" y ").map(n=>UM.box(esc(n))).join("")}</div>`:""):"";
-   return`<div class="umx"><div class="umg">${par}${box}${sb}</div></div>`};
+   const cx=XX.filter(x=>x.r=="cx"),cxp=cx.filter(x=>pl.includes(x)).map(x=>UM.aso(esc(c.n),"","",esc(x.t.slice(13)))).join("")+(cx.some(x=>!pl.includes(x))&&cur&&cur.r=="cx"?UM.aso(esc(c.n),"","",UM.q(null,1)):"");
+   return`<div class="umx"><div class="umg">${par}${box}${sb}</div></div>`+cxp};
   cards.push(card);meta.push({k:"class",n:c.n,B,abs:!!(S&&S.abs),at:c.at})};
  /* 4) cada asociación */
  const mkAso=z=>{const m=/^(\w+) (\S+) (◆?—) (\S+) (\w+)(.*)$/.exec(z[0]);if(!m)return;const A=m[1],ma=m[2],mb=m[4],Bc=m[5],ord=/\{ordered\}/.test(m[6]),acm=/con clase de asociación (\w+)(?: \(([^)]*)\))?/.exec(m[6]),ac=acm&&acm[1],h=kHl(z[2]),all=cls.map(c=>c.n);

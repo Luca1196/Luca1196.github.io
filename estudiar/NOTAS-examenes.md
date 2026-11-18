@@ -142,3 +142,4 @@ nucleo.js: una tarjeta kit con c.kd(puestas, actual) dibuja lo armado en vez de 
 - DSS: diagrama de secuencia (actor y :Sistema con líneas de vida, flechas numeradas con su nota, loop/alt/opt como marcos con guarda y ramas). Los DataTypes como recuadros (DTPaso con △).
 - DCD: recuadros de clase con sus operaciones y flechas → (con multiplicidad) y ⇢ punteadas.
 - 17/11 23:10: modelo de dominio en orden de lectura: clases como en la lista de la letra y cada asociación apenas están armadas sus dos clases (nota de Luca: Conductor–Ciudad no aparecía al armar Estacion porque todas las asociaciones iban al final).
+- 18/11 00:30: cada clase del modelo de dominio tiene ahora sus fichas «conexión con X» y, enfrente, la tentadora «xs: Set(X)» como atributo (nota de Luca). Regla nueva en el encabezado de js/examen.js: revisión frase por frase (qué ficha representa cada frase y cuál es su forma equivocada más tentadora).
