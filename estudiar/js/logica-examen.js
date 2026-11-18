@@ -12,7 +12,7 @@
      lg5 tableaux (18/11): tema que apareció en el primer parcial 2026 y no estaba en ningún examen anterior. Un tema nuevo de un examen = un filtro
      nuevo: agregarlo en la lista de filtros de nucleo.js (fila de chips) y su teoría en LTH.
    - Material (18/11): sumados el primer parcial (28/4/2026) y el segundo parcial (10/7/2026), con su propuesta de solución. Su deducción natural
-     va en Bloques (1P 3a, 3b y la derivación de 4b); la del 2P (3a y 3b) usa igualdad (RI1, RI3) y E↔, que Bloques no tiene: queda pendiente.
+     va en Bloques (1P 3a, 3b y la derivación de 4b); la del 2P (3a y 3b) usa igualdad y E↔, que se sumaron a Bloques (ver la decisión 14 de bloques.js).
    - Las series binarias «Semántica · Feb 2026 2a–2d» y «Modelos · Feb 2026 4a–4c» quedan ocultas (hid): adelantaban las respuestas que ahora se deciden acá.
    RECETA PARA SUMAR UN EXAMEN: una entrada lgEx(G, tema, previas, letra, tarjetas) por ejercicio; simular con jsdom; actualizar ?v=. */
 const LTH=["Conjunto inductivo: cláusulas base (quién está de entrada) y cláusulas inductivas (cómo se arma un elemento nuevo con otros). Función por recursión: un caso por cláusula; en la inductiva se llama a sí misma sobre las partes. Prueba por inducción (PIP): un paso base por cada cláusula base, probado solo con definiciones; y un paso inductivo por cada cláusula inductiva, donde se supone la propiedad para las partes (HI) y se prueba para el elemento nuevo (TI). En una cadena, cada paso se justifica con una definición, una propiedad dada o la HI.",

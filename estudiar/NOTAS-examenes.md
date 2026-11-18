@@ -155,6 +155,6 @@ Luca trajo el primer parcial (28/4/2026) y el segundo parcial (10/7/2026) con su
 En js/logica-examen.js, con lgEx: 1P26 Ej. 1 inducción sobre P⁺ (7 tarjetas) · 1P26 Ej. 2a tableau (4) · 1P26 Ej. 2bc semántica y equivalencias (3) · 1P26 Ej. 4 consistencia (4) · 2P26 Ej. 1 TERMC e inducción (6) · 2P26 Ej. 2 estructuras con igualdad (5) · 2P26 Ej. 4 Mod, Th, Cons (5).
 Filtro nuevo «Lóg. · tableaux» (lg5), con su teoría en LTH: el tableau no estaba en ningún examen anterior.
 Bloques: 1P26 3a y 3b con sus pasos intermedios como previas, y «¬¬⊥ es inconsistente» (derivación de 4b).
-Pendiente: 2P26 Ej. 3 (derivaciones con igualdad RI1/RI3 y E↔): Bloques no tiene esas reglas.
+2P26 Ej. 3 (18/11 14:40): Bloques suma RI1–RI4 y E↔. Grupos nuevos: «Igualdad» (una pieza por regla), «Segundo parcial 3a», «Segundo parcial 3b» y «Febrero 3b» (con RI4). Probado con Playwright: los tres árboles completos armados a mano por la interfaz (2P 3b queda igual que la solución), RI3 con las premisas en otro orden, un error a propósito y las pistas de los 15 ejercicios nuevos.
 Arreglos: «No sé» en Bloques y en las tarjetas «Árbol» daba error (swTeo sin steps); pista para meta A∨B cuando un lado sale con E→ o E∧.
 Probado con Playwright: las 7 cadenas resueltas en sus filtros (lg1, lg2, lg4, lg5), un error a propósito con mensaje, las pistas de los 9 árboles nuevos y sin errores de consola. No probado: armar los árboles nuevos completos a mano.
