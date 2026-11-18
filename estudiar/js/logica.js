@@ -20,14 +20,10 @@
       d. Poner esas piezas en req del ejercicio compuesto (cadena: piezas simples → intermedias → ejercicio entero).
       e. Si el ejercicio usa una regla que Bloques no tiene (ej. igualdad RI2/RI4), avisarle a Luca en vez de forzarlo.
       Cada ejercicio de E aparece solo en Deslizar como tarjeta «Árbol · <título>» cuando sus req se resolvieron sin errores.
-   3. OTROS TIPOS (semántica, modelos, verdadero/falso, definiciones…) → series de Deslizar en este archivo, como en el bloque
-      «Ejercicios 2 y 4 del examen de febrero 2026» de más abajo:
-      Object.assign(sw("lg","<Tema> · <título>",null,[pasos…]),{keep:1,req:["<Tema> · <previa>"]}).
-      a. Primero series de PIEZAS (qué significa la definición, qué alcanza para probar/refutar), después una serie por ítem
-         del examen («<Tema> · Feb 2026 4a») con req a las piezas que usa.
-      b. Cada paso es {q,a,b,w}: una decisión atómica, b es el error tentador real, w explica por qué. El primer paso de una serie nueva lleva th
-         (teoría corta); el enunciado o los datos van en x, sin adelantar lo que el paso pregunta.
-      c. Si aparece un tema nuevo, sumar su entrada en window.THT (lo que se muestra al tocar «No sé»).
+   3. OTROS TIPOS (inducción, semántica, modelos, consistencia, tableaux…) → js/logica-examen.js, una entrada lgEx(G, tema, previas, letra, tarjetas)
+      por ejercicio, con fichas (set / seq / cad) y sus fichas equivocadas con la razón. Ver la RECETA de ese archivo.
+      Si el examen trae un TEMA que todavía no tiene filtro (pasó con tableaux en el 1P26), se crea un filtro nuevo (lg5, lg6…): chip en nucleo.js y
+      teoría en LTH de logica-examen.js.
    4. Actualizar ?v= en index.html, probar en el navegador (node --check y una pasada por Bloques/Deslizar), commit y push. */
 /* ---- Tarjetas (cortas): Lógica ---- */
 const LGA=[

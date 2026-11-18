@@ -149,3 +149,12 @@ js/fichas.js (nuevo, cargado después de logica-examen.js): las 82 series binari
 - 18/11 01:45: corrección. Luca no quería las preguntas convertidas a fichas: quería aprender resolviendo ejercicios con fichas y la teoría en los «No sé». js/fichas.js ya no crea tarjetas: oculta las series, saca sus nombres de las previas y su contenido sale en «📚 Más teoría de este tema» con «No sé» (tarjetas de fichas, líneas de comunicación y árboles de deducción).
 - 18/11 14:10: DSS, fragmentos en dos fichas (nota de Luca: «esperaba primero una ficha de sigue en el loop»): (1) qué pasa con el fragmento que estaba abierto (sigue dentro / se cierra / otra rama del alt) y (2) si el mensaje abre uno nuevo (abre loop / alt / opt / no abre ningún fragmento). Arreglado también: el alt dentro del loop ya no desaparece al elegir «otra rama».
 - 18/11 14:20: P3 «el diseño» sin fichas administrativas de la consigna (qué clases implementar, #include, getters): solo conceptos (nota de Luca). Regla escrita en el encabezado del P3 en js/codigo.js.
+
+## Lógica: parciales 2026 (18/11, pedido de Luca)
+Luca trajo el primer parcial (28/4/2026) y el segundo parcial (10/7/2026) con su solución, y otra vez la solución de julio 2026 (ya estaba entera).
+En js/logica-examen.js, con lgEx: 1P26 Ej. 1 inducción sobre P⁺ (7 tarjetas) · 1P26 Ej. 2a tableau (4) · 1P26 Ej. 2bc semántica y equivalencias (3) · 1P26 Ej. 4 consistencia (4) · 2P26 Ej. 1 TERMC e inducción (6) · 2P26 Ej. 2 estructuras con igualdad (5) · 2P26 Ej. 4 Mod, Th, Cons (5).
+Filtro nuevo «Lóg. · tableaux» (lg5), con su teoría en LTH: el tableau no estaba en ningún examen anterior.
+Bloques: 1P26 3a y 3b con sus pasos intermedios como previas, y «¬¬⊥ es inconsistente» (derivación de 4b).
+Pendiente: 2P26 Ej. 3 (derivaciones con igualdad RI1/RI3 y E↔): Bloques no tiene esas reglas.
+Arreglos: «No sé» en Bloques y en las tarjetas «Árbol» daba error (swTeo sin steps); pista para meta A∨B cuando un lado sale con E→ o E∧.
+Probado con Playwright: las 7 cadenas resueltas en sus filtros (lg1, lg2, lg4, lg5), un error a propósito con mensaje, las pistas de los 9 árboles nuevos y sin errores de consola. No probado: armar los árboles nuevos completos a mano.

@@ -172,7 +172,17 @@ const E=[
 {t:"E∀ tres veces",g:"R(x,x)∧R(x,x)→P(x,x)",P:["(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],req:[],grp:"3b"},
 {t:"Usar la ∀∀∀ con R(x,x)",g:"P(x,x)",P:["R(x,x)","(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],req:["E∀ tres veces"],grp:"3b"},
 {t:"I∃ con testigo x",g:"(∃x)P(x,x)",P:["R(x,x)","R(x,x)∧R(x,x)→P(x,x)"],req:["Usar la ∀∀∀ con R(x,x)"],grp:"3b"},
-{t:"3b",g:"(∃x)P(x,x)",P:["(∃x)R(x,x)","(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],req:["I∃ con testigo x"],grp:"3b"}];
+{t:"3b",g:"(∃x)P(x,x)",P:["(∃x)R(x,x)","(∀x)(∀y)(∀z)(R(x,y)∧R(x,z)→P(y,z))"],req:["I∃ con testigo x"],grp:"3b"},
+/* Primer parcial 2026 (18/11): 3a, 3b y la derivación de 4b, con sus pasos intermedios como previas */
+{t:"Chocar ¬p→¬r con r",g:"⊥",P:["¬p→¬r","¬p","r"],req:["Modus tollens: choque"],grp:"Primer parcial 3a"},
+{t:"p por RAA",g:"p",P:["¬p→¬r","r"],req:["Chocar ¬p→¬r con r"],grp:"Primer parcial 3a"},
+{t:"q desde p→q",g:"q",P:["p→q","¬p→¬r","r"],req:["p por RAA"],grp:"Primer parcial 3a"},
+{t:"Primer parcial 3a",g:"(¬p→¬r)→(r→q)",P:["p→q"],req:["q desde p→q"],grp:"Primer parcial 3a"},
+{t:"Rama p→q",g:"q∨r",P:["p→q","p"],req:[],grp:"Primer parcial 3b"},
+{t:"Rama ¬p∨r",g:"q∨r",P:["¬p∨r","p"],req:["Silogismo disyuntivo"],grp:"Primer parcial 3b"},
+{t:"Casos de (p→q)∨(¬p∨r)",g:"q∨r",P:["(p→q)∨(¬p∨r)","p"],req:["Rama p→q","Rama ¬p∨r"],grp:"Primer parcial 3b"},
+{t:"Primer parcial 3b",g:"p→(q∨r)",P:["(p→q)∨(¬p∨r)"],req:["Casos de (p→q)∨(¬p∨r)"],grp:"Primer parcial 3b"},
+{t:"¬¬⊥ es inconsistente",g:"⊥",P:["¬¬⊥"],req:["Choque con ¬¬φ"],grp:"Patrones de contradicción"}/* 1P26 4b; en Patrones para que salga como tarjeta «Árbol» */];
 E.forEach(e=>{e.PA=e.P.map(pf);e.GA=pf(e.g);e.q=/[∀∃]/.test(e.P.join("")+e.g)});
 let ex=0;
 /* ---------- Estado ---------- */
@@ -328,6 +338,8 @@ function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:
   return`La meta es ⊥: buscá el par con una negación que tengas. Con ${P(n)} el par es ${P(n.a)} y ${P(n)}: E¬ con esas dos.`+how}
  const dj=c.find(f=>f.k=="or"&&!c.some(h=>eq(h,f.l)||eq(h,f.r)));if(dj)return`Tenés la disyunción ${P(dj)}: E∨ (una rama por lado, en cada una probás ${P(g)}).`;
  if(g.k=="or"&&c.some(f=>eq(f,g.l)||eq(f,g.r))){const x=c.find(f=>eq(f,g.l)||eq(f,g.r));return`Tenés ${P(x)}, que es un lado de ${P(g)}: I∨ con ${P(x)}.`}
+ if(g.k=="or"){const sd=[g.l,g.r],im=c.find(f=>f.k=="imp"&&sd.some(x=>eq(f.r,x))&&c.some(h=>eq(h,f.l))),cj=c.find(f=>f.k=="and"&&sd.some(x=>eq(f.l,x)||eq(f.r,x)));/* 18/11: un lado que sale de lo que tenés (E→ o E∧) */
+  if(im)return`${P(im.r)} es un lado de ${P(g)} y sale de ${P(im)} con ${P(im.l)} (E→): I∨ con ${P(im.r)}.`;if(cj){const x=sd.find(x=>eq(cj.l,x)||eq(cj.r,x));return`${P(x)} es un lado de ${P(g)} y sale de ${P(cj)} (E∧): I∨ con ${P(x)}.`}}
  if(g.k=="or")return`I∨ solo si sabés qué lado vale (${P(g.l)} o ${P(g.r)}); si no, RAA suponiendo ${P(NG(g))}.`;
  if(c.some(f=>f.k=="bot"))return`Tenés ⊥: E⊥ te da ${P(g)}.`;
  return`Nada directo para ${P(g)}: RAA (suponés ${P(NG(g))} y arriba queda ⊥).`}
