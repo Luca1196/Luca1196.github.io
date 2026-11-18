@@ -15,4 +15,10 @@
   const cl=el.cloneNode(true);const nts=[...el.querySelectorAll("textarea")].map(t=>t.value.trim()).filter(Boolean);cl.querySelectorAll("#fbs,button,.nt").forEach(x=>x.remove());cl.style.cssText="position:fixed;left:-9999px;white-space:pre-wrap";document.body.appendChild(cl);let tx=(cl.innerText||"").replace(/\n{3,}/g,"\n\n").trim()+nts.map(n=>"\nNOTA DE LUCA: "+n).join("");cl.remove();
   if(TAB==1||TAB==2){try{tx=($("fr").contentDocument.querySelector("main")||$("fr").contentDocument.body).innerText.trim()}catch(e){}}
   cp(`[${TN[TAB]}${id?" · "+id:""}]\n${tx}`)}})();
+/* MIGRACIÓN A IDS FIJOS (18/11, ver base.js): pasa el progreso guardado con el id viejo (c.oid, por contenido) al id fijo (c.id). Una sola vez por almacenamiento. */
+(()=>{const M=SWC.filter(c=>c.oid&&c.oid!=c.id),seen={};SWC.forEach(c=>{if(seen[c.id])console.warn("Título de bloque repetido (comparten progreso):",c.s,c.g);seen[c.id]=1});
+ const mv=(o,a,b)=>{if(o&&o[a]!==undefined){if(o[b]===undefined)o[b]=o[a];delete o[a]}};
+ const mig=X=>{if(!X||X.idv==2)return false;M.forEach(c=>{const o=c.oid,n=c.id;["seen","bst","kok"].forEach(k=>mv(X[k],o,n));if(X.mt)mv(X.mt.fd,o,n);
+   if(X.box)Object.keys(X.box).forEach(k=>{const i=k.lastIndexOf(":");if(k.slice(0,i)==o)mv(X.box,k,n+k.slice(i))})});X.idv=2;return true};
+ if(mig(S2))SV2();try{const r=localStorage.getItem("sw1b");if(r){const X=JSON.parse(r);if(mig(X))localStorage.setItem("sw1b",JSON.stringify(X))}}catch(e){}})();
 {const hm={repaso:0,prog4:1,logica:6,deslizar:3,musica:4,errores:5,bloques:6,basico:7,codigo:8},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
