@@ -51,6 +51,7 @@ function erOpen(){const NT=nsTag(),L=E1.log.filter(e=>(ERW=="all"||e.w==ERW)&&(!
  <div class="row" style="margin-top:12px;gap:6px;flex-wrap:wrap">${[["all","Todo"],["sw","Principal"],["bs","Básico"],["cd","Código"],["ej","Ejercicios"],["bq","Bloques"],["oi","Oído"],["rep","Repaso"]].map(([k,t])=>`<button class="btn chip${ERW==k?" sel":""}" data-e="w" data-v="${k}">${t}</button>`).join("")}<button class="btn chip${ERNS?" sel":""}" data-e="ns">Solo «No sé» (${E1.log.filter(e=>e.ns).length})</button></div>
  ${(()=>{const L=dayStats("").slice(-7);return`<div class="card"><h2>Aciertos por día</h2>${L.length?L.map(({d,t})=>`<div class="row between" style="margin:4px 0"><span>${d.slice(8)}/${d.slice(5,7)}</span><span class="mut">${t.all[0]}/${t.all[1]} · <b>${pc(...t.all)}</b></span></div><div class="pb" style="height:6px"><i style="width:${t.all[1]?t.all[0]/t.all[1]*100:0}%"></i></div>`).join(""):'<p class="mut" style="margin:0">Se empieza a registrar desde hoy.</p>'}</div>`})()}<div class="card"><h2>Dónde fallo más</h2>${st.length?st.slice(0,15).map(([[w,s,g],f,n])=>`<div class="row between" style="gap:8px;margin:4px 0"><span>${esc(SN[s]+" · "+g)} <span class="mut">(${WN[w]})</span>${NT[w+"|"+s+"|"+g]?` <span class="nsb">${NT[w+"|"+s+"|"+g]} no sé</span>`:""}</span><span class="mut" style="white-space:nowrap">${w=="ej"?`<b>${f}</b> ${f==1?"fallo":"fallos"}`:`${f}/${n} · <b>${Math.round(f/n*100)}%</b>`}</span></div>`).join(""):'<p class="mut" style="margin:0">Todavía no hay errores. Se guardan solos al estudiar en Deslizar y en los ejercicios.</p>'}</div>
  <div class="card"><h2>Últimos errores</h2>${L.slice(-40).reverse().map(e=>`<div style="border-top:1px solid var(--bd);padding:8px 0"><div class="mut" style="font-size:12px">${e.ns?'<span class="nsb">No sé · falta teoría</span> ':""}${fd(e.t)} · ${WN[e.w]} · ${esc(SN[e.s]+" · "+e.g)}${e.ms?" · "+Math.round(e.ms/1000)+" s":""}</div><div>${esc(e.q.split("\n").pop())}</div><div style="font-size:14px">${e.ns?"":`<span style="color:var(--bad)">✗ ${esc(e.p)}</span> · `}<span style="color:var(--ok)">✓ ${esc(e.a)}</span></div><details class="nt"${e.note?" open":""}><summary>✏️ ${e.note?"Tu nota":"Agregar nota"}</summary><textarea data-note="${E1.log.indexOf(e)}" rows="2" placeholder="¿Qué no entendiste o qué te confundió?">${esc(e.note||"")}</textarea></details></div>`).join("")||'<p class="mut" style="margin:0">Nada por acá.</p>'}</div>
+ ${ghCard()}
  <button class="btn ghost" data-e="clr">${ERR?"Tocá otra vez para borrar todos los errores":"Borrar registro de errores"}</button>`;
  V.innerHTML=h}
 function erCopy(all){ERT=erTxt(all);const done=()=>{if(!all){E1.exp=Date.now();SVE()}};try{navigator.clipboard.writeText(ERT).then(()=>{done();ERT="";erOpen();const b=V.querySelector('[data-e="'+(all?"cpa":"cp")+'"]');if(b)b.textContent="Copiado ✓"},()=>{done();erOpen()})}catch(e){done();erOpen()}}
@@ -58,3 +59,34 @@ V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[dat
  if(a=="ns"){ERNS=ERNS?0:1;erOpen()}else if(a=="cp")erCopy(0);else if(a=="cpa")erCopy(1);else if(a=="w"){ERW=b.dataset.v;erOpen()}
  else if(a=="dl"){const u=URL.createObjectURL(new Blob([erTxt(1)],{type:"text/plain"})),l=document.createElement("a");l.href=u;l.download="errores-"+TD()+".txt";l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
  else if(a=="clr"){if(ERR){E1={log:[],st:{},exp:0};SVE();ERR=0}else ERR=1;erOpen()}});
+
+/* ENVÍO AUTOMÁTICO DE NOTAS A GITHUB (pedido de Luca, 19/11: «que los errores con nota vayan directamente sin que lo tenga que hacer a mano»).
+   Cada error con nota se crea como un issue en el repo (título «[nota] …»), para que Gemini/Claude lo lean y procesen desde GitHub.
+   - El token NUNCA va en el código (el repo es público): Luca lo pega una vez acá y queda solo en su navegador (localStorage "gh1").
+     Token fine-grained, solo este repo, permiso Issues: read and write.
+   - Se envía solo: 20 s después de dejar de escribir una nota, al salir de la página y al abrir la app (reintenta lo pendiente).
+   - Si la nota se edita después de enviada, se actualiza el mismo issue (e.gi = número de issue, e.gn = texto enviado). Se guarda en err1. */
+const GHR="Luca1196/Luca1196.github.io";let GHT=null,GHB=0,GHM="";
+const ghTok=()=>{try{return localStorage.getItem("gh1")||""}catch(e){return""}};
+const ghPend=()=>E1.log.filter(e=>e.note&&e.gn!==e.note);
+const ghBody=e=>{const cut=(t,n)=>{t=String(t||"");return t.length>n?t.slice(0,n)+"…":t};
+ return[`**Fecha:** ${new Date(e.t).toLocaleString("es-UY")} · **Sección:** ${WN[e.w]||e.w} · **Materia:** ${SN[e.s]||e.s}`,`**Bloque:** ${e.g}${e.n?" · paso "+e.n:""}`,
+  "","**Nota de Luca:**",...String(e.note).split("\n").map(l=>"> "+l),"",`**Pregunta:** ${cut(e.q,1500)}`,`**Correcta:** ${cut(e.a,800)}`,e.ns?"**Respondió:** No sé (falta teoría)":`**Eligió:** ${cut(e.p,800)}`,
+  e.x?"\n<details><summary>Contexto de la tarjeta</summary>\n\n```\n"+cut(e.x,3000)+"\n```\n</details>":"",
+  "","---","Para la IA: decidir si es un error de Luca (se explica) o un defecto de la tarjeta (se corrige), según el skill practica-tipo-duolingo."].join("\n")};
+async function ghSync(){const tk=ghTok();if(!tk||GHB||!navigator.onLine)return;const P=ghPend();if(!P.length)return;GHB=1;
+ try{for(const e of P.slice(0,10)){const nt=e.note,body=JSON.stringify(e.gi?{body:ghBody(e)}:{title:("[nota] "+(SN[e.s]||e.s)+" · "+e.g).slice(0,200),body:ghBody(e)});
+   const r=await fetch("https://api.github.com/repos/"+GHR+"/issues"+(e.gi?"/"+e.gi:""),{method:e.gi?"PATCH":"POST",keepalive:true,headers:{Authorization:"Bearer "+tk,Accept:"application/vnd.github+json","Content-Type":"application/json"},body});
+   if(!r.ok){GHM=r.status==401||r.status==403?"El token no sirve o no tiene permiso de Issues (error "+r.status+").":"GitHub respondió "+r.status+".";break}
+   const j=await r.json();e.gi=j.number;e.gn=nt;GHM="";SVE()}}catch(err){GHM="Sin conexión con GitHub; se reintenta solo."}
+ GHB=0;if(TAB==5)erOpen()}
+const ghLater=(ms)=>{clearTimeout(GHT);GHT=setTimeout(ghSync,ms)};
+V.addEventListener("input",ev=>{if(ev.target&&ev.target.dataset&&ev.target.dataset.note!==undefined)ghLater(20000)});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState=="hidden")ghSync()});
+setTimeout(ghSync,3000);
+function ghCard(){const tk=ghTok(),P=ghPend().length,S=E1.log.filter(e=>e.gi).length;
+ return`<div class="card"><h2>Notas → GitHub</h2>${tk?`<p style="margin:0">Envío automático activado: cada error con nota se crea como issue en el repo. <span class="mut">${S} enviadas · ${P} pendientes</span></p>${GHM?`<p style="color:var(--bad);margin:6px 0 0">${esc(GHM)}</p>`:""}<div class="row" style="margin-top:8px;gap:6px"><button class="btn" data-g="now">Enviar ahora</button><button class="btn ghost" data-g="off">Quitar token</button></div>`:
+ `<p class="mut" style="margin:0 0 8px">Pegá una vez un token de GitHub (fine-grained, solo este repo, permiso Issues: read and write). Queda solo en este navegador, nunca en el código.</p><div class="row" style="gap:6px"><input id="ghk" type="password" placeholder="github_pat_…" style="flex:1;min-width:0;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)"><button class="btn pri" data-g="save">Guardar</button></div>`}</div>`}
+V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[data-g]");if(!b)return;const a=b.dataset.g;
+ if(a=="save"){const v=($("ghk").value||"").trim();if(v){try{localStorage.setItem("gh1",v)}catch(e){}GHM="";ghSync()}erOpen()}
+ else if(a=="off"){try{localStorage.removeItem("gh1")}catch(e){}erOpen()}else if(a=="now")ghSync()});
