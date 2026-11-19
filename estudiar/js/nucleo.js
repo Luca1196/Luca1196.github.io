@@ -177,13 +177,15 @@ const PKF={},PKN=15,KTH={tra:"Traducir la letra: cada objetivo dice QUÉ necesit
 const tema=c=>c.tm?c.tm:c.s=="lg"?"lg3":/ · DCD/.test(c.g)?"dcd":/ · DSS|^Parcial P1b/.test(c.g)?"dss":/ · Modelo de dominio|^Parcial P1a/.test(c.g)?"md":area(c)=="cod"?"p3":area(c)=="mod"?"md":"com";
 /* FILTROS COMO CASILLEROS (19/11, pedido de Luca: «quiero marcar y desmarcar temas para que me aparezcan»). Cada tema es un casillero; salen
    tarjetas de los temas marcados (S2.selT, se guarda; sin guardar = todos). SF queda solo para el modo: "all" (temas marcados), "lin" (líneas
-   sueltas), "err" (mis errores, también dentro de los temas marcados). «Oído» marca si se intercalan tarjetas de oído. No se puede desmarcar el
-   último tema: siempre queda al menos uno. */
+   sueltas), "err" (mis errores, también dentro de los temas marcados). Oído es un casillero más: con otros temas se intercala una tarjeta de oído
+   cada OI_CADA; solo Oído = solo tarjetas de oído (musica.js). Tocar un filtro nunca dispara una de oído (SWNOOI). Siempre queda al menos uno. */
 const TEMAS=[["Prog4",[["md","Modelo de dominio (1a)"],["dss","Secuencia · DSS (1b)"],["com","Comunicación (2a)"],["dcd","DCD (2b)"],["p3","Código C++ (P3)"]]],
- ["Lógica",[["lg1","Inducción"],["lg2","Semántica"],["lg3","Deducción"],["lg4","Modelos y consistencia"],["lg5","Tableaux"]]],["Otros",[["oi","Oído (intercalado)"]]]],
+ ["Lógica",[["lg1","Inducción"],["lg2","Semántica"],["lg3","Deducción"],["lg4","Modelos y consistencia"],["lg5","Tableaux"]]],["Oído",[["oi","Tarjetas de oído"]]]],
  TEMK=TEMAS.flatMap(g=>g[1].map(x=>x[0]));
 const swSel=k=>{const L=S2&&S2.selT;return!Array.isArray(L)||L.includes(k)};window.swSel=swSel;
-const swSelSet=(ks,on)=>{let L=Array.isArray(S2.selT)?S2.selT.slice():TEMK.slice();ks.forEach(k=>{L=L.filter(x=>x!=k);if(on)L.push(k)});if(!L.some(k=>k!="oi"))return false;S2.selT=L;SV2();return true};
+const swSelSet=(ks,on)=>{let L=Array.isArray(S2.selT)?S2.selT.slice():TEMK.slice();ks.forEach(k=>{L=L.filter(x=>x!=k);if(on)L.push(k)});if(!L.length)return false;S2.selT=L;SV2();return true};
+window.swFiltHTML=()=>`<div style="margin-top:8px">${TEMAS.map(([gn,L])=>`<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:4px;align-items:center"><span class="lbl" style="margin:0 4px 0 0">${gn}</span>${L.map(([k,t])=>{const on=swSel(k);return`<button class="btn chip${on?" sel":""}" data-w="st" data-v="${k}" role="checkbox" aria-checked="${on}">${on?"☑":"☐"} ${t}</button>`}).join("")}${L.length>1?`<button class="btn ghost" style="margin:0;padding:2px 8px;font-size:13px" data-w="sg" data-v="${L.map(x=>x[0]).join(",")}">${L.every(x=>swSel(x[0]))?"ninguno":"todos"}</button>`:""}</div>`).join("")}
+ <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${[["all","Temas marcados"],["lin","Líneas sueltas"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div></div>`;/* también la usa la tarjeta de oído (musica.js) */
 let SW=null,SF="all",SCOMBO=0,SRETRY=[],SLAST="",SUN=0,SDRAG=null,STM=null;
 const swBox=(c,i)=>S2.box[c.id+":"+i]||0;
 /* Pendientes = pasos que fallaste alguna vez (registro de Errores) y todavía no acertaste 2 veces seguidas. Pesan más al elegir serie y forman el filtro "Mis errores". */
@@ -305,8 +307,7 @@ function mtBar(){const m=mtHoy();if(!m)return"";const bar=(x,n)=>`<div class="pb
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  (TAB==3?mtBar():"")+`<div class="row between mut" style="margin-top:6px"><span>Seguidas ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
- (TAB==7?"":`<div style="margin-top:8px">${TEMAS.map(([gn,L])=>`<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:4px;align-items:center"><span class="lbl" style="margin:0 4px 0 0">${gn}</span>${L.map(([k,t])=>{const on=swSel(k);return`<button class="btn chip${on?" sel":""}" data-w="st" data-v="${k}" role="checkbox" aria-checked="${on}">${on?"☑":"☐"} ${t}</button>`}).join("")}${L.length>1?`<button class="btn ghost" style="margin:0;padding:2px 8px;font-size:13px" data-w="sg" data-v="${L.map(x=>x[0]).join(",")}">${L.every(x=>swSel(x[0]))?"ninguno":"todos"}</button>`:""}</div>`).join("")}
- <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${[["all","Temas marcados"],["lin","Líneas sueltas"],["err","Mis errores ("+swPend().size+")"]].map(([k,t])=>`<button class="btn chip${SF==k?" sel":""}" data-w="sf" data-v="${k}">${t}</button>`).join("")}</div></div>`);
+ (TAB==7?"":swFiltHTML());
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;
@@ -363,9 +364,7 @@ function swMode(m){clearTimeout(STM);if(m==SWM)return;SPACK=[];SWX[SWM]={S2,SCOM
  if(x){({S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW}=x)}else{S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};try{const r=localStorage.getItem(SK);if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}SCOMBO=0;SRETRY=[];SLAST="";SLT="";SLK="";SERR="";SAX="";SUN=0;SW=null}}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if((TAB!=3&&TAB!=7))return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
- if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="tns")swTile(-1);else if(w=="tsh")swShow();else if(w=="sf"){SF=b.dataset.v;swNew()}
- else if(w=="st"){const k=b.dataset.v;if(swSelSet([k],!swSel(k))){SPACK=[];swNew()}}
- else if(w=="sg"){const ks=b.dataset.v.split(","),on=!ks.every(swSel);if(swSelSet(ks,on)){SPACK=[];swNew()}}});
+ if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="tns")swTile(-1);else if(w=="tsh")swShow();else if(w=="sf"||w=="st"||w=="sg"){if(w=="sf")SF=b.dataset.v;else{const ks=b.dataset.v.split(","),on=!ks.every(swSel);if(!swSelSet(ks,on))return;SPACK=[]}window.SWNOOI=1;try{swNew()}finally{window.SWNOOI=0}}});
 document.addEventListener("keydown",e=>{if((TAB!=3&&TAB!=7)||!SW||(e.target&&e.target.tagName=="TEXTAREA")||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
  if(k=="ArrowDown"&&SW.ans==null&&!SW.recap){e.preventDefault();swChoose("NS")}
  else if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}

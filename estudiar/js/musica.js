@@ -7,7 +7,7 @@
      correcta a la tocada, con signo (+ = tocó más arriba), de 1 a 6 semitonos (2m, 2M, 3m, 3M, 4J, tritono).
    - Registro en Errores con logA("oi","mu","Nota X", ok, {a, f: fallos, iv: [semitonos], rd: se rindió}).
      ok = encontrada al primer toque. La exportación para Claude tiene una sección «Oído» (por nota y por intervalo).
-   - Se intercalan en Principal (pestaña 3): 1 tarjeta de oído cada OI_CADA tarjetas (envuelve swNew de nucleo.js).
+   - En Principal (pestaña 3) es un casillero de filtro: con otros temas, 1 tarjeta de oído cada OI_CADA; solo Oído, todas (envuelve swNew de nucleo.js).
    - Elección de nota: pesa más la que más falla y la que nunca salió; no repite la anterior. Stats en S3.oi (mu1).
    - REGISTRO PROGRESIVO (pedido de Luca): el oído distingue mejor el registro medio, así que se empieza por las notas
      más agudas del bajo y se baja a medida que mejora. Solo suenan notas de los trastes OF0-OF1 (5 a 9, pedido de Luca);
@@ -52,7 +52,7 @@ function oiBoard(){const nm=S3.nm,o=OI,last=o.taps[o.taps.length-1],hid=oHide();
 function oiDraw(){const o=OI,x=(S3.od||{})[o.dg],nf=o.taps.length,kn=NN[o.K],hid=oHide(),tp=t=>`${mNm(t[0],t[1])} = grado ${DGN[dOf(t[0],t[1])]} (${ivT(t[2])})`;
  const msg=o.done?(o.rd?`Era <b>${NN[o.pc]}</b> = grado <b>${DGN[o.dg]}</b> de ${kn}. Te rendiste tras ${nf} ${nf==1?"intento":"intentos"}.`:`¡Era <b>${NN[o.pc]}</b> = grado <b>${DGN[o.dg]}</b> de ${kn}! ${nf?nf+(nf==1?" intento fallido":" intentos fallidos")+".":"Al primer intento."}`)
   :nf?`No: ${hid?mNm(...o.taps[nf-1])+" ("+ivT(o.taps[nf-1][2])+")":tp(o.taps[nf-1])}. Seguí buscando.`:(hid?"Suena la tónica (sin decirte cuál es) y después la nota. Tocá la nota.":`Tonalidad <b>${kn}</b> mayor (marcada con 1). Suena la tónica y después la nota: tocá la nota.`);
- V.innerHTML=`<div class="s-mu"><div class="row between"><b class="sj">🎧 Oído</b><span class="mut">Nivel ${o.lv+1}/${OFL.length}: ${OFL[o.lv][2]}${x&&x.n&&!hid?" · grado "+DGN[o.dg]+": "+(x.n-x.f)+"/"+x.n:""}</span></div>
+ V.innerHTML=(o.inP&&window.swFiltHTML?swFiltHTML():"")+`<div class="s-mu"><div class="row between"><b class="sj">🎧 Oído</b><span class="mut">Nivel ${o.lv+1}/${OFL.length}: ${OFL[o.lv][2]}${x&&x.n&&!hid?" · grado "+DGN[o.dg]+": "+(x.n-x.f)+"/"+x.n:""}</span></div>
  <div class="sn" style="margin-top:8px">${msg}</div>${o.up?`<div class="sn" style="margin-top:6px">¡Subiste de nivel! Ahora: ${OFL[ofLv()][2]}.</div>`:""}${o.done&&nf?`<div class="mut" style="margin-top:4px">Tocaste: ${o.taps.map(tp).join(" · ")}</div>`:""}
  <div id="fbs" style="overflow-x:auto;padding-bottom:6px;margin-top:8px"><div id="fb" class="fbd">${oiBoard()}</div></div>
  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${o.done?`<button class="btn pri big" data-o="go">Continuar</button>`:`<button class="btn pri" data-o="rp">🔊 Tónica y nota</button><button class="btn" data-o="rn">Solo la nota</button><button class="btn ghost" data-o="rd">Me rindo</button>`}<button class="btn chip${S3.nm?" sel":""}" data-o="nm">Ver notas</button><button class="btn chip${S3.snd===0?"":" sel"}" data-o="snd">Sonido</button></div></div>`;
@@ -72,12 +72,14 @@ function muOpen(){OI=null;oiNew(0)}
 V.addEventListener("click",ev=>{if(!OI||(TAB!=4&&TAB!=3))return;const b=ev.target.closest("[data-o]");if(!b)return;const a=b.dataset.o;
  if(a=="t")oiTap(+b.dataset.s,+b.dataset.f);else if(a=="rp")oiPlay(1);else if(a=="rn")oiPlay(0);else if(a=="rd")oiEnd(1);
  else if(a=="nm"){S3.nm=S3.nm?0:1;mSave();oiDraw()}else if(a=="snd"){S3.snd=S3.snd===0?1:0;mSave();oiDraw()}
- else if(a=="go"){if(OI.inP){OI=null;swNewBase()}else oiNew(0)}});
+ else if(a=="go"){if(OI.inP){OI=null;swNew()}else oiNew(0)}});
 document.addEventListener("keydown",e=>{if(!OI||!OI.done||(TAB!=4&&TAB!=3)||e.target.tagName=="BUTTON")return;if(e.key=="Enter"||e.key==" "||e.key=="ArrowRight"){e.preventDefault();V.querySelector('[data-o="go"]').click()}});
 
 /* ===== Intercalado en Principal (solo pestaña 3, no en Básico): cuenta los pasos respondidos (logA "sw" en la pestaña 3)
    y, al terminar la serie en curso, si ya van OI_CADA pasos desde la última, muestra una tarjeta de oído.
    La primera aparece después de la primera serie. ===== */
-const swNewBase=swNew,logABase=logA;let OIK=OI_CADA;
+const swNewBase=swNew,logABase=logA;let OIK=0;/* 19/11: arranca en 0 (antes la primera tarjeta de Principal ya era de oído) */
 logA=function(w){if(w=="sw"&&TAB==3)OIK++;return logABase.apply(this,arguments)};
-swNew=function(){OI=null;if(TAB==3&&SWM==3&&SF=="all"&&(!window.swSel||swSel("oi"))&&SW&&OIK>=OI_CADA){OIK=0;SW=null;oiNew(1);return}swNewBase()};
+/* Casillero «Oído» de Principal (19/11): marcado junto con otros temas = una de oído cada OI_CADA; solo Oído = solo oído. Tocar un filtro (SWNOOI) no la dispara salvo con solo Oído. */
+swNew=function(){OI=null;const on=TAB==3&&SWM==3&&SF=="all"&&(!window.swSel||swSel("oi")),solo=on&&window.swSel&&!["md","dss","com","dcd","p3","lg1","lg2","lg3","lg4","lg5"].some(swSel);
+ if(on&&(solo||(!window.SWNOOI&&SW&&OIK>=OI_CADA))){OIK=0;SW=null;oiNew(1);return}swNewBase()};
