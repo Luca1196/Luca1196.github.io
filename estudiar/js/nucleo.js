@@ -199,7 +199,11 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
  if(SF=="err"){let a=[...PD.values()].filter(r=>!r.c.hid);if(SAX&&a.some(r=>arF(r.c)))a=a.filter(r=>arF(r.c));if(a.length>1)a=a.filter(r=>r.c.id+":"+r.i!=SLK&&swTop(r.c)!=SLT).concat([]);if(!a.length)a=[...PD.values()].filter(r=>r.c.id+":"+r.i!=SLK);if(!a.length)a=[...PD.values()];if(a.length){const r=a[Math.floor(Math.random()*a.length)];return{c:r.c,i:r.i,only:true,built:[],err:0}}SF="all"}
  /* primero el nivel (nuevo → con errores → sin errores), después la variedad (otra área tras un error, no repetir el último, espera de los paquetes) */
- const cool=c=>!(c.kq&&PKF[c.id]!=null&&SUN-PKF[c.id]<PKN),C0=SWC.filter(ok),CW=C0.filter(cool).length?C0.filter(cool):C0;let pool=[];
+ const cool=c=>!(c.kq&&PKF[c.id]!=null&&SUN-PKF[c.id]<PKN),C0=SWC.filter(ok);let CW=C0.filter(cool).length?C0.filter(cool):C0,pool=[];
+ /* ROTACIÓN DE TEMAS (19/11, Luca: «tengo varios filtros marcados pero me tocan puros ejercicios de deducción»). Antes, «nuevos primero» era global y
+    deducción, con muchos árboles chicos que se desbloquean al acertar, se llevaba casi todas las tarjetas. Ahora primero se elige el TEMA marcado (con
+    algo disponible) que hace más tiempo que no sale (S2.tls), y adentro de ese tema rige lo de siempre: nuevos → con errores → sin errores. */
+ if(SF=="all"&&CW.length){const TT={};CW.forEach(c=>{(TT[tema(c)]=TT[tema(c)]||[]).push(c)});const ks=Object.keys(TT);if(ks.length>1){const ls=S2.tls||{},w=k=>ls[k]||Math.random();CW=TT[ks.sort((a,b)=>w(a)-w(b))[0]]}}
  if(CW.length){const tm=Math.min(...CW.map(blkTier)),L=CW.filter(c=>blkTier(c)==tm);pool=L.filter(c=>arF(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=L.filter(c=>c.id!=SLAST);if(!pool.length)pool=L}
  /* filtro de un tema sin nada disponible (p. ej. DCD antes de aprobar sus diagramas): se entra igual por el comienzo de cada cadena de ese tema */
  if(!pool.length){const T=SWC.filter(c=>!c.ln&&!c.hid&&swSel(tema(c)));pool=T.filter(c=>!(c.req||[]).some(t=>T.some(z=>(z.toks||[]).includes(t))));if(!pool.length){ign=true;pool=SWC.filter(ok)}}/* nada disponible en los temas marcados: entra por el comienzo de sus cadenas; si tampoco, de cualquier tema */
@@ -210,7 +214,7 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  /* paquete kit: si ya está aprobado se repasa entero; si quedó a medias, se retoma en la primera tarjeta que falta */
  if(pk.kq&&pk.pack){const K=S2.kok=S2.kok||{},all=[pk].concat(pk.pack);if((pk.toks||[]).every(t=>(S2.bqok||{})[t]))all.forEach(x=>delete K[x.id]);else if(K[pk.id]){const pe=pk.pack.filter(x=>!K[x.id]);if(pe.length){SPACK=pe.slice(1);return{c:pe[0],i:0,only:false,built:[],err:0}}}}
  return{c:pk,i:0,only:false,built:[],err:0}}
-function swNew(){NLE=null;SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swNew(){NLE=null;SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();(S2.tls=S2.tls||{})[tema(SW.c)]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){NLE=null;SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»",Dom:"el dominio",Esc:"el enunciado"};
 function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.map((l,i)=>{if(hl){const on=hl=="ESC"?(di<0||i<di):(di>=0&&i>di&&new RegExp(hl).test(l));return on?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
