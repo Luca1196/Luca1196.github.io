@@ -782,7 +782,7 @@ TPRE={"aceptarPostulacion":[{n:"1",from:":Controlador",to:":Estudiante *",op:"fi
    if(gl.length>=2&&(isL||/^Patrón · /.test(g))){gl.forEach(x=>x.dp=gl.filter(y=>Cl[x.j].has(y.j)));
     const ex=[],bank=gl.map(x=>({t:x.t,rt:1}));gl.forEach((x,i)=>{if(i)ex.push(nlT());ex.push(x)});(TDIS[g]||[]).forEach(([t,why])=>bank.push({t,why}));
     const e0=ent[0],T=Object.assign(sw("p4",g+" · traducí la letra",sig,[Object.assign(st("Traducí la letra",gl.map(o=>o.t).join("\n"),"—",""),{k:"bld"})],""),{dg:dgOf(cs[0]),bld:{exp:ex,bank,n:ex.length},tra:1,req:e0.req,then:e0});
-    e0.req=[];e0.ln=1;SWC.push(T);ent[0]=T}}
+    /* 19/11, pedido de Luca: sin la tarjeta «Traducí la letra»: decía en lenguaje común lo mismo que muestra la tarjeta siguiente («Lo que pide la letra en este tramo» y los objetivos ▶). El ejercicio arranca en su primer tramo. */void T}}
   ent.forEach((e,i)=>{if(ent[i+1]){e.next=ent[i+1];if(e.then)e.then.next=ent[i+1]}})})}
 
 /* ===== Teoría de los patrones (tarjetas binarias, genéricas) ===== */
