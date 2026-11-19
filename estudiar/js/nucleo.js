@@ -1,4 +1,12 @@
 /* NÚCLEO: estado, Repaso, motor de Deslizar, pestañas y portado de tarjetas. Tocar solo para cambios que afecten a todas las secciones. */
+/* PARA TODAS LAS SESIONES (19/11, pedido de Luca; varias conversaciones trabajan en paralelo sobre este repo):
+   1. Antes de cambiar algo, traer los cambios (git pull) y leer los comentarios de decisiones del archivo que se va a tocar: acá están las reglas vigentes,
+      con fecha y el pedido de Luca que las motivó (buscar «pedido de Luca»).
+   2. TODA decisión nueva se comenta en el código, junto al código que la implementa: qué se decidió, por qué y la fecha. Si cambia una regla anterior,
+      se actualiza ese comentario (no se deja uno viejo que la contradiga).
+   3. Si una regla nueva toca la misma cosa que otra vigente (por ejemplo, el orden en que salen las tarjetas: «ESTADO DE CADA BLOQUE» y «ROTACIÓN DE
+      TEMAS»), se hacen convivir y se escribe cómo conviven. Si chocan de verdad, se le pregunta a Luca antes de pisar una.
+   4. Al terminar: actualizar ?v= en index.html, probar con jsdom, commit y push, y anotar el cambio en NOTAS-examenes.md. */
 
 const CARDS=[].concat(P4A,LGA).map(c=>(c.id=hs(c.s+c.k+c.q),c));
 CARDS.forEach(c=>{if(c.k=="mc"){c.why={};c.d=c.d.map(t=>{const p=t.split("||");if(p[1])c.why[p[0]]=p[1];return p[0]})}});
@@ -203,7 +211,9 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  /* ROTACIÓN DE TEMAS (19/11, Luca: «tengo varios filtros marcados pero me tocan puros ejercicios de deducción»). Antes, «nuevos primero» era global y
     deducción, con muchos árboles chicos que se desbloquean al acertar, se llevaba casi todas las tarjetas. Ahora primero se elige el TEMA marcado (con
     algo disponible) que hace más tiempo que no sale (S2.tls), y adentro de ese tema rige lo de siempre: nuevos → con errores → sin errores. */
- if(SF=="all"&&CW.length){const TT={};CW.forEach(c=>{(TT[tema(c)]=TT[tema(c)]||[]).push(c)});const ks=Object.keys(TT);if(ks.length>1){const ls=S2.tls||{},w=k=>ls[k]||Math.random();CW=TT[ks.sort((a,b)=>w(a)-w(b))[0]]}}
+ /* CONVIVENCIA CON «NUEVOS PRIMERO» (19/11, Luca eligió esta opción): la rotación se hace solo entre los temas que todavía tienen bloques NUEVOS
+    disponibles; recién cuando ningún tema tiene nada nuevo se rota entre todos. Así nunca se repite un bloque mientras quede uno sin ver en otro tema. */
+ if(SF=="all"&&CW.length){const TT={};CW.forEach(c=>{(TT[tema(c)]=TT[tema(c)]||[]).push(c)});let ks=Object.keys(TT);const kn=ks.filter(k=>TT[k].some(c=>!blkTier(c)));if(kn.length)ks=kn;if(Object.keys(TT).length>1){const ls=S2.tls||{},w=k=>ls[k]||Math.random();CW=TT[ks.sort((a,b)=>w(a)-w(b))[0]]}}
  if(CW.length){const tm=Math.min(...CW.map(blkTier)),L=CW.filter(c=>blkTier(c)==tm);pool=L.filter(c=>arF(c)&&c.id!=SLAST&&swTop(c)!=SLT);if(!pool.length)pool=L.filter(c=>c.id!=SLAST);if(!pool.length)pool=L}
  /* filtro de un tema sin nada disponible (p. ej. DCD antes de aprobar sus diagramas): se entra igual por el comienzo de cada cadena de ese tema */
  if(!pool.length){const T=SWC.filter(c=>!c.ln&&!c.hid&&swSel(tema(c)));pool=T.filter(c=>!(c.req||[]).some(t=>T.some(z=>(z.toks||[]).includes(t))));if(!pool.length){ign=true;pool=SWC.filter(ok)}}/* nada disponible en los temas marcados: entra por el comienzo de sus cadenas; si tampoco, de cualquier tema */
