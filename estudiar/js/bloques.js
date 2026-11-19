@@ -91,7 +91,7 @@ if(FW.includes(r)&&r!="E∨"&&r!="E∃"){const x=c[a[0]];if(!x)return F("premisa
 if(r=="E∧"){if(f.k!="and")return bad("E∧ necesita una conjunción como premisa.");add(f.l,nd(f.l,"E∧",[x.d]));add(f.r,nd(f.r,"E∧",[x.d]))}
 if(r=="E→f"){if(f.k!="imp")return bad("E→ necesita una implicación como premisa.");const q=has(c,f.l);if(!q)return bad(`Para E→ hace falta tener el antecedente «${pr(f.l)}» entre tus hipótesis. Construilo con una meta nueva (E→ hacia atrás) o elegí otro movimiento.`);add(f.r,nd(f.r,"E→",[x.d,q.d]))}
 if(r=="E¬f"){if(f.k!="not")return bad("E¬ hacia adelante necesita una negación ¬φ como premisa.");const q=has(c,f.a);if(!q)return bad(`Para E¬ hace falta tener también «${pr(f.a)}» entre tus hipótesis.`);add({k:"bot"},nd({k:"bot"},"E¬",[x.d,q.d]))}
-if(r=="E∀"){if(f.k!="all")return bad("E∀ necesita una premisa (∀x)φ.");const t=TPm()[a[1]];if(!ff(f.a,f.v,t))return F("condición",`E∀ exige que ${pt(t)} sea libre para ${f.v} en «${pr(f.a)}»: al sustituir se captura una variable.`);const nf=sb(f.a,f.v,t);add(nf,nd(nf,"E∀",[x.d],"",`${pt(t)} libre para ${f.v} en ${pr(f.a)}`))}
+if(r=="E∀"){if(f.k!="all")return bad("E∀ necesita una premisa (∀x)φ.");const t=TPm()[a[1]];if(!ff(f.a,f.v,t))return F("condición",`E∀ exige que ${pt(t)} sea libre para ${f.v} en «${pr(f.a)}». Si ponés ${pt(t)} en el lugar de ${f.v}, queda atrapada por un cuantificador de adentro que usa esa misma variable. E∀ saca UN solo ∀, el de más afuera (${f.v}); los de adentro se sacan después, con otro E∀ cada uno. Elegí un término que no esté cuantificado adentro.`);const nf=sb(f.a,f.v,t);add(nf,nd(nf,"E∀",[x.d],"",`${pt(t)} libre para ${f.v} en ${pr(f.a)}`))}
 S.log.push(`${R} sobre «${pr(f)}»`);cl0(S,o);return null}
 let how={k:r};
 if(r=="E∨"||r=="E∃"){const x=c[a[0]],f=x.f;
@@ -250,7 +250,7 @@ const TPL={
  "RI3":{n:"RI3",m:["Premisa izquierda (t =′ s)","Premisa derecha (s =′ r)"],ay:"De t =′ s y s =′ r se obtiene t =′ r. Si el término del medio no aparece en la lista, sacá primero la igualdad que lo tiene con E∀ (hacia adelante)."},
  "RI4":{n:"RI4",m:["Premisa: la igualdad de los argumentos (t =′ s)"],ay:"De t =′ s se obtiene f(t) =′ f(s): el mismo símbolo de función a los dos lados, cambia el argumento."},
  "I∀":{n:"I∀",m:["¿Qué queda arriba de la raya?"],ay:"Arriba va la fórmula sin el ∀, con la misma variable. Condición: la variable no puede estar libre en una hipótesis abierta."},
- "E∀":{n:"E∀",m:["Premisa: el ∀ que usás (de lo que tenés)","¿Con qué término t lo instanciás?"],k:["ctx","t"],ay:"E∀ saca la instancia φ(t) de un (∀x)φ que tenés. Si la instancia es la meta, la cierra; si no, queda en «Tengo». Condición: t libre para x."},
+ "E∀":{n:"E∀",m:["Premisa: el ∀ que usás (de lo que tenés)","¿Con qué término t lo instanciás?"],k:["ctx","t"],ay:"E∀ saca UN ∀ por vez, el de más afuera: de (∀x)φ que tenés sale φ(t), con t en el lugar de x. Con varios ∀ seguidos, se repite E∀ sobre lo que va quedando. Si la instancia es la meta, la cierra; si no, queda en «Tengo». Condición: t libre para x."},
  "I∃":{n:"I∃",m:["¿Con qué término t (el testigo)?"],k:["t"],ay:"Para probar (∃x)φ alcanza con probar φ(t). Arriba queda φ(t). Condición: t libre para x."},
  "E∃":{n:"E∃",m:["Premisa: el ∃ que usás (de lo que tenés)"],k:["ctx"],ay:"E∃ suponé la fórmula sin el ∃ (con su variable) y llegá a la misma meta; esa suposición se cancela. Condición: la variable no libre en la meta ni en otras hipótesis abiertas."}};
 const BK=[["Cerrar una hoja",["hip"]],["Introducción (arma la meta)",["I∧","I→","I¬","I∨","I↔","RAA"]],["Eliminación (usa una fórmula)",["E→","E¬","E∧","E∨","E⊥","E↔"]]],BKQ=["Cuantificadores",["I∀","E∀","I∃","E∃"]],BKI=["Igualdad",["RI1","RI2","RI3","RI4"]];
@@ -351,7 +351,7 @@ function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+
  else if(c.cust=="E∧f"||c.cust=="E∀"||c.cust=="E∃"){const m=M[0],i=o1.ctx.findIndex(y=>m.hyp?y.d.l==m.hyp:eq(y.f,m.f)&&!(y.d.r=="hip"&&y.d.l));
   NOAUTO=true;res=c.cust=="E∧f"?mv(S1,o1,"E∧",[i]):c.cust=="E∀"?mv(S1,o1,"E∀",[i,M[1].t]):mv(S1,o1,"E∃",[i]);NOAUTO=false;
   if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}
-  if(c.cust!="E∃"){const y=o1.ctx.find(y=>eq(y.f,o1.g)&&!(y.d.r=="hip"&&y.d.l));if(y)sol(S1,o1,y.d);else{const nw=c.cust=="E∀"?sb(m.f.a,m.f.v,TPm()[M[1].t]):null;D.ok2=c.cust=="E∀"?`E∀: ahora tenés ${P(nw)} (en «Tengo»).`:`E∧: ahora tenés ${P(m.f.l)} y ${P(m.f.r)} (en «Tengo»).`}}}
+  if(c.cust!="E∃"){const y=o1.ctx.find(y=>eq(y.f,o1.g)&&!(y.d.r=="hip"&&y.d.l));if(y)sol(S1,o1,y.d);else{const nw=c.cust=="E∀"?sb(m.f.a,m.f.v,TPm()[M[1].t]):null;D.ok2=c.cust=="E∀"?`E∀: ahora tenés ${P(nw)} (en «Tengo»).${nw.k=="all"?" Todavía empieza con ∀: tocá E∀ otra vez y elegí esta fórmula para sacar el siguiente.":""}`:`E∧: ahora tenés ${P(m.f.l)} y ${P(m.f.r)} (en «Tengo»).`}}}
  else if(c.cust=="E∨"){const f=M[0].f,n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
   [[f,[]],[o1.g,[hy(M[1].f,n1)]],[o1.g,[hy(M[2].f,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}
  else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.sw)o1.subs.reverse();closeSubs(S1,o1,r,M)}/* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
@@ -367,18 +367,24 @@ function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:
   mf=(p,q,V,m)=>p.k!=q.k?false:p.k=="bot"?true:p.k=="at"?p.n==q.n&&p.a.length==q.a.length&&p.a.every((x,i)=>mt(x,q.a[i],V,m)):p.k=="not"?mf(p.a,q.a,V,m):(p.k=="all"||p.k=="ex")?p.v==q.v&&mf(p.a,q.a,V.filter(v=>v!=p.v),m):mf(p.l,q.l,V,m)&&mf(p.r,q.r,V,m),
   strip=f=>{const V=[];while(f.k=="all"){V.push(f.v);f=f.a}return{V,b:f}},subF=(f,L=[])=>{L.push(f);if(f.k=="not"||f.k=="all"||f.k=="ex")subF(f.a,L);else if(f.l){subF(f.l,L);subF(f.r,L)}return L},
   appears=h=>c.some(f=>{const{V,b}=strip(f);return subF(b).some(x=>mf(x,h,V,{}))});
- {const qi=c.find(f=>f.k=="all"&&(()=>{const{V,b}=strip(f);return mf(b,g,V,{})})());if(qi)return`La meta ${P(g)} es una instancia de ${P(qi)}: E∀ (hacia adelante), una vez por cada ∀, con los términos que la dan.`}
+ {let mq={};const qi=c.find(f=>{if(f.k!="all")return false;const{V,b}=strip(f);mq={};return mf(b,g,V,mq)});
+  if(qi){const{V}=strip(qi),ps=V.map(v=>`${v} := ${mq[v]?pt(mq[v]):"cualquiera"}`);/* 19/11: la pista dice qué término va en cada E∀ */
+   return`La meta ${P(g)} sale de ${P(qi)} sacando sus ∀ de a uno, de afuera hacia adentro: ${V.length>1?V.length+" veces E∀, ":"E∀ "}con ${ps.join(", después ")}. Cada E∀ deja lo que queda en «Tengo»; el último cierra la meta.`}}
  {const cj0=c.find(f=>f.k=="and"&&(eq(f.l,g)||eq(f.r,g)));if(cj0)return`${P(g)} es parte de ${P(cj0)}, que ya tenés: E∧ con premisa ${P(cj0)} (la conjunción entera arriba, ${P(g)} abajo).`}
  if(ISEQ(g)){const[t,r]=g.a,T=pt(t),Rr=pt(r);if(T==Rr)return`${P(g)} tiene el mismo término a los dos lados: RI1, sin premisas.`;
   if(c.some(f=>ISEQ(f)&&pt(f.a[0])==Rr&&pt(f.a[1])==T))return`Tenés ${Rr}=′${T}: RI2 la da vuelta.`;
   const a=c.find(f=>ISEQ(f)&&pt(f.a[0])==T&&c.some(h=>ISEQ(h)&&pt(h.a[0])==pt(f.a[1])&&pt(h.a[1])==Rr));if(a)return`Tenés ${P(a)} y ${pt(a.a[1])}=′${Rr}: RI3 las encadena.`;
   if(t.k=="fn"&&r.k=="fn"&&t.n==r.n){const d=t.a.map((_,i)=>i).filter(i=>pt(t.a[i])!=pt(r.a[i]));if(d.length==1)return`El mismo símbolo ${t.n} a los dos lados: RI4, con ${pt(t.a[d[0]])}=′${pt(r.a[d[0]])} arriba.`}
   const a1=c.find(f=>ISEQ(f)&&(pt(f.a[0])==T||pt(f.a[1])==Rr));if(a1)return pt(a1.a[0])==T?`Tenés ${P(a1)}, que empieza con ${T}: RI3 con ${P(a1)} y ${pt(a1.a[1])}=′${Rr}.`:`Tenés ${P(a1)}, que termina con ${Rr}: RI3 con ${T}=′${pt(a1.a[0])} y ${P(a1)}.`;
-  const im=c.find(f=>f.k=="imp"&&eq(f.r,g));if(!im){const qa=c.find(f=>f.k=="all");if(qa)return`Sacá una instancia de ${P(qa)} con E∀ (hacia adelante): ahí está la igualdad que te sirve.`}}
+}
  {const bi=c.find(f=>f.k=="iff"&&(eq(f.l,g)||eq(f.r,g)));if(bi)return`Tenés ${P(bi)}: E↔ con ${P(bi)} y ${P(eq(bi.r,g)?bi.l:bi.r)} da ${P(g)}.`}
  {const xe=c.find(f=>f.k=="ex"&&!c.some(h=>eq(h,f.a)));if(xe)return`Tenés ${P(xe)}: E∃ primero (suponés ${P(xe.a)} y en esa rama probás ${P(g)}).`}
  if(g.k=="ex"){const TM=TPm(),TT=(E[ex].T||[]).map(x=>TM[x]).filter(Boolean).concat(Object.values(TM)),/* los testigos extra del ejercicio (e.T) van primero */ok=(h,d)=>h.k=="ex"?d<2&&TT.some(u=>ok(sb(h.a,h.v,u),d+1)):c.some(f=>eq(f,h))||appears(h),t=TT.find(u=>ok(sb(g.a,g.v,u),0));
   if(t)return`Para ${P(g)}: I∃ con testigo ${pt(t)} (arriba queda ${P(sb(g.a,g.v,t))}).`}
+ if(g.k=="at"&&!c.some(f=>(f.k=="iff"||f.k=="imp")&&atoms(f).has(g.n))){for(const f of c){if(f.k!="all")continue;const{V,b}=strip(f);let m={};if(!subF(b).some(x=>{m={};return x!==b&&mf(x,g,V,m)}))continue;
+   const ps=V.map(v=>`${v} := ${m[v]?pt(m[v]):"x"}`),nx=b.k=="imp"?"; queda una → que termina en la meta: después E→":b.k=="iff"?"; queda una ↔: después E↔":b.k=="and"?"; queda una ∧: después E∧":"";/* 19/11: términos concretos */
+   return`${P(g)} está adentro de ${P(f)}. Sacá sus ∀ de a uno, de afuera hacia adentro, con E∀: ${ps.join(", después ")}${nx}.`}}
+ if(ISEQ(g)&&!c.some(f=>f.k=="imp"&&eq(f.r,g))){const qa=c.find(f=>f.k=="all");if(qa)return`Sacá una instancia de ${P(qa)} con E∀ (hacia adelante): ahí está la igualdad que te sirve.`}
  if(g.k=="at"){const bd=f=>f.k=="all"?bd(f.a):f,qa=c.find(f=>f.k=="all"&&atoms(bd(f)).has(g.n));if(qa&&!c.some(f=>(f.k=="iff"||f.k=="imp")&&atoms(f).has(g.n)))return`${P(g)} sale de ${P(qa)}: instanciala con E∀ (hacia adelante) hasta tener la fórmula sin ∀.`}
  if(g.k!="bot"){const pr0=c.find(f=>f.k=="not"&&c.some(h=>eq(h,f.a)));if(pr0)return`Tenés ${P(pr0.a)} y ${P(pr0)}: E⊥ (arriba ⊥) y después E¬ con ${P(pr0.a)} y ${P(pr0)}.`}
  if(g.k!="bot"&&I[g.k]&&g.k!="or")return`La meta ${P(g)} tiene conector principal ${{and:"∧",imp:"→",not:"¬",iff:"↔"}[g.k]}: se ARMA con su introducción, ${I[g.k]}.`;
