@@ -167,3 +167,6 @@ Meta del día (19/11 16:50, pedido de Luca): bloques sin terminar ahora / días 
 I∧ e I↔ en cualquier orden (19/11 16:55): elegir ¬γ antes que β para β∧¬γ ya no es error; el árbol dibuja las premisas en el orden de la conjunción.
 Rotación de temas (19/11 17:05, Luca: «tengo varios filtros marcados pero me tocan puros ejercicios de deducción»): swPick elige primero el tema marcado que hace más tiempo que no sale (S2.tls) y adentro aplica nuevos → con errores → sin errores. Los paquetes (un ejercicio entero) siguen saliendo seguidos.
 Plazo de la meta diaria (19/11 18:12, pedido de Luca): 30/11 (META_FIN).
+
+## Exportación de errores 16–19/11 (19/11)
+135/227 (59%): Principal 83% el 16, 23% el 17, 13% el 18 (cambios de formato y DSS/MD nuevos), 47% el 19; Bloques 76% el 19. Cambios: la ficha de la nota de memoria del DSS y su teoría explican cómo decidirla (¿se vuelve a mandar en un mensaje siguiente?) por las notas «¿cómo sé que debo recordarlo?»; las cadenas de Lógica muestran plegadas las definiciones del tema (nota «no recuerdo qué es Th ni Mod»). Ya resueltas antes: «sigue dentro del loop», la CI del conductor, fichas de consigna en P3. Pendiente: confusión repetida 5× asociación ↔ dependencia (antes en una serie de introducción, ahora en el «No sé» del DCD).
