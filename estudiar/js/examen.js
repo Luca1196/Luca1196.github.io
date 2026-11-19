@@ -413,7 +413,9 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
  dss=(k,fr)=>M.slice(0,k).map((m,i)=>{const F=fr?X.fr.filter(f=>i>=f.a&&i<=f.b):[],h=F.map((f,q)=>{const p=`<div style="padding-left:${q*14}px"><b>`;return i==f.a?p+`${f.k} [${esc(f.k=="alt"?f.g[0]:f.g)}]</b></div>`:f.k=="alt"&&i==f.b?p+`[${esc(f.g[1])}]</b></div>`:""}).join("");
   return h+`<div style="padding-left:${F.length*14}px">${i+1}. ${esc(i<k?ln(m):m.op+" — "+m.d)}${i<k&&m.mem?` <span class="mut">· nota: ${esc(m.mem[0])}</span>`:""}</div>`}).join(""),
  /* contexto: lo que se pide + el caso de uso (frases resaltables) + la realidad plegada + el DSS ya decidido (st: 0 no se muestra, 1 abierto, 2 plegado) */
- o=(k,fr,st)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pb||P1P.b)}</div><div class="lt"><b>Caso de uso:</b> ${esc(L.cu)} · <b>Actor:</b> ${esc(L.act)}</div>`+kSent(L.S,L.Uk,hs)+
+ /* MENOS TEXTO (19/11, pedido de Luca): cada tarjeta muestra solo las frases del caso de uso que usa (ids); el caso de uso completo y la realidad,
+    plegados. La tarjeta de un mensaje no repite «Tu DSS hasta ahora»: ya está dibujado en lo que se arma. */
+ o=(k,fr,st,ids)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b),sel=ids?[...new Set(String(ids).split(",").filter(Boolean).concat(hs.filter(h=>h[0]=="u")))].sort((a,c)=>+a.slice(1)-+c.slice(1)):null;return`<div class="lt"><b>${esc(X.id)} · ${esc(L.cu)}</b> · actor: ${esc(L.act)}</div>`+(sel?kSent(L.S,sel,hs)+kFold("Caso de uso completo",kSent(L.S,L.Uk,hs),0):kSent(L.S,L.Uk,hs))+
   kFold("Descripción de la realidad",`<div class="lt">${esc(L.i)}</div>`+L.P.map(p=>kSent(L.S,p,hs)).join("<br>"),hs.some(h=>h[0]=="a"))+(st?kFold("Tu DSS hasta ahora",seqDraw(k),st<2):"")}}),U=[];
  /* EL DSS SE ARMA CON FICHAS, MENSAJE POR MENSAJE (pedido de Luca, 16/11). Cada tarjeta es la línea que sigue del diagrama: si abre, sigue o cierra un
     fragmento (y su guarda) → qué hace el actor ahora (el paso del caso de uso que es un mensaje) → sus parámetros, ficha por ficha → qué devuelve → la nota de
@@ -439,7 +441,7 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
   if(m.mem){parts.push("\n","nota:",{t:m.mem[0],r:"nt",sn:"la nota de memoria",w:"Cómo saberlo: mirá si lo que llega en este mensaje se vuelve a mandar en alguno de los que siguen. Si no se vuelve a mandar pero se usa más adelante (por ejemplo, al confirmar), el Sistema lo tiene que recordar. "+m.mem[1],hl:hl(m.mh||m.hl)});m.mem.slice(2).concat([["sin nota",DSW[m.fin?1:0]]],m.fin?[]:[["libera la memoria",DSW[2]]]).forEach(d=>add([d[0],d[1],hl(d[2])]))}
   const use=parts.flatMap(z=>typeof z=="string"?[]:z.set?z.set.map(y=>y.t):[z.t]);
   U.push({id:"m"+(i+1),cards:[kTok(G+" · mensaje "+(i+1),"DSS · mensaje "+(i+1),"Armá con las fichas la línea que sigue del DSS.",parts,dis.filter(d=>!use.includes(d[0])),
-   Object.assign(o(i,1,i?1:0),{th:DTH[2]+" "+DTH[1],ko:"Orden: el fragmento que estaba abierto → si abre uno nuevo (y su guarda) → qué hace el actor → parámetros → lo que devuelve → nota de memoria."}))]})});
+   Object.assign(o(i,1,0,[m.hl,m.rh,m.ph,m.mh,(st||{}).hl,(br||{}).hl,(op||{}).hl].filter(Boolean).join(",")),{th:DTH[2]+" "+DTH[1],ko:"Orden: el fragmento que estaba abierto → si abre uno nuevo (y su guarda) → qué hace el actor → parámetros → lo que devuelve → nota de memoria."}))]})});
  /* DIBUJO DEL DSS (17/11): actor y :Sistema con sus líneas de vida, cada mensaje como flecha con su nota, y loop / alt / opt como marcos.
     seqDraw(k) = los k primeros mensajes ya decididos; con cur (la tarjeta del mensaje k) se agrega ese mensaje según las fichas puestas. */
  /* un DataType como recuadro; si sus fichas son «Clase (hereda de Base): atributos», como jerarquía con △ */
@@ -466,7 +468,7 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
   return`<div class="sqh"><span>🧍 ${esc(L.act)}</span><span>:Sistema</span></div><div class="sqb">${rows.length?draw(0,rows.length-1,fr):'<div class="mut" style="text-align:center">(todavía sin mensajes)</div>'}</div>`}
  U.forEach(u=>{const mm=/^m(\d+)$/.exec(u.id);if(!mm)return;const c=u.cards[0],k=+mm[1]-1,XX=c.bld.exp;c.kd=(pl,cur)=>seqDraw(k,{X:XX,pl,cu:cur,v:kV(pl,cur,XX),q:kQ(pl,cur,XX)})});
  /* 4) DataTypes */
- (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[(z=>(z.kd=pl=>dtDraw(d,pl),z))(kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),Object.assign(o(N,1,2),{th:DTH[3]})))]}));
+ (X.DT||[]).forEach((d,q)=>U.push({id:"dt"+(q+1),cards:[(z=>(z.kd=pl=>dtDraw(d,pl),z))(kSet(G+" · "+d.n,"DSS · DataType","¿Qué lleva "+d.n+" ("+d.d+")?",d.at.map(t=>({t,w:d.w,hl:hl(d.hl)})),dz(d.x),Object.assign(o(N,1,2,d.hl),{th:DTH[3]})))]}));
  kChain(G,[{id:"dss3",cards:U.filter(u=>!/^dt/.test(u.id)).map(u=>u.cards[0])},{id:"dt",cards:U.filter(u=>/^dt/.test(u.id)).map(u=>u.cards[0])}].filter(u=>u.cards.length),{req:KIN.dss});window.DSSD[X.id]=U});
 
 /* ===== Problema 1a: Modelo de dominio y restricciones =====
