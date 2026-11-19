@@ -1268,6 +1268,7 @@ function nuevaPregunta() {
     opciones: generada.opciones
   };
 
+  Calc.reiniciarRegistro();
   mostrarPregunta();
 }
 
@@ -1343,6 +1344,7 @@ function seleccionarRespuesta(indice, elemento) {
   });
 
   mostrarExplicacion(seleccion);
+  document.getElementById("explicacion").innerHTML += Calc.registroHTML(Calc.registro);
   mostrarDominio(preguntaActual.tipo);
   mostrarRacha();
 }
@@ -1674,6 +1676,7 @@ function mostrarInicioEvaluacion() {
         <li>El botón <strong>Ver fórmula</strong> resta <strong>${C.penalizacionFormula}</strong>.</li>
         <li>Bonus por racha: ${C.bonusRacha.slice().sort((a,b)=>a.dias-b.dias).map(t => `<strong>+${t.puntos}</strong> con ${t.dias} ${t.dias === 1 ? "día" : "días"}`).join(", ")}.</li>
         <li>Nota máxima ${C.notaMaxima} · se aprueba con ${C.notaAprobacion}.</li>
+        <li>Hacé las cuentas con la <strong>calculadora de la página</strong>: queda registrado cada cálculo para revisar el procedimiento.</li>
         ${C.unaPorDia ? "<li>Se puede hacer <strong>una sola vez por día</strong>. Si salís o recargás la página, la evaluación se cierra con lo que tengas.</li>" : ""}
       </ul>
       <div class="ev-bonus">🔥 Tu racha: <strong>${dias} ${dias === 1 ? "día" : "días"}</strong> → bonus <strong>+${bonus}</strong>
@@ -1712,12 +1715,16 @@ function empezarEvaluacion() {
 
 /* Lo que se guarda mientras se rinde: si recarga, se cierra con esto */
 function guardarEnCurso() {
+  // La pregunta actual (si no terminó) guarda lo que lleva hecho en la calculadora
+  const actual = evaluacion.preguntas[evaluacion.indice];
+  if (actual && !actual.terminada) actual.calculos = Calc.registro;
   const h = cargarHistorialEval();
   h.enCurso = {
     fecha: evaluacion.fecha, inicio: evaluacion.inicio,
     racha: evaluacion.racha, bonusRacha: evaluacion.bonusRacha,
     preguntas: evaluacion.preguntas.map(p => ({
-      tipo: p.tipo, errores: p.errores, usoFormula: p.usoFormula, resuelta: p.resuelta, puntos: p.puntos
+      tipo: p.tipo, errores: p.errores, usoFormula: p.usoFormula, resuelta: p.resuelta, puntos: p.puntos,
+      calculos: p.calculos || []
     }))
   };
   guardarHistorialEval(h);
@@ -1736,6 +1743,7 @@ function puntosRestantes(p) {
 
 function mostrarPreguntaEval() {
   const p = evaluacion.preguntas[evaluacion.indice];
+  Calc.reiniciarRegistro();
   const C = CONFIG_EVALUACION;
   const zona = document.getElementById("evZona");
   const unidad = p.unidad ? " " + p.unidad : "";
@@ -1812,6 +1820,7 @@ function responderEval(indice, elemento) {
 }
 
 function terminarPreguntaEval(p, acerto) {
+  p.calculos = Calc.registro;
   p.terminada = true;
   p.puntos = puntosPregunta(p);
   document.querySelectorAll("#evOpciones .option").forEach((el, i) => {
@@ -1859,7 +1868,8 @@ function cerrarEvaluacion(enCurso, abandonada) {
     abandonada,
     preguntas: preguntas.map(p => ({
       tema: CONFIG_PREGUNTAS[p.tipo] ? CONFIG_PREGUNTAS[p.tipo].nombre : p.tipo,
-      resuelta: p.resuelta, errores: p.errores, usoFormula: p.usoFormula, puntos: p.puntos
+      resuelta: p.resuelta, errores: p.errores, usoFormula: p.usoFormula, puntos: p.puntos,
+      calculos: p.calculos || []
     }))
   };
 
@@ -1897,6 +1907,11 @@ function mostrarResultado(r, yaHecha) {
         <tr><td>🔥 Bonus por racha (${r.racha} ${r.racha === 1 ? "día" : "días"})</td><td class="ev-num">+${r.bonusRacha}</td></tr>
         <tr class="ev-total"><td>Nota</td><td class="ev-num">${r.nota}</td></tr>
       </table>
+      ${r.preguntas.some(p => p.calculos) ? `
+      <details class="ev-calculos">
+        <summary>🧮 Ver los cálculos hechos</summary>
+        ${r.preguntas.map((p, i) => `<p class="ev-sub"><strong>${i + 1}. ${p.tema}</strong></p>${Calc.registroHTML(p.calculos)}`).join("")}
+      </details>` : ""}
       <div class="ev-sub">${fechaTexto} · ${r.hora} · duración ${Math.floor(r.duracionSeg / 60)} min ${r.duracionSeg % 60} s</div>
     </div>
     ${historialHTML(cargarHistorialEval())}`;
@@ -1932,6 +1947,9 @@ function cambiarModo(modo) {
   document.getElementById("btnModoMemorizar").classList.toggle("activo", modo === "memorizar");
   document.getElementById("btnModoEvaluacion").classList.toggle("activo", modo === "evaluacion");
 
+  // La calculadora está en Practicar y Evaluación (en Memorizar no hace falta)
+  Calc.mostrar(modo !== "memorizar");
+
   if (modo === "memorizar") {
     mostrarSiguienteFlash();
   }
@@ -1947,6 +1965,8 @@ function cambiarModo(modo) {
  *
  ****************************************************************/
 
+Calc.mostrar(true);
+Calc.alCalcular = () => { if (evaluacion) guardarEnCurso(); };
 poblarSelectorTemas();
 poblarSelectorCategorias();
 nuevaPregunta();
