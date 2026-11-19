@@ -286,12 +286,12 @@ function swTeo(c,s){const T=(window.THT||[]).filter(x=>x.s==c.s),q=s.q+" "+s.a,o
 /* META DIARIA Y RACHA (pedido de Luca, 18/11: «tengo que adquirir todos los conocimientos de la web en 2 semanas, poneme una meta diaria y una racha como tiktok»).
    Unidad = bloque de Principal (paquete, serie o árbol; sin líneas sueltas, ocultas ni Básico). Un bloque cuenta cuando queda TERMINADO, con o sin errores
    (S2.bst con estado; pedido de Luca, 18/11: «si sale todo sin errar no estoy aprendiendo»; los errores ya lo hacen volver como repaso).
-   Meta del día (19/11, pedido de Luca) = bloques sin terminar AHORA / días que faltan hasta META_FIN (1/12), redondeado hacia arriba. No queda
+   Meta del día (19/11, pedido de Luca) = bloques sin terminar AHORA / días que faltan hasta META_FIN (30/11), redondeado hacia arriba. No queda
    fija en el día: se recalcula en el momento. Si un día no llegás, lo que faltó se reparte entre los días que quedan. Estudiar más allá no tiene tope.
    CONTADORES (pedido 18/11): «Hoy x/meta» y «Total x/105». Terminado = el bloque tiene estado en S2.bst, o (progreso de antes del 17/11, sin estado)
    lo abriste y acertaste todos sus pasos alguna vez. Cada bloque terminado guarda su día en S2.mt.fd; al estrenar esto, los que ya estaban terminados
    toman el día en que se vieron por última vez (S2.seen), así lo de hoy cuenta para hoy. Meta del día: ver arriba (sin terminar / días que faltan). Racha 🔥 = días seguidos cumpliendo la meta; si hoy todavía no la cumpliste, la racha sigue viva pero gris («en riesgo») hasta medianoche, como en TikTok. Se guarda en S2.mt (localStorage "sw1"). */
-const META_FIN="2026-12-01";/* plazo (19/11, pedido de Luca: al 1 de diciembre; exámenes: Lógica 4/12, Prog4 5/12); cambiar acá para mover el plazo */
+const META_FIN="2026-11-30";/* plazo (19/11, pedido de Luca: al 30 de noviembre; exámenes: Lógica 4/12, Prog4 5/12); cambiar acá para mover el plazo */
 const mtBlq=()=>{const bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com");return SWC.filter(c=>!c.pk&&!c.hid&&!c.ln&&!bas(c))};
 const dAdd=(t,n)=>{const d=new Date(t+"T12:00:00");d.setDate(d.getDate()+n);return d.toLocaleDateString("en-CA")};
 let MTCEL=0;
@@ -306,7 +306,7 @@ function mtBar(){const m=mtHoy();if(!m)return"";const bar=(x,n)=>`<div class="pb
  if(MTCEL){MTCEL=0;setTimeout(()=>{const x=document.createElement("div");x.className="card";x.style.cssText="position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:60;text-align:center;font-size:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)";x.innerHTML=`🔥 <b>¡Meta de hoy cumplida!</b><br>Racha: ${m.stk} ${m.stk==1?"día":"días"}`;document.body.appendChild(x);try{navigator.vibrate&&navigator.vibrate([40,60,40])}catch(_){}setTimeout(()=>x.remove(),3500)},50)}
  return`<div class="row" style="margin-top:8px;gap:10px"><b title="Racha: días seguidos cumpliendo la meta" style="font-size:20px;white-space:nowrap;${m.ok?"":"filter:grayscale(1);opacity:.55"}">🔥 ${m.stk}</b><span class="mut" style="width:42px">Hoy</span>${bar(m.done,m.goal)}<b class="cnt" style="white-space:nowrap">${m.done}/${m.goal}</b></div>`+
  `<div class="row" style="margin-top:4px;gap:10px"><span style="width:${String(m.stk).length*11+30}px"></span><span class="mut" style="width:42px">Total</span>${bar(m.fin,m.tot)}<b class="cnt" style="white-space:nowrap">${m.fin}/${m.tot}</b></div>`+
- `<div class="mut" style="font-size:12px;margin-top:2px">${m.ok?"Meta de hoy cumplida ✓ (podés seguir sin tope)":m.stk?"Racha en riesgo: cumplí la meta antes de medianoche":"Cumplí la meta de hoy para arrancar la racha"} · faltan ${m.tot-m.fin} sin terminar ÷ ${m.dl} ${m.dl==1?"día":"días"} hasta el 1/12 = ${m.goal} por día</div>`}
+ `<div class="mut" style="font-size:12px;margin-top:2px">${m.ok?"Meta de hoy cumplida ✓ (podés seguir sin tope)":m.stk?"Racha en riesgo: cumplí la meta antes de medianoche":"Cumplí la meta de hoy para arrancar la racha"} · faltan ${m.tot-m.fin} sin terminar ÷ ${m.dl} ${m.dl==1?"día":"días"} hasta el 30/11 = ${m.goal} por día</div>`}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  (TAB==3?mtBar():"")+`<div class="row between mut" style="margin-top:6px"><span>Seguidas ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+

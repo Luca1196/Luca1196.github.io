@@ -166,3 +166,4 @@ Oído como casillero propio (19/11 16:10, Luca: «cada vez que toco un botón me
 Meta del día (19/11 16:50, pedido de Luca): bloques sin terminar ahora / días que faltan al 1/12, se recalcula en el momento (antes quedaba fija al empezar el día, con plazo 2/12). El texto bajo la barra muestra la cuenta.
 I∧ e I↔ en cualquier orden (19/11 16:55): elegir ¬γ antes que β para β∧¬γ ya no es error; el árbol dibuja las premisas en el orden de la conjunción.
 Rotación de temas (19/11 17:05, Luca: «tengo varios filtros marcados pero me tocan puros ejercicios de deducción»): swPick elige primero el tema marcado que hace más tiempo que no sale (S2.tls) y adentro aplica nuevos → con errores → sin errores. Los paquetes (un ejercicio entero) siguen saliendo seguidos.
+Plazo de la meta diaria (19/11 18:12, pedido de Luca): 30/11 (META_FIN).
