@@ -220,8 +220,8 @@ Object.keys(P3X).forEach(id=>{const X=CDX.find(z=>z.id==id),H=P3X[id];if(!X||typ
  X.blocks.forEach(b=>{const m=/^class (\w+)/.exec(b.lines[0][1]);if(b.kind=="decl"&&m)pure[m[1]]=b.lines.map(l=>/^virtual .*\b(\w+)\(.*\) = 0;$/.exec(l[1])).filter(Boolean).map(z=>z[1])});
  const code=b=>`<div style="font-family:var(--m);font-size:13px;margin-bottom:6px">`+b.lines.map(l=>`<div style="padding-left:${l[0]*14}px">${esc(l[1])}</div>`).join("")+`</div>`,
   desc=k=>{const a=H.ds[k];if(!a)return"";const i=X.letra.indexOf(a[0]),j=X.letra.indexOf(a[1],i);return i<0||j<0?"":X.letra.slice(i,j+a[1].length)},
-  o=(bi,k,x)=>Object.assign({ctx:H.n+" · Problema 3",ar:"cod",th:P3T[bi<0?0:1],kv:()=>`<div class="lt"><b>${esc(X.t)}</b></div>`+kFold("Letra",`<div class="lt">${esc(X.letra).replace(/\n/g,"<br>")}</div>`,bi<0)+
-   kFold("Diagrama de clases (DCD)",`<img class="ltim" src="${X.img}" alt="DCD">`,bi<0)+(k&&desc(k)?`<div class="lt"><b>Qué tiene que hacer:</b> ${esc(desc(k))}</div>`:"")+(bi>0?kFold("Tu código hasta ahora",ordB.slice(0,bi).map(i=>code(X.blocks[i])).join(""),0):"")},x||{});
+  o=(bi,k,x)=>Object.assign({ctx:H.n+" · Problema 3",ar:"cod",th:P3T[bi<0?0:1],kv:()=>`<div class="lt"><b>${esc(X.t)}</b></div>`+kFold("Letra",`<div class="lt">${esc(X.letra).replace(/\n/g,"<br>")}</div>`,bi<0,"lt")+
+   kFold("Diagrama de clases (DCD)",`<img class="ltim" src="${X.img}" alt="DCD">`,0,"lt")+(k&&desc(k)?`<div class="lt"><b>Qué tiene que hacer:</b> ${esc(desc(k))}</div>`:"")+(bi>0?kFold("Tu código hasta ahora",ordB.slice(0,bi).map(i=>code(X.blocks[i])).join(""),0):"")},x||{});
  U.push({id:"dis",cards:[kSet(G+" · el diseño","P3 · el diseño",H.T.p,H.T.ok.map(z=>({t:z[0],w:z[1]})),H.T.no,o(-1))]});
  const cl=b=>(/^class (\w+)/.exec(b.lines[0][1])||/(\w+)::/.exec(b.lines[0][1])||[])[1],ordB=[];
  /* orden: clase por clase, de la menos acoplada a la más acoplada (P3X.ord), y de cada una primero su .h y después sus operaciones */

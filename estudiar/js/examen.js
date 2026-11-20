@@ -82,7 +82,11 @@ function kChain(g,units,o){o=o||{};const ent=[];
 /* Frases de la letra (S: textos) con resaltado: una ficha esperada lleva hl:"S:<id>,<id>" y nucleo.js lo deja en b.hl al fallar */
 const kHs=b=>String(b&&b.hl||"").startsWith("S:")?b.hl.slice(2).split(","):[];
 const kSent=(S,ids,hs)=>ids.map(i=>`<div class="lt${hs.includes(String(i))?" hl":""}">${esc(S[i])}</div>`).join("");
-const kFold=(t,h,open)=>h?`<details${open?" open":""}><summary>${esc(t)}</summary>${h}</details>`:"";
+/* LETRA EN ACORDEÓN (pedido de Luca, 19/11: «hay mucho texto; que las secciones se desplieguen una a la vez según cuál está clickeada»).
+   Las secciones de una LETRA llevan nm="lt": abrir una cierra las otras (details name nativo + respaldo por JS para navegadores viejos).
+   Lo que se va armando («Tu modelo/DSS/DCD hasta ahora») no lleva nm y no se cierra. Al fallar se abre sola la sección con el dato. */
+const kFold=(t,h,open,nm)=>h?`<details${nm?` name="${nm}"`:""}${open?" open":""}><summary>${esc(t)}</summary>${h}</details>`:"";
+document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.tagName=="DETAILS"&&d.open&&d.getAttribute("name"))document.querySelectorAll('details[name="'+d.getAttribute("name")+'"]').forEach(x=>{if(x!==d&&x.open)x.open=false})},true);
 
 /* ===== Problema 2b: DCD resultante de los diagramas de comunicación =====
    Acciones del estudiante: juntar las flechas de las DOS operaciones (asociaciones navegables, con * si es colección) → marcar las dependencias
@@ -415,8 +419,8 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
  /* contexto: lo que se pide + el caso de uso (frases resaltables) + la realidad plegada + el DSS ya decidido (st: 0 no se muestra, 1 abierto, 2 plegado) */
  /* MENOS TEXTO (19/11, pedido de Luca): cada tarjeta muestra solo las frases del caso de uso que usa (ids); el caso de uso completo y la realidad,
     plegados. La tarjeta de un mensaje no repite «Tu DSS hasta ahora»: ya está dibujado en lo que se arma. */
- o=(k,fr,st,ids)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b),sel=ids?[...new Set(String(ids).split(",").filter(Boolean).concat(hs.filter(h=>h[0]=="u")))].sort((a,c)=>+a.slice(1)-+c.slice(1)):null;return`<div class="lt"><b>${esc(X.id)} · ${esc(L.cu)}</b> · actor: ${esc(L.act)}</div>`+(sel?kSent(L.S,sel,hs)+kFold("Caso de uso completo",kSent(L.S,L.Uk,hs),0):kSent(L.S,L.Uk,hs))+
-  kFold("Descripción de la realidad",`<div class="lt">${esc(L.i)}</div>`+L.P.map(p=>kSent(L.S,p,hs)).join("<br>"),hs.some(h=>h[0]=="a"))+(st?kFold("Tu DSS hasta ahora",seqDraw(k),st<2):"")}}),U=[];
+ o=(k,fr,st,ids)=>({ctx:X.id+" · Problema 1 b) DSS",ar:"mod",kv:b=>{const hs=kHs(b),sel=ids?[...new Set(String(ids).split(",").filter(Boolean).concat(hs.filter(h=>h[0]=="u")))].sort((a,c)=>+a.slice(1)-+c.slice(1)):null;return`<div class="lt"><b>${esc(X.id)} · ${esc(L.cu)}</b> · actor: ${esc(L.act)}</div>`+(sel?kSent(L.S,sel,hs)+kFold("Caso de uso completo",kSent(L.S,L.Uk,hs),0,"lt"):kSent(L.S,L.Uk,hs))+
+  kFold("Descripción de la realidad",`<div class="lt">${esc(L.i)}</div>`+L.P.map(p=>kSent(L.S,p,hs)).join("<br>"),hs.some(h=>h[0]=="a"),"lt")+(st?kFold("Tu DSS hasta ahora",seqDraw(k),st<2):"")}}),U=[];
  /* EL DSS SE ARMA CON FICHAS, MENSAJE POR MENSAJE (pedido de Luca, 16/11). Cada tarjeta es la línea que sigue del diagrama: si abre, sigue o cierra un
     fragmento (y su guarda) → qué hace el actor ahora (el paso del caso de uso que es un mensaje) → sus parámetros, ficha por ficha → qué devuelve → la nota de
     memoria. No hay tarjetas aparte de «qué mensajes hay» ni de «qué fragmentos»: se decide al armar cada línea. */
@@ -672,7 +676,7 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",C=k=>X.C.find(c
    roots=names.filter(n=>!(CI[n]&&CI[n].B)),en=M.filter(m=>m.k=="enum").map(m=>UM.box(esc(m.n),{st:"«"+m.st+"»",at:m.vals.map(esc)}));
   return`<div class="umx">${roots.map(n=>UM.gen(bx(n),kids(n).map(c=>UM.gen(bx(c),kids(c).map(bx))))).concat(en).join("")}</div>`+M.filter(m=>m.k=="aso").map(m=>UM.aso(esc(m.A),esc(m.ma),esc(m.mb),esc(m.B),m.ord?"{ordered}":"",m.ac?UM.box(esc(m.ac.n),{at:m.ac.at.map(esc)}):"")).join("")};
  const view=(i,fx)=>b=>{const hs=kHs(b).concat(fx?fx.split(","):[]);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pa||P1P.a)}</div><div class="lt">${esc(L.i)}</div>`+
-   L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),(!i&&!fx)||p.some(k=>hs.includes(k)))).join("")+kFold("Tu modelo hasta ahora",model(i),1)},
+   L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),(!i&&!fx&&!q&&!hs.length)||p.some(k=>hs.includes(k)),"lt")).join("")+kFold("Tu modelo hasta ahora",model(i),1)},
   o=(k,fx,kd)=>Object.assign({ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod",th:MTH[k],kv:view(meta.length,fx)},kd?{kd}:{});
  /* 1) clases */
  {const c=C("cls"),names=c.ok.map(z=>z[0]);cards.push(kSet(G+" · clases","Modelo de dominio · clases",c.p,c.ok.map(z=>({t:z[0],w:z[1],hl:kHl(z[2])})),kDz(c.no),
