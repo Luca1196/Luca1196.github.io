@@ -441,7 +441,10 @@ DSSX.forEach(X=>{const L=P1L[X.id],M=X.M,N=M.length,G=X.id+" · DSS",hl=h=>h?"S:
   else{const ok=m.pa[0]=="sin parámetros"?[]:m.pa[0].split(", "),ph=hl(m.ph||m.hl);
    if(ok.length)parts.push({set:ok.map(t=>({t})),r:"p",w:m.pa[1],hl:ph},")");else parts.push({t:"sin parámetros",r:"p",sn:"los parámetros",w:m.pa[1],hl:ph},")");
    m.pa.slice(2).forEach(d=>d[0].split(", ").filter(t=>!ok.includes(t)).forEach(t=>add([t,d[1],hl(d[2])])))}
-  if(m.rt){parts.push("devuelve",{t:m.rt[0],r:"rt",sn:"lo que devuelve",w:m.rt[1],hl:hl(m.rh||m.hl)});m.rt.slice(2).forEach(d=>add([d[0],d[1],hl(d[2])]))}
+  /* «NADA» AMBIGUO (nota de Luca, 19/11: «es engañoso: había que poner "no abre ningún fragmento" y yo elegí "nada"»): la ficha del retorno vacío se
+     llama «no devuelve nada», para que no se confunda con la del fragmento. Los datos siguen diciendo "nada". */
+  const NADA=t=>t=="nada"?"no devuelve nada":t;
+  if(m.rt){parts.push("devuelve",{t:NADA(m.rt[0]),r:"rt",sn:"lo que devuelve",w:m.rt[1],hl:hl(m.rh||m.hl)});m.rt.slice(2).forEach(d=>add([NADA(d[0]),d[1],hl(d[2])]))}
   if(m.mem){parts.push("\n","nota:",{t:m.mem[0],r:"nt",sn:"la nota de memoria",w:"Cómo saberlo: mirá si lo que llega en este mensaje se vuelve a mandar en alguno de los que siguen. Si no se vuelve a mandar pero se usa más adelante (por ejemplo, al confirmar), el Sistema lo tiene que recordar. "+m.mem[1],hl:hl(m.mh||m.hl)});m.mem.slice(2).concat([["sin nota",DSW[m.fin?1:0]]],m.fin?[]:[["libera la memoria",DSW[2]]]).forEach(d=>add([d[0],d[1],hl(d[2])]))}
   const use=parts.flatMap(z=>typeof z=="string"?[]:z.set?z.set.map(y=>y.t):[z.t]);
   U.push({id:"m"+(i+1),cards:[kTok(G+" · mensaje "+(i+1),"DSS · mensaje "+(i+1),"Armá con las fichas la línea que sigue del DSS.",parts,dis.filter(d=>!use.includes(d[0])),
@@ -670,14 +673,22 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",C=k=>X.C.find(c
  const ENS=C("tip").ok.map(o=>/^«(enum|DataType)» (\w+) \{(.*)\}$/.exec(o[0])&&[o,/^«(enum|DataType)» (\w+) \{(.*)\}$/.exec(o[0])]).filter(Boolean);
  const atr=C("atr"),cls=atr.ok.map(o=>({n:o[0].split(": ")[0],at:o[0].slice(o[0].indexOf(": ")+2).split(", "),w:o[1],hl:o[2]})).concat((atr.xt||[]).map(t=>({n:t.split(": ")[0],at:t.slice(t.indexOf(": ")+2).split(", "),w:""})));
  /* el modelo con lo armado antes de la tarjeta k */
- const model=k=>{const M=meta.slice(0,k),names=(M.find(m=>m.k=="cls")||{}).names||[],CI={};M.filter(m=>m.k=="class").forEach(m=>CI[m.n]=m);
+ /* UN SOLO DIBUJO (pedido de Luca, 19/11: «es confuso que el diagrama tenga 2 recuadros de Mecánico»): en la tarjeta de una clase, la clase que se arma
+    se dibuja DENTRO del modelo (ov = override: su recuadro, su padre y sus subclases elegidas), y no se repite «Tu modelo hasta ahora».
+    Las subclases de una clase ya armada aparecen colgando de ella (recuadro vacío) hasta que se arman. */
+ const model=(k,ov)=>{const M=meta.slice(0,k),names=(M.find(m=>m.k=="cls")||{}).names||[],CI={};M.filter(m=>m.k=="class").forEach(m=>CI[m.n]=m);
+  M.filter(m=>m.k=="class"&&m.subs).forEach(m=>m.subs.forEach(z=>{if(!CI[z])CI[z]={B:m.n,at:[],stub:1}}));
+  if(ov){const p0=CI[ov.n];CI[ov.n]={B:ov.B!==undefined?ov.B:(p0&&p0.B),at:[]};(ov.kids||[]).forEach(z=>{if(!CI[z]||CI[z].stub)CI[z]={B:ov.n,at:[],stub:1}})}
   if(!names.length)return'<span class="mut">todavía nada</span>';
-  const bx=n=>{const m=CI[n];return UM.box(esc(n),m?{st:m.abs?"«abstracta»":"",at:m.at.map(esc)}:{at:[]})},kids=n=>names.filter(z=>CI[z]&&CI[z].B==n),
+  const bx=n=>{if(ov&&n==ov.n)return ov.box;const m=CI[n];return UM.box(esc(n),m&&!m.stub?{st:m.abs?"«abstracta»":"",at:m.at.map(esc)}:{at:[]})},kids=n=>names.filter(z=>CI[z]&&CI[z].B==n),
+   node=n=>UM.gen(bx(n),kids(n).map(node).concat(ov&&n==ov.n&&ov.kq?[ov.kq]:[])),
    roots=names.filter(n=>!(CI[n]&&CI[n].B)),en=M.filter(m=>m.k=="enum").map(m=>UM.box(esc(m.n),{st:"«"+m.st+"»",at:m.vals.map(esc)}));
-  return`<div class="umx">${roots.map(n=>UM.gen(bx(n),kids(n).map(c=>UM.gen(bx(c),kids(c).map(bx))))).concat(en).join("")}</div>`+M.filter(m=>m.k=="aso").map(m=>UM.aso(esc(m.A),esc(m.ma),esc(m.mb),esc(m.B),m.ord?"{ordered}":"",m.ac?UM.box(esc(m.ac.n),{at:m.ac.at.map(esc)}):"")).join("")};
- const view=(i,fx)=>b=>{const hs=kHs(b).concat(fx?fx.split(","):[]);return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pa||P1P.a)}</div><div class="lt">${esc(L.i)}</div>`+
-   L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),(!i&&!fx&&!q&&!hs.length)||p.some(k=>hs.includes(k)),"lt")).join("")+kFold("Tu modelo hasta ahora",model(i),1)},
-  o=(k,fx,kd)=>Object.assign({ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod",th:MTH[k],kv:view(meta.length,fx)},kd?{kd}:{});
+  return`<div class="umx">${roots.map(node).concat(en).join("")}</div>`+M.filter(m=>m.k=="aso").map(m=>UM.aso(esc(m.A),esc(m.ma),esc(m.mb),esc(m.B),m.ord?"{ordered}":"",m.ac?UM.box(esc(m.ac.n),{at:m.ac.at.map(esc)}):"")).join("")};
+ /* SECCIONES DE LA LETRA (19/11): se abre sola la sección donde está lo que la tarjeta necesita (ex.rel: frases de la tarjeta, sin resaltarlas);
+    al fallar, la de la frase marcada. En acordeón (kFold nm="lt"): de a una. */
+ const view=(i,fx,ex)=>b=>{ex=ex||{};const hs=kHs(b).concat(fx?fx.split(","):[]),rel=ex.rel||[];return`<div class="lt"><b>${esc(X.id)} · Problema 1</b> ${esc(L.pa||P1P.a)}</div><div class="lt">${esc(L.i)}</div>`+
+   L.P.map((p,q)=>kFold(X.pt[q],kSent(L.S,p,hs),(!i&&!fx&&!q&&!hs.length&&!rel.length)||p.some(k=>hs.includes(k)||(!hs.length&&rel.includes(k))),"lt")).join("")+(ex.nm?"":kFold("Tu modelo hasta ahora",model(i),1))},
+  o=(k,fx,kd,ex)=>Object.assign({ctx:X.id+" · Problema 1 a) Modelo de dominio",ar:"mod",th:MTH[k],kv:view(meta.length,fx,ex)},kd?{kd}:{});
  /* 1) clases */
  {const c=C("cls"),names=c.ok.map(z=>z[0]);cards.push(kSet(G+" · clases","Modelo de dominio · clases",c.p,c.ok.map(z=>({t:z[0],w:z[1],hl:kHl(z[2])})),kDz(c.no),
    o("cls",null,(pl)=>`<div class="umx">${pl.map(x=>UM.box(esc(x.t),{at:[]})).join("")}</div>${pl.length<names.length?'<span class="mut">¿alguna más?</span>':""}`)));meta.push({k:"cls",names})}
@@ -689,30 +700,37 @@ MDX.forEach(X=>{const L=P1L[X.id],G=X.id+" · Modelo de dominio",C=k=>X.C.find(c
   const card=cards[cards.length-1],XX=card.bld.exp;card.kd=(pl,cur)=>{const v=kQ(pl,cur,XX);const vs=XX.filter(x=>x.r=="v"&&pl.includes(x)).map(x=>esc(x.t)),pend=XX.some(x=>x.r=="v"&&!pl.includes(x));return`<div class="umx">${UM.box(esc(m[2]),{st:v("st"),at:vs.concat(pend?[UM.q(null,cur&&cur.r=="v")]:[])})}</div>`};
   meta.push({k:"enum",n:m[2],st:m[1],vals})});
  /* 3) cada clase */
- const mkClass=c=>{const B=sub[c.n],S=bas[c.n],NS=nosub[c.n],parts=[],dis=[],h=kHl(c.hl);
-  if(B){parts.push({t:"hereda de "+B,sn:"de quién hereda",r:"par",w:"«"+c.n+"» es un tipo de «"+B+"» con datos propios: es una subclase (△ hacia «"+B+"»).",hl:kHl(bas[B].hl)});dis.push(["no hereda de ninguna"])}
-  if(S){parts.push({t:"con subclases "+S.subs.join(" y "),sn:"si tiene subclases",r:"sub",w:"Cada tipo de «"+c.n+"» registra datos propios: hacen falta subclases, no alcanza con un atributo.",hl:kHl(S.hl)});dis.push(["sin subclases (un atributo «tipo»)"]);
-   if(S.abs){parts.push({t:"«abstracta»",sn:"si es abstracta",r:"abs",w:"Todo «"+c.n+"» es de alguno de sus tipos: no hay un «"+c.n+"» a secas, por eso es abstracta.",hl:kHl(S.hl)});dis.push(["concreta"])}}
-  if(NS){parts.push({t:"sin subclases",sn:"si tiene subclases",r:"sub",w:NS.why,hl:kHl(NS.hl)});dis.push(["con subclases "+NS.subs.join(" y "),NS.why,kHl(NS.hl)])}
-  parts.push({set:c.at.map(t=>({t})),r:"at",w:c.w||"Son los datos propios de «"+c.n+"» que da la letra.",hl:h});
+ /* ORDEN LIBRE (pedido de Luca, 19/11: «lo de las subclases se debería elegir en cualquier momento»): herencia, subclases, abstracta, atributos y
+    conexiones son UN grupo de fichas en cualquier orden. «hereda de» solo se pide si la clase padre todavía no se armó (si ya se armó con sus
+    subclases, el dibujo ya lo muestra: pedirlo de nuevo era redundante, nota del 19/11). */
+ const mkClass=c=>{const B=sub[c.n],S=bas[c.n],NS=nosub[c.n],its=[],dis=[],h=kHl(c.hl),k0=meta.length,pB=B&&meta.some(m=>m.k=="class"&&m.n==B),rel=[];
+  const R=x=>{if(x)String(x).split(",").forEach(y=>rel.push(y))};R(c.hl);if(B)R(bas[B].hl);
+  if(B&&!pB){its.push({t:"hereda de "+B,r:"par",w:"«"+c.n+"» es un tipo de «"+B+"» con datos propios: es una subclase (△ hacia «"+B+"»).",hl:kHl(bas[B].hl)});R(bas[B].hl);dis.push(["no hereda de ninguna","«"+c.n+"» es un tipo de «"+B+"»: es una subclase.",kHl(bas[B].hl)])}
+  if(S){its.push({t:"con subclases "+S.subs.join(" y "),r:"sub",w:"Cada tipo de «"+c.n+"» registra datos propios: hacen falta subclases, no alcanza con un atributo.",hl:kHl(S.hl)});R(S.hl);dis.push(["sin subclases (un atributo «tipo»)","Cada tipo de «"+c.n+"» tiene datos propios: con un atributo «tipo» no habría dónde guardarlos.",kHl(S.hl)]);
+   if(S.abs){its.push({t:"«abstracta»",r:"abs",w:"Todo «"+c.n+"» es de alguno de sus tipos: no hay un «"+c.n+"» a secas, por eso es abstracta.",hl:kHl(S.hl)});dis.push(["concreta","Todo «"+c.n+"» es de alguno de sus tipos: no hay un «"+c.n+"» a secas, así que es abstracta.",kHl(S.hl)])}}
+  if(NS){its.push({t:"sin subclases",r:"sub",w:NS.why,hl:kHl(NS.hl)});R(NS.hl);dis.push(["con subclases "+NS.subs.join(" y "),NS.why,kHl(NS.hl)])}
+  c.at.forEach(t=>its.push({t,r:"at",w:c.w||"Son los datos propios de «"+c.n+"» que da la letra.",hl:h}));
   /* CONEXIONES (18/11, pedido de Luca): lo que la letra dice de la clase y es OTRA clase se dibuja como conexión (línea), no como atributo. Ficha correcta
      «conexión con X» y, enfrente, la ficha tentadora del mismo dato escrito como atributo («ciudades: Set(Ciudad)»). La multiplicidad se arma después,
      en la tarjeta de la asociación. */
-  const RL=C("aso").ok.map(z=>{const m=/^(\w+) (\S+) ◆?— (\S+) (\w+)/.exec(z[0]);return m&&(m[1]==c.n?{o:m[4],mu:m[3],z}:m[4]==c.n?{o:m[1],mu:m[2],z}:null)}).filter(Boolean).filter((r,i,a)=>a.findIndex(y=>y.o==r.o)==i);
-  if(RL.length){parts.push({set:RL.map(r=>({t:"conexión con "+r.o,w:"«"+r.o+"» es otra clase del modelo: lo que vincula a «"+c.n+"» con ella se dibuja como una línea entre los dos recuadros (una asociación). "+r.z[1],hl:kHl(r.z[2])})),r:"cx"});
+  const RL=C("aso").ok.map(z=>{const m=/^(\w+) (\S+) ◆?— (\S+) (\w+)/.exec(z[0]);return m&&(m[1]==c.n?{o:m[4],mu:m[3],z}:m[4]==c.n?{o:m[1],mu:m[2],z}:null)}).filter(Boolean).filter((r,i,a)=>a.findIndex(y=>y.o==r.o)==i)
+   /* UNA SOLA VEZ (nota de Luca, 19/11: «¿esa conexión no iba desde Conductor? ¿es importante contestarlo dos veces?»): en el modelo de dominio una
+      asociación no tiene dirección; se pide en la tarjeta de la primera de sus dos clases que se arma, no en la segunda. */
+   .filter(r=>!meta.some(m=>m.k=="class"&&m.n==r.o));
+  RL.forEach(r=>R(r.z[2]));
+  if(RL.length){RL.forEach(r=>its.push({t:"conexión con "+r.o,r:"cx",w:"«"+r.o+"» es otra clase del modelo: lo que vincula a «"+c.n+"» con ella se dibuja como una línea entre los dos recuadros (una asociación). "+r.z[1],hl:kHl(r.z[2])}));
    const lc=n=>n[0].toLowerCase()+n.slice(1),pl=n=>/[aeiou]$/i.test(n)?n+"s":n+"es";
    RL.forEach(r=>{const t=/\*/.test(r.mu)?pl(lc(r.o))+": Set("+r.o+")":lc(r.o)+": "+r.o;if(!dis.some(d=>d[0]==t))dis.push([t,"«"+r.o+"» es otra clase: no va como atributo de «"+c.n+"». El vínculo se dibuja como una asociación (una línea entre los recuadros), con su multiplicidad en cada punta.",kHl(r.z[2])])});
    const oth=cls.map(z=>z.n).filter(n=>n!=c.n&&!RL.some(r=>r.o==n)&&n!=B&&sub[n]!=c.n);if(oth.length)dis.push(["conexión con "+oth[cards.length%oth.length],"La letra no vincula «"+c.n+"» con esa clase."])}
   atr.no.filter(z=>z[0].startsWith(c.n+": ")&&!/\(sin /.test(z[0])).forEach(z=>z[0].slice(c.n.length+2).split(", ").filter(t=>!c.at.includes(t)).forEach(t=>dis.push([t,z[1],kHl(z[2])])));
   cls.filter(z=>z.n!=c.n&&z.n!=B&&sub[z.n]!=c.n).flatMap(z=>z.at.map(t=>[t,z.n])).filter(z=>!c.at.includes(z[0])&&!dis.some(d=>d[0]==z[0])).slice(cards.length%3,cards.length%3+2).forEach(z=>dis.push([z[0],"Ese dato es de «"+z[1]+"», no de «"+c.n+"»."]));
-  const card=kTok(G+" · clase "+c.n,"Modelo de dominio · clase "+c.n,"Armá la clase "+c.n+" con las fichas: lo que es un dato va como atributo y lo que es otra clase, como conexión.",parts,dis.filter((d,i)=>dis.findIndex(z=>z[0]==d[0])==i),o("atr"));const XX=card.bld.exp;
+  const card=kTok(G+" · clase "+c.n,"Modelo de dominio · clase "+c.n,"Armá la clase "+c.n+" con las fichas, en cualquier orden: lo que es un dato va como atributo y lo que es otra clase, como conexión.",[{set:its}],dis.filter((d,i)=>dis.findIndex(z=>z[0]==d[0])==i),o("atr",null,null,{nm:1,rel}));const XX=card.bld.exp;
   card.kd=(pl,cur)=>{const v=kV(pl,cur,XX),q0=kQ(pl,cur,XX),hid=kOp(pl,cur,XX),q=r=>hid(r)?"":q0(r),at=XX.filter(x=>x.r=="at"&&pl.includes(x)).map(x=>esc(x.t)),pend=XX.some(x=>x.r=="at"&&!pl.includes(x));
-   const abs=XX.some(x=>x.r=="abs")&&!hid("abs")?(v("abs")==null?q("abs"):v("abs")=="«abstracta»"?"«abstracta»":""):"",box=UM.box(esc(c.n),{st:abs,at:at.concat(pend?[UM.q(null,cur&&cur.r=="at")]:[])});
-   const par=XX.some(x=>x.r=="par")&&!hid("par")?(v("par")==null?`<div class="umg">${UM.box(q("par"))}<div class="umt">△</div></div>`:v("par").startsWith("hereda de ")?`<div class="umg">${UM.box(esc(v("par").slice(10)))}<div class="umt">△</div></div>`:""):"";
-   const sb=XX.some(x=>x.r=="sub")&&!hid("sub")?(v("sub")==null?`<div class="umt">△</div><div class="umk">${UM.box(q("sub"))}</div>`:v("sub").startsWith("con subclases ")?`<div class="umt">△</div><div class="umk">${v("sub").slice(14).split(" y ").map(n=>UM.box(esc(n))).join("")}</div>`:""):"";
-   const cx=XX.filter(x=>x.r=="cx"),cxp=cx.filter(x=>pl.includes(x)).map(x=>UM.aso(esc(c.n),"","",esc(x.t.slice(13)))).join("")+(cx.some(x=>!pl.includes(x))&&cur&&cur.r=="cx"?UM.aso(esc(c.n),"","",UM.q(null,1)):"");
-   return`<div class="umx"><div class="umg">${par}${box}${sb}</div></div>`+cxp};
-  cards.push(card);meta.push({k:"class",n:c.n,B,abs:!!(S&&S.abs),at:c.at})};
+   const abs=XX.some(x=>x.r=="abs")&&!hid("abs")?(v("abs")==null?q("abs"):v("abs")=="«abstracta»"?"«abstracta»":""):(XX.some(x=>x.r=="abs")&&v("abs")=="«abstracta»"?"«abstracta»":""),box=`<div class="umc" style="display:inline-block;padding:0">${UM.box(esc(c.n),{st:abs,at:at.concat(pend?[UM.q(null,cur&&cur.r=="at")]:[])})}</div>`;
+   const pv=v("par"),sv=v("sub"),hp=XX.some(x=>x.r=="par"),ov={n:c.n,box,B:hp?(pv&&pv.startsWith("hereda de ")?B:null):undefined,kids:sv&&sv.startsWith("con subclases ")?S.subs:[]};
+   const cx=XX.filter(x=>x.r=="cx"),cxp=cx.filter(x=>pl.includes(x)).map(x=>UM.aso(esc(c.n),"","",esc(x.t.slice(13)))).join("");
+   return model(k0,ov)+cxp};
+  cards.push(card);meta.push({k:"class",n:c.n,B,abs:!!(S&&S.abs),at:c.at,subs:S?S.subs:null})};
  /* 4) cada asociación */
  const mkAso=z=>{const m=/^(\w+) (\S+) (◆?—) (\S+) (\w+)(.*)$/.exec(z[0]);if(!m)return;const A=m[1],ma=m[2],mb=m[4],Bc=m[5],ord=/\{ordered\}/.test(m[6]),acm=/con clase de asociación (\w+)(?: \(([^)]*)\))?/.exec(m[6]),ac=acm&&acm[1],h=kHl(z[2]),all=cls.map(c=>c.n);
   const parts=[{t:Bc,sn:"la otra clase",r:"B",w:z[1],hl:h},{t:ma,sn:"la multiplicidad del lado de "+A,r:"ma",w:"Al lado de «"+A+"» va cuántos «"+A+"» se vinculan con UN «"+Bc+"». "+z[1],hl:h},{t:mb,sn:"la multiplicidad del lado de "+Bc,r:"mb",w:"Al lado de «"+Bc+"» va cuántos «"+Bc+"» se vinculan con UN «"+A+"». "+z[1],hl:h},

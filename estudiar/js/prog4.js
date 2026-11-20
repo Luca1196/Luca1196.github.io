@@ -633,10 +633,18 @@ window.THL=window.THL||[];THL.push({s:"p4",re:/secuencia del sistema|recordad|me
   D.push({t:":",k:"d"},{t:"*",k:"d"});
   if(L.res)D.push({t:L.res+" =",k:"d"});else D.push({t:"res :=",k:"d"});
   add(L.t=="A"||L.t=="G"?SL:SA);if(L.t=="P")add(SA);
-  if(L.nd)add(L.nd+":");if(L.od)add(L.od);if(L.pd)add(L.pd);
+  if(L.nd)add(L.nd+":");
+  /* NUMERACIÓN TENTADORA (nota de Luca, 19/11: «falta un distractor que sea 3:»): además del de los datos, el número que se confunde al volver al
+     nivel de arriba (2.2* → 3:) y, si es de un recorrido, el mismo sin * (2.2* → 2.2:). */
+  {const nb=L.n.replace(/\*$/,""),sg=nb.split(".");if(sg.length>1)add((+sg[0]+1)+":","El número lo define quién envía: este mensaje lo manda el objeto que está ejecutando "+sg.slice(0,-1).join(".")+", así que va "+L.n+", no un número del nivel de arriba.");
+   if(/\*$/.test(L.n))add(nb+":","Este mensaje se repite para cada elemento del recorrido: el número lleva *.")}
+  if(L.od)add(L.od);if(L.pd)add(L.pd);
   const dobj=s=>s?objT(s).map(x=>x.t):[];
   dobj(L.td).concat(dobj(L.fd)).forEach(t=>{if(D.length<8&&!/^[:*]$/.test(t))add(t)});
-  const fix=D.slice(0,8);c.bld={exp:ex,bank:ex.filter(x=>x.k!="a").map(x=>({t:x.t})).concat(fix.map(x=>({t:x.t}))),n:ex.length};
+  /* SIN FICHA QUE SOLO FALLA EN LA APP (nota de Luca, 19/11: «si me ponés como distractor "a", yo quiero poner "a :=" separado; es un mal distractor
+     porque solo falla en la app, no en la realidad»): si la línea guarda su resultado en una variable, el nombre suelto de esa variable no va como
+     distractor (la variable y := van en una sola ficha). */
+  const fix=D.filter(x=>!(L.res&&x.t==L.res)).slice(0,8);c.bld={exp:ex,bank:ex.filter(x=>x.k!="a").map(x=>({t:x.t})).concat(fix.map(x=>({t:x.t}))),n:ex.length};
   if(!/\nClases: /.test(c.ctx)&&c.dg.clc)c.ctx=c.ctx.replace("\n▶ ","\nClases: "+c.dg.clc+"\n▶ ");
   c.lineSteps=old;
   c.steps=[Object.assign(st("Armá la línea",lineStr(L),"—",""),{k:"bld"})]})}
