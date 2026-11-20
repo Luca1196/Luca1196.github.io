@@ -14,7 +14,8 @@
    - Material (18/11): sumados el primer parcial (28/4/2026) y el segundo parcial (10/7/2026), con su propuesta de solución. Su deducción natural
      va en Bloques (1P 3a, 3b y la derivación de 4b); la del 2P (3a y 3b) usa igualdad y E↔, que se sumaron a Bloques (ver la decisión 14 de bloques.js).
    - Las series binarias «Semántica · Feb 2026 2a–2d» y «Modelos · Feb 2026 4a–4c» quedan ocultas (hid): adelantaban las respuestas que ahora se deciden acá.
-   - Los diagramas se dibujan mientras se eligen las fichas (pedido de Luca, 18/11): el tableau es una tarjeta k:"tab" (ver tabHTML).
+   - Los diagramas se dibujan mientras se eligen las fichas (pedido de Luca, 18/11). Tableaux (20/11): motor propio tbSolve/tbEx, ver «TABLEAUX DESDE CERO»;
+     k:"tab"/tabHTML quedan sin uso.
    RECETA PARA SUMAR UN EXAMEN: una entrada lgEx(G, tema, previas, letra, tarjetas) por ejercicio; simular con jsdom; actualizar ?v=. */
 const LTH=["Conjunto inductivo: cláusulas base (quién está de entrada) y cláusulas inductivas (cómo se arma un elemento nuevo con otros). Función por recursión: un caso por cláusula; en la inductiva se llama a sí misma sobre las partes. Prueba por inducción (PIP): un paso base por cada cláusula base, probado solo con definiciones; y un paso inductivo por cada cláusula inductiva, donde se supone la propiedad para las partes (HI) y se prueba para el elemento nuevo (TI). En una cadena, cada paso se justifica con una definición, una propiedad dada o la HI.",
  "Valuación: v(⊥) = 0, v(¬φ) = 1 − v(φ), v(α ∧ β) = mín, v(α ∨ β) = máx, v(α → β) = máx{1 − v(α), v(β)}. Tautología: vale 1 en toda valuación; contradicción: 0 en toda; contingencia: ni una ni otra. Para justificar: un «para toda» verdadero se prueba con un elemento arbitrario; un «para toda» falso se refuta con un contraejemplo que cumpla la hipótesis y no la conclusión; un «existe» verdadero se prueba dando el testigo y verificándolo.",
@@ -182,20 +183,109 @@ lgEx("1P26 · Ej. 1 (inducción)","lg1",LGI.ind,["Primer parcial de Lógica, 28 
  {id:"d",k:"seq",t:"d) ¿la fórmula es única?",p:"Decidí y justificá la parte d.",mo:1,sl:["d:",["NO se cumple","Hay tiras que salen de más de una fórmula.","el veredicto",["SÍ se cumple","El ¬ no agrega letras: p0 y (¬p0) dan la misma tira."]],"\n","se justifica con",
    ["un contraejemplo: la tira p0 sale de p0 y de (¬p0)","Dos fórmulas distintas con la misma tira.","la justificación",["la parte c","La parte c prueba que existe una fórmula, no que sea única."],["un contraejemplo: las tiras p0 y p1 salen de fórmulas distintas","Eso no contradice nada: para romper la unicidad hacen falta dos FÓRMULAS con la MISMA tira."]]]}]);
 
-/* --- Primer parcial · Ejercicio 2a: tableau semántico (tema nuevo lg5) --- */
-lgEx("1P26 · Ej. 2a (tableau)","lg5",[],["Primer parcial de Lógica, 28 de abril de 2026 · Ejercicio 2 (10 puntos)","Considere tres fórmulas α, β y φ de PROP.",
- "a. Determine mediante tableau semántico si: α ∧ β → φ ⊨ (α → φ) ∨ (β → φ)"],[
- {id:"a1",k:"seq",t:"a) la raíz del tableau",p:"¿Con qué empieza el tableau y cuándo vale la consecuencia?",sl:["la raíz lleva",["T.α ∧ β → φ  y  F.(α → φ) ∨ (β → φ)","Se busca una valuación que haga verdadera la premisa y falsa la conclusión (un contraejemplo).","la raíz",["T.α ∧ β → φ  y  T.(α → φ) ∨ (β → φ)","Así se buscaría un modelo de las dos. Para ⊨ se busca un contraejemplo: conclusión falsa."],["F.α ∧ β → φ  y  F.(α → φ) ∨ (β → φ)","El contraejemplo tiene que cumplir la premisa: va con T."]],"\n","la consecuencia vale si",
-   ["todas las ramas cierran","Ninguna valuación hace verdadera la premisa y falsa la conclusión.","la condición",["alguna rama cierra","Una rama abierta y terminada ya es un contraejemplo: alcanza con una abierta para que ⊨ falle."]]]},
- {id:"a2",k:"set",t:"a) las reglas que se usan",p:"¿Qué hace cada regla de este tableau?",ok:[["F.A ∨ B ⇒ F.A y F.B en la misma rama","Un ∨ es falso solo si los dos lados son falsos."],["F.A → B ⇒ T.A y F.B en la misma rama","Un → es falso solo con antecedente verdadero y consecuente falso."],["T.A → B ⇒ dos ramas: F.A | T.B","Un → es verdadero si el antecedente es falso o el consecuente verdadero."],["F.A ∧ B ⇒ dos ramas: F.A | F.B","Un ∧ es falso si alguno de los dos es falso."]],
-  no:[["T.A → B ⇒ F.A y T.B en la misma rama","Alcanza con una de las dos cosas: van en ramas separadas."],["F.A → B ⇒ dos ramas: F.A | T.B","Un → falso no tiene opciones: T.A y F.B a la vez, en la misma rama."],["F.A ∧ B ⇒ F.A y F.B en la misma rama","Basta con que uno sea falso: son dos ramas."]]},
- {id:"a3",k:"tab",t:"a) desarrollo del tableau",p:"Desarrollá el tableau: primero las reglas que no abren ramas, y cerrá cada rama apenas tenga T.X y F.X.",mo:1,ini:["T.α ∧ β → φ","F.(α → φ) ∨ (β → φ)"],st:[
-   {t:"F.(α → φ) ∨ (β → φ) ⇒ F.α → φ, F.β → φ",add:["F.α → φ","F.β → φ"],mark:"F.(α → φ) ∨ (β → φ)"},{t:"F.α → φ ⇒ T.α, F.φ",add:["T.α","F.φ"],mark:"F.α → φ",dp:[0]},{t:"F.β → φ ⇒ T.β, F.φ",add:["T.β","F.φ"],mark:"F.β → φ",dp:[0]},
-   {t:"T.α ∧ β → φ ⇒ ramas F.α ∧ β | T.φ",split:[["F.α ∧ β"],["T.φ"]],mark:"T.α ∧ β → φ",dp:[1,2]},{t:"rama T.φ: cierra con F.φ ×",close:"R",dp:[3]},
-   {t:"rama F.α ∧ β ⇒ ramas F.α | F.β",at:"L",split:[["F.α"],["F.β"]],mark:"F.α ∧ β",dp:[3]},{t:"F.α cierra con T.α ×   y   F.β cierra con T.β ×",close:["LL","LR"],dp:[5]}],
-  no:[["T.α ∧ β → φ ⇒ T.α, T.β → φ","El conectivo principal es →: α ∧ β → φ se lee (α ∧ β) → φ."],["F.α → φ ⇒ ramas F.α | T.φ","Esa es la regla de T.A → B. Un → falso da T.A y F.B en la misma rama."],["rama T.φ: queda abierta","En esa rama ya está F.φ (vino de F.α → φ): T.φ y F.φ la cierran."]]},
- {id:"a4",k:"seq",t:"a) conclusión",p:"¿Qué concluís del tableau?",mo:1,sl:["α ∧ β → φ ⊨ (α → φ) ∨ (β → φ)",["SE CUMPLE","Todas las ramas cerraron.","el veredicto",["NO se cumple","No quedó ninguna rama abierta: no hay contraejemplo."]],"\n","porque",
-   ["ninguna valuación v cumple v(α ∧ β → φ) = 1 y v((α → φ) ∨ (β → φ)) = 0","Cada rama cerrada es un intento de contraejemplo que fracasa.","el argumento",["hay una valuación con v(α ∧ β → φ) = 1 y v((α → φ) ∨ (β → φ)) = 1","Que haya una donde las dos valen no prueba nada: ⊨ habla de TODAS las valuaciones."]]]}]);
+/* --- TABLEAUX DESDE CERO (20/11, pedido de Luca: «no siento que me enseñen desde cero qué es un tableau y cómo se resuelve; además es un árbol, se
+   debería ir graficando a medida que se construye»). Reemplaza la versión del 18/11 (4 tarjetas: raíz y veredicto como texto, y el desarrollo con una
+   ficha por paso entero, que ya traía la respuesta escrita).
+   DECISIONES DIDÁCTICAS
+   - Un tableau = UNA tarjeta de fichas, y el árbol se dibuja desde la primera ficha: raíz → cada paso → cierre de ramas → veredicto. Nada se arma
+     como texto suelto.
+   - Cada paso se parte en decisiones atómicas (una ficha cada una, con su pregunta arriba del árbol): (1) qué fórmula desarmo, (2) si sigue en la misma
+     rama o abre dos (conectivo principal + signo), (3) cada fórmula nueva, (4) por cada rama que recibió algo, si se cierra (×) o sigue abierta.
+     Al final: ¿cerraron todas?, veredicto (⊨ / ⊭) y, si quedó una rama abierta, la valuación contraejemplo que se lee de ella.
+   - Orden fijo y enseñable (va en la consigna): primero las fórmulas que siguen en la misma rama, de arriba hacia abajo; después las que abren dos
+     ramas, de arriba hacia abajo. Una fórmula se desarma en TODAS las ramas abiertas que cuelgan de ella. Se cierra apenas hay T.X y F.X.
+   - Distractores tentadores: el signo cambiado (T.α en vez de F.α), «misma rama» ↔ «dos ramas», otra fórmula pendiente (la que abre ramas, una más
+     abajo o una letra sola), cerrar una rama abierta o dejar abierta una que cierra. Cada uno trae su porqué; «No sé» da la regla de esa decisión.
+   - Desde cero = previas en escalera (kChain con req): cada mini-tableau agrega UNA idea (raíz, T.∧, F.∨, F.→, la primera rama doble, T.→, una rama
+     abierta → contraejemplo, ¬ y F.∧, una fórmula que se desarma en dos ramas a la vez) y el del parcial se desbloquea al final.
+   - El motor (tbSolve) resuelve el tableau solo a partir del secuente: para sumar un ejercicio alcanza con una línea tbEx(...). */
+const TBR={"T∧":["m","Un ∧ es verdadero solo si los DOS lados son verdaderos: T.A y T.B, los dos en la misma rama."],"F∧":["b","Un ∧ es falso si ALGUNO de los lados es falso: hay dos posibilidades, así que abre dos ramas: F.A | F.B."],
+ "T∨":["b","Un ∨ es verdadero si ALGUNO de los lados es verdadero: dos posibilidades, dos ramas: T.A | T.B."],"F∨":["m","Un ∨ es falso solo si los DOS lados son falsos: F.A y F.B, los dos en la misma rama."],
+ "T→":["b","Un → es verdadero si el antecedente es falso O el consecuente es verdadero: dos ramas: F.A | T.B."],"F→":["m","Un → es falso solo con el antecedente verdadero y el consecuente falso: T.A y F.B, en la misma rama."],
+ "T¬":["m","¬A es verdadero cuando A es falso: F.A, en la misma rama."],"F¬":["m","¬A es falso cuando A es verdadero: T.A, en la misma rama."]};
+const TBTH="Tableau semántico: sirve para decidir si Γ ⊨ φ buscando un CONTRAEJEMPLO, una valuación que haga verdaderas todas las hipótesis y falsa la conclusión. Raíz: T. de cada hipótesis y F. de la conclusión (T. = «vale 1», F. = «vale 0»). Después se desarma cada fórmula según su conectivo principal y su signo: algunas reglas agregan dos fórmulas en la MISMA rama (T.∧, F.∨, F.→, T.¬, F.¬) y otras dan dos posibilidades, así que ABREN DOS RAMAS (F.∧, T.∨, T.→). Cada rama es un intento de contraejemplo. Una rama se CIERRA (×) cuando tiene T.X y F.X de la misma fórmula: ese intento es imposible. Si todas cierran, no hay contraejemplo: Γ ⊨ φ. Si una rama queda abierta y ya no hay nada para desarmar, sus letras dan el contraejemplo (T.p → v(p) = 1, F.p → v(p) = 0): Γ ⊭ φ.";
+/* fórmulas: letras (p, q, α, β, φ…), ⊥, ¬, ∧, ∨, → (→ asocia a la derecha; ¬ > ∧ > ∨ > →) */
+function tbParse(s){const T=s.replace(/\s+/g,"").match(/→|∧|∨|¬|\(|\)|⊥|[^→∧∨¬()⊥]/g)||[];let i=0;const pk=()=>T[i],nx=()=>T[i++];
+ const at=()=>{const t=nx();if(t=="¬")return{o:"¬",a:at()};if(t=="("){const f=im();nx();return f}return{v:t}},
+  bin=(op,sub)=>()=>{let f=sub();while(pk()==op){nx();f={o:op,a:f,b:sub()}}return f},cj=bin("∧",at),dj=bin("∨",cj),
+  im=()=>{const f=dj();if(pk()=="→"){nx();return{o:"→",a:f,b:im()}}return f};return im()}
+function tbStr(f,par){if(f.v)return f.v;if(f.o=="¬"){const s=tbStr(f.a,"¬");return"¬"+(f.a.o&&f.a.o!="¬"?"("+s+")":s)}
+ const s=tbStr(f.a,f.o)+" "+f.o+" "+tbStr(f.b,f.o);return par&&par!="¬"&&!(par=="→"&&f.o!="→")?"("+s+")":par=="¬"?s:s}
+/* hijo binario de un binario lleva paréntesis, salvo ∧/∨ adentro de →: «α ∧ β → φ», «(α → φ) ∨ (β → φ)» */
+const tbS=x=>x.s+"."+tbStr(x.f),tbFl=x=>({s:x.s=="T"?"F":"T",f:x.f}),tbAt=f=>!!f.v;
+function tbRule(x){const f=x.f,k=x.s+f.o,r=TBR[k];if(!r)return null;const A=f.a,B=f.b;
+ const res={"T∧":[{s:"T",f:A},{s:"T",f:B}],"F∧":[{s:"F",f:A},{s:"F",f:B}],"T∨":[{s:"T",f:A},{s:"T",f:B}],"F∨":[{s:"F",f:A},{s:"F",f:B}],
+  "T→":[{s:"F",f:A},{s:"T",f:B}],"F→":[{s:"T",f:A},{s:"F",f:B}],"T¬":[{s:"F",f:A}],"F¬":[{s:"T",f:A}]}[k];return{k,br:r[0]=="b",w:r[1],res}}
+/* Resuelve el tableau y devuelve las fichas en orden (X), los distractores (D) y el árbol final (N, raíz R). Cada fórmula del árbol guarda en qué
+   ficha aparece como «?» (bo) y en cuál se escribe (fi); cada nodo, en cuál se abren sus ramas (sp) y en cuál se decide si cierra (ca). */
+function tbSolve(hyp,concl){let U=0;const N={},E=[],nn=par=>{const n={u:"n"+U++,L:[],ch:null,x:0,par};N[n.u]=n;return n},
+  ne=(n,x,bo)=>{const e={u:"e"+U++,x,n:n.u,used:0,bo};E.push(e);n.L.push(e);return e},
+  path=n=>{const L=[];for(let q=n;q;q=q.par&&N[q.par])L.unshift(...q.L);return L},
+  leaves=n=>n.ch?n.ch.flatMap(u=>leaves(N[u])):[n],open=n=>leaves(n).filter(l=>!l.x),
+  clash=l=>{const P=path(l);for(const a of P){if(a.x.s=="T"&&a.x.f.v=="⊥")return[a,a];const b=P.find(b=>b.x.s!=a.x.s&&tbStr(b.x.f)==tbStr(a.x.f));if(b)return a.x.s=="T"?[a,b]:[b,a]}return null},
+  lab=l=>tbS(l.L[0].x),labs=ls=>{const a=ls.map(lab);return ls.map((l,i)=>a.filter(z=>z==a[i]).length>1&&l.par?lab(N[l.par])+" › "+a[i]:a[i])},X=[],D=[];let ln=0;
+ const chip=(t,sn,w,dis)=>{const sl=X.filter(e=>e.ln==ln).length+1,e={t,k:"tb",sl,sn,w,ln,rt:1};X.push(e);(dis||[]).filter(d=>d&&d[0]!=t&&!D.some(z=>z.ln==ln&&z.t==d[0])).forEach(d=>D.push({t:d[0],why:d[1],sl,ln}));return X.length-1};
+ const R=nn(null);
+ /* raíz: las fórmulas se ven como «?» desde el principio y cada ficha escribe su signo */
+ hyp.forEach(h=>{const x={s:"T",f:tbParse(h)};ne(R,x,-1).fi=chip(tbS(x),"el signo de la hipótesis "+tbStr(x.f),"Se busca un contraejemplo: una valuación que haga VERDADERAS las hipótesis. Por eso cada hipótesis va con T. (T. = vale 1).",[[tbS(tbFl(x)),"Las hipótesis van con T.: el contraejemplo tiene que cumplirlas (valer 1). La que va con F. es la conclusión."]])});
+ {const x={s:"F",f:tbParse(concl)};ne(R,x,-1).fi=chip(tbS(x),"el signo de la conclusión "+tbStr(x.f),"El contraejemplo tiene que hacer FALSA la conclusión: va con F. (F. = vale 0).",[[tbS(tbFl(x)),"Con T. buscarías una valuación que cumpla todo; para refutar ⊨ hace falta que la conclusión FALLE: va con F."]])}
+ const closeAsk=ls=>{const LB=labs(ls);ls.forEach((l,i)=>{if(i)ln++;/* una rama por vez: solo sus dos fichas a la vista */const c=clash(l),nm="",q="si la rama"+(ls.length>1?" "+LB[i]:"")+" se cierra o sigue abierta";
+  if(c){l.x=1;l.ca=chip(nm+"× se cierra",q,"En el camino de esa rama (desde la raíz) están "+tbS(c[0].x)+(c[0]===c[1]?"":" y "+tbS(c[1].x))+": ningún contraejemplo puede cumplir las dos cosas. Se cierra (×).",[[nm+"sigue abierta",c[0]===c[1]?"T.⊥ no se puede cumplir nunca: la rama se cierra.":"En el camino de esa rama ya están "+tbS(c[0].x)+" y "+tbS(c[1].x)+": se cierra."]])}
+  else l.ca=chip(nm+"sigue abierta",q,"En el camino de esa rama (desde la raíz) no hay ninguna fórmula con T. y con F. a la vez: sigue abierta.",[[nm+"× se cierra","Para cerrar hace falta la MISMA fórmula con T. y con F. en el camino desde la raíz hasta esa rama, y acá no está."]])})};
+ ln++;if(clash(R))closeAsk([R]);
+ for(let guard=0;guard<80;guard++){
+  const pend=E.filter(e=>!e.used&&!tbAt(e.x.f)&&open(N[e.n]).length),e=pend.filter(e=>!tbRule(e.x).br)[0]||pend[0];if(!e)break;
+  ln++;const r=tbRule(e.x),ls=open(N[e.n]),fs=tbS(e.x),main="El conectivo principal de "+tbStr(e.x.f)+" es "+e.x.f.o+". ";
+  const why=o=>!tbRule(o.x).br&&r.br?"«"+tbS(o.x)+"» sigue en la misma rama: primero se desarman las que no abren ramas.":tbRule(o.x).br&&!r.br?"«"+tbS(o.x)+"» abre dos ramas: dejala para después; primero las que siguen en la misma rama.":"Las dos son del mismo tipo: va primero la de más arriba (la que apareció antes).",
+   atom=E.find(a=>tbAt(a.x.f)&&a.x.f.v!="⊥"&&ls.some(l=>path(l).includes(a)));
+  e.ua=chip("desarmo "+fs,"qué fórmula se desarma ahora","Orden: primero las que siguen en la misma rama (T.∧, F.∨, F.→, T.¬, F.¬), de arriba hacia abajo; después las que abren dos ramas (F.∧, T.∨, T.→), de arriba hacia abajo. Ahora toca «"+fs+"».",
+   pend.filter(o=>o!==e).slice(0,2).map(o=>["desarmo "+tbS(o.x),why(o)]).concat(atom?[["desarmo "+tbS(atom.x),"Es una letra sola: no se desarma; solo sirve para cerrar ramas o para leer el contraejemplo."]]:[]));
+  e.used=1;
+  const k=chip(r.br?"abre dos ramas":"sigue en la misma rama","si "+fs+" sigue en la misma rama o abre dos",main+r.w,[[r.br?"sigue en la misma rama":"abre dos ramas",main+r.w]]);
+  if(r.br){ls.forEach(l=>{l.ch=[nn(l.u).u,nn(l.u).u];l.sp=k});
+   const ES=[0,1].map(j=>ls.map(l=>ne(N[l.ch[j]],r.res[j],k)));
+   [0,1].forEach(j=>{const x=r.res[j],f=chip(tbS(x),"lo que va en la rama "+(j?"derecha":"izquierda"),r.w,[[tbS(tbFl(x)),r.w],[tbS(r.res[1-j]),"Esa va en la rama "+(j?"izquierda":"derecha")+"."]]);ES[j].forEach(z=>z.fi=f)});
+   ln++;closeAsk(ls.flatMap(l=>l.ch.map(u=>N[u])))}
+  else{const ES=r.res.map(x=>ls.map(l=>ne(l,x,k)));
+   r.res.forEach((x,j)=>{const f=chip(tbS(x),r.res.length>1?"la fórmula "+(j+1)+" de las 2 que salen de "+fs+" (en orden: lado izquierdo y lado derecho)":"la fórmula que sale de "+fs,r.w,[[tbS(tbFl(x)),r.w]].concat(r.res.length>1?[[tbS(r.res[1-j]),"Van en orden: primero la del lado izquierdo del conectivo ("+tbStr(e.x.f.a)+"), después la del derecho ("+tbStr(e.x.f.b)+")."]]:[]));ES[j].forEach(z=>z.fi=f)});
+   ln++;closeAsk(ls)}}
+ /* veredicto */
+ ln++;const op=open(R),ok=!op.length;
+ chip(ok?"cerraron todas las ramas":"quedó una rama abierta","cómo terminó el tableau",ok?"Todas las ramas terminan en ×.":"Hay una rama sin × y ya no queda nada por desarmar en ella.",[[ok?"quedó una rama abierta":"cerraron todas las ramas",ok?"Mirá el dibujo: todas las ramas terminan en ×.":"Mirá el dibujo: hay una rama sin ×."]]);
+ chip(ok?"⊨ se cumple":"⊭ no se cumple","el veredicto",ok?"Cada rama era un intento de contraejemplo y todos fracasaron: ninguna valuación hace verdaderas las hipótesis y falsa la conclusión, así que la consecuencia vale.":"La rama abierta es un contraejemplo: una valuación que hace verdaderas las hipótesis y falsa la conclusión.",
+  [[ok?"⊭ no se cumple":"⊨ se cumple",ok?"Para que falle haría falta una rama abierta (un contraejemplo), y cerraron todas.":"Alcanza con UNA rama abierta y terminada: es un contraejemplo, así que la consecuencia no vale."]]);
+ if(!ok){const P=path(op[0]),seen={};ln++;P.filter(a=>tbAt(a.x.f)&&a.x.f.v!="⊥").forEach(a=>{const v=a.x.f.v;if(seen[v])return;seen[v]=1;const b=a.x.s=="T"?1:0;
+  chip("v("+v+") = "+b,"cuánto vale "+v+" en el contraejemplo","En la rama abierta"+(op.length>1?" de más a la izquierda":"")+" está "+tbS(a.x)+": "+v+" vale "+b+" (T. = 1, F. = 0).",[["v("+v+") = "+(1-b),"En la rama abierta está "+tbS(a.x)+" (T. = vale 1, F. = vale 0)."]])})}
+ return{X,D,N,R:R.u}}
+/* Dibujo con n fichas puestas: cada fórmula aparece como «?» cuando la ficha que la crea ya está puesta y se escribe con su propia ficha;
+   la decisión actual va resaltada y su pregunta arriba del árbol. */
+function tbKd(T){return(pl,cur)=>{const n=pl.length,X=T.X,nx=X[n],
+  bx=(t,on)=>`<span style="white-space:nowrap;${on?"outline:2px solid #e0a030;border-radius:4px;padding:0 3px;":""}">${t}</span>`;
+ const R=u=>{const d=T.N[u];let h=d.L.filter(e=>e.bo<n).map(e=>`<div>${e.fi<n?bx(esc(tbS(e.x))+(e.ua<n?' <span class="mut">✓</span>':""),e.ua==n):bx("?",e.fi==n)}</div>`).join("");
+  if(d.ca!=null&&d.ca<n&&d.x)h+=`<div style="font-weight:700">×</div>`;else if(d.ca==n)h+=`<div>${bx("¿×?",1)}</div>`;else if(n>=X.length&&!d.ch)h+=`<div class="mut">abierta</div>`;
+  if(d.ch&&d.sp<n)h+=`<div style="display:flex;gap:22px;justify-content:center;border-top:1.5px solid currentColor;padding-top:4px;margin-top:4px">${d.ch.map(R).join("")}</div>`;
+  return`<div style="display:flex;flex-direction:column;align-items:center;min-width:56px">${h}</div>`};
+ return(nx?`<div class="mut" style="margin-bottom:4px">Ahora: <b>${esc(nx.sn)}</b></div>`:"")+`<div style="overflow-x:auto;font-family:var(--m);padding:4px 0"><div style="display:inline-flex;justify-content:center;min-width:100%">${R(T.R)}</div></div>`}}
+/* tbEx(G, req, letra, hipótesis, conclusión, idea nueva): una tarjeta = un tableau entero; cadena propia (token "m:G:ej") para usarla de previa */
+function tbEx(G,req,L,hyp,concl,idea){const T=tbSolve(hyp,concl),q="Lógica · tableau";
+ const x=kCard(G+" · tableau",q,"Armá el tableau ficha por ficha. Orden: raíz (T. hipótesis, F. conclusión) → desarmar primero lo que sigue en la misma rama, de arriba hacia abajo → después lo que abre dos ramas → cerrar cada rama apenas tenga T.X y F.X → veredicto.",
+  T.X,T.X.map(e=>({t:e.t,sl:e.sl,rt:1,ln:e.ln})).concat(T.D),
+  {ctx:G,tm:"lg5",th:TBTH+(idea?" · Idea nueva de este ejercicio: "+idea:""),ko:"Primero lo que sigue en la misma rama (de arriba hacia abajo), después lo que abre dos ramas; una fórmula se desarma en todas las ramas abiertas que cuelgan de ella.",
+   kv:()=>L.map(l=>`<div class="lt">${esc(l)}</div>`).join("")+(idea?`<div class="lt mut">💡 ${esc(idea)}</div>`:"")+kFold("Qué es un tableau y sus reglas",`<div class="lt">${esc(TBTH)}</div>`+Object.keys(TBR).map(k=>`<div class="lt">${esc(k[0]+"."+"A "+k.slice(1)+" B")}: ${esc(TBR[k][1])}</div>`).join(""),0)});
+ x.kd=tbKd(T);x.s="lg";kChain(G,[{id:"ej",cards:[x]}],{req});return"m:"+G+":ej"}
+/* Escalera desde cero: cada uno suma UNA idea; el del parcial se desbloquea al final */
+{const D="Determiná mediante tableau semántico si se cumple: ";let r=[];
+ [["Tableau 1 · la raíz y T.∧",["p ∧ q"],"p","Qué es un tableau: se busca un contraejemplo. La raíz lleva T. de la hipótesis y F. de la conclusión; T.A ∧ B agrega T.A y T.B en la misma rama; una rama con T.X y F.X se cierra."],
+  ["Tableau 2 · F.∨",["p"],"p ∨ q","Un ∨ falso: los dos lados falsos, en la misma rama."],
+  ["Tableau 3 · F.→",["q"],"p → q","Un → falso: antecedente verdadero y consecuente falso, en la misma rama."],
+  ["Tableau 4 · T.∨ abre dos ramas",["p ∨ q"],"q ∨ p","La primera regla que abre DOS ramas, y el orden: primero lo que sigue en la misma rama."],
+  ["Tableau 5 · T.→",["p","p → q"],"q","T.→ abre dos ramas (F.A | T.B); hay que cerrar las dos."],
+  ["Tableau 6 · una rama abierta",["p → q"],"q → p","Si una rama queda abierta, la consecuencia NO vale y sus letras dan el contraejemplo."],
+  ["Tableau 7 · ¬ y F.∧",["¬(p ∧ q)"],"¬p ∨ ¬q","T.¬A da F.A y F.¬A da T.A; F.A ∧ B abre dos ramas."],
+  ["Tableau 8 · una fórmula en dos ramas",["p ∨ q","p → r"],"r","Una fórmula de arriba se desarma en TODAS las ramas abiertas que cuelgan de ella."]
+ ].forEach(z=>{r=[tbEx(z[0],r,[D+z[1].join(", ")+" ⊨ "+z[2]],z[1],z[2],z[3])]});
+ /* --- Primer parcial · Ejercicio 2a: tableau semántico (tema nuevo lg5); se desbloquea con la escalera --- */
+ tbEx("1P26 · Ej. 2a (tableau)",r,["Primer parcial de Lógica, 28 de abril de 2026 · Ejercicio 2 (10 puntos)","Considere tres fórmulas α, β y φ de PROP.","a. Determine mediante tableau semántico si: α ∧ β → φ ⊨ (α → φ) ∨ (β → φ)"],["α ∧ β → φ"],"(α → φ) ∨ (β → φ)","")}
 
 /* --- Primer parcial · Ejercicio 2b y 2c: semántica y equivalencias --- */
 lgEx("1P26 · Ej. 2bc (semántica)","lg2",LGI.sem,["Primer parcial de Lógica, 28 de abril de 2026 · Ejercicio 2 (10 puntos)","Considere tres fórmulas α, β y φ de PROP.",
