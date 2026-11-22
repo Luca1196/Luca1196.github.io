@@ -314,8 +314,25 @@ const mtFin=c=>{const B=BST();if(B[c.id]||(c.then&&B[c.then.id]))return true;ret
    finos, los errores y las notas viajan con la sincronización por GitHub. */
 const PCB=()=>mtBlq().slice().sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0),PCV=L=>hs(L.map(c=>c.id).join(",")).slice(0,4);
 const pcVal=c=>{const B=BST(),b=B[c.id]||(c.then&&B[c.then.id]);return b==1?3:b||mtFin(c)?1:0};
-function pcExport(){if(SWM!=3)swMode(3);const L=PCB(),v=L.map(pcVal);let h="";for(let i=0;i<v.length;i+=2)h+=((v[i]<<2)|(v[i+1]||0)).toString(16);return"P-"+PCV(L)+"-"+h}
-function pcImport(code){if(SWM!=3)swMode(3);const m=/^P-([0-9a-z]{1,4})-([0-9a-f]+)$/i.exec(String(code).trim().replace(/\s/g,""));if(!m)return"Ese texto no es un código de progreso.";
+/* CÓDIGO CORTO (pedido de Luca, 22/11: «un código más corto que podamos copiar a mano, usando letras»): base32 Crockford (0-9 y letras sin I, L, O, U;
+   sin distinguir mayúsculas), 1 BIT por bloque (terminado o no: 105 bloques = 21 caracteres) + 2 de versión + 1 de control (detecta una letra mal
+   copiada), en grupos de 4: «VVxx-xxxx-…-xxxC». Combinar = OR. Lo que llega por código entra como «terminado con errores» (vuelve una vez como repaso)
+   salvo que este dispositivo ya lo tuviera sin errores. Al pegar se aceptan O por 0, I/L por 1, guiones y espacios. Los códigos viejos «P-…» (hexa,
+   2 bits por bloque) se siguen aceptando. */
+const C32="0123456789ABCDEFGHJKMNPQRSTVWXYZ",c32n=s=>String(s).toUpperCase().replace(/[\s-]/g,"").replace(/O/g,"0").replace(/[IL]/g,"1");
+const pcVer=L=>{const h=parseInt(hs(L.map(c=>c.id).join(",")),36)>>>0;return C32[h&31]+C32[(h>>5)&31]};
+function pcExport(){if(SWM!=3)swMode(3);const L=PCB(),bits=L.map(c=>pcVal(c)?1:0);let p="";
+ for(let i=0;i<bits.length;i+=5){let v=0;for(let j=0;j<5;j++)v=v*2+(bits[i+j]||0);p+=C32[v]}
+ const body=pcVer(L)+p,ck=C32[[...body].reduce((a,ch,i)=>a+C32.indexOf(ch)*(i+1),0)%32];return(body+ck).match(/.{1,4}/g).join("-")}
+function pcImport(code){if(SWM!=3)swMode(3);if(/^\s*P-/i.test(code))return pcImportHex(code);
+ const t=c32n(code);if(!t||[...t].some(ch=>C32.indexOf(ch)<0))return"Ese texto no es un código de progreso (solo números y letras, sin I, L, O ni U).";
+ const L=PCB(),need=2+Math.ceil(L.length/5)+1;if(t.length!=need)return"El código tiene "+t.length+" caracteres y deberían ser "+need+". Revisá que esté completo.";
+ const body=t.slice(0,-1);if(C32[[...body].reduce((a,ch,i)=>a+C32.indexOf(ch)*(i+1),0)%32]!=t.slice(-1))return"Alguna letra quedó mal copiada (no coincide el control). Revisalo y probá de nuevo.";
+ if(body.slice(0,2)!=pcVer(L))return"Este código es de otra versión del sitio. Recargá la página en los dos dispositivos y copiá el código de nuevo.";
+ const P=body.slice(2),B=BST(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||(S2.seen={});let n=0;
+ L.forEach((c,i)=>{const v=C32.indexOf(P[Math.floor(i/5)]),bit=(v>>(4-i%5))&1;if(!bit||pcVal(c))return;B[c.id]=2;if(!SE[c.id])SE[c.id]=1;if(!FD[c.id])FD[c.id]="importado";n++});
+ SV2();return n?"Listo: "+(n==1?"se sumó 1 bloque":"se sumaron "+n+" bloques")+" del otro dispositivo.":"No había nada nuevo: este dispositivo ya tenía todo lo de ese código."}
+function pcImportHex(code){const m=/^P-([0-9a-z]{1,4})-([0-9a-f]+)$/i.exec(String(code).trim().replace(/\s/g,""));if(!m)return"Ese texto no es un código de progreso.";
  const L=PCB();if(m[1]!=PCV(L))return"Este código es de otra versión del sitio. Recargá la página en los dos dispositivos y copiá el código de nuevo.";
  const h=m[2].toLowerCase(),B=BST(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||(S2.seen={});let n=0;
  L.forEach((c,i)=>{const d=parseInt(h[i>>1]||"0",16),inc=i%2?d&3:d>>2,loc=pcVal(c),nv=inc|loc;if(nv==loc)return;

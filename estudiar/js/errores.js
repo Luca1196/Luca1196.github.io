@@ -95,7 +95,7 @@ V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[dat
 let PCM="";
 function pcCard(){if(typeof pcExport!="function")return"";const c=pcExport();
  return`<div class="card"><h2>Pasar progreso con un código</h2><p class="mut" style="margin:0 0 8px">Sin token: copiá este código en un dispositivo y pegalo en el otro. Se combinan los bloques terminados de los dos.</p>
- <div class="sn" style="word-break:break-all;font-family:var(--m);font-size:13px">${esc(c)}</div><div class="row" style="margin-top:6px;gap:6px"><button class="btn" data-pc="cp">Copiar mi código</button></div>
+ <div class="sn" style="font-family:var(--m);font-size:20px;letter-spacing:1px;text-align:center">${esc(c)}</div><p class="mut" style="margin:4px 0 0;font-size:12px">Podés copiarlo a mano: no distingue mayúsculas y no usa I, L, O ni U.</p><div class="row" style="margin-top:6px;gap:6px"><button class="btn" data-pc="cp">Copiar mi código</button></div>
  <div class="row" style="margin-top:10px;gap:6px"><input id="pcin" placeholder="Pegá el código del otro dispositivo" style="flex:1;min-width:0;padding:8px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--fg)"><button class="btn pri" data-pc="in">Combinar</button></div>${PCM?`<p style="margin:8px 0 0">${esc(PCM)}</p>`:""}</div>`}
 V.addEventListener("click",ev=>{if(TAB!=5)return;const b=ev.target.closest("[data-pc]");if(!b)return;
  if(b.dataset.pc=="cp"){const t=pcExport();try{navigator.clipboard.writeText(t).then(()=>{b.textContent="Copiado ✓"},()=>prompt("Copiá el código:",t))}catch(e){prompt("Copiá el código:",t)}}
