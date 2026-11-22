@@ -306,6 +306,21 @@ const mtBlq=()=>{const bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com
 const dAdd=(t,n)=>{const d=new Date(t+"T12:00:00");d.setDate(d.getDate()+n);return d.toLocaleDateString("en-CA")};
 let MTCEL=0;
 const mtFin=c=>{const B=BST();if(B[c.id]||(c.then&&B[c.then.id]))return true;return!!(S2.seen||{})[c.id]&&c.steps.every((_,i)=>swBox(c,i)>0)};
+/* CÓDIGO DE PROGRESO (idea de Luca, 22/11): pasar el progreso entre dispositivos sin token, copiando un código. Cada bloque de Principal (mtBlq, en
+   orden de id fijo) ocupa 2 bits: 00 = sin ver, 01 = terminado con errores, 11 = terminado sin errores. El código es «P-versión-hexa». Combinar = OR
+   bit a bit (sin acarreo): lo terminado en cualquiera de los dos queda terminado, y «sin errores» le gana a «con errores» (01|11 = 11; nunca sale 10).
+   La versión es un hash de la lista de bloques: si los dos dispositivos tienen versiones distintas del sitio, no se mezcla (se pide recargar).
+   Los bloques que llegan por código cuentan en «Total» pero no en «Hoy» (fd = "importado"). Solo lleva qué bloques están terminados: los repasos
+   finos, los errores y las notas viajan con la sincronización por GitHub. */
+const PCB=()=>mtBlq().slice().sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0),PCV=L=>hs(L.map(c=>c.id).join(",")).slice(0,4);
+const pcVal=c=>{const B=BST(),b=B[c.id]||(c.then&&B[c.then.id]);return b==1?3:b||mtFin(c)?1:0};
+function pcExport(){if(SWM!=3)swMode(3);const L=PCB(),v=L.map(pcVal);let h="";for(let i=0;i<v.length;i+=2)h+=((v[i]<<2)|(v[i+1]||0)).toString(16);return"P-"+PCV(L)+"-"+h}
+function pcImport(code){if(SWM!=3)swMode(3);const m=/^P-([0-9a-z]{1,4})-([0-9a-f]+)$/i.exec(String(code).trim().replace(/\s/g,""));if(!m)return"Ese texto no es un código de progreso.";
+ const L=PCB();if(m[1]!=PCV(L))return"Este código es de otra versión del sitio. Recargá la página en los dos dispositivos y copiá el código de nuevo.";
+ const h=m[2].toLowerCase(),B=BST(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||(S2.seen={});let n=0;
+ L.forEach((c,i)=>{const d=parseInt(h[i>>1]||"0",16),inc=i%2?d&3:d>>2,loc=pcVal(c),nv=inc|loc;if(nv==loc)return;
+  B[c.id]=nv==3?1:2;if(!SE[c.id])SE[c.id]=1;if(!FD[c.id])FD[c.id]="importado";n++});
+ SV2();return n?"Listo: "+(n==1?"se sumó 1 bloque":"se sumaron "+n+" bloques")+" del otro dispositivo.":"No había nada nuevo: este dispositivo ya tenía todo lo de ese código."}
 function mtHoy(){if(SWM!=3)return null;const t=TD(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||{},L=mtBlq();let ch=0;
  L.forEach(c=>{if(!FD[c.id]&&mtFin(c)){FD[c.id]=M.v==2||!SE[c.id]?t:new Date(SE[c.id]).toLocaleDateString("en-CA");ch=1}});if(M.v!=2){M.v=2;ch=1}
  const tot=L.length,fin=L.filter(c=>FD[c.id]).length,done=L.filter(c=>FD[c.id]==t).length,dl=Math.max(1,Math.round((new Date(META_FIN+"T12:00:00")-new Date(t+"T12:00:00"))/864e5)),goal=Math.ceil((tot-fin)/dl);/* 19/11, pedido de Luca: meta = lo que falta terminar AHORA / días que faltan al 1/12 (se recalcula al momento, no queda fija en el día) */
