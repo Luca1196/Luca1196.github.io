@@ -4,6 +4,7 @@
      (toks de sus tarjetas, su título g o su bqx). El grafo se calcula de los datos: no hay que mantener nada a mano al sumar ejercicios.
    - Un árbol por tema (chips arriba). Niveles = profundidad de previas dentro del tema; dentro de cada nivel, los nodos se ordenan por el promedio de
      la posición de sus previas (menos cruces). Previas de otro tema: se nombran en el panel del nodo.
+   - Una previa se cumple al TERMINAR el bloque anterior, con o sin errores (23/11); terminarlo sin errores solo cambia el símbolo (🟡 → ⭐).
    - Estado del nodo: 🔒 bloqueado (le falta una previa) · ✨ disponible · anillo = tarjetas hechas / total · 🟡 terminado con errores · ⭐ dominado.
    - Tocar un nodo abre su panel; «Practicar» lleva a Principal con ESE bloque (SFORCE en nucleo.js) y después Principal sigue con su orden normal.
      Un bloque bloqueado se puede practicar igual, con aviso (no se esconde nada). */
@@ -13,7 +14,7 @@
  .arn .o i{position:absolute;inset:5px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-style:normal}
  .arn .l{font-size:10.5px;line-height:1.2;margin-top:4px;max-height:3.6em;overflow:hidden}.arn.lock{opacity:.45}.arn.disp .o{animation:arp 1.8s ease-in-out infinite}
  .arn.sel .o{outline:3px solid var(--ac);outline-offset:2px}@keyframes arp{0%,100%{box-shadow:0 0 0 0 var(--ac)}50%{box-shadow:0 0 0 6px transparent}}`;document.head.appendChild(st);
- const reqOf=c=>c.bqx?BQ.req(c.bqx):(c.req||[]),okT=t=>(S2.bqok||{})[t]||(typeof TOKSEED=="function"&&TOKSEED(t));
+ const reqOf=c=>c.bqx?BQ.req(c.bqx):(c.req||[]),okT=tokOk;/* previa cumplida al TERMINAR el bloque anterior, con o sin errores (nucleo.js) */
  const short=g=>{const p=g.split(" · ");return p.length>2?p.slice(-2).join(" · "):g};
  function graph(){const B=mtBlq(),prov={};B.forEach(b=>pcCardsOf(b).forEach(c=>{(c.toks||[]).concat([c.g],c.bqx?[c.bqx]:[]).forEach(t=>prov[t]=b)}));
   const par=new Map();B.forEach(b=>{const s=new Set();pcCardsOf(b).forEach(c=>reqOf(c).forEach(t=>{const p=prov[t];if(p&&p!==b)s.add(p)}));par.set(b,[...s])});return{B,par}}

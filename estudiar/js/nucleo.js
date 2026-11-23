@@ -202,12 +202,20 @@ function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).
  /* MARCAR PARA REPASAR (23/11, pedido de Luca: «es un error conceptual que quiero marcar para repasar; necesito esa opción»). Botón en cada
     tarjeta de fichas: la tarjeta entra en «Mis errores» y su bloque cuenta como terminado con errores, hasta dos aciertos seguidos. Vale para todas las secciones. */
  Object.keys(S2.mk||{}).forEach(k=>{const j=k.lastIndexOf(":"),id=k.slice(0,j),i=+k.slice(j+1),c=SWC.find(z=>z.id==id);if(c&&swBox(c,i)<2)m.set(k,{c,i});else delete S2.mk[k]});return m}
+/* PREVIA CUMPLIDA AL TERMINAR (pedido de Luca, 23/11: «la previa la completa haber terminado el paquete anterior; eso ya debe desbloquear al
+   siguiente; tenerlo sin errores que solo cambie el símbolo»). Un token de previa vale si: ya se aprobó sin errores (S2.bqok, como antes), o lo da
+   TOKSEED, o el bloque que lo da está TERMINADO (todas sus tarjetas hechas, con o sin errores; o aprobado). Se calcula del progreso: vale también
+   para lo hecho antes de este cambio. S2.bqok sigue marcando lo aprobado sin errores (lo usa el repaso de paquetes y el ⭐ del Árbol). */
+let TPROV=null;
+const tokProv=()=>{if(TPROV)return TPROV;TPROV={};mtBlq().forEach(b=>pcCardsOf(b).forEach(c=>(c.toks||[]).concat([c.g],c.bqx?[c.bqx]:[]).forEach(t=>{if(!TPROV[t])TPROV[t]=b})));return TPROV};
+const blkFin=b=>{const B=BST();return B[b.id]==1||(b.then&&B[b.then.id]==1)||pcCardsOf(b).every(mtFinC)};
+const tokOk=t=>!!((S2.bqok||{})[t]||(typeof TOKSEED=="function"&&TOKSEED(t))||(tokProv()[t]&&blkFin(tokProv()[t])));
 /* SFORCE: bloque elegido en la pestaña Árbol (arbol.js): sale primero, con la misma lógica de inicio que un bloque elegido por el orden normal */
 let SFORCE=null;
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  if(SFORCE&&TAB==3){const f=SFORCE;SFORCE=null;SPACK=[];return swStartBlk(f)}
  if(SPACK.length&&TAB==3){const c=SPACK.shift();return{c,i:0,only:false,built:[],err:0}}
- let ign=false;const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]||(typeof TOKSEED=="function"&&TOKSEED(t))),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&!c.hid&&avail(c)&&(SF=="lin"?!!c.ln&&!bldMulti(c):(!c.ln||SF=="err")&&(ign||swSel(tema(c))))),PD=swPend();
+ let ign=false;const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(tokOk),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&!c.hid&&avail(c)&&(SF=="lin"?!!c.ln&&!bldMulti(c):(!c.ln||SF=="err")&&(ign||swSel(tema(c))))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
  const arF=c=>!SAX||area(c)==SAX,nu=SF!="err"&&SWC.some(c=>ok(c)&&!blkTier(c)),di=nu?-1:SRETRY.findIndex(r=>r.due<=SUN&&ok(r.c)&&arF(r.c)&&swTop(r.c)!=SLT);
  if(di>=0){const r=SRETRY.splice(di,1)[0];return{c:r.c,i:r.i,only:true,built:[],err:0}}
