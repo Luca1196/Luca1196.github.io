@@ -267,7 +267,7 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
   if(!ns){SV2();swDraw();return}}
  else{b.m=null;b.src=null;b.hl=null}
  b.used[i]=1;b.pl.push(e);b.p++;if(e.fr)frSort(X,b.pl);while(b.p<X.length&&(X[b.p].auto||b.pl.includes(X[b.p]))){if(!b.pl.includes(X[b.p]))b.pl.push(X[b.p]);b.p++}
- if(b.p>=X.length){b.done=true;if(c.kq)PKF[(c.pk||c).id]=SUN;{const own=c.pk||c;if(b.e||c.tErr)BST()[own.id]=2;else if(!c.pk&&!(c.pack&&c.pack.length)&&!c.then)BST()[c.id]=1}{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.kq){const own=c.pk||c,K=S2.kok=S2.kok||{};if(b.e)delete K[c.id];else K[c.id]=1;if(!c.pk)SPACK=(c.pack||[]).filter(x=>!K[x.id]);if(!SPACK.some(x=>x.pk===own)&&[own].concat(own.pack||[]).every(x=>K[x.id])){tk(own.toks||[]);BST()[own.id]=1;adv(own)}}else if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);BST()[c.pk.id]=1;adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
+ if(b.p>=X.length){b.done=true;(S2.cf=S2.cf||{})[c.id]=1;/* tarjeta terminada (con o sin errores): cuenta para la meta */if(c.kq)PKF[(c.pk||c).id]=SUN;{const own=c.pk||c;if(b.e||c.tErr)BST()[own.id]=2;else if(!c.pk&&!(c.pack&&c.pack.length)&&!c.then)BST()[c.id]=1}{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.kq){const own=c.pk||c,K=S2.kok=S2.kok||{};if(b.e)delete K[c.id];else K[c.id]=1;if(!c.pk)SPACK=(c.pack||[]).filter(x=>!K[x.id]);if(!SPACK.some(x=>x.pk===own)&&[own].concat(own.pack||[]).every(x=>K[x.id])){tk(own.toks||[]);BST()[own.id]=1;adv(own)}}else if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);BST()[c.pk.id]=1;adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
   if(!b.e){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)+2;S2.box[k]=Date.now()-(u.ts||0)>90000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,900)}}
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */
@@ -305,6 +305,14 @@ const META_FIN="2026-11-30";/* plazo (19/11, pedido de Luca: al 30 de noviembre;
 const mtBlq=()=>{const bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com");return SWC.filter(c=>!c.pk&&!c.hid&&!c.ln&&!bas(c))};
 const dAdd=(t,n)=>{const d=new Date(t+"T12:00:00");d.setDate(d.getDate()+n);return d.toLocaleDateString("en-CA")};
 let MTCEL=0;
+/* POR TARJETAS (pedido de Luca, 22/11: «el tamaño de los paquetes es muy dispar y contar así no da una imagen precisa del progreso»): la meta y los
+   contadores cuentan TARJETAS de Principal (cada tarjeta de un paquete, cada serie, cada árbol), no bloques. Tarjeta terminada = S2.cf[id] (se marca al
+   terminarla, con o sin errores). Lo de antes del 22/11 se deduce: acertada (kok), todos sus pasos acertados alguna vez, o respondida dentro de un
+   paquete que ya tiene estado. El código de progreso sigue siendo por bloque (para que sea corto) y al importarlo marca todas las tarjetas del bloque. */
+const mtCards=()=>{const bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com");return SWC.filter(c=>!c.hid&&(!c.ln||c.pk)&&!bas(c))};/* los miembros de un paquete llevan ln y pk: cuentan */
+const mtFinC=c=>{if((S2.cf||{})[c.id]||(S2.kok||{})[c.id])return true;const B=BST(),own=c.pk||c,st=B[own.id]||(own.then&&B[own.then.id]);
+ if(c.steps.every((_,i)=>swBox(c,i)>0))return!!(S2.seen||{})[c.id];return!!st&&!!(S2.seen||{})[c.id]&&c.steps.every((_,i)=>(c.id+":"+i) in S2.box)};
+const pcCardsOf=c=>{const r=[c].concat(c.pack||[]);let t=c.then;while(t&&!r.includes(t)){r.push(t);t=t.then}return r};
 const mtFin=c=>{const B=BST();if(B[c.id]||(c.then&&B[c.then.id]))return true;return!!(S2.seen||{})[c.id]&&c.steps.every((_,i)=>swBox(c,i)>0)};
 /* CÓDIGO DE PROGRESO (idea de Luca, 22/11): pasar el progreso entre dispositivos sin token, copiando un código. Cada bloque de Principal (mtBlq, en
    orden de id fijo) ocupa 2 bits: 00 = sin ver, 01 = terminado con errores, 11 = terminado sin errores. El código es «P-versión-hexa». Combinar = OR
@@ -330,16 +338,16 @@ function pcImport(code){if(SWM!=3)swMode(3);if(/^\s*P-/i.test(code))return pcImp
  const body=t.slice(0,-1);if(C32[[...body].reduce((a,ch,i)=>a+C32.indexOf(ch)*(i+1),0)%32]!=t.slice(-1))return"Alguna letra quedó mal copiada (no coincide el control). Revisalo y probá de nuevo.";
  if(body.slice(0,2)!=pcVer(L))return"Este código es de otra versión del sitio. Recargá la página en los dos dispositivos y copiá el código de nuevo.";
  const P=body.slice(2),B=BST(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||(S2.seen={});let n=0;
- L.forEach((c,i)=>{const v=C32.indexOf(P[Math.floor(i/5)]),bit=(v>>(4-i%5))&1;if(!bit||pcVal(c))return;B[c.id]=2;if(!SE[c.id])SE[c.id]=1;if(!FD[c.id])FD[c.id]="importado";n++});
+ L.forEach((c,i)=>{const v=C32.indexOf(P[Math.floor(i/5)]),bit=(v>>(4-i%5))&1;if(!bit||pcVal(c))return;B[c.id]=2;pcCardsOf(c).forEach(x=>{(S2.cf=S2.cf||{})[x.id]=1;if(!SE[x.id])SE[x.id]=1;if(!FD[x.id])FD[x.id]="importado"});n++});
  SV2();return n?"Listo: "+(n==1?"se sumó 1 bloque":"se sumaron "+n+" bloques")+" del otro dispositivo.":"No había nada nuevo: este dispositivo ya tenía todo lo de ese código."}
 function pcImportHex(code){const m=/^P-([0-9a-z]{1,4})-([0-9a-f]+)$/i.exec(String(code).trim().replace(/\s/g,""));if(!m)return"Ese texto no es un código de progreso.";
  const L=PCB();if(m[1]!=PCV(L))return"Este código es de otra versión del sitio. Recargá la página en los dos dispositivos y copiá el código de nuevo.";
  const h=m[2].toLowerCase(),B=BST(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||(S2.seen={});let n=0;
  L.forEach((c,i)=>{const d=parseInt(h[i>>1]||"0",16),inc=i%2?d&3:d>>2,loc=pcVal(c),nv=inc|loc;if(nv==loc)return;
-  B[c.id]=nv==3?1:2;if(!SE[c.id])SE[c.id]=1;if(!FD[c.id])FD[c.id]="importado";n++});
+  B[c.id]=nv==3?1:2;pcCardsOf(c).forEach(x=>{(S2.cf=S2.cf||{})[x.id]=1;if(!SE[x.id])SE[x.id]=1;if(!FD[x.id])FD[x.id]="importado"});n++});
  SV2();return n?"Listo: "+(n==1?"se sumó 1 bloque":"se sumaron "+n+" bloques")+" del otro dispositivo.":"No había nada nuevo: este dispositivo ya tenía todo lo de ese código."}
-function mtHoy(){if(SWM!=3)return null;const t=TD(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||{},L=mtBlq();let ch=0;
- L.forEach(c=>{if(!FD[c.id]&&mtFin(c)){FD[c.id]=M.v==2||!SE[c.id]?t:new Date(SE[c.id]).toLocaleDateString("en-CA");ch=1}});if(M.v!=2){M.v=2;ch=1}
+function mtHoy(){if(SWM!=3)return null;const t=TD(),M=S2.mt||(S2.mt={rd:{}}),FD=M.fd||(M.fd={}),SE=S2.seen||{},L=mtCards();let ch=0;
+ L.forEach(c=>{if(!FD[c.id]&&mtFinC(c)){FD[c.id]=M.v==3||!SE[c.id]?t:new Date(SE[c.id]).toLocaleDateString("en-CA");ch=1}});if(M.v!=3){M.v=3;ch=1}
  const tot=L.length,fin=L.filter(c=>FD[c.id]).length,done=L.filter(c=>FD[c.id]==t).length,dl=Math.max(1,Math.round((new Date(META_FIN+"T12:00:00")-new Date(t+"T12:00:00"))/864e5)),goal=Math.ceil((tot-fin)/dl);/* 19/11, pedido de Luca: meta = lo que falta terminar AHORA / días que faltan al 1/12 (se recalcula al momento, no queda fija en el día) */
  if(done>=goal&&!M.rd[t]){M.rd[t]=1;MTCEL=1;ch=1}if(ch)SV2();
  let k=0,d=M.rd[t]?t:dAdd(t,-1);while(M.rd[d]){k++;d=dAdd(d,-1)}
@@ -356,7 +364,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;
-   BQ.bqEmbed(c.bqx,$("bqemb"),(err,ns,th)=>{u.bqd=1;u.bqe=err;u.bqh=th||"";u.ans=err?"no":"ok";S2.n++;SUN++;const k=c.id+":0";
+   BQ.bqEmbed(c.bqx,$("bqemb"),(err,ns,th)=>{u.bqd=1;(S2.cf=S2.cf||{})[c.id]=1;u.bqe=err;u.bqh=th||"";u.ans=err?"no":"ok";S2.n++;SUN++;const k=c.id+":0";
     BST()[c.id]=err?2:1;if(!err){(S2.bqok=S2.bqok||{})[c.bqx]=1;logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=3;S2.box[k]=Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,3500)}
     else{SCOMBO=0;S2.box[k]=0;SRETRY.push({c,i:0,due:SUN+8});logA("sw",c.s,c.g,false,{q:"Armá el árbol",x:c.bqx,a:"árbol completo sin errores",p:err+(err==1?" error":" errores")+(ns?" ("+ns+" «No sé»)":""),ns:ns?1:0,n:1})}
     NLE=E1.log[E1.log.length-1];SV2();swDraw()});return}
@@ -397,7 +405,7 @@ function swAdvance(){clearTimeout(STM);if(!SW||(TAB!=3&&TAB!=7))return;const u=S
  if(u.ans=="no"){SLAST=u.c.id;SLT=swTop(u.c);SERR=area(u.c);
   swNew();return}
  if(s&&s.f)u.built.push(s.f);u.i++;
- if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;if(!u.err&&!u.only){(S2.bqok=S2.bqok||{})[u.c.g]=1;BST()[u.c.id]=1}/* serie completa sin errores: abre las que la tienen de previa (c.req) */S2.xp+=u.bonus;SLAST=u.c.id;SV2();u.recap=true;swDraw();return}
+ if(u.i>=u.c.steps.length){SLT=swTop(u.c);u.bonus=u.err==0?5:0;if(!u.err&&!u.only){(S2.bqok=S2.bqok||{})[u.c.g]=1;BST()[u.c.id]=1}/* serie completa sin errores: abre las que la tienen de previa (c.req) */S2.xp+=u.bonus;SLAST=u.c.id;(S2.cf=S2.cf||{})[u.c.id]=1;SV2();u.recap=true;swDraw();return}
  swStep()}
 /* Principal y Básico son secciones separadas: cada una con su propio progreso, racha, repasos y almacenamiento (sw1 / sw1b). */
 /* Nota en cada error: textarea bajo el aviso; se guarda sola en la entrada del registro (e.note) y sale en el export */

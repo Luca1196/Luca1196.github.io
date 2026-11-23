@@ -23,7 +23,7 @@
   const side=id=>(sa[id]||0)>=(sb[id]||0)?a:b;
   const box={};new Set([...Object.keys(a.box||{}),...Object.keys(b.box||{})]).forEach(k=>{const id=k.slice(0,k.lastIndexOf(":")),s=side(id);box[k]=(s.box||{})[k]!=null?s.box[k]:((a.box||{})[k]!=null?a.box[k]:b.box[k])});r.box=box;
   const bst={};new Set([...Object.keys(a.bst||{}),...Object.keys(b.bst||{})]).forEach(id=>{const s=side(id);bst[id]=(s.bst||{})[id]||(a.bst||{})[id]||(b.bst||{})[id]});r.bst=bst;
-  r.kok=U(a.kok,b.kok);r.bqok=U(a.bqok,b.bqok);["xp","n","ok","best"].forEach(k=>r[k]=mx(a[k],b[k]));r.idv=mx(a.idv,b.idv)||undefined;
+  r.kok=U(a.kok,b.kok);r.cf=U(a.cf,b.cf);/* tarjetas terminadas: se unen */r.bqok=U(a.bqok,b.bqok);["xp","n","ok","best"].forEach(k=>r[k]=mx(a[k],b[k]));r.idv=mx(a.idv,b.idv)||undefined;
   if(a.mt||b.mt){const A=a.mt||{},B=b.mt||{},fd={};new Set([...Object.keys(A.fd||{}),...Object.keys(B.fd||{})]).forEach(i=>{const x=(A.fd||{})[i],y=(B.fd||{})[i];fd[i]=x&&y?(x<y?x:y):(x||y)});
    r.mt=Object.assign({},n.mt||{},{rd:U(A.rd,B.rd),fd,v:mx(A.v,B.v)})}
   return r}
