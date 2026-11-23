@@ -72,7 +72,7 @@ return ilv(dd).concat(ilv(nn).slice(0,mode=="todo"?nn.length:remain()))}
 const hdr=()=>{$("hd").textContent=(S.stk?"Racha "+S.stk+(S.stk==1?" día":" días")+" · ":"")+"XP hoy "+S.xpd};
 
 /* ---- Pestañas ---- */
-function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5,6,7,8].forEach(j=>$("t"+j).className="btn tab"+(j==i?" on":""));hdr();if(i==6)bqOpen();else if(i==0)home();else if(i==5)erOpen();else if(i==3){swMode(3);SF=SF=="bas"?"all":SF;swOpen()}else if(i==7){swMode(7);SF="bas";swOpen()}else if(i==8)cdOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
+function tab(i){TAB=i;Q=null;clearInterval(TM);muStop();[0,1,2,3,4,5,6,7,8,9].forEach(j=>{const x=$("t"+j);if(x)x.className="btn tab"+(j==i?" on":"")});hdr();if(i==6)bqOpen();else if(i==0)home();else if(i==5)erOpen();else if(i==3){swMode(3);SF=SF=="bas"?"all":SF;swOpen()}else if(i==7){swMode(7);SF="bas";swOpen()}else if(i==8)cdOpen();else if(i==9)arOpen();else if(i==4)muOpen();else frame(i==1?"prog4.html":"logica.html",i==1?"Ejercicios de Prog4":"Ejercicios de Lógica")}
 function frame(src,t){V.innerHTML=`<iframe id="fr" class="fr" src="${src}" title="${t}"></iframe>`;const f=$("fr"),fit=()=>{try{const d=f.contentDocument,m=d.querySelector("main")||d.body;f.style.height=Math.max(480,Math.ceil(m.getBoundingClientRect().height)+60)+"px"}catch(e){}};f.onload=()=>{fit();clearInterval(TM);TM=setInterval(fit,500)}}
 
 /* ---- Inicio ---- */
@@ -202,7 +202,10 @@ function swPend(){const m=new Map(),by={};SWC.forEach(c=>{(by[c.g]=by[c.g]||[]).
  /* MARCAR PARA REPASAR (23/11, pedido de Luca: «es un error conceptual que quiero marcar para repasar; necesito esa opción»). Botón en cada
     tarjeta de fichas: la tarjeta entra en «Mis errores» y su bloque cuenta como terminado con errores, hasta dos aciertos seguidos. Vale para todas las secciones. */
  Object.keys(S2.mk||{}).forEach(k=>{const j=k.lastIndexOf(":"),id=k.slice(0,j),i=+k.slice(j+1),c=SWC.find(z=>z.id==id);if(c&&swBox(c,i)<2)m.set(k,{c,i});else delete S2.mk[k]});return m}
+/* SFORCE: bloque elegido en la pestaña Árbol (arbol.js): sale primero, con la misma lógica de inicio que un bloque elegido por el orden normal */
+let SFORCE=null;
 function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
+ if(SFORCE&&TAB==3){const f=SFORCE;SFORCE=null;SPACK=[];return swStartBlk(f)}
  if(SPACK.length&&TAB==3){const c=SPACK.shift();return{c,i:0,only:false,built:[],err:0}}
  let ign=false;const avail=c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).every(t=>(S2.bqok||{})[t]||(typeof TOKSEED=="function"&&TOKSEED(t))),bas=c=>!!c.arch||(c.s=="p4"&&!c.bld&&!c.dg&&area(c)=="com"),ok=c=>SF=="bas"?bas(c):(!bas(c)&&!c.hid&&avail(c)&&(SF=="lin"?!!c.ln&&!bldMulti(c):(!c.ln||SF=="err")&&(ign||swSel(tema(c))))),PD=swPend();
  if(SERR){const i=SAO.indexOf(SERR);SAX="";for(let j=1;j<=SAO.length&&!SAX;j++){const k=SAO[(i+j)%SAO.length];if(SF=="err"?[...PD.values()].some(r=>area(r.c)==k):SWC.some(c=>ok(c)&&area(c)==k))SAX=k}SERR=""}
@@ -225,7 +228,8 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  const SE=S2.seen||(S2.seen={}),now=Date.now(),sc=c=>{const st=SE[c.id];const weak=(c.kq&&c.pack&&S2.kok&&[c].concat(c.pack).some(x=>S2.kok[x.id])?4:0)+1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0)/c.steps.length;return(st?(now-st):1e12+Math.random()*1e9)*weak};
  const tm=Math.min(...pool.map(blkTier)),un=pool.filter(c=>blkTier(c)==tm),top=un.map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
  /* paquete kit: si ya está aprobado se repasa entero; si quedó a medias, se retoma en la primera tarjeta que falta */
- if(pk.kq&&pk.pack){const K=S2.kok=S2.kok||{},all=[pk].concat(pk.pack);if((pk.toks||[]).every(t=>(S2.bqok||{})[t]))all.forEach(x=>delete K[x.id]);else if(K[pk.id]){const pe=pk.pack.filter(x=>!K[x.id]);if(pe.length){SPACK=pe.slice(1);return{c:pe[0],i:0,only:false,built:[],err:0}}}}
+ return swStartBlk(pk)}
+function swStartBlk(pk){if(pk.kq&&pk.pack){const K=S2.kok=S2.kok||{},all=[pk].concat(pk.pack);if((pk.toks||[]).every(t=>(S2.bqok||{})[t]))all.forEach(x=>delete K[x.id]);else if(K[pk.id]){const pe=pk.pack.filter(x=>!K[x.id]);if(pe.length){SPACK=pe.slice(1);return{c:pe[0],i:0,only:false,built:[],err:0}}}}
  return{c:pk,i:0,only:false,built:[],err:0}}
 function swNew(){NLE=null;SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();(S2.tls=S2.tls||{})[tema(SW.c)]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){NLE=null;SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}

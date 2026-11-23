@@ -1,8 +1,8 @@
 /* INICIO: se carga al final; engancha pestañas y abre la pestaña del hash. */
-[0,1,2,3,4,5,6,7,8].forEach(i=>$("t"+i).onclick=()=>tab(i));
+[0,1,2,3,4,5,6,7,8,9].forEach(i=>{const x=$("t"+i);if(x)x.onclick=()=>tab(i)});
 /* COPIAR TARJETA (pedido de Luca): botón fijo 📋 que copia la tarjeta visible (las tarjetas deslizables no dejan
    seleccionar texto) con su identificación, para pegarla en el chat cuando algo está mal. */
-(()=>{const TN={0:"Repaso",1:"Ejercicios Prog4",2:"Ejercicios Lógica",3:"Principal",4:"Oído",5:"Errores",6:"Bloques",7:"Básico"};
+(()=>{const TN={0:"Repaso",1:"Ejercicios Prog4",2:"Ejercicios Lógica",3:"Principal",4:"Oído",5:"Errores",6:"Bloques",7:"Básico",9:"Árbol"};
  const st=document.createElement("style");st.textContent="#cpc{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:50;border-radius:99px;width:44px;height:44px;padding:0;font-size:18px;opacity:.9;box-shadow:0 2px 10px rgba(0,0,0,.25)}";document.head.appendChild(st);
  const b=document.createElement("button");b.id="cpc";b.className="btn";b.textContent="📋";b.title="Copiar tarjeta";b.setAttribute("aria-label","Copiar tarjeta");document.body.appendChild(b);
  const cp=t=>{const ok=()=>{b.textContent="✓";setTimeout(()=>b.textContent="📋",1500)},fb=()=>{const x=document.createElement("textarea");x.value=t;x.style.cssText="position:fixed;opacity:0";document.body.appendChild(x);x.select();try{document.execCommand("copy");ok()}catch(e){prompt("Copiá este texto:",t)}x.remove()};
@@ -21,4 +21,4 @@
  const mig=X=>{if(!X||X.idv==2)return false;M.forEach(c=>{const o=c.oid,n=c.id;["seen","bst","kok"].forEach(k=>mv(X[k],o,n));if(X.mt)mv(X.mt.fd,o,n);
    if(X.box)Object.keys(X.box).forEach(k=>{const i=k.lastIndexOf(":");if(k.slice(0,i)==o)mv(X.box,k,n+k.slice(i))})});X.idv=2;return true};
  if(mig(S2))SV2();try{const r=localStorage.getItem("sw1b");if(r){const X=JSON.parse(r);if(mig(X))localStorage.setItem("sw1b",JSON.stringify(X))}}catch(e){}})();
-{const hm={repaso:0,prog4:1,logica:6,deslizar:3,musica:4,errores:5,bloques:6,basico:7,codigo:8},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
+{const hm={repaso:0,prog4:1,logica:6,deslizar:3,musica:4,errores:5,bloques:6,basico:7,codigo:8,arbol:9},hh=location.hash.slice(1);tab(hh in hm?hm[hh]:3)}
