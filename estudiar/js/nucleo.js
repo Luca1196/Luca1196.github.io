@@ -252,7 +252,13 @@ function swShow(){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs;if
  if(!b.e){b.e=1;SCOMBO=0;S2.box[c.id+":0"]=0;if(!c.kq)SRETRY.push({c,i:0,due:SUN+8});const ln=(c.bld.exp[b.p]||{}).ln||0;
   logA("sw",c.s,c.g,false,{q:bldQ(c),x:c.ctx,a:bldPlain(c,ln),p:"Ver la línea completa",ns:1,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});NLE=E1.log[E1.log.length-1];SV2()}
  swDraw()}
-function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X=c.bld.exp,ns=i<0;let e=X[b.p];
+function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X=c.bld.exp,ns=i<0;let e=X[b.p],SG=null;
+ if(isSlot(c)&&!b.done){SG=b.sel||slFirst(c,b);if(b.sel&&X.some(x=>!x.auto&&slotOf(X,x)==SG)&&!slNext(c,b,SG)){b.m=["«"+SLN[SG]+"» ya está completo","Tocá otro casillero para seguir."];b.sel=slFirst(c,b);swDraw();return}/* casillero ya completo: aviso, sin error */const t1=i>=0?c.bld.bank[i]:null,nx=(t1&&X.find(x=>!x.auto&&!b.pl.includes(x)&&slotOf(X,x)==SG&&x.t==t1.t))||slNext(c,b,SG);/* dentro del casillero, cualquier orden */
+  if(nx)e=nx;else if(SG){const why="Este mensaje no lleva "+SLN[SG]+(SG=="c"?": se envía siempre, sin condición.":SG=="r"?": su resultado no se usa después, así que no se guarda en una variable.":".");
+   if(ns){b.m=["No va nada en «"+SLN[SG]+"»",why];b.sel=slFirst(c,b);swDraw();return}
+   const t0=c.bld.bank[i];b.e++;SCOMBO=0;S2.box[c.id+":0"]=0;cpCount(cpOf(c,null,SG),false);
+   logA("sw",c.s,c.g,false,{q:bldQ(c),x:c.ctx,a:"(nada en "+SLN[SG]+")",p:"["+t0.t+"] en "+SLN[SG],ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1,cp:cpOf(c,null,SG)});NLE=E1.log[E1.log.length-1];
+   b.m=[(/^«/.test(t0.t)?t0.t:"«"+t0.t+"»")+" no va: "+SLN[SG],why];b.sel=slFirst(c,b);SV2();swDraw();return}}
  if(ns)i=c.bld.bank.findIndex((t,j)=>!b.used[j]&&t.t==e.t&&(t.ln==null||t.ln==e.ln));else if(b.used[i])return;
  const t=c.bld.bank[i],k=c.id+":0";
  /* el número del mensaje se puede poner en cualquier momento (solo puede ir al frente del mensaje): si se toca antes, queda puesto y después se saltea */
@@ -261,16 +267,40 @@ function swTile(i){const u=SW;if(!u||!u.c.bld||u.ans)return;const c=u.c,b=u.bs,X
  if(!ns&&e.fr&&t.t!=e.t){const j=X.findIndex((x,q)=>q>b.p&&x.fr&&x.t==t.t&&!frChk(x,b.pl,X));if(j>=0){X[b.p]=X[j];X[j]=e;e=X[b.p]}}
  if((t.t!=e.t||ns)&&!(ns&&b.show)){const ph=b.pl.map((x,i)=>(i&&!x.g?" ":"")+x.t).join("");b.e++;SCOMBO=0;S2.box[k]=0;
   if(b.e==1&&!c.kq)SRETRY.push({c,i:0,due:SUN+8});
-  logA("sw",c.s,c.g,false,{q:bldQ(c),x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1});
+  cpCount(cpOf(c,e,SG),false);logA("sw",c.s,c.g,false,{q:bldQ(c),x:c.ctx,a:(ph+" ["+e.t+"]").trim(),p:ns?"No sé":(ph+" ["+t.t+"]").trim(),ns:ns?1:0,ms:Date.now()-(u.ts||Date.now()),rp:u.only?1:0,n:1,cp:cpOf(c,e,SG)});
   NLE=E1.log[E1.log.length-1];
-  b.teo=ns?({rt:"Camino al receptor",n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":"«"+t.t+"» no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.kth=!ns?"":c.kq?(c.th||""):c.tra?KTH.tra:c.des?KTH.des:"";b.ktm=ns?tema(c):"";b.src=e.src||null;b.hl=(!ns&&t.hl)||e.hl||(e.ob&&typeof letraIds=="function"?"S:"+letraIds(c,e.ob).join(","):null);try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
+  b.teo=ns?({rt:"Camino al receptor",n:"Numeración de mensajes",o:"Notación de objetos",r:"Guardar el resultado",m:"Operaciones genéricas y del dominio",p:"Parámetros de un mensaje",c:"Condiciones [ ]"}[e.k]||""):"";b.m=ns?["Era «"+e.t+"»",bldLead(e)+(e.w||"")]:[(t.t==":"?"Ese «:» no va acá.":(/^«/.test(t.t)?t.t:"«"+t.t+"»")+" no va acá."),bldWhy(e,t)];b.o=bldOrd(e,b);b.kth=!ns?"":c.kq?(c.th||""):c.tra?KTH.tra:c.des?KTH.des:"";b.ktm=ns?tema(c):"";b.src=e.src||null;b.hl=(!ns&&t.hl)||e.hl||(e.ob&&typeof letraIds=="function"?"S:"+letraIds(c,e.ob).join(","):null);try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
   if(!ns){SV2();swDraw();return}}
- else{b.m=null;b.src=null;b.hl=null}
- b.used[i]=1;b.pl.push(e);b.p++;if(e.fr)frSort(X,b.pl);while(b.p<X.length&&(X[b.p].auto||b.pl.includes(X[b.p]))){if(!b.pl.includes(X[b.p]))b.pl.push(X[b.p]);b.p++}
+ else{b.m=null;b.src=null;b.hl=null;if(!ns)cpCount(cpOf(c,e,SG),true)}
+ b.used[i]=1;b.pl.push(e);
+ if(isSlot(c)){X.forEach(x=>{if(x.auto&&!b.pl.includes(x))b.pl.push(x)});b.pl.sort((p,q)=>X.indexOf(p)-X.indexOf(q));b.p=X.findIndex(x=>!b.pl.includes(x));if(b.p<0)b.p=X.length;if(!slNext(c,b,b.sel))b.sel=slFirst(c,b)}
+ else{b.p++;if(e.fr)frSort(X,b.pl);while(b.p<X.length&&(X[b.p].auto||b.pl.includes(X[b.p]))){if(!b.pl.includes(X[b.p]))b.pl.push(X[b.p]);b.p++}}
  if(b.p>=X.length){b.done=true;(S2.cf=S2.cf||{})[c.id]=1;/* tarjeta terminada (con o sin errores): cuenta para la meta */if(c.kq)PKF[(c.pk||c).id]=SUN;{const own=c.pk||c;if(b.e||c.tErr)BST()[own.id]=2;else if(!c.pk&&!(c.pack&&c.pack.length)&&!c.then)BST()[c.id]=1}{const tk=ts=>{S2.bqok=S2.bqok||{};ts.forEach(t=>S2.bqok[t]=1)},adv=cc=>{const n=cc.next;if(n&&(n.req||[]).every(t=>S2.bqok[t]||(typeof TOKSEED=="function"&&TOKSEED(t))))SPACK.push(n)};if(c.kq){const own=c.pk||c,K=S2.kok=S2.kok||{};if(b.e)delete K[c.id];else K[c.id]=1;if(!c.pk)SPACK=(c.pack||[]).filter(x=>!K[x.id]);if(!SPACK.some(x=>x.pk===own)&&[own].concat(own.pack||[]).every(x=>K[x.id])){tk(own.toks||[]);BST()[own.id]=1;adv(own)}}else if(c.then){c.then.tErr=b.e>0;SPACK=[c.then]}else if(c.pack&&c.pack.length){SPACK=c.pack.slice();SPK={rc:c,left:c.pack.length,bad:b.e>0||!!c.tErr}}else if(c.pk&&SPK&&SPK.rc===c.pk){SPK.left--;if(b.e)SPK.bad=1;if(SPK.left<=0&&!SPK.bad){tk(c.pk.toks||[]);BST()[c.pk.id]=1;adv(c.pk)}}else if(c.toks&&!b.e&&!c.tErr){tk(c.toks);adv(c)}}u.ans=b.e?"no":"ok";S2.n++;SUN++;
   if(!b.e){logA("sw",c.s,c.g,true,{});S2.ok++;S2.today++;SCOMBO++;if(SCOMBO>S2.best)S2.best=SCOMBO;S2.xp+=1+(SCOMBO%5==0?2:0)+2;S2.box[k]=Date.now()-(u.ts||0)>90000?(S2.box[k]||0):Math.min(4,(S2.box[k]||0)+1);STM=setTimeout(swAdvance,900)}}
  SV2();swDraw()}
 /* Regla según lo que se tocó y lo que correspondía */
+/* CASILLEROS (pedido de Luca, 23/11: «sería mejor para los diagramas de comunicación que yo primero seleccione el lugar que quiero llenar»): en una
+   línea de comunicación se ve el esquema completo del mensaje como en el examen y se toca primero el casillero y después la ficha; así el ORDEN en
+   que se llena no cuenta como error («en un escenario real da igual si escribí el número primero»). Sin casillero elegido, se llena el siguiente vacío.
+   [condición] y var := se ven SIEMPRE (aunque el mensaje no los lleve), para no adelantar si van; poner algo en uno que no va es un error de ese
+   concepto. Cada ficha (bien o mal) se cuenta por CONCEPTO en E1.cp (pestaña Errores: «Conceptos flojos»). */
+const SLOTS=[["f","origen"],["t","destino"],["n","nº"],["c","[condición]"],["r","var :="],["m","operación"],["p","(parámetros)"],["s","«estereotipo»"]],SLN=Object.fromEntries(SLOTS);
+const isSlot=c=>!!(c&&c.dg&&c.bld&&!bldMulti(c));
+const slotOf=(X,x)=>{if(!x||x.auto)return null;if(x.k=="o"){const a=X.findIndex(y=>y.auto&&y.t=="→");return X.indexOf(x)<a?"f":"t"}return x.k};
+const slNext=(c,b,g)=>c.bld.exp.find(x=>!x.auto&&!b.pl.includes(x)&&slotOf(c.bld.exp,x)==g);
+const slFirst=(c,b)=>{const x=c.bld.exp.find(y=>!y.auto&&!b.pl.includes(y));return x?slotOf(c.bld.exp,x):null};
+function slotHtml(c,b){const X=c.bld.exp,sel=b.done?null:(b.sel||slFirst(c,b));
+ return`<div class="row" style="gap:4px;flex-wrap:wrap;align-items:center">`+SLOTS.map(([g,lb])=>{const has=X.some(x=>!x.auto&&slotOf(X,x)==g),put=X.filter(x=>!x.auto&&slotOf(X,x)==g&&b.pl.includes(x));
+  if(b.done&&!has)return"";const full=has&&!slNext(c,b,g),txt=put.map((x,i)=>(i&&!x.g?" ":"")+esc(x.t)).join("");
+  return(g=="t"?'<span class="mut">→</span>':g=="n"?'<span class="mut">｜</span>':"")+`<button class="btn chip${g==sel?" sel":""}" data-w="sl" data-v="${g}"${b.done?" disabled":""} style="font-family:var(--m);${full?"border-style:solid":"border-style:dashed"}">${txt||'<span class="mut">'+esc(lb)+'</span>'}${txt&&!full?' <span class="mut">…</span>':""}</button>`}).join("")+`</div>`}
+/* CONCEPTO de una ficha: tema + qué se decide en ese lugar (no la tarjeta) */
+const TMN={md:"Modelo de dominio",dss:"DSS",com:"Comunicación",dcd:"DCD",p3:"Código C++",lg1:"Lógica · inducción",lg2:"Lógica · semántica",lg3:"Lógica · deducción",lg4:"Lógica · modelos",lg5:"Lógica · tableaux"};
+const CPN={f:"objeto de origen",t:"receptor (destino)",n:"numeración",c:"condición",r:"guardar el resultado (var :=)",m:"operación (genérica o propia)",p:"parámetros",s:"estereotipo",
+ ob:"objetivos (traducir la letra)",rt:"recorrido (qué flechas)",ds:"desarmar en mensajes",at:"atributos",cx:"atributo o asociación",par:"herencia",sub:"subclases",abs:"abstracta",st:"enum o DataType",v:"valores del tipo",
+ B:"la otra clase de la asociación",ma:"multiplicidad",mb:"multiplicidad",ord:"orden {ordered}",ac:"clase de asociación",fa:"fragmentos (loop/alt/opt)",fb:"fragmentos (loop/alt/opt)",g:"guarda del fragmento",d:"qué hace el actor",nt:"nota de memoria"};
+const cpOf=(c,e,g)=>{const T=TMN[tema(c)]||tema(c),k=g||(isSlot(c)?slotOf(c.bld.exp,e):(e&&(e.r||e.k)));let n=CPN[k];
+ if(!n&&e&&e.sn)n=String(e.sn).replace(/«[^»]*»/g,"").replace(/ (de|del lado de) \S+$/,"").trim();if(!n)n=(c.kq||bldQ(c)).replace(/ · .*$/,"");return T+" · "+n};
+const cpCount=(cp,ok)=>{const C=E1.cp||(E1.cp={}),v=C[cp]||(C[cp]=[0,0]);v[1]++;if(ok)v[0]++};
 function bldWhy(e,t){const x=t.t,r=e.t;
  if(e.sl)return t.sl&&t.sl!=e.sl?"Todavía no: ahora va "+e.sn+".":t.why||("No es eso. "+(e.w||""));
  if(e.fr){if(t.why)return t.why;const b=SW.bs,X=SW.c.bld.exp,y=X.find((y,q)=>q>b.p&&y.fr&&y.t==x),v=y&&frChk(y,b.pl,X);
@@ -373,7 +403,7 @@ function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  if(c.bld){const b=u.bs||(u.bs=bsNew(c)),bk=c.bld.bank,ln=b.done?0:(c.bld.exp[b.p]||{}).ln||0;
   h+=`<div class="swc" id="swc"><div class="lbl"><b class="sj">${SUBJ[c.s].n}</b> · ${esc(c.g)}${u.only?" · repaso":""}${bldMulti(c)?"":" · armá la línea"}</div>`+
   `<div class="sn">${((()=>{const t=c.ctx;return c.kv?c.kv(b):(typeof letraHtml!="undefined"&&letraHtml(c,t,b.hl,b.src))||bldCtx(t,b.src,b.hl)})())+(c.bk&&c.bk.before.length?`<details><summary>Diagrama hasta ahora</summary>${blkCtx(c)}</details>`:"")+(!bldMulti(c)&&c.dg&&c.dg.cur&&!/^(find|next|create|add|remove|destroy|getInstance)$/.test(c.dg.cur.op)?`<div class="lt mut">Este mensaje usa una operación propia (la diseñás vos; el nombre es libre). Acá se llama <b>${esc(c.dg.cur.op)}</b>.</div>`:"")+(c.des?`<div class="lt mut">find, next, create, add, remove y destroy son las genéricas. «Operación propia» = una que diseñás vos para pedirle eso a ese objeto.</div>`:"")}</div>${bldMulti(c)?"":swDg(c,0,b.done)}<div class="qt">${c.kp?esc(c.kp):c.tra?"Mirá la letra: ¿qué tiene que conseguir o hacer el sistema?":c.des?"Desarmá el tramo en mensajes: ¿quién le pide qué a quién?":c.route?"¿Qué flechas hacen falta? Elegí los saltos (de qué objeto a cuál)":"Armá la línea con las fichas"}</div>`+
-  `<div class="bpl${b.done?" fin":""}">${c.kd?c.kd(b.pl,b.done?null:c.bld.exp[b.p]):b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
+  `<div class="bpl${b.done?" fin":""}">${isSlot(c)?slotHtml(c,b):c.kd?c.kd(b.pl,b.done?null:c.bld.exp[b.p]):b.pl.length?bldDisp(b.pl):'<span class="mut">tocá las fichas en orden…</span>'}</div>`+
   (b.m?`<div class="fb no"><b>${esc(b.m[0])}</b><div>${esc(b.m[1])}</div><div class="mut" style="margin-top:6px">${b.o||""}</div>${(()=>{const o=b.teo&&(window.THT||[]).find(x=>x.t==b.teo);return o?`<div class="th" style="margin-top:10px"><b>📘 ${esc(o.t)}</b>${o.p.map(x=>`<div style="margin-top:6px">${esc(x)}</div>`).join("")}</div>`:""})()}${b.kth?`<div class="th" style="margin-top:10px"><b>📘 Teoría</b><div style="margin-top:4px">${esc(b.kth)}</div></div>`:""}${b.ktm&&window.TEMATEO?TEMATEO(b.ktm):""}${b.src?`<div class="mut" style="margin-top:4px">👀 Estaba en: ${b.src.map(k=>HLN[k]).join(" y ")} (marcado arriba)</div>`:""}</div>`:"")+(b.e?noteBox():"")+
   (b.show&&!b.done?`<div class="fb"><b>${bldMulti(c)?"Respuesta":"Línea completa"}</b><div class="sn">${c.kd?c.kd(c.bld.exp.filter(x=>!x.nl),null):bldMulti(c)?bldDisp(c.bld.exp):esc(bldPlain(c,ln))}</div></div>`:"")+(b.done?`<div class="fb ${b.e?"no":"ok"}"><b>${b.e?b.e+(b.e==1?" error":" errores")+": "+(bldMulti(c)?"esta tarjeta":"esta línea")+" vuelve en un rato.":(bldMulti(c)?"Correcto":"Línea correcta")}</b></div>${b.e?`<button class="btn pri big" data-w="go">Continuar</button>`:""}`:
    `<div class="bank">${b.ord.filter(i=>bk[i].ln==null||bk[i].ln==ln).map(i=>`<button class="btn tile${b.used[i]?" used":""}" data-w="tl" data-i="${i}"${b.used[i]?" disabled":""}>${esc(bk[i].t)}</button>`).join("")}</div>${b.show?"":`<button class="btn ghost" data-w="tsh" style="display:block;margin:10px auto 0">${bldMulti(c)?"Ver la respuesta":"Ver la línea completa"}</button>`}<button class="btn ghost" data-w="tns" style="display:block;margin:10px auto 0">No sé qué sigue</button>`)+`</div></div>`;
@@ -417,7 +447,7 @@ function swMode(m){clearTimeout(STM);if(m==SWM)return;SPACK=[];SWX[SWM]={S2,SCOM
  if(x){({S2,SCOMBO,SRETRY,SLAST,SLT,SLK,SERR,SAX,SUN,SW}=x)}else{S2={box:{},xp:0,best:0,n:0,ok:0,day:"",today:0};try{const r=localStorage.getItem(SK);if(r)S2=Object.assign(S2,JSON.parse(r))}catch(e){}SCOMBO=0;SRETRY=[];SLAST="";SLT="";SLK="";SERR="";SAX="";SUN=0;SW=null}}
 function swOpen(){SW=null;swNew()}
 V.addEventListener("click",ev=>{if((TAB!=3&&TAB!=7))return;const b=ev.target.closest("[data-w]");if(!b)return;const w=b.dataset.w;
- if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="tns")swTile(-1);else if(w=="tsh")swShow();else if(w=="sf"||w=="st"||w=="sg"){if(w=="sf")SF=b.dataset.v;else{const ks=b.dataset.v.split(","),on=!ks.every(swSel);if(!swSelSet(ks,on))return;SPACK=[]}window.SWNOOI=1;try{swNew()}finally{window.SWNOOI=0}}});
+ if(w=="NS")swChoose(w);else if(w=="go")swAdvance();else if(w=="tl")swTile(+b.dataset.i);else if(w=="sl"){if(SW&&SW.bs&&!SW.bs.done){SW.bs.sel=b.dataset.v;SW.bs.m=null;swDraw()}}else if(w=="tns")swTile(-1);else if(w=="tsh")swShow();else if(w=="sf"||w=="st"||w=="sg"){if(w=="sf")SF=b.dataset.v;else{const ks=b.dataset.v.split(","),on=!ks.every(swSel);if(!swSelSet(ks,on))return;SPACK=[]}window.SWNOOI=1;try{swNew()}finally{window.SWNOOI=0}}});
 document.addEventListener("keydown",e=>{if((TAB!=3&&TAB!=7)||!SW||(e.target&&e.target.tagName=="TEXTAREA")||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key;
  if(k=="ArrowDown"&&SW.ans==null&&!SW.recap){e.preventDefault();swChoose("NS")}
  else if(k=="ArrowLeft"||k=="ArrowRight"){e.preventDefault();if(SW.ans==null&&!SW.recap)swChoose(k=="ArrowLeft"?"L":"R");else if(SW.ans!="ok")swAdvance()}

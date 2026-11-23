@@ -33,6 +33,7 @@
   r.log=[...M.values()].sort((x,y)=>x.t-y.t).slice(-4000);
   const st={};new Set([...Object.keys(a.st||{}),...Object.keys(b.st||{})]).forEach(k=>{const x=(a.st||{})[k]||[0,0],y=(b.st||{})[k]||[0,0];st[k]=[mx(x[0],y[0]),mx(x[1],y[1])]});r.st=st;
   const day={};new Set([...Object.keys(a.day||{}),...Object.keys(b.day||{})]).forEach(d=>{const x=(a.day||{})[d]||{},y=(b.day||{})[d]||{},o={};new Set([...Object.keys(x),...Object.keys(y)]).forEach(k=>{const p=x[k]||[0,0],q=y[k]||[0,0];o[k]=[mx(p[0],q[0]),mx(p[1],q[1])]});day[d]=o});r.day=day;
+  const cp={};new Set([...Object.keys(a.cp||{}),...Object.keys(b.cp||{})]).forEach(k=>{const x=(a.cp||{})[k]||[0,0],y=(b.cp||{})[k]||[0,0];cp[k]=[mx(x[0],y[0]),mx(x[1],y[1])]});r.cp=cp;
   r.exp=mx(a.exp,b.exp);return r}
  /* fusiona lo local con lo remoto: devuelve {k:{m,d}} */
  function merge(rem){const m=meta().mt||{},out={};
