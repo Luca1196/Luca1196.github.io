@@ -119,7 +119,8 @@ case"E→b":{const p=FPm(o)[a[0]]||pool(o).find(f=>pr(f)==a[0]);/* también inst
 S.log.push(`${R} sobre la meta «${pr(g)}»`)}
 o.how=how;subs.forEach(q=>cl0(S,q));
 const w=subs.find(q=>q.s=="o"&&!entails(q.ctx.map(x=>x.f),q.g));
-return w?{warn:1,t:"camino sin salida",m:`Camino sin salida: «${pr(w.g)}» ya no se sigue de tus hipótesis.`}:null}
+/* 26/11 (nota de Luca: «pienso que sale por E⊥, pero me falta asumir RAA»): si el camino sin salida vino de E⊥, se explica la diferencia con RAA */
+return w?{warn:1,t:"camino sin salida",m:`Camino sin salida: «${pr(w.g)}» ya no se sigue de tus hipótesis.`+(R=="E⊥"?` Si pensabas suponer la negación de la meta para llegar a ⊥, eso es RAA, no E⊥: E⊥ no cancela ninguna suposición (necesita ⊥ con las hipótesis que ya tenés), y RAA es justamente «suponer ¬φ, llegar a ⊥ y concluir φ», cancelando [¬φ].`:"")}:null}
 const PM=(r,o)=>{const p={"E∧":["f"],"E→f":["f"],"E¬f":["f"],"E∨":["f"],"E∃":["f"],"E∀":["f","t"],"I∨":["s"],"I∃":["t"],"E¬b":["φ"],"E→b":["φ"]}[r]||[];return(r=="I∨"&&o.g.k!="or")||(r=="I∃"&&o.g.k!="ex")||(r=="E¬b"&&o.g.k!="bot")?[]:p};
 function pl(k,o){if(k=="f")return o.ctx.map((x,i)=>[i,pr(x.f)]);if(k=="t")return Object.keys(TPm()).map(s=>[s,s]);if(k=="s")return[[0,pr(o.g.l)],[1,pr(o.g.r)]];return Object.keys(FPm(o)).map(s=>[s,s])}
 function hint(o){const g=o.g,c=o.ctx,sh={and:"I∧",imp:"I→",not:"I¬",iff:"I↔",all:"I∀"},any=f=>c.some(f);
