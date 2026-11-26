@@ -37,7 +37,7 @@
       sus subfórmulas. Después de cada movimiento, la selección pasa al hueco nuevo de arriba.
   16. I∧ e I↔ también aceptan las premisas en cualquier orden (19/11, Luca eligió ¬γ y después β para β∧¬γ): el árbol las pone en su lugar.
   14. Igualdad y E↔ (18/11, para el segundo parcial 2026 y Febrero 3b): RI1 (t =′ t, sin premisas), RI2 (dar vuelta), RI3 (transitividad,
-      premisas en cualquier orden), RI4 (f(t) =′ f(s) desde t =′ s, un argumento a la vez) y E↔ (de φ↔ψ y un lado, el otro). El átomo de igualdad
+      premisas en cualquier orden), RI4 (sustitución, como en el curso desde el 26/11: de t =′ s y φ(t) sale φ(s), condición t y s libres para u en φ(u)) y E↔ (de φ↔ψ y un lado, el otro). El átomo de igualdad
       se escribe t=′s. Para RI3 la lista ofrece igualdades con cada término que aparece en «Tengo»: si falta el del medio, se saca antes con E∀.
       Un testigo que no está en la letra (f(c,y) en 2P 3a) va en e.T del ejercicio. Pistas nuevas: meta instancia de un ∀ → E∀; ∃ en «Tengo» → E∃
       primero; meta ∃ → I∃ con el testigo que hace aparecer la fórmula.
@@ -86,7 +86,7 @@ function mk(S,par,g,ctx){const o={id:S.G.length,g,ctx,par,s:"o",d:null,how:null,
 function sol(S,o,d){o.s="d";o.d=d;const p=o.par!=null?S.G[o.par]:null;if(p&&p.s=="o"&&p.subs.every(i=>S.G[i].s=="d"))sol(S,p,bld(p,S))}
 const cl0=(S,o)=>{if(NOAUTO)return;const q=has(o.ctx,o.g);if(q&&o.s=="o")sol(S,o,q.d)};
 function bld(p,S){const h=p.how,k=h.k,ds=p.subs.map(i=>S.G[i].d),g=p.g;
-switch(k){case"I→":case"I¬":case"RAA":return nd(g,k,ds,h.l);case"I∀":case"I∃":case"E∀":return nd(g,k,ds,"",h.s);case"E¬b":return nd(g,"E¬",ds);case"E→b":return nd(g,"E→",ds);case"E∨":return nd(g,"E∨",[h.fd,...ds].filter(Boolean),h.l);case"E∃":return nd(g,"E∃",[h.fd,...ds],h.l,h.s);default:return nd(g,k,ds)}}
+switch(k){case"I→":case"I¬":case"RAA":return nd(g,k,ds,h.l);case"I∀":case"I∃":case"E∀":case"RI4":return nd(g,k,ds,"",h.s);case"E¬b":return nd(g,"E¬",ds);case"E→b":return nd(g,"E→",ds);case"E∨":return nd(g,"E∨",[h.fd,...ds].filter(Boolean),h.l);case"E∃":return nd(g,"E∃",[h.fd,...ds],h.l,h.s);default:return nd(g,k,ds)}}
 const FW=["E∧","E→f","E¬f","E∨","E∀","E∃"],TPC={};
 const TPm=()=>TPC[ex]||(TPC[ex]=tp(E[ex])),FPm=o=>{const m={};[...o.ctx.map(x=>x.f),o.g].forEach(f=>sf(f,m));return m};
 function mv(S,o,r,a){const g=o.g,c=o.ctx,F=(t,m)=>({blocked:1,t,m}),R=rr(r);
@@ -198,7 +198,7 @@ const E=[
 {t:"Igualdad reflexiva (RI1)",g:"c=′c",P:[],req:[],grp:"Igualdad"},
 {t:"Dar vuelta (RI2)",g:"c=′f(x)",P:["f(x)=′c"],req:[],grp:"Igualdad"},
 {t:"Transitividad (RI3)",g:"g(x,y)=′c",P:["g(x,y)=′f(x)","f(x)=′c"],req:[],grp:"Igualdad"},
-{t:"Congruencia (RI4)",g:"f(h(z))=′f(g(z))",P:["h(z)=′g(z)"],req:[],grp:"Igualdad"},
+{t:"Sustitución (RI4)",g:"f(h(z))=′g(f(z))",P:["g(z)=′h(z)","f(g(z))=′g(f(z))"],req:[],grp:"Igualdad"},
 {t:"Usar una ↔ (E↔)",g:"P(x,y)",P:["P(x,y)↔g(x,y)=′c","g(x,y)=′c"],req:[],grp:"Igualdad"},
 {t:"Instanciar con c e y",g:"c=′c→P(f(c,y))",P:["(∀x)(∀y)(x=′c→P(f(x,y)))"],req:[],grp:"Segundo parcial 3a"},
 {t:"P(f(c,y)) con E→",g:"P(f(c,y))",P:["c=′c→P(f(c,y))"],req:["Igualdad reflexiva (RI1)"],grp:"Segundo parcial 3a"},
@@ -208,7 +208,7 @@ const E=[
 {t:"Dos I∃",g:"(∃x)(∃y)P(x,y)",P:["(∀x)(∀y)(P(x,y)↔g(x,y)=′c)","(∀x)g(x,y)=′f(x)","f(x)=′c"],req:["P(x,y) desde φ1"],grp:"Segundo parcial 3b"},
 {t:"Segundo parcial 3b",g:"(∃x)(∃y)P(x,y)",P:["(∀x)(∀y)(P(x,y)↔g(x,y)=′c)","(∃x)f(x)=′c","(∃y)(∀x)g(x,y)=′f(x)"],req:["Dos I∃"],grp:"Segundo parcial 3b"},
 {t:"h(z) =′ g(z) desde φ2",g:"h(z)=′g(z)",P:["(∀y)(P(y)→h(y)=′g(y))","P(z)"],req:[],grp:"Febrero 3b"},
-{t:"f(h(z)) =′ g(f(z))",g:"f(h(z))=′g(f(z))",P:["(∀x)f(g(x))=′g(f(x))","(∀y)(P(y)→h(y)=′g(y))","P(z)"],req:["Congruencia (RI4)","h(z) =′ g(z) desde φ2","Transitividad (RI3)"],grp:"Febrero 3b"},
+{t:"f(h(z)) =′ g(f(z))",g:"f(h(z))=′g(f(z))",P:["(∀x)f(g(x))=′g(f(x))","(∀y)(P(y)→h(y)=′g(y))","P(z)"],req:["Sustitución (RI4)","h(z) =′ g(z) desde φ2","Dar vuelta (RI2)"],grp:"Febrero 3b"},
 {t:"Febrero 3b",g:"(∃w)f(h(w))=′g(f(w))",P:["(∀x)f(g(x))=′g(f(x))","(∀y)(P(y)→h(y)=′g(y))","(∃z)P(z)"],req:["f(h(z)) =′ g(f(z))"],grp:"Febrero 3b"}];
 E.forEach(e=>{e.PA=e.P.map(pf);e.GA=pf(e.g);e.q=/[∀∃]/.test(e.P.join("")+e.g);e.eq=/=′/.test(e.P.join("")+e.g)});
 let ex=0;
@@ -266,7 +266,7 @@ const TPL={
  "RI1":{n:"RI1",m:[],ay:"t =′ t, sin premisas."},
  "RI2":{n:"RI2",m:["Premisa: la igualdad dada vuelta"],ay:"De t =′ s se obtiene s =′ t."},
  "RI3":{n:"RI3",m:["Premisa izquierda (t =′ s)","Premisa derecha (s =′ r)"],ay:"De t =′ s y s =′ r se obtiene t =′ r. La lista ofrece igualdades con los términos de lo que tenés y de las instancias de tus ∀."},
- "RI4":{n:"RI4",m:["Premisa: la igualdad de los argumentos (t =′ s)"],ay:"De t =′ s se obtiene f(t) =′ f(s): el mismo símbolo de función a los dos lados, cambia el argumento."},
+ "RI4":{n:"RI4",m:["Premisa: la igualdad t =′ s","Premisa: la fórmula con t, φ(t)"],ay:"RI4 (sustitución, como en el curso): de t =′ s y φ(t) se obtiene φ(s), cambiando t por s en uno o más lugares. Las premisas en el orden que quieras. Condición: t y s libres para u en φ(u)."},
  "I∀":{n:"I∀",m:["¿Qué queda arriba de la raya?"],ay:"Arriba va la fórmula sin el ∀, con la misma variable. Condición: la variable no puede estar libre en una hipótesis abierta."},
  "E∀":{n:"E∀",m:["Arriba de la raya: el ∀ del que sale la meta","¿Qué término t va en el lugar de la variable?"],k:["pool","t"],ay:"E∀ se arma de abajo hacia arriba: la meta es φ(t) y arriba va (∀x)φ. Si ese ∀ no lo tenés todavía, queda como meta nueva y repetís E∀ sobre ella, hasta llegar al ∀ que tenés. Condición: t libre para x."},
  "I∃":{n:"I∃",m:["¿Con qué término t (el testigo)?"],k:["t"],ay:"Para probar (∃x)φ alcanza con probar φ(t). Arriba queda φ(t). Condición: t libre para x."},
@@ -311,12 +311,25 @@ function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"
  case"RI2":return !ISEQ(g)?bad(`RI2 concluye una igualdad, y la meta es ${P(g)}.`):ISEQ(M[0])&&pt(M[0].a[0])==pt(g.a[1])&&pt(M[0].a[1])==pt(g.a[0])?{ok:1,cust:"sub",k:"RI2"}:bad(`RI2 da vuelta una igualdad: para obtener ${P(g)}, arriba va ${pt(g.a[1])}=′${pt(g.a[0])}.`);
  case"RI3":{if(!ISEQ(g))return bad(`RI3 concluye una igualdad, y la meta es ${P(g)}.`);const t=pt(g.a[0]),r2=pt(g.a[1]),ok=(A,B)=>ISEQ(A)&&ISEQ(B)&&pt(A.a[0])==t&&pt(B.a[1])==r2&&pt(A.a[1])==pt(B.a[0]);
   return ok(M[0],M[1])||ok(M[1],M[0])?{ok:1,cust:"sub",k:"RI3"}:bad(`RI3 encadena dos igualdades: de t =′ s y s =′ r sale t =′ r. Para ${P(g)}, una empieza con ${t}, la otra termina con ${r2}, y las dos comparten el término del medio.`)}
- case"RI4":{if(!ISEQ(g))return bad(`RI4 concluye una igualdad, y la meta es ${P(g)}.`);const[t,r2]=g.a;if(t.k!="fn"||r2.k!="fn"||t.n!=r2.n||t.a.length!=r2.a.length)return bad(`RI4 concluye f(t) =′ f(s), con el mismo símbolo de función a los dos lados; ${P(g)} no tiene esa forma.`);
-  const d=t.a.map((_,i)=>i).filter(i=>pt(t.a[i])!=pt(r2.a[i]));if(d.length!=1)return bad(d.length?"Acá RI4 cambia un solo argumento a la vez.":"Los dos lados son iguales: eso es RI1.");const i=d[0];
-  return ISEQ(M[0])&&pt(M[0].a[0])==pt(t.a[i])&&pt(M[0].a[1])==pt(r2.a[i])?{ok:1,cust:"sub",k:"RI4"}:bad(`RI4: de t =′ s sale ${t.n}(t) =′ ${t.n}(s). Acá cambia ${pt(t.a[i])} por ${pt(r2.a[i])}: arriba va ${pt(t.a[i])}=′${pt(r2.a[i])}.`)}
+ case"RI4":{/* 26/11, pedido de Luca: RI4 del curso = sustitución. De t =′ s y φ(t) sale φ(s); condición: t y s libres para u en φ(u) */
+  let why="";const tryv=(e,A)=>{if(!ISEQ(e))return null;const T=pt(e.a[0]),Sx=pt(e.a[1]),V=new Set();tv(e.a[0],V);tv(e.a[1],V);let rep=0,cap=0;
+   const dT=(a,b,bd)=>{if(pt(a)==pt(b))return a;if(pt(a)==T&&pt(b)==Sx){rep++;if(bd.some(v=>V.has(v)))cap=1;return{k:"v",n:"u"}}if(a.k=="fn"&&b.k=="fn"&&a.n==b.n&&a.a.length==b.a.length){const r=a.a.map((x,i)=>dT(x,b.a[i],bd));return r.every(Boolean)?{k:"fn",n:a.n,a:r}:null}return null},
+    dF=(X,Y,bd)=>{if(X.k!=Y.k)return null;switch(X.k){case"bot":return X;case"at":{if(X.n!=Y.n||X.a.length!=Y.a.length)return null;const r=X.a.map((x,i)=>dT(x,Y.a[i],bd));return r.every(Boolean)?{...X,a:r}:null}
+     case"not":{const r=dF(X.a,Y.a,bd);return r&&{k:"not",a:r}}case"all":case"ex":{if(X.v!=Y.v)return null;const r=dF(X.a,Y.a,bd.concat(X.v));return r&&{...X,a:r}}default:{const l=dF(X.l,Y.l,bd),r2=dF(X.r,Y.r,bd);return l&&r2&&{...X,l,r:r2}}}};
+   const pat=dF(A,g,[]);if(!pat){why=`Cambiando ${T} por ${Sx} en ${P(A)} no se llega a la meta ${P(g)}: abajo tiene que quedar la misma fórmula, con ${Sx} en lugar de ${T} en uno o más lugares.`;return null}
+   if(!rep){why=`${P(A)} ya es la meta: RI4 tiene que cambiar ${T} por ${Sx} en algún lugar.`;return null}
+   if(cap){why=`Condición de RI4: ${T} y ${Sx} tienen que ser libres para u en φ(u); acá quedarían atrapados por un cuantificador.`;return null}
+   return{ok:1,cust:"sub",k:"RI4",s:`${T} y ${Sx} libres para u en ${P(pat)}`}};
+  const ok4=tryv(M[0],M[1])||tryv(M[1],M[0]);if(ok4)return ok4;
+  for(const[e,A]of[[M[0],M[1]],[M[1],M[0]]])if(ISEQ(e)&&tryv(EQF(e.a[1],e.a[0]),A))return bad(`La igualdad va al revés: RI4 cambia t por s usando t =′ s. Para cambiar ${pt(e.a[1])} por ${pt(e.a[0])} en ${P(A)} necesitás ${pt(e.a[1])}=′${pt(e.a[0])} (la sacás de ${P(e)} con RI2).`);
+  return bad(why||`RI4 usa una igualdad t =′ s y una fórmula φ(t); ${P(M[0])} y ${P(M[1])} no tienen esa forma.`)}
  case"E⊥":return g.k=="bot"?bad("La meta ya es ⊥."):M[0].k!="bot"?bad("E⊥ parte de ⊥: arriba va ⊥."):{ok:1,run:["E⊥",[]]}}}
 /* fórmulas candidatas para elegir: lo que tengo, la meta, sus subfórmulas, sus negaciones y ⊥ */
-function pool(o){const m={},add=f=>{m[P(f)]=f};Object.values(FPm(o)).forEach(f=>{add(f);if(f.k!="not"&&f.k!="bot")add(NG(f))});add(BOT);o.ctx.forEach(x=>add(x.f));const IN=insts(o);IN.forEach(f=>{const m={};sf(f,m);Object.values(m).forEach(add)});if(ISEQ(o.g)){const[t,r]=o.g.a;add(EQF(r,t));trs(o.ctx.map(x=>x.f).concat([o.g],IN)).forEach(u=>{add(EQF(t,u));add(EQF(u,r))});if(t.k=="fn"&&r.k=="fn"&&t.n==r.n)t.a.forEach((x,i)=>add(EQF(x,r.a[i])))}/* igualdad: dada vuelta, con un término del medio (RI3) y de los argumentos (RI4) */
+function pool(o){const m={},add=f=>{m[P(f)]=f};Object.values(FPm(o)).forEach(f=>{add(f);if(f.k!="not"&&f.k!="bot")add(NG(f))});add(BOT);o.ctx.forEach(x=>add(x.f));const IN=insts(o);IN.forEach(f=>{const m={};sf(f,m);Object.values(m).forEach(add)});if(ISEQ(o.g)){const[t,r]=o.g.a;add(EQF(r,t));trs(o.ctx.map(x=>x.f).concat([o.g],IN)).forEach(u=>{add(EQF(t,u));add(EQF(u,r))});if(t.k=="fn"&&r.k=="fn"&&t.n==r.n)t.a.forEach((x,i)=>add(EQF(x,r.a[i])))}/* igualdad: dada vuelta y con un término del medio (RI3) */
+ {const EQS=Object.values(m).filter(ISEQ),all=EQS.concat(EQS.map(e=>EQF(e.a[1],e.a[0])));all.forEach(add);/* RI4: φ(t) = la meta con t en lugar de s (en todos los lugares o en uno) */
+  all.forEach(e=>{const T=e.a[0],Sx=pt(e.a[1]);if(pt(T)==Sx)return;let n=0;const cnt=f=>{const c=t=>{if(pt(t)==Sx)n++;else if(t.k=="fn")t.a.forEach(c)},w=f=>{if(f.k=="at")f.a.forEach(c);else if(f.k=="not"||f.k=="all"||f.k=="ex")w(f.a);else if(f.l){w(f.l);w(f.r)}};w(f)};cnt(o.g);if(!n||n>4)return;
+   const rp=(f,which)=>{let k=0;const rt=t=>{if(pt(t)==Sx){k++;return which<0||k==which?T:t}return t.k=="fn"?{...t,a:t.a.map(rt)}:t},rf=f=>f.k=="at"?{...f,a:f.a.map(rt)}:f.k=="not"?{k:"not",a:rf(f.a)}:f.k=="all"||f.k=="ex"?{...f,a:rf(f.a)}:f.l?{...f,l:rf(f.l),r:rf(f.r)}:f;return rf(f)};
+   add(rp(o.g,-1));if(n>1)for(let w=1;w<=n;w++)add(rp(o.g,w))})}
  return Object.values(m).sort((a,b)=>P(a).length-P(b).length||P(a).localeCompare(P(b)))}
 /* Modo incrustado: una tarjeta de Deslizar arma un árbol corto acá adentro (EMB = {el, cb, err}) */
 let EMB=null;const OUT=()=>EMB?EMB.el:V;
@@ -367,7 +380,7 @@ function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+
  if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!(y.d.r=="hip"&&y.d.l)&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;if(EMB)EMB.err++;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
  else if(c.cust=="leaf")sol(S1,o1,nd(o1.g,c.k,[]));
  else if(c.cust=="E∀b"){const f=M[0].f;o1.how={k:"E∀",s:`${c.t} libre para ${f.v} en ${P(f.a)}`};const q=mk(S1,o1.id,f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,[M[0]])}
- else if(c.cust=="sub"){o1.how={k:c.k};M.forEach(m=>{const q=mk(S1,o1.id,m.f,o1.ctx);o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}/* E↔ y RI2–RI4: arriba quedan los miembros elegidos, en ese orden */
+ else if(c.cust=="sub"){o1.how={k:c.k,s:c.s};M.forEach(m=>{const q=mk(S1,o1.id,m.f,o1.ctx);o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}/* E↔ y RI2–RI4: arriba quedan los miembros elegidos, en ese orden */
  else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0].f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,M)}
  else if(c.cust=="E∧f"||c.cust=="E∀"||c.cust=="E∃"){const m=M[0],i=o1.ctx.findIndex(y=>m.hyp?y.d.l==m.hyp:eq(y.f,m.f)&&!(y.d.r=="hip"&&y.d.l));
   NOAUTO=true;res=c.cust=="E∧f"?mv(S1,o1,"E∧",[i]):c.cust=="E∀"?mv(S1,o1,"E∀",[i,M[1].t]):mv(S1,o1,"E∃",[i]);NOAUTO=false;
@@ -393,12 +406,17 @@ function bqHint(o){const g=o.g,c=o.ctx.map(x=>x.f),I={and:"I∧",imp:"I→",not:
   for(let k=V.length;k>=1;k--){const m={};if(!mf(PL[k],g,V.slice(0,k),m))continue;let a=f;for(let j=0;j<k-1;j++)a=sb(a.a,V[j],m[V[j]]||{k:"v",n:V[j]});const t=m[V[k-1]]?pt(m[V[k-1]]):V[k-1];
    return k==1?`La meta ${P(g)} sale de ${P(f)}, que ya tenés: E∀ con ${P(f)} arriba y t = ${t}.`:`La meta ${P(g)} sale de ${P(f)} (que ya tenés) sacando ${k} ∀. E∀ de abajo hacia arriba: arriba va ${P(a)} con t = ${t}; después repetís E∀ sobre esa meta nueva hasta llegar a ${P(f)}.`}}
  {const cj0=c.find(f=>f.k=="and"&&(eq(f.l,g)||eq(f.r,g)));if(cj0)return`${P(g)} es parte de ${P(cj0)}, que ya tenés: E∧ con premisa ${P(cj0)} (la conjunción entera arriba, ${P(g)} abajo).`}
+ const ri4h=()=>{/* RI4: una igualdad t =′ s y una fórmula que es la meta con t en lugar de s (de lo que tenés o de las instancias de tus ∀) */
+  const AV=c.concat(insts(o)),EQ2=AV.flatMap(f=>{const L=[];const w=x=>{if(ISEQ(x))L.push(x);else if(x.k=="not")w(x.a);else if(x.l){w(x.l);w(x.r)}};w(f);return L});
+  for(const e of EQ2.concat(EQ2.map(e=>EQF(e.a[1],e.a[0])))){const T=pt(e.a[0]),Sx=pt(e.a[1]);if(T==Sx||!P(g).includes(Sx))continue;const F=AV.find(f=>f!==e&&!eq(f,g)&&P(f).split(T).join("\u0000")==P(g).split(Sx).join("\u0000"));
+   if(F)return`RI4 (sustitución): con ${T}=′${Sx} y ${P(F)} sale ${P(g)}, cambiando ${T} por ${Sx}. Cada premisa se arma después hacia arriba.`}return""};
  if(ISEQ(g)){const[t,r]=g.a,T=pt(t),Rr=pt(r);if(T==Rr)return`${P(g)} tiene el mismo término a los dos lados: RI1, sin premisas.`;
   if(c.some(f=>ISEQ(f)&&pt(f.a[0])==Rr&&pt(f.a[1])==T))return`Tenés ${Rr}=′${T}: RI2 la da vuelta.`;
   const a=c.find(f=>ISEQ(f)&&pt(f.a[0])==T&&c.some(h=>ISEQ(h)&&pt(h.a[0])==pt(f.a[1])&&pt(h.a[1])==Rr));if(a)return`Tenés ${P(a)} y ${pt(a.a[1])}=′${Rr}: RI3 las encadena.`;
-  if(t.k=="fn"&&r.k=="fn"&&t.n==r.n){const d=t.a.map((_,i)=>i).filter(i=>pt(t.a[i])!=pt(r.a[i]));if(d.length==1)return`El mismo símbolo ${t.n} a los dos lados: RI4, con ${pt(t.a[d[0]])}=′${pt(r.a[d[0]])} arriba.`}
+  {const h4=ri4h();if(h4)return h4}
   const a1=c.find(f=>ISEQ(f)&&(pt(f.a[0])==T||pt(f.a[1])==Rr));if(a1)return pt(a1.a[0])==T?`Tenés ${P(a1)}, que empieza con ${T}: RI3 con ${P(a1)} y ${pt(a1.a[1])}=′${Rr}.`:`Tenés ${P(a1)}, que termina con ${Rr}: RI3 con ${T}=′${pt(a1.a[0])} y ${P(a1)}.`;
 }
+ {const h4=ri4h();if(h4)return h4}
  {const bi=c.find(f=>f.k=="iff"&&(eq(f.l,g)||eq(f.r,g)));if(bi)return`Tenés ${P(bi)}: E↔ con ${P(bi)} y ${P(eq(bi.r,g)?bi.l:bi.r)} da ${P(g)}.`}
  {const xe=c.find(f=>f.k=="ex"&&!c.some(h=>eq(h,f.a)));if(xe)return`Tenés ${P(xe)}: E∃ primero (suponés ${P(xe.a)} y en esa rama probás ${P(g)}).`}
  if(g.k=="ex"){const TM=TPm(),TT=(E[ex].T||[]).map(x=>TM[x]).filter(Boolean).concat(Object.values(TM)),/* los testigos extra del ejercicio (e.T) van primero */ok=(h,d)=>h.k=="ex"?d<2&&TT.some(u=>ok(sb(h.a,h.v,u),d+1)):c.some(f=>eq(f,h))||appears(h),t=TT.find(u=>ok(sb(g.a,g.v,u),0));
