@@ -397,11 +397,18 @@ function mtHoy(){if(SWM!=3)return null;const t=TD(),M=S2.mt||(S2.mt={rd:{}}),FD=
  if(done>=goal&&!M.rd[t]){M.rd[t]=1;MTCEL=1;ch=1}if(ch)SV2();
  let k=0,d=M.rd[t]?t:dAdd(t,-1);while(M.rd[d]){k++;d=dAdd(d,-1)}
  return{done,goal,ok:!!M.rd[t],stk:k,fin,tot,dl}}
+/* BARRA DE LÓGICA (26/11, pedido de Luca: «una barra de progreso exclusiva sobre las tarjetas de lógica»): cuenta solo las tarjetas de Principal
+   de la sección Lógica (c.s=="lg"), con la misma marca de terminada (S2.mt.fd). Meta del día = lo que falta ÷ días hasta el 3/12 (examen el 4/12). */
+const LG_FIN="2026-12-03";
+function lgBar(bar){const FD=(S2.mt||{}).fd||{},t=TD(),L=mtCards().filter(c=>c.s=="lg");if(!L.length)return"";const tot=L.length,fin=L.filter(c=>FD[c.id]).length,done=L.filter(c=>FD[c.id]==t).length,
+  dl=Math.max(1,Math.round((new Date(LG_FIN+"T12:00:00")-new Date(t+"T12:00:00"))/864e5)),goal=Math.ceil((tot-fin+done)/dl);
+ return`<div class="row" style="margin-top:8px;gap:10px"><b style="white-space:nowrap">Lógica</b>${bar(fin,tot)}<b class="cnt" style="white-space:nowrap">${fin}/${tot}</b></div>`+
+  `<div class="mut" style="font-size:12px;margin-top:2px">Lógica hoy: ${done}/${goal} · faltan ${tot-fin} ÷ ${dl} ${dl==1?"día":"días"} hasta el 3/12 (examen el 4/12)</div>`}
 function mtBar(){const m=mtHoy();if(!m)return"";const bar=(x,n)=>`<div class="pb" style="flex:1"><i style="width:${n?Math.min(100,x/n*100):100}%"></i></div>`;
  if(MTCEL){MTCEL=0;setTimeout(()=>{const x=document.createElement("div");x.className="card";x.style.cssText="position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:60;text-align:center;font-size:18px;box-shadow:0 4px 20px rgba(0,0,0,.3)";x.innerHTML=`🔥 <b>¡Meta de hoy cumplida!</b><br>Racha: ${m.stk} ${m.stk==1?"día":"días"}`;document.body.appendChild(x);try{navigator.vibrate&&navigator.vibrate([40,60,40])}catch(_){}setTimeout(()=>x.remove(),3500)},50)}
  return`<div class="row" style="margin-top:8px;gap:10px"><b title="Racha: días seguidos cumpliendo la meta" style="font-size:20px;white-space:nowrap;${m.ok?"":"filter:grayscale(1);opacity:.55"}">🔥 ${m.stk}</b><span class="mut" style="width:42px">Hoy</span>${bar(m.done,m.goal)}<b class="cnt" style="white-space:nowrap">${m.done}/${m.goal}</b></div>`+
  `<div class="row" style="margin-top:4px;gap:10px"><span style="width:${String(m.stk).length*11+30}px"></span><span class="mut" style="width:42px">Total</span>${bar(m.fin,m.tot)}<b class="cnt" style="white-space:nowrap">${m.fin}/${m.tot}</b></div>`+
- `<div class="mut" style="font-size:12px;margin-top:2px">${m.ok?"Meta de hoy cumplida ✓ (podés seguir sin tope)":m.stk?"Racha en riesgo: cumplí la meta antes de medianoche":"Cumplí la meta de hoy para arrancar la racha"} · faltan ${m.tot-m.fin} sin terminar ÷ ${m.dl} ${m.dl==1?"día":"días"} hasta el 30/11 = ${m.goal} por día</div>`}
+ lgBar(bar)+`<div class="mut" style="font-size:12px;margin-top:2px">${m.ok?"Meta de hoy cumplida ✓ (podés seguir sin tope)":m.stk?"Racha en riesgo: cumplí la meta antes de medianoche":"Cumplí la meta de hoy para arrancar la racha"} · faltan ${m.tot-m.fin} sin terminar ÷ ${m.dl} ${m.dl==1?"día":"días"} hasta el 30/11 = ${m.goal} por día</div>`}
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  (TAB==3?mtBar():"")+`<div class="row between mut" style="margin-top:6px"><span>Seguidas ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
