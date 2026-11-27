@@ -32,7 +32,7 @@ function mostrarRecord() {
 }
 
 // ───── Configuración de partida ─────
-let modoConfig = "solo", cantidadElegida = 10;
+let modoConfig = "solo", cantidadElegida = 10, soloPruebas = guardado.leer("soloPruebas", false);
 let temasElegidos = guardado.leer("temas", TEMAS.map(t => t.id)).filter(id => temaPorId(id));
 if (!temasElegidos.length) temasElegidos = TEMAS.map(t => t.id);
 
@@ -41,12 +41,13 @@ function prepararConfig(modo) {
   $("config-titulo").textContent = modo === "solo" ? "Partida Solo" : "Nuevo desafío VS";
   $("config-vs").hidden = modo !== "vs";
   $("config-aviso").textContent = "";
+  $("solo-pruebas").checked = soloPruebas;
   pintarTemasElegir();
   $("cantidades").innerHTML = CANTIDADES.map(n => `<button class="chip-n${n === cantidadElegida ? " sel" : ""}" data-n="${n}">${n}</button>`).join("");
 }
 function pintarTemasElegir() {
   $("temas-elegir").innerHTML = TEMAS.map(t => {
-    const cant = PREGUNTAS.filter(p => p.tema === t.id).length;
+    const cant = PREGUNTAS.filter(p => p.tema === t.id && (!soloPruebas || esDePrueba(p))).length;
     const sel = temasElegidos.includes(t.id);
     return `<button class="chip-tema${sel ? " sel" : ""}" data-tema="${t.id}" style="--c:${t.color}" aria-pressed="${sel}">
       <span class="ico">${t.icono}</span><span class="nom">${t.nombre}</span><span class="cant">${cant}</span></button>`;
@@ -59,6 +60,7 @@ $("temas-elegir").addEventListener("click", e => {
   temasElegidos = temasElegidos.includes(id) ? temasElegidos.filter(x => x !== id) : [...temasElegidos, id];
   pintarTemasElegir();
 });
+$("solo-pruebas").onchange = e => { soloPruebas = e.target.checked; guardado.escribir("soloPruebas", soloPruebas); pintarTemasElegir(); };
 $("todos").onclick = () => { temasElegidos = TEMAS.map(t => t.id); pintarTemasElegir(); };
 $("ninguno").onclick = () => { temasElegidos = []; pintarTemasElegir(); };
 $("cantidades").addEventListener("click", e => {
@@ -72,15 +74,15 @@ let desafioPendiente = null;
 $("empezar").onclick = () => {
   if (!temasElegidos.length) { $("config-aviso").textContent = "Elige al menos un tema."; return; }
   guardado.escribir("temas", temasElegidos);
-  if (modoConfig === "solo") { iniciarPartida({ modo: "solo", temas: temasElegidos, semilla: semillaAlAzar() }); return; }
-  const cfg = { temas: temasElegidos.slice(), n: cantidadElegida, semilla: semillaAlAzar() };
+  if (modoConfig === "solo") { iniciarPartida({ modo: "solo", temas: temasElegidos, semilla: semillaAlAzar(), soloPruebas }); return; }
+  const cfg = { temas: temasElegidos.slice(), n: cantidadElegida, semilla: semillaAlAzar(), soloPruebas };
   cfg.codigo = codificarDesafio(cfg);
   mostrarCodigoCreado(cfg);
 };
 
 function describirDesafio(cfg) {
   const nombres = cfg.temas.length === TEMAS.length ? "todos los temas" : cfg.temas.map(id => temaPorId(id).icono + " " + temaPorId(id).nombre).join(" · ");
-  return `${cfg.n} preguntas · ${nombres}`;
+  return `${cfg.n} preguntas${cfg.soloPruebas ? " de pruebas OUA" : ""} · ${nombres}`;
 }
 function enlaceDesafio(codigo) { return location.origin + location.pathname + "?c=" + codigo; }
 
@@ -175,7 +177,7 @@ function girarHacia(indice, k) {
 let estado = null, reloj = null;
 
 function iniciarPartida(cfg) {
-  estado = { ...cfg, mazo: crearMazo(cfg.temas, cfg.semilla), indice: 0, aciertos: 0, racha: 0, tiempo: 0, historial: [], actual: null };
+  estado = { ...cfg, mazo: crearMazo(cfg.temas, cfg.semilla, cfg.soloPruebas), indice: 0, aciertos: 0, racha: 0, tiempo: 0, historial: [], actual: null };
   giroActual = 0;
   dibujarRuleta(cfg.temas);
   irA("juego");
@@ -374,7 +376,7 @@ $("comparar").onclick = () => {
 };
 
 $("otra").onclick = () => {
-  if (estado.modo === "solo") iniciarPartida({ modo: "solo", temas: estado.temas, semilla: semillaAlAzar() });
+  if (estado.modo === "solo") iniciarPartida({ modo: "solo", temas: estado.temas, semilla: semillaAlAzar(), soloPruebas: estado.soloPruebas });
   else { prepararConfig("vs"); irA("config"); }
 };
 

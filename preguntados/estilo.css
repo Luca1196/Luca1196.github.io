@@ -60,6 +60,9 @@ h3 { font-size: 22px; margin: 24px 0 10px; }
 .chip-tema .ico { font-size: 24px; }
 .chip-tema .nom { flex: 1; font-size: 14px; line-height: 1.2; }
 .chip-tema .cant { font-size: 12px; opacity: .7; }
+.interruptor { display: flex; align-items: center; gap: 10px; margin: 14px 0 6px; padding: 12px 14px; border-radius: 14px;
+  background: var(--tarjeta); border: 2px solid var(--borde); font-weight: 800; cursor: pointer; }
+.interruptor input { width: 22px; height: 22px; accent-color: var(--oro); flex: none; }
 .cantidades { display: flex; justify-content: center; gap: 10px; }
 .chip-n {
   width: 58px; height: 48px; border-radius: 14px; font: inherit; font-weight: 900; font-size: 18px; color: var(--tenue);

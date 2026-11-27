@@ -23,11 +23,11 @@ function mezclar(lista, rng) {
 
 // Mazo de preguntas: reparte los temas elegidos de forma pareja (bolsa de temas) y no repite preguntas
 // hasta agotar cada tema. Devuelve { tema, pregunta, orden } donde orden es la permutación de las opciones.
-function crearMazo(temasElegidos, semilla) {
+function crearMazo(temasElegidos, semilla, soloPruebas) {
   const rng = crearRng(semilla ^ (VERSION_BANCO * 0x9E3779B1));
   const temas = TEMAS.map(t => t.id).filter(id => temasElegidos.includes(id)); // orden canónico
   const colas = {};
-  const rellenar = id => { colas[id] = mezclar(PREGUNTAS.filter(p => p.tema === id), rng); };
+  const rellenar = id => { colas[id] = mezclar(PREGUNTAS.filter(p => p.tema === id && (!soloPruebas || esDePrueba(p))), rng); };
   temas.forEach(rellenar);
   let bolsa = [];
   return {
@@ -70,11 +70,11 @@ function normalizarCodigo(s) {
     .replace(/O/g, "0").replace(/[IL]/g, "1").replace(/U/g, "V");
 }
 
-// cfg = { temas: [ids], n: 10|15|20|25, semilla: 0..2^20-1 }
+// cfg = { temas: [ids], n: 10|15|20|25, semilla: 0..2^20-1, soloPruebas: bool }
 function codificarDesafio(cfg) {
   let mascara = 0;
   TEMAS.forEach((t, i) => { if (cfg.temas.includes(t.id)) mascara |= 1 << i; });
-  const num = (cfg.semilla * 4 + CANTIDADES.indexOf(cfg.n)) * 512 + mascara; // 20 + 2 + 9 = 31 bits
+  const num = ((cfg.semilla * 4 + CANTIDADES.indexOf(cfg.n)) * 2 + (cfg.soloPruebas ? 1 : 0)) * 512 + mascara; // 20 + 2 + 1 + 9 = 32 bits
   const cuerpo = aBase32(num, 7);
   const c = cuerpo + digito(cuerpo);
   return c.slice(0, 4) + "-" + c.slice(4);
@@ -88,11 +88,12 @@ function decodificarDesafio(texto) {
   const num = deBase32(cuerpo);
   if (num === null) return null;
   const mascara = num % 512;
-  const nIdx = Math.floor(num / 512) % 4;
-  const semilla = Math.floor(num / 2048);
+  const soloPruebas = Math.floor(num / 512) % 2 === 1;
+  const nIdx = Math.floor(num / 1024) % 4;
+  const semilla = Math.floor(num / 4096);
   const temas = TEMAS.filter((t, i) => mascara & (1 << i)).map(t => t.id);
   if (!temas.length || semilla >= 2 ** 20) return null;
-  return { temas, n: CANTIDADES[nIdx], semilla, codigo: s.slice(0, 4) + "-" + s.slice(4) };
+  return { temas, n: CANTIDADES[nIdx], semilla, soloPruebas, codigo: s.slice(0, 4) + "-" + s.slice(4) };
 }
 
 function semillaAlAzar() { return Math.floor(Math.random() * 2 ** 20); }
