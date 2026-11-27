@@ -6,6 +6,9 @@ Sitio: https://luca1196.github.io
 - Cada juego vive en su propia carpeta, con su `index.html`:
   - `exoplanetas/`: Sistemas Exoplanetas (contra bots). `estilo.css` y `js/` (datos, motor, bots, interfaz).
   - `astrofisica/`: repaso de astrofísica con repetición espaciada.
+  - `preguntados/`: Ruleta OUA, preguntas estilo Preguntados para la 1ª etapa de la Olimpíada Uruguaya de Astronomía.
+    `js/preguntas.js` (temas, teórico y banco), `js/azar.js` (semilla y códigos VS), `js/juego.js` (interfaz).
+    Para sumar preguntas: agregarlas **al final** de su tema en `preguntas.js` (la primera opción es la correcta). Cambiar el banco cambia lo que genera un código VS: si se reordena o se borra algo, subir `VERSION_BANCO`.
   - `estudiar/`: herramienta de estudio personal (Prog4 y Lógica). No está en `juegos.json`, por eso no aparece en el menú; se entra con `/estudiar`. Lleva `noindex`.
 
 ## Agregar un juego

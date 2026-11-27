@@ -12,5 +12,12 @@
     "descripcion": "Preguntas y tarjetas con repetición espaciada para repasar los temas del curso.",
     "tipo": "Repaso",
     "icono": "🔭"
+  },
+  {
+    "carpeta": "preguntados",
+    "titulo": "Ruleta OUA",
+    "descripcion": "Gira la ruleta y responde preguntas de la 1ª etapa de la Olimpíada Uruguaya de Astronomía. Solo hasta fallar o desafío VS con código.",
+    "tipo": "Preguntas",
+    "icono": "🎡"
   }
 ]

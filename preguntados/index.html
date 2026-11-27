@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruleta OUA — Preguntas de astronomía</title>
+<meta name="description" content="Juego de preguntas con ruleta de temas para preparar la primera etapa de la Olimpíada Uruguaya de Astronomía.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="estilo.css?v=1">
+</head>
+<body>
+<div class="app">
+
+  <!-- Inicio -->
+  <section class="pantalla activa" id="p-inicio">
+    <a class="volver" href="../">← Juegos</a>
+    <h1>Ruleta <span>OUA</span></h1>
+    <p class="sub">Preguntas para la 1ª etapa de la Olimpíada Uruguaya de Astronomía</p>
+    <div class="botonera">
+      <button class="btn grande solo" data-ir="config" data-modo="solo">🔥 Solo<small>Hasta fallar: suma aciertos seguidos</small></button>
+      <button class="btn grande vs" data-ir="config" data-modo="vs">⚔️ VS: crear desafío<small>Mismas preguntas para los dos</small></button>
+      <button class="btn grande unir" data-ir="unirse">🔑 VS: tengo un código<small>Jugar el desafío de un rival</small></button>
+      <button class="btn chico" data-ir="teorico">📖 Teórico</button>
+    </div>
+    <p class="record" id="record"></p>
+  </section>
+
+  <!-- Nueva partida -->
+  <section class="pantalla" id="p-config">
+    <button class="volver" data-ir="inicio">← Volver</button>
+    <h2 id="config-titulo">Nueva partida</h2>
+    <p class="sub">Elige los temas que entran en la ruleta</p>
+    <div class="temas-elegir" id="temas-elegir"></div>
+    <div class="fila-acciones"><button class="link" id="todos">Todos</button><button class="link" id="ninguno">Ninguno</button></div>
+    <div id="config-vs" hidden>
+      <p class="sub">Cantidad de preguntas</p>
+      <div class="cantidades" id="cantidades"></div>
+    </div>
+    <p class="aviso" id="config-aviso"></p>
+    <button class="btn primario" id="empezar">¡Jugar!</button>
+  </section>
+
+  <!-- Unirse con código -->
+  <section class="pantalla" id="p-unirse">
+    <button class="volver" data-ir="inicio">← Volver</button>
+    <h2>Desafío VS</h2>
+    <p class="sub">Escribe el código que te pasó tu rival</p>
+    <input class="codigo" id="codigo-in" maxlength="9" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <p class="aviso" id="unirse-aviso"></p>
+    <button class="btn primario" id="unirse-btn">Jugar desafío</button>
+  </section>
+
+  <!-- Código creado -->
+  <section class="pantalla" id="p-codigo">
+    <button class="volver" data-ir="inicio">← Volver</button>
+    <h2>Desafío creado</h2>
+    <p class="sub">Pásale este código a tu rival. Los dos van a jugar exactamente las mismas preguntas.</p>
+    <div class="codigo-grande" id="codigo-grande"></div>
+    <p class="detalle" id="codigo-detalle"></p>
+    <div class="botonera fila">
+      <button class="btn chico" id="compartir">📤 Compartir enlace</button>
+      <button class="btn chico" id="copiar">📋 Copiar código</button>
+    </div>
+    <button class="btn primario" id="jugar-desafio">Jugar ahora</button>
+  </section>
+
+  <!-- Juego -->
+  <section class="pantalla" id="p-juego">
+    <header class="marcador">
+      <button class="volver" id="salir">✕</button>
+      <div class="dato" id="dato-izq"></div>
+      <div class="dato" id="dato-der"></div>
+    </header>
+    <div class="zona-ruleta" id="zona-ruleta">
+      <div class="ruleta-caja">
+        <div class="puntero" aria-hidden="true"></div>
+        <svg class="ruleta" id="ruleta" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+        <button class="centro" id="girar" aria-label="Girar la ruleta">GIRAR</button>
+      </div>
+      <p class="tema-salio" id="tema-salio" aria-live="polite"></p>
+    </div>
+    <div class="zona-pregunta" id="zona-pregunta" hidden>
+      <div class="tarjeta" id="tarjeta">
+        <div class="cabeza-tema" id="cabeza-tema"></div>
+        <div class="reloj"><div class="reloj-barra" id="reloj-barra"></div></div>
+        <p class="pregunta" id="pregunta"></p>
+        <div class="opciones" id="opciones"></div>
+        <div class="feedback" id="feedback" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fin -->
+  <section class="pantalla" id="p-fin">
+    <h2 id="fin-titulo"></h2>
+    <div class="puntaje" id="fin-puntaje"></div>
+    <p class="detalle" id="fin-detalle"></p>
+    <div id="fin-vs" hidden>
+      <p class="sub">Tu resultado: pásaselo a tu rival</p>
+      <div class="codigo-grande chico" id="fin-codigo"></div>
+      <p class="sub">Resultado del rival</p>
+      <input class="codigo" id="rival-in" maxlength="4" placeholder="XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <button class="btn chico" id="comparar">Comparar</button>
+      <div class="veredicto" id="veredicto" aria-live="polite"></div>
+    </div>
+    <div id="fin-repaso"></div>
+    <div class="botonera">
+      <button class="btn primario" id="otra">Jugar otra</button>
+      <button class="btn chico" data-ir="inicio">Menú</button>
+    </div>
+  </section>
+
+  <!-- Teórico -->
+  <section class="pantalla" id="p-teorico">
+    <button class="volver" id="teorico-volver">← Volver</button>
+    <h2>Teórico</h2>
+    <p class="sub">Temario de la 1ª prueba de la OUA (vigente desde 2024)</p>
+    <div id="teorico"></div>
+  </section>
+
+</div>
+<script src="js/preguntas.js?v=1"></script>
+<script src="js/azar.js?v=1"></script>
+<script src="js/juego.js?v=1"></script>
+</body>
+</html>
