@@ -321,7 +321,7 @@ function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"
    if(cap){why=`Condición de RI4: ${T} y ${Sx} tienen que ser libres para u en φ(u); acá quedarían atrapados por un cuantificador.`;return null}
    return{ok:1,cust:"sub",k:"RI4",s:`${T} y ${Sx} libres para u en ${P(pat)}`}};
   const ok4=tryv(M[0],M[1])||tryv(M[1],M[0]);if(ok4)return ok4;
-  for(const[e,A]of[[M[0],M[1]],[M[1],M[0]]])if(ISEQ(e)&&tryv(EQF(e.a[1],e.a[0]),A))return bad(`La igualdad va al revés: RI4 cambia t por s usando t =′ s. Para cambiar ${pt(e.a[1])} por ${pt(e.a[0])} en ${P(A)} necesitás ${pt(e.a[1])}=′${pt(e.a[0])} (la sacás de ${P(e)} con RI2).`);
+  for(const[e,A]of[[M[0],M[1]],[M[1],M[0]]])if(ISEQ(e)&&tryv(EQF(e.a[1],e.a[0]),A))return bad(`El orden de las dos premisas arriba de la raya no importa (se aceptan en cualquier orden); lo que importa es el SENTIDO de la igualdad: RI4 cambia t por s usando t =′ s. Para cambiar ${pt(e.a[1])} por ${pt(e.a[0])} en ${P(A)} necesitás ${pt(e.a[1])}=′${pt(e.a[0])} (la sacás de ${P(e)} con RI2).`);
   return bad(why||`RI4 usa una igualdad t =′ s y una fórmula φ(t); ${P(M[0])} y ${P(M[1])} no tienen esa forma.`)}
  case"E⊥":return g.k=="bot"?bad("La meta ya es ⊥."):M[0].k!="bot"?bad("E⊥ parte de ⊥: arriba va ⊥."):{ok:1,run:["E⊥",[]]}}}
 /* fórmulas candidatas para elegir: lo que tengo, la meta, sus subfórmulas, sus negaciones y ⊥ */
@@ -354,6 +354,9 @@ function bqMap(){const GR=[...new Set(E.map(x=>x.grp))],g=D.mg||E[ex].grp;
  <div class="sn" style="overflow-x:auto;padding:8px;margin-top:8px">${mapHtml(g)}</div></div>`}
 function bqOpen(){EMB=null;if(!D)D=nw(ex);bqDraw()}
 function bqEmbed(t,el,cb){const i=E.findIndex(x=>x.t==t);if(i<0)return;EMB={el,cb,err:0,ns:0,i};ex=i;D=nw(i);bqDraw()}
+/* NOTA EN LOS ERRORES DE ÁRBOLES (26/11, Luca: «no tengo lugar para anotaciones en los errores de deducciones»): cada «No encaja» lleva
+   la misma caja de nota que las tarjetas de fichas (noteBox de nucleo.js), atada a la entrada del registro de ese error. */
+const bqNote=()=>{if(typeof E1=="undefined"||!E1.log.length)return"";NLE=E1.log[E1.log.length-1];return typeof noteBox=="function"?noteBox():""};
 function bqDraw(){if(MAPV&&!EMB)return bqMap();const S=D.S,root=S.G[0],done=root.s=="d",o=done?null:curG();if(o)D.cur=o.id;const e=E[ex];
  const GR=[...new Set(E.map(x=>x.grp))],cg=D.grp||e.grp,nd2=g=>E.filter(x=>x.grp==g),dn=g=>nd2(g).filter(x=>ST.done[x.t]).length;
  let h=`<div class="s-lg"><div class="row" style="flex-wrap:wrap;gap:6px${EMB?";display:none":""}">${GR.map(g=>`<button class="btn chip${g==cg?" sel":""}" data-b="gr" data-v="${esc(g)}">${esc(g)} <span class="mut">${dn(g)}/${nd2(g).length}</span></button>`).join("")}<button class="btn" data-b="mp">Mapa de previas</button></div>
@@ -375,20 +378,20 @@ function bqDraw(){if(MAPV&&!EMB)return bqMap();const S=D.S,root=S.G[0],done=root
 const ctxTxt=o=>o.ctx.map(x=>P(x.f)).join(", ")||"nada";
 /* aplicar cuando están todos los miembros */
 function bqDo(){const o=curG(),r=D.r,M=D.m,c=chk(r,o,M),info={q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,p:TPL[r].n+": "+M.map(MS).join(" ; ")};D.r=null;D.m=[];
- if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}<div class="hn" style="margin-top:8px">💡 ${esc(bqHint(o))}</div></div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));return bqDraw()}
+ if(!c.ok){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(c.m)}<div class="hn" style="margin-top:8px">💡 ${esc(bqHint(o))}</div></div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:c.m}));D.fb+=bqNote();return bqDraw()}
  const S1=structuredClone(D.S),o1=S1.G[o.id];let res=null;
- if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!(y.d.r=="hip"&&y.d.l)&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;if(EMB)EMB.err++;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));return bqDraw()}sol(S1,o1,x.d)}
+ if(r=="hip"){const m=M[0],x=m.hyp?o1.ctx.find(y=>y.d.l==m.hyp):o1.ctx.find(y=>!(y.d.r=="hip"&&y.d.l)&&eq(y.f,o1.g));if(!x){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(P(o1.g))} no es una premisa del ejercicio: si es una suposición, elegila con sus corchetes.</div>`;if(EMB)EMB.err++;logA("bq","lg","Hipótesis",false,Object.assign(info,{a:"elegir la suposición con corchetes",x:"hoja sin corchetes"}));D.fb+=bqNote();return bqDraw()}sol(S1,o1,x.d)}
  else if(c.cust=="leaf")sol(S1,o1,nd(o1.g,c.k,[]));
  else if(c.cust=="E∀b"){const f=M[0].f;o1.how={k:"E∀",s:`${c.t} libre para ${f.v} en ${P(f.a)}`};const q=mk(S1,o1.id,f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,[M[0]])}
  else if(c.cust=="sub"){o1.how={k:c.k,s:c.s};M.forEach(m=>{const q=mk(S1,o1.id,m.f,o1.ctx);o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}/* E↔ y RI2–RI4: arriba quedan los miembros elegidos, en ese orden */
  else if(c.cust=="E∧"){o1.how={k:"E∧"};const q=mk(S1,o1.id,M[0].f,o1.ctx);o1.subs.push(q.id);closeSubs(S1,o1,r,M)}
  else if(c.cust=="E∧f"||c.cust=="E∀"||c.cust=="E∃"){const m=M[0],i=o1.ctx.findIndex(y=>m.hyp?y.d.l==m.hyp:eq(y.f,m.f)&&!(y.d.r=="hip"&&y.d.l));
   NOAUTO=true;res=c.cust=="E∧f"?mv(S1,o1,"E∧",[i]):c.cust=="E∀"?mv(S1,o1,"E∀",[i,M[1].t]):mv(S1,o1,"E∃",[i]);NOAUTO=false;
-  if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}
+  if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));D.fb+=bqNote();return bqDraw()}
   if(c.cust!="E∃"){const y=o1.ctx.find(y=>eq(y.f,o1.g)&&!(y.d.r=="hip"&&y.d.l));if(y)sol(S1,o1,y.d);else{const nw=c.cust=="E∀"?sb(m.f.a,m.f.v,TPm()[M[1].t]):null;D.ok2=c.cust=="E∀"?`E∀: ahora tenés ${P(nw)} (en «Tengo»).${nw.k=="all"?" Todavía empieza con ∀: tocá E∀ otra vez y elegí esta fórmula para sacar el siguiente.":""}`:`E∧: ahora tenés ${P(m.f.l)} y ${P(m.f.r)} (en «Tengo»).`}}}
  else if(c.cust=="E∨"){const f=M[0].f,n1=++S1.lab,n2=++S1.lab,hy=(f,n)=>({f,d:nd(f,"hip",[],""+n)});o1.how={k:"E∨",l:n1+","+n2,fd:null};
   [[f,[]],[o1.g,[hy(M[1].f,n1)]],[o1.g,[hy(M[2].f,n2)]]].forEach(([g2,h2])=>{const q=mk(S1,o1.id,g2,o1.ctx.concat(h2));o1.subs.push(q.id)});closeSubs(S1,o1,r,M)}
- else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.sw)o1.subs.reverse();closeSubs(S1,o1,r,c.mrev?[M[1],M[0]]:M)}/* 19/11: I∧ e I↔ aceptan las premisas en cualquier orden; el árbol las dibuja en el orden de la conjunción *//* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));return bqDraw()}}
+ else{NOAUTO=true;res=mv(S1,o1,c.run[0],c.run[1]);NOAUTO=false;if(!(res&&res.blocked)){if(c.sw)o1.subs.reverse();closeSubs(S1,o1,r,c.mrev?[M[1],M[0]]:M)}/* 19/11: I∧ e I↔ aceptan las premisas en cualquier orden; el árbol las dibuja en el orden de la conjunción *//* E¬: φ a la izquierda, ¬φ a la derecha, como se eligió */if(res&&res.blocked){D.fb=`<div class="fb no"><b>No encaja.</b> ${esc(res.m)}</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:bqHint(o),x:res.m}));D.fb+=bqNote();return bqDraw()}}
  D.H.push(D.S);D.S=S1;{const nx=o1.subs.map(i=>S1.G[i]).find(q=>q.s=="o");if(nx)D.cur=nx.id}/* 19/11: se sigue armando hacia arriba, en el hueco nuevo */
  if(res&&res.warn){D.fb=`<div class="fb no"><b>Ojo:</b> ${esc(res.m)} Podés deshacer.</div>`;if(EMB)EMB.err++;logA("bq","lg",TPL[r].n,false,Object.assign(info,{a:"Deshacer y elegir otro camino",x:res.m}))}
  else{D.fb=D.ok2?`<div class="fb ok">${esc(D.ok2)}</div>`:"";D.ok2="";logA("bq","lg",TPL[r].n,true,info)}
@@ -459,7 +462,7 @@ ${L.join("\n")}
 `+(cu?`Meta seleccionada: ${P(cu.g)} · Tengo: ${cu.ctx.map(x=>x.d.l?"["+P(x.f)+"]"+x.d.l:P(x.f)).join(", ")||"nada"}\n`:"Árbol completo.\n")+(fb?`Último mensaje: ${fb}\n`:"")}
 function bqCopy(){const t=bqTxt();D.cp=t;try{navigator.clipboard.writeText(t).then(()=>{D.cp="";D.cpOk=1;bqDraw()},()=>bqDraw())}catch(_){bqDraw()}}
 function bqNS(){if(EMB){EMB.err++;EMB.ns++}const o=curG(),hn=bqHint(o),th=(typeof swTeo=="function"?swTeo({s:"lg",g:"",ctx:""},{q:hn+" "+P(o.g),a:"",x:""}):"")+(window.TEMATEO?TEMATEO("lg3"):"");/* 18/11: + la teoría de las series de deducción */
- D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});bqDraw()}
+ D.fb=`<div class="fb no"><b>Pista:</b> ${esc(hn)}${th}</div>`;logA("bq","lg","No sé",false,{q:"Meta: "+P(o.g)+" · Tengo: "+ctxTxt(o),x:E[ex].t,a:hn,p:"No sé",ns:1});D.fb=(D.fb||"")+bqNote();bqDraw()}
 V.addEventListener("click",ev=>{if(EMB?!EMB.el.contains(ev.target):TAB!=6)return;const b=ev.target.closest("[data-b]");if(!b)return;const w=b.dataset.b;
  if(w=="g"){D.cur=+b.dataset.i;D.r=null;D.m=[];D.fb="";bqDraw()}
  else if(w=="r"){D.r=b.dataset.v;D.m=[];D.fb="";if(!TPL[D.r].m.length)bqDo();else bqDraw()}
