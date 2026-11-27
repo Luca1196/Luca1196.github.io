@@ -109,3 +109,11 @@ const cpList=()=>Object.entries(E1.cp||{}).filter(([k,[ok,n]])=>n>=3).map(([k,[o
 function cpCard(){const L=cpList();return`<div class="card"><h2>Conceptos flojos</h2>${L.length?L.slice(0,15).map(([k,f,n])=>`<div class="row between" style="gap:8px;margin:4px 0"><span>${esc(k)}</span><span class="mut" style="white-space:nowrap">${f}/${n} fichas mal · <b>${Math.round(f/n*100)}%</b></span></div><div class="pb" style="height:6px"><i style="width:${Math.round((n-f)/n*100)}%"></i></div>`).join(""):'<p class="mut" style="margin:0">Se empieza a contar desde el 23/11: hacen falta al menos 3 fichas de un concepto para que aparezca.</p>'}</div>`}
 const cpTxt=()=>{const L=cpList();return L.length?"\n## Conceptos flojos (fichas mal / fichas puestas en ese concepto, desde el 23/11)\n"+L.map(([k,f,n])=>`- ${k}: ${f}/${n} (${Math.round(f/n*100)}%)`).join("\n")+"\n":""};
 {const _t=erTxt;erTxt=all=>{const o=_t(all),i=o.indexOf("\n## Tasa por tag");return i<0?o+cpTxt():o.slice(0,i)+cpTxt()+o.slice(i)}}
+/* PROGRESO EN LA EXPORTACIÓN (26/11, pedido de Luca: «lo mejor sería que se exporte en el botón de copiar para Claude»): tarjetas terminadas de
+   Principal (misma marca que la barra: S2.mt.fd o mtFinC), por sección y por tema de Lógica, más la meta de hoy y la racha. Va arriba de todo. */
+const prgTxt=()=>{if(typeof mtCards!="function")return"";const FD=(S2.mt||{}).fd||{},t=new Date().toLocaleDateString("en-CA"),fin=c=>!!FD[c.id]||mtFinC(c),A=mtCards(),
+  ln=(nm,L)=>{const f=L.filter(fin).length,h=L.filter(c=>FD[c.id]==t).length;return`- ${nm}: ${f}/${L.length} terminadas (${L.length?Math.round(f/L.length*100):0}%) · hoy ${h}\n`};
+ const LG=A.filter(c=>c.s=="lg"),T={};LG.forEach(c=>{const k=TMN[tema(c)]||tema(c);(T[k]=T[k]||[]).push(c)});
+ let o="\n## Progreso (tarjetas de Principal terminadas, con o sin errores)\n"+ln("Lógica (total)",LG)+Object.keys(T).sort().map(k=>"  "+ln(k.replace(/^Lógica · /,"").replace(/^modelos$/,"modelos y consistencia"),T[k])).join("")+ln("Prog4 (para febrero)",A.filter(c=>c.s=="p4"));
+ const m=typeof mtHoy=="function"&&SWM==3?mtHoy():null;if(m)o+=`- Meta de hoy (Lógica): ${m.done}/${m.goal} · racha ${m.stk} ${m.stk==1?"día":"días"} · faltan ${m.tot-m.fin} ÷ ${m.dl} ${m.dl==1?"día":"días"}\n`;return o};
+{const _t=erTxt;erTxt=all=>{const o=_t(all),i=o.indexOf("\n");return o.slice(0,i)+"\n"+prgTxt()+o.slice(i)}}
