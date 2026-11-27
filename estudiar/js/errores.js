@@ -117,3 +117,10 @@ const prgTxt=()=>{if(typeof mtCards!="function")return"";const FD=(S2.mt||{}).fd
  let o="\n## Progreso (tarjetas de Principal terminadas, con o sin errores)\n"+ln("Lógica (total)",LG)+Object.keys(T).sort().map(k=>"  "+ln(k.replace(/^Lógica · /,"").replace(/^modelos$/,"modelos y consistencia"),T[k])).join("")+ln("Prog4 (para febrero)",A.filter(c=>c.s=="p4"));
  const m=typeof mtHoy=="function"&&SWM==3?mtHoy():null;if(m)o+=`- Meta de hoy (Lógica): ${m.done}/${m.goal} · racha ${m.stk} ${m.stk==1?"día":"días"} · faltan ${m.tot-m.fin} ÷ ${m.dl} ${m.dl==1?"día":"días"}\n`;return o};
 {const _t=erTxt;erTxt=all=>{const o=_t(all),i=o.indexOf("\n");return o.slice(0,i)+"\n"+prgTxt()+o.slice(i)}}
+/* MARCADAS PARA REPASAR EN LA EXPORTACIÓN (26/11, pedido de Luca: «las tarjetas pineadas para repasar también se deberían exportar»).
+   Qué significa una marca para él: entiende el tema y puede deducirlo, pero no con la certeza de poder explicárselo a otra persona.
+   Por eso se exportan aparte de los errores: piden una explicación más profunda del porqué, no corregir una confusión. Va después del progreso. */
+const mkTxt=()=>{const K=Object.keys(S2.mk||{});if(!K.length)return"";
+ return"\n## Marcadas para repasar (las entiendo y las deduzco, pero no podría explicárselas a alguien con seguridad)\n"+K.map(k=>{const j=k.lastIndexOf(":"),c=SWC.find(z=>z.id==k.slice(0,j));
+  return c?`- ${c.g}${+k.slice(j+1)?" · paso "+(+k.slice(j+1)+1):""}`:null}).filter(Boolean).join("\n")+"\n"};
+{const _t=erTxt;erTxt=all=>{const o=_t(all),i=o.indexOf("\n## ",o.indexOf("## Progreso")+3);return i<0?o+mkTxt():o.slice(0,i)+mkTxt()+o.slice(i)}}
