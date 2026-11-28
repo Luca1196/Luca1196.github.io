@@ -8,7 +8,7 @@ Sitio: https://luca1196.github.io
   - `astrofisica/`: repaso de astrofísica con repetición espaciada.
   - `preguntados/`: Ruleta OUA, preguntas estilo Preguntados para la 1ª etapa de la Olimpíada Uruguaya de Astronomía.
     `js/preguntas.js` (temas, teórico y banco), `js/azar.js` (semilla y códigos VS), `js/juego.js` (interfaz).
-    El banco mezcla preguntas reales de las 1ª etapas OUA 2021-2025 (con `fuente`) y preguntas de práctica; la opción «Solo preguntas de pruebas OUA» usa solo las reales.
+    El banco mezcla preguntas reales de las 1ª etapas OUA 2021-2025 (con `fuente`) y preguntas propias que cubren los subtemas del programa de Astronomía 1° EMS (2026) dentro de los temas de la OUA, sin ejercicios con cuentas (esas están en `js/preguntas-con-cuentas.js`, que no se carga); la opción «Solo preguntas de pruebas OUA» usa solo las reales.
     Para sumar preguntas: agregarlas **al final** de su tema en `preguntas.js` (la primera opción es la correcta). Cambiar el banco cambia lo que genera un código VS: si se reordena o se borra algo, subir `VERSION_BANCO`.
   - `estudiar/`: herramienta de estudio personal (Prog4 y Lógica). No está en `juegos.json`, por eso no aparece en el menú; se entra con `/estudiar`. Lleva `noindex`.
 
