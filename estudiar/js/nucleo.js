@@ -238,12 +238,12 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  /* paquete kit: si ya está aprobado se repasa entero; si quedó a medias, se retoma en la primera tarjeta que falta */
  /* AVISO DE REPASO (28/11, Luca: «sigo con 0 tarjetas hoy; si no suman porque ya están hechas, no deberían aparecer mientras hay pendientes»).
     Sale un repaso solo cuando en los temas marcados no queda NINGUNA tarjeta nueva disponible: las nuevas que faltan están bloqueadas porque piden
-    acertar SIN errores una tarjeta anterior (regla de previas). Antes eso no se veía y parecía un error. Ahora la tarjeta lo dice, nombra qué
+    TERMINAR antes otra tarjeta (con o sin errores: regla de previas del 23/11, ver tokOk). Antes eso no se veía y parecía un error. Ahora la tarjeta lo dice, nombra qué
     tarjetas desbloquean nuevas y cuántas nuevas hay en temas no marcados. */
  SWNOTE="";if(SF=="all"&&blkTier(pk)>0&&TAB==3){const NW=SWC.filter(c=>c.s==pk.s&&!c.ln&&!c.hid&&!c.arch&&!blkTier(c)),lk=NW.filter(c=>swSel(tema(c))&&!avail(c)),
    nm=t=>String(t).replace(/^m:/,"").replace(/:[^:]*$/,"").replace(/^(.*) · $/,"$1"),RQ={};lk.forEach(c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).filter(t=>!tokOk(t)).forEach(t=>{RQ[nm(t)]=(RQ[nm(t)]||0)+1}));
    const top=Object.entries(RQ).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>"«"+x[0]+"»"),otr=NW.filter(c=>!swSel(tema(c))&&avail(c)).length;
-   SWNOTE=`Repaso (no suma a «hoy»): en los temas marcados no queda ninguna tarjeta nueva disponible.`+(lk.length?` Hay ${lk.length} nuevas bloqueadas: se abren al terminar SIN errores ${top.join(", ")}${Object.keys(RQ).length>3?" y otras":""}.`:"")+(otr?` En temas que no marcaste hay ${otr} nuevas.`:"")}
+   SWNOTE=`Repaso (no suma a «hoy»): en los temas marcados no queda ninguna tarjeta nueva disponible.`+(lk.length?` Hay ${lk.length} nuevas bloqueadas: se abren al terminar ${top.join(", ")}${Object.keys(RQ).length>3?" y otras":""}.`:"")+(otr?` En temas que no marcaste hay ${otr} nuevas.`:"")}
  return swStartBlk(pk)}
 let SWNOTE="";
 /* CONCEPTOS AL PRINCIPIO DEL PAQUETE (26/11, pedido de Luca: «tenerlos como un paquete aparte no me está funcionando; mejor que aparezcan al
