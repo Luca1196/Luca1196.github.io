@@ -333,7 +333,7 @@ function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"
    siguen todas las de esa forma, incluidas las que no sirven. En E∧, E∨, E→ y E¬ se deja la lista completa, porque elegir una fórmula de otra
    forma es un error típico que se quiere practicar. */
 function SLOK(r,k,o,f){const g=o.g,sh=f=>f.k==g.k&&(f.k!="at"||f.n==g.n);
- if(r=="RI4"){const C=RI4C(o);return(k==0?C.e:C.p).some(x=>P(x)==P(f))}
+ if(r=="RI4"){const C=RI4C(o);return C.e.concat(C.p).some(x=>P(x)==P(f))}/* 28/11 (Luca: «no me da la opción correcta»): las premisas de RI4 van en cualquier orden, así que los dos casilleros ofrecen la igualdad y φ(t); antes el 2.º solo ofrecía φ(t) y si ponías φ primero faltaba la igualdad */
  if(r=="RI2")return ISEQ(f)&&ISEQ(g)&&RI4C(o).e.concat([EQF(g.a[1],g.a[0])]).some(x=>P(x)==P(f));
  if(r=="RI3"){if(!ISEQ(f)||!ISEQ(g))return false;const a=pt(g.a[k==0?0:1]);return pt(f.a[0])==a||pt(f.a[1])==a}/* el lado que tiene que coincidir con la meta, en cualquier sentido (queda el error de sentido) */
  if(r=="E∀"&&k==0)return f.k=="all";if(r=="E∃"&&k==0)return f.k=="ex";return true}
