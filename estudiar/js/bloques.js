@@ -327,7 +327,25 @@ function chk(r,o,MM){const M=MM.map(m=>m.f);const g=o.g,bad0=m=>({m}),ARM={and:"
   return bad(why||`RI4 usa una igualdad t =′ s y una fórmula φ(t); ${P(M[0])} y ${P(M[1])} no tienen esa forma.`)}
  case"E⊥":return g.k=="bot"?bad("La meta ya es ⊥."):M[0].k!="bot"?bad("E⊥ parte de ⊥: arriba va ⊥."):{ok:1,run:["E⊥",[]]}}}
 /* fórmulas candidatas para elegir: lo que tengo, la meta, sus subfórmulas, sus negaciones y ⊥ */
-function pool(o){const m={},add=f=>{m[P(f)]=f};Object.values(FPm(o)).forEach(f=>{add(f);if(f.k!="not"&&f.k!="bot")add(NG(f))});add(BOT);o.ctx.forEach(x=>add(x.f));const IN=insts(o);IN.forEach(f=>{const m={};sf(f,m);Object.values(m).forEach(add)});if(ISEQ(o.g)){const[t,r]=o.g.a;add(EQF(r,t));trs(o.ctx.map(x=>x.f).concat([o.g],IN)).forEach(u=>{add(EQF(t,u));add(EQF(u,r))});if(t.k=="fn"&&r.k=="fn"&&t.n==r.n)t.a.forEach((x,i)=>add(EQF(x,r.a[i])))}/* igualdad: dada vuelta y con un término del medio (RI3) */
+/* LISTA POR FORMA (28/11, Luca: «hay demasiadas fórmulas en donde buscar lo que ya sé que quiero escribir»). En los casilleros donde la regla
+   fija la FORMA de la premisa, la lista muestra solo fórmulas de esa forma: RI2/RI3 y la primera de RI4, igualdades; la φ(t) de RI4, fórmulas
+   con la misma forma que la meta (la sustitución solo cambia términos: mismo conectivo, mismo predicado); E∀ un ∀, E∃ un ∃. No da la respuesta:
+   siguen todas las de esa forma, incluidas las que no sirven. En E∧, E∨, E→ y E¬ se deja la lista completa, porque elegir una fórmula de otra
+   forma es un error típico que se quiere practicar. */
+function SLOK(r,k,o,f){const g=o.g,sh=f=>f.k==g.k&&(f.k!="at"||f.n==g.n);
+ if(r=="RI4"){const C=RI4C(o);return(k==0?C.e:C.p).some(x=>P(x)==P(f))}
+ if(r=="RI2")return ISEQ(f)&&ISEQ(g)&&RI4C(o).e.concat([EQF(g.a[1],g.a[0])]).some(x=>P(x)==P(f));
+ if(r=="RI3"){if(!ISEQ(f)||!ISEQ(g))return false;const a=pt(g.a[k==0?0:1]);return pt(f.a[0])==a||pt(f.a[1])==a}/* el lado que tiene que coincidir con la meta, en cualquier sentido (queda el error de sentido) */
+ if(r=="E∀"&&k==0)return f.k=="all";if(r=="E∃"&&k==0)return f.k=="ex";return true}
+/* Candidatos de RI4: igualdades que ya están a mano (Tengo, sus partes, las instancias de tus ∀) en los dos sentidos; y como φ(t), la meta con
+   el término de un lado de cada una de esas igualdades puesto en lugar del otro (en los dos sentidos: el sentido equivocado queda como opción). */
+function RI4C(o){const m={},add=f=>{m[P(f)]=f};o.ctx.forEach(x=>sf(x.f,m));insts(o).forEach(f=>sf(f,m));
+ const E={};Object.values(m).filter(ISEQ).forEach(e=>{E[P(e)]=e;const r=EQF(e.a[1],e.a[0]);E[P(r)]=r});const e=Object.values(E).sort((a,b)=>P(a).length-P(b).length).slice(0,10);/* las instancias anidadas de los ∀ inflan la lista: quedan las 10 más cortas (las que se usan son las de términos chicos) */
+ const rt=(t,A,B)=>pt(t)==A?B:t.k=="fn"?{...t,a:t.a.map(x=>rt(x,A,B))}:t,
+  rf=(f,A,B)=>f.k=="at"?{...f,a:f.a.map(t=>rt(t,A,B))}:f.k=="bot"?f:(f.k=="not"||f.k=="all"||f.k=="ex")?{...f,a:rf(f.a,A,B)}:{...f,l:rf(f.l,A,B),r:rf(f.r,A,B)};
+ const Pm={};e.forEach(q=>{const h=rf(o.g,pt(q.a[1]),q.a[0]);if(P(h)!=P(o.g))Pm[P(h)]=h});Object.values(m).filter(f=>f.k==o.g.k&&(f.k!="at"||f.n==o.g.n)&&P(f)!=P(o.g)).forEach(f=>{Pm[P(f)]=f});
+ return{e,p:Object.values(Pm).sort((a,b)=>P(a).length-P(b).length).slice(0,10)}}
+function pool(o){const m={},add=f=>{m[P(f)]=f};{const C=RI4C(o);C.e.concat(C.p).forEach(add)}Object.values(FPm(o)).forEach(f=>{add(f);if(f.k!="not"&&f.k!="bot")add(NG(f))});add(BOT);o.ctx.forEach(x=>add(x.f));const IN=insts(o);IN.forEach(f=>{const m={};sf(f,m);Object.values(m).forEach(add)});if(ISEQ(o.g)){const[t,r]=o.g.a;add(EQF(r,t));trs(o.ctx.map(x=>x.f).concat([o.g],IN)).forEach(u=>{add(EQF(t,u));add(EQF(u,r))});if(t.k=="fn"&&r.k=="fn"&&t.n==r.n)t.a.forEach((x,i)=>add(EQF(x,r.a[i])))}/* igualdad: dada vuelta y con un término del medio (RI3) */
  {const EQS=Object.values(m).filter(ISEQ),all=EQS.concat(EQS.map(e=>EQF(e.a[1],e.a[0])));all.forEach(add);/* RI4: φ(t) = la meta con t en lugar de s (en todos los lugares o en uno) */
   all.forEach(e=>{const T=e.a[0],Sx=pt(e.a[1]);if(pt(T)==Sx)return;let n=0;const cnt=f=>{const c=t=>{if(pt(t)==Sx)n++;else if(t.k=="fn")t.a.forEach(c)},w=f=>{if(f.k=="at")f.a.forEach(c);else if(f.k=="not"||f.k=="all"||f.k=="ex")w(f.a);else if(f.l){w(f.l);w(f.r)}};w(f)};cnt(o.g);if(!n||n>4)return;
    const rp=(f,which)=>{let k=0;const rt=t=>{if(pt(t)==Sx){k++;return which<0||k==which?T:t}return t.k=="fn"?{...t,a:t.a.map(rt)}:t},rf=f=>f.k=="at"?{...f,a:f.a.map(rt)}:f.k=="not"?{k:"not",a:rf(f.a)}:f.k=="all"||f.k=="ex"?{...f,a:rf(f.a)}:f.l?{...f,l:rf(f.l),r:rf(f.r)}:f;return rf(f)};
@@ -370,7 +388,7 @@ function bqDraw(){if(MAPV&&!EMB)return bqMap();const S=D.S,root=S.G[0],done=root
  h+=`<div class="card" style="margin-top:10px"><div class="lbl">Meta seleccionada (tocá otro hueco para cambiar)</div><div class="qt" style="margin:4px 0">${esc(P(o.g))}</div>${(()=>{const L=[];let q=o;while(q.par!=null){newSup(q).forEach(x=>L.unshift("["+esc(P(x.f))+"]"+sup(x.d.l)));q=D.S.G[q.par]}return L.length?`<div class="mut" style="font-size:14px">En esta rama suponés: ${L.join(" ")}</div>`:""})()}
  <div class="mut" style="font-size:14px">Tengo: ${o.ctx.length?o.ctx.map(x=>`<span class="bqc">${x.d.l?"["+esc(P(x.f))+"]"+sup(x.d.l):esc(P(x.f))}</span>`).join(" "):"nada"}</div>`;
  const t=D.r&&TPL[D.r];
- if(t){const k=D.m.length,HY=o.ctx.filter(x=>x.d.l).map(x=>[`H${x.d.l}`,"["+esc(P(x.f))+"]"+sup(x.d.l)]),PR=o.ctx.filter(x=>!x.d.l).map(x=>[P(x.f),esc(P(x.f))]),kd=(t.k||[])[k]||(t.only=="ctx"?"ctx":"pool"),nsp=(t.sp||[])[k]===undefined?(["I→","I¬","RAA"].includes(D.r)&&k==0):(t.sp||[])[k]==1,L=kd=="t"?Object.keys(TMo(o)).map(x=>["T"+x,esc(x)]):kd=="ctx"?HY.concat(PR):(nsp?[]:HY).concat(pool(o).map(f=>[P(f),esc(P(f))]));
+ if(t){const k=D.m.length,HY=o.ctx.filter(x=>x.d.l).map(x=>[`H${x.d.l}`,"["+esc(P(x.f))+"]"+sup(x.d.l)]),PR=o.ctx.filter(x=>!x.d.l).map(x=>[P(x.f),esc(P(x.f))]),kd=(t.k||[])[k]||(t.only=="ctx"?"ctx":"pool"),nsp=(t.sp||[])[k]===undefined?(["I→","I¬","RAA"].includes(D.r)&&k==0):(t.sp||[])[k]==1,L=kd=="t"?Object.keys(TMo(o)).map(x=>["T"+x,esc(x)]):kd=="ctx"?HY.concat(PR):(nsp?[]:HY.filter(h=>{const x=o.ctx.find(y=>"H"+y.d.l==h[0]);return!x||SLOK(D.r,k,o,x.f)})).concat(pool(o).filter(f=>SLOK(D.r,k,o,f)).map(f=>[P(f),esc(P(f))]));
   h+=`<div class="sn" style="margin-top:10px;text-align:center;overflow-x:auto">${shape(D.r,o.g,D.m,k)}</div>
   ${t.ay?`<div class="mut" style="font-size:14px">${esc(t.ay)}</div>`:""}<div class="lbl">${esc(t.m[k])}</div><div class="row" style="flex-wrap:wrap;gap:6px">${L.map(([v,lab])=>`<button class="btn chip${v[0]=="H"?" bqhy":""}" data-b="m" data-v="${esc(v)}">${lab}</button>`).join("")||'<span class="mut">No tenés hipótesis.</span>'}</div>
   <div class="row" style="gap:8px">${k?'<button class="btn ghost" data-b="mb">Borrar último</button>':""}<button class="btn ghost" data-b="cx">Cancelar</button></div>`}
