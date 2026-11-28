@@ -6,7 +6,7 @@
 // IMPORTANTE para el modo VS: agrega preguntas nuevas AL FINAL de cada tema, así los códigos ya compartidos siguen funcionando
 // (cambiar el banco cambia las preguntas que genera un código; ver VERSION_BANCO).
 
-const VERSION_BANCO = 3;
+const VERSION_BANCO = 4;
 
 const TEMAS = [
   { id: "cielo", nombre: "Cielo y telescopios", icono: "🔭", color: "#e8475f",
@@ -520,3 +520,89 @@ q("sistema", "¿Cómo se sabe que el Sistema Solar tiene unos 4600 millones de a
 q("sistema", "¿Cuál es la explicación más aceptada sobre el origen de la Luna?", ["Un gran impacto de un cuerpo del tamaño de Marte contra la Tierra joven", "La Tierra la capturó cuando pasaba cerca", "Se separó de la Tierra por su rotación rápida", "Se formó junto al Sol"], "Los restos del choque formaron un anillo que se juntó y formó la Luna.", "formacion");
 q("sistema", "Los planetas se formaron a partir de:", ["Pequeños cuerpos (planetesimales) que chocaron y se fueron juntando en el disco alrededor del Sol joven", "Pedazos que se desprendieron del Sol", "Estrellas que se apagaron", "La explosión de una supernova dentro del Sistema Solar"], "Ese proceso se llama acreción.", "formacion");
 q("sistema", "¿Qué le pasará al Sol dentro de unos 5000 millones de años?", ["Se convertirá en gigante roja y luego en enana blanca", "Explotará como supernova", "Se convertirá en agujero negro", "Se apagará de golpe"], "No tiene masa suficiente para explotar como supernova.", "formacion");
+
+// ═════════ Completado según el Manual de astronomía (Santillana, Biblioteca País) ═════════
+// El libro se usó como estándar de completitud de cada tema; el texto es propio.
+const LIBRO = "Manual de astronomía (Santillana), disponible en Biblioteca País (Ceibal)";
+const LIBRO_PAGS = {
+  cielo: "cap. 2 «El cielo», págs. 26–41; medidas y magnitudes, pág. 15; zodíaco, págs. 88–89; Vía Láctea, págs. 144–145",
+  diurno: "cap. 2, «La bóveda celeste» (pág. 26) y «Las coordenadas celestes» (pág. 28)",
+  orientacion: "cap. 2, «Las cartas celestes, los mapas del cielo» (pág. 32)",
+  distancias: "«Algunas medidas astronómicas», pág. 15",
+  estaciones: "cap. 4, «Movimiento aparente del Sol», págs. 80–81",
+  eclipses: "cap. 4, «Eclipses» y «¿Qué se oculta en un eclipse de Sol?», págs. 82–86",
+  sistema: "cap. 3 «Sistema solar», págs. 44–69; cap. 4 «El Sol», págs. 72–79",
+  luna: "cap. 4, «Eclipses», pág. 83 (posiciones Sol–Tierra–Luna)"
+};
+
+seccion("cielo", "calidad", "Calidad del cielo y lugares de observación",
+  "Para observar importan tres cosas: la <b>oscuridad</b> (poca contaminación lumínica y sin Luna llena), la <b>transparencia</b> (aire seco y limpio, sin nubes, humedad ni polvo) y la <b>estabilidad</b> del aire (<i>seeing</i>): si la atmósfera está turbulenta, las estrellas titilan mucho y las imágenes del telescopio «hierven». Por eso los observatorios profesionales se construyen en montañas altas y desiertos. En Uruguay hay observatorios de enseñanza y divulgación, como el <b>Observatorio Astronómico de Montevideo</b> y el del <b>IPA</b>, y el <b>Planetario de Montevideo</b>.");
+seccion("cielo", "zodiaco", "El zodíaco",
+  "El <b>zodíaco</b> es la franja del cielo alrededor de la eclíptica por la que se mueven el Sol, la Luna y los planetas. Los astrónomos antiguos la dividieron en <b>12 partes de 30°</b> (360° en total), cada una asociada a una constelación y a un mes del año. La palabra viene del griego y significa «círculo de animales». La <b>astrología</b> usa esos «signos», pero no es una ciencia.");
+seccion("cielo", "historiamag", "Origen de la escala de magnitudes",
+  "Hace más de 2000 años, el griego <b>Hiparco</b> clasificó las estrellas en seis grupos: las más brillantes eran de «primera magnitud» y las apenas visibles, de «sexta». En el siglo XIX Pogson le dio una definición precisa: 5 magnitudes equivalen a un factor 100 en brillo. Por eso la escala parece «al revés»: un número mayor indica un astro más débil. Con instrumentos se ven estrellas mucho más débiles que magnitud 6: con binoculares, hasta 9 o 10, y los grandes telescopios y el Hubble llegan a magnitud 30.");
+seccion("cielo", "galaxia", "La Vía Láctea, nuestra galaxia",
+  "La Vía Láctea es una <b>galaxia espiral barrada</b> de unos 100 000 años luz de diámetro, con unos <b>cientos de miles de millones de estrellas</b>. Tiene un <b>bulbo</b> central con una barra de estrellas viejas, un <b>disco</b> con <b>brazos espirales</b> donde hay gas, polvo y se forman estrellas jóvenes, y un <b>halo</b> casi esférico con estrellas viejas y cúmulos globulares. En el centro hay un <b>agujero negro supermasivo</b> (Sagitario A*). El Sol está en el disco, en el <b>brazo de Orión</b>, a unos 26 000 años luz del centro, y da una vuelta a la galaxia cada unos <b>240 millones de años</b>. Todas las estrellas que vemos a simple vista pertenecen a la Vía Láctea.");
+
+seccion("diurno", "coordenadas", "Coordenadas celestes",
+  "Para ubicar un astro se usan dos ángulos, como la latitud y la longitud en la Tierra. En el sistema <b>horizontal</b>: la <b>altura</b> (ángulo sobre el horizonte, de 0° en el horizonte a 90° en el cenit) y el <b>acimut</b> (dirección sobre el horizonte). Esas coordenadas <b>cambian</b> durante la noche y dependen del lugar de observación. En el sistema <b>ecuatorial</b>: la <b>declinación</b> (ángulo al norte o al sur del ecuador celeste, como la latitud) y la <b>ascensión recta</b> (como la longitud, medida desde el punto Aries). Esas coordenadas son <b>las mismas para todos los observadores</b> y casi no cambian con los años, por eso se usan en los catálogos y en las cartas celestes.");
+seccion("orientacion", "cartas", "Cartas celestes y planetarios virtuales",
+  "Una <b>carta celeste</b> es un mapa del cielo. Un <b>planisferio</b> (carta giratoria) muestra qué estrellas están sobre el horizonte a cada hora y fecha, y se hace para una latitud determinada. Para usar una carta hay que orientarla: mirando al sur, se pone hacia abajo el borde marcado «Sur». Como miramos el cielo desde abajo, en una carta celeste el <b>este y el oeste aparecen invertidos</b> respecto de un mapa terrestre. Programas y aplicaciones como <b>Stellarium</b> simulan el cielo de cualquier lugar, fecha y hora, y sirven para planificar observaciones.");
+
+seccion("eclipses", "ocultaciones", "Ocultaciones y tránsitos",
+  "Un eclipse, en general, es que un astro se interponga entre otro y el observador. Cuando la Luna tapa una estrella o un planeta se habla de <b>ocultación</b>. Cuando un cuerpo pequeño pasa por delante de uno grande sin taparlo (por ejemplo, Mercurio o Venus cruzando el disco del Sol, o un exoplaneta pasando delante de su estrella) se llama <b>tránsito</b>. Para que haya un eclipse de Sol, Sol, Luna y Tierra tienen que estar alineados <b>en ese orden</b>; para uno de Luna, en el orden Sol–Tierra–Luna.");
+
+seccion("sistema", "historia", "Del modelo geocéntrico al heliocéntrico",
+  "En la Antigüedad predominó el modelo <b>geocéntrico</b>: la Tierra inmóvil en el centro y el Sol, la Luna y los planetas girando a su alrededor. <b>Ptolomeo</b> (siglo II) lo perfeccionó con epiciclos para explicar el <b>movimiento retrógrado</b> de los planetas, que por momentos parecen ir hacia atrás entre las estrellas. Aristarco ya había propuesto que la Tierra giraba alrededor del Sol, pero fue <b>Copérnico</b> (1543) quien desarrolló el modelo <b>heliocéntrico</b>, que explica la retrogradación de forma simple: la Tierra adelanta a los planetas exteriores. <b>Galileo</b> (1609–1610) apuntó un telescopio al cielo y vio las fases de Venus y las lunas de Júpiter, pruebas en contra del geocentrismo. <b>Kepler</b> descubrió que las órbitas son elipses, y <b>Newton</b> lo explicó con la gravitación universal.");
+seccion("sistema", "sol", "El Sol, nuestra estrella",
+  "El Sol es una estrella mediana de unos 4600 millones de años, a mitad de su vida. Tiene <b>109 veces</b> el diámetro de la Tierra y es casi todo <b>hidrógeno (74 %) y helio (25 %)</b>. De adentro hacia afuera: el <b>núcleo</b> (unos 15 millones de grados, donde se produce la energía por fusión), la <b>zona radiativa</b>, la <b>zona convectiva</b>, la <b>fotosfera</b> (la superficie visible, a unos 5800 K), la <b>cromosfera</b> y la <b>corona</b>, que se ve en los eclipses totales. No rota como un sólido: el ecuador da una vuelta en unos <b>25 días</b> y los polos tardan más. Su luz tarda unos 8 minutos en llegarnos.");
+seccion("sistema", "actividad", "Actividad solar",
+  "Las <b>manchas solares</b> son zonas de la fotosfera más <b>frías</b> que su entorno (por eso se ven oscuras), donde el campo magnético es muy intenso. Su cantidad sube y baja en un <b>ciclo de unos 11 años</b>. Siguiéndolas, Galileo comprobó que el Sol rota. El Sol emite constantemente el <b>viento solar</b>, un flujo de partículas cargadas. Las <b>fulguraciones</b> y las <b>eyecciones de masa coronal</b> lanzan enormes cantidades de partículas que, al llegar a la Tierra, producen <b>auroras</b> cerca de los polos y pueden dañar satélites y redes eléctricas. El campo magnético de la Tierra nos protege de ellas.");
+
+// Cielo
+q("cielo", "Para observar con telescopio, ¿qué es el «seeing»?", ["La estabilidad del aire: si hay turbulencia, las imágenes tiemblan", "La cantidad de nubes", "La fase de la Luna", "El aumento del telescopio"], "La turbulencia del aire hace titilar a las estrellas y borronea las imágenes.", "calidad");
+q("cielo", "¿Cuál de estas condiciones es la peor para observar estrellas débiles?", ["Una noche de Luna llena en la ciudad", "Una noche sin Luna en el campo", "Un lugar alto y seco", "Una noche despejada de invierno"], "La Luna llena y las luces de la ciudad aclaran el cielo y borran lo más tenue.", "calidad");
+q("cielo", "¿Qué es el zodíaco?", ["La franja del cielo alrededor de la eclíptica por donde se mueven el Sol, la Luna y los planetas", "El conjunto de todas las constelaciones", "Un método de orientación", "La zona del cielo que nunca se pone"], "Los antiguos la dividieron en 12 partes de 30°, una por cada mes.", "zodiaco");
+q("cielo", "¿Por qué la Luna y los planetas siempre se ven en las constelaciones del zodíaco?", ["Porque sus órbitas están casi en el mismo plano que la de la Tierra", "Porque esas constelaciones están más cerca", "Por casualidad", "Porque las otras constelaciones están detrás del Sol"], "El Sistema Solar es casi plano: todos se mueven cerca de la eclíptica.", "zodiaco");
+q("cielo", "La palabra «zodíaco» viene del griego y significa:", ["Círculo de animales", "Camino del Sol", "Doce estrellas", "Cielo nocturno"], "La mayoría de sus figuras son animales: Aries, Tauro, Cáncer, Leo, Escorpio, etc.", "zodiaco");
+q("cielo", "¿Quién creó la primera clasificación de las estrellas en seis magnitudes?", ["Hiparco, en la antigua Grecia", "Galileo", "Newton", "Copérnico"], "Las más brillantes eran de primera magnitud y las apenas visibles, de sexta.", "historiamag");
+q("cielo", "¿Por qué en la escala de magnitudes un número mayor indica un astro más débil?", ["Porque viene de la clasificación antigua, donde «primera magnitud» eran las estrellas más brillantes", "Porque mide la distancia", "Porque mide la temperatura", "Por un error de traducción"], "La escala moderna conservó ese orden.", "historiamag");
+q("cielo", "¿Qué tipo de galaxia es la Vía Láctea?", ["Espiral barrada", "Elíptica", "Irregular", "Lenticular sin brazos"], "Tiene una barra central de estrellas y brazos espirales.", "galaxia");
+q("cielo", "¿Dónde está ubicado el Sol dentro de la Vía Láctea?", ["En el disco, en un brazo espiral (el brazo de Orión), lejos del centro", "En el centro de la galaxia", "En el halo, fuera del disco", "En el bulbo central"], "Está a unos 26 000 años luz del centro.", "galaxia");
+q("cielo", "¿Cuánto tarda el Sol en dar una vuelta alrededor del centro de la Vía Láctea?", ["Unos 240 millones de años", "Un año", "Unos 26 000 años", "No se mueve"], "Desde que se formó, el Sol dio unas 20 vueltas a la galaxia.", "galaxia");
+q("cielo", "¿Qué hay en el centro de la Vía Láctea?", ["Un agujero negro supermasivo, Sagitario A*", "El Sol", "Una nebulosa vacía", "La galaxia de Andrómeda"], "Está en dirección a la constelación de Sagitario.", "galaxia");
+q("cielo", "En la Vía Láctea, ¿dónde se forman las estrellas jóvenes?", ["En los brazos espirales del disco, donde hay gas y polvo", "En el halo", "En el agujero negro central", "Fuera de la galaxia"], "El halo y el bulbo tienen sobre todo estrellas viejas.", "galaxia");
+q("cielo", "Las estrellas que vemos a simple vista en el cielo nocturno:", ["Pertenecen todas a la Vía Láctea", "Están en distintas galaxias", "Están dentro del Sistema Solar", "Son la mitad de nuestra galaxia y la mitad de Andrómeda"], "Las galaxias que se ven a simple vista (Andrómeda, las Nubes de Magallanes) aparecen como manchas, no como estrellas sueltas.", "galaxia");
+
+// Movimiento diurno: coordenadas
+q("diurno", "La altura de un astro es:", ["El ángulo que forma con el horizonte", "Su distancia a la Tierra", "Su ángulo respecto al ecuador celeste", "Su tamaño aparente"], "Va de 0° en el horizonte a 90° en el cenit.", "coordenadas");
+q("diurno", "¿Qué coordenadas de una estrella son las mismas para dos observadores en lugares distintos de la Tierra?", ["La declinación y la ascensión recta", "La altura y el acimut", "La altura de culminación", "La hora de salida"], "Las coordenadas ecuatoriales no dependen del lugar ni de la hora.", "coordenadas", F21(5) + " (adaptada)");
+q("diurno", "La declinación de un astro es:", ["Su ángulo al norte o al sur del ecuador celeste", "Su ángulo sobre el horizonte", "Su dirección sobre el horizonte", "Su brillo"], "Es el equivalente celeste de la latitud.", "coordenadas");
+q("diurno", "Durante la noche, la altura y el acimut de una estrella:", ["Cambian continuamente por la rotación de la Tierra", "Se mantienen fijos", "Solo cambian en invierno", "Cambian una vez por mes"], "Por eso los catálogos usan coordenadas ecuatoriales, que no cambian.", "coordenadas");
+
+// Orientación: cartas
+q("orientacion", "En una carta celeste, comparada con un mapa de la Tierra, el este y el oeste:", ["Aparecen invertidos, porque el cielo se mira desde abajo", "Están en la misma posición", "No aparecen", "Están arriba y abajo"], "Al sostener la carta sobre la cabeza, los puntos cardinales coinciden con el cielo real.", "cartas");
+q("orientacion", "Un planisferio celeste (carta giratoria) sirve para:", ["Saber qué estrellas están sobre el horizonte en una fecha y hora", "Medir la distancia a las estrellas", "Ver las fases de la Luna", "Calcular eclipses"], "Se hace para una latitud determinada.", "cartas");
+q("orientacion", "¿Para qué sirve un programa como Stellarium?", ["Para simular el cielo de cualquier lugar, fecha y hora", "Para controlar telescopios espaciales", "Para predecir el clima", "Para medir la contaminación lumínica"], "Permite planificar observaciones y ver el cielo más allá del clima o de las luces.", "cartas");
+
+// Eclipses
+q("eclipses", "Cuando la Luna pasa delante de una estrella y la tapa, el fenómeno se llama:", ["Ocultación", "Tránsito", "Eclipse penumbral", "Conjunción"], "Un eclipse de Sol es, en realidad, una ocultación del Sol por la Luna.", "ocultaciones");
+q("eclipses", "Cuando Mercurio o Venus pasan por delante del disco del Sol, se habla de:", ["Un tránsito", "Un eclipse total", "Una ocultación", "Una oposición"], "El planeta se ve como un pequeño punto negro que cruza el Sol.", "ocultaciones");
+q("eclipses", "Para que ocurra un eclipse de Luna, los astros deben estar alineados en el orden:", ["Sol – Tierra – Luna", "Sol – Luna – Tierra", "Tierra – Sol – Luna", "Luna – Sol – Tierra"], "La Tierra, en el medio, proyecta su sombra sobre la Luna.", "ocultaciones");
+
+// Sistema Solar: historia y Sol
+q("sistema", "En el modelo geocéntrico de Ptolomeo:", ["La Tierra está inmóvil en el centro y los demás astros giran a su alrededor", "El Sol está en el centro", "Las órbitas son elipses", "La Tierra gira sobre su eje y el cielo está quieto"], "Fue el modelo aceptado durante unos 1400 años.", "historia");
+q("sistema", "¿Quién propuso en 1543 el modelo heliocéntrico, con el Sol en el centro?", ["Nicolás Copérnico", "Claudio Ptolomeo", "Isaac Newton", "Tycho Brahe"], "Su libro se publicó el año de su muerte.", "historia");
+q("sistema", "El movimiento retrógrado de Marte (cuando parece ir hacia atrás entre las estrellas) se explica, en el modelo heliocéntrico, porque:", ["La Tierra, que va más rápido en su órbita, lo adelanta", "Marte frena y da marcha atrás", "Lo atrae Júpiter", "Es una ilusión de la atmósfera"], "Es como cuando un auto adelanta a otro y parece que el otro va hacia atrás.", "historia");
+q("sistema", "¿Qué observó Galileo con su telescopio que contradecía el modelo geocéntrico?", ["Las fases de Venus y las lunas de Júpiter", "Los anillos de Urano", "La órbita elíptica de Marte", "La rotación de la Tierra"], "Las fases completas de Venus solo se explican si Venus gira alrededor del Sol.", "historia");
+q("sistema", "¿Quién explicó por qué los planetas se mueven según las leyes de Kepler?", ["Isaac Newton, con la gravitación universal", "Galileo Galilei", "Ptolomeo", "Copérnico"], "La misma fuerza que hace caer una manzana mantiene a la Luna en órbita.", "historia");
+q("sistema", "¿De qué está formado principalmente el Sol?", ["De hidrógeno y helio", "De hierro y níquel", "De oxígeno y carbono", "De roca fundida"], "Alrededor de 74 % hidrógeno y 25 % helio.", "sol");
+q("sistema", "¿Cuántas veces mayor es el diámetro del Sol que el de la Tierra?", ["Unas 109 veces", "Unas 10 veces", "Unas 1000 veces", "Unas 2 veces"], "Entrarían más de un millón de Tierras dentro del Sol.", "sol");
+q("sistema", "¿En qué parte del Sol se produce su energía?", ["En el núcleo", "En la corona", "En la fotosfera", "En las manchas solares"], "Allí hay unos 15 millones de grados, suficiente para fusionar hidrógeno.", "sol");
+q("sistema", "La superficie visible del Sol se llama:", ["Fotosfera", "Corona", "Cromosfera", "Núcleo"], "Está a unos 5800 K.", "sol");
+q("sistema", "¿Qué capa del Sol se ve como un halo blanco durante un eclipse total?", ["La corona", "La fotosfera", "El núcleo", "La zona convectiva"], "Normalmente la tapa el brillo de la fotosfera.", "sol");
+q("sistema", "¿Cuánto tarda aproximadamente el ecuador del Sol en dar una vuelta sobre sí mismo?", ["Unos 25 días", "24 horas", "Un año", "No rota"], "No rota como un sólido: los polos tardan más que el ecuador.", "sol");
+q("sistema", "¿Por qué las manchas solares se ven oscuras?", ["Porque son zonas más frías que el resto de la fotosfera", "Porque son agujeros en el Sol", "Porque son planetas que pasan delante", "Porque allí no hay gas"], "Igual son muy calientes, pero brillan menos que su entorno.", "actividad");
+q("sistema", "La cantidad de manchas solares varía en un ciclo de unos:", ["11 años", "11 días", "76 años", "365 días"], "En el máximo del ciclo hay más fulguraciones y auroras.", "actividad");
+q("sistema", "Las auroras polares se producen cuando:", ["Partículas del viento solar chocan con la atmósfera cerca de los polos", "La Luna refleja luz hacia los polos", "Hay erupciones volcánicas", "La Tierra pasa por la cola de un cometa"], "El campo magnético terrestre canaliza las partículas hacia los polos.", "actividad");
+q("sistema", "¿Qué es el viento solar?", ["Un flujo continuo de partículas cargadas que emite el Sol", "El viento que sopla en la Tierra de día", "La luz del Sol", "Una tormenta en Júpiter"], "Llega hasta más allá de Neptuno.", "actividad");

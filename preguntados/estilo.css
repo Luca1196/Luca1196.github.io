@@ -157,6 +157,7 @@ h3 { font-size: 22px; margin: 24px 0 10px; }
 /* Teórico */
 .teo-tema { background: var(--tarjeta); border: 2px solid var(--borde); border-top: 6px solid var(--c); border-radius: 16px; padding: 4px 16px 10px; margin-bottom: 16px; scroll-margin-top: 12px; }
 .teo-tema h3 { color: var(--c); margin: 14px 0 6px; filter: brightness(1.2); }
+.teo-libro { font-size: 13px; color: var(--tenue); margin: 4px 0 8px; line-height: 1.4; }
 .teo-sec { border-radius: 10px; padding: 2px 10px; margin: 0 -10px; scroll-margin-top: 12px; transition: background .4s; }
 .teo-sec h4 { margin: 12px 0 4px; font-size: 17px; }
 .teo-sec p { margin: 0 0 10px; line-height: 1.55; color: #dfe3ff; }

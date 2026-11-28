@@ -385,8 +385,10 @@ function pintarTeorico() {
   $("teorico").innerHTML = TEMAS.map(t => `
     <article class="teo-tema" id="t-${t.id}" style="--c:${t.color}">
       <h3>${t.icono} ${t.nombre}</h3>
+      ${LIBRO_PAGS[t.id] ? `<p class="teo-libro">📚 Para profundizar: <i>${LIBRO}</i>, ${LIBRO_PAGS[t.id]}.</p>` : ""}
       ${t.teoria.map(s => `<section class="teo-sec" id="t-${t.id}-${s.id}"><h4>${s.titulo}</h4><p>${s.texto}</p></section>`).join("")}
-    </article>`).join("");
+    </article>`).join("") +
+    `<p class="teo-libro">Referencia: <i>${LIBRO}</i>. Los textos de este teórico son propios; el libro se usó como estándar de los contenidos.</p>`;
 }
 function abrirTeorico(tema, sec) {
   const volverA = pantallaActual;
