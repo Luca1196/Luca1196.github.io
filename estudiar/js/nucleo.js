@@ -236,7 +236,16 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
  const SE=S2.seen||(S2.seen={}),now=Date.now(),sc=c=>{const st=SE[c.id];const weak=(c.kq&&c.pack&&S2.kok&&[c].concat(c.pack).some(x=>S2.kok[x.id])?4:0)+1+c.steps.reduce((a,_,i)=>a+Math.max(0,3-swBox(c,i))+(PD.has(c.id+":"+i)?6:0),0)/c.steps.length;return(st?(now-st):1e12+Math.random()*1e9)*weak};
  const tm=Math.min(...pool.map(blkTier)),un=pool.filter(c=>blkTier(c)==tm),top=un.map(c=>[sc(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,3),pk=top[Math.floor(Math.random()*top.length)][1];
  /* paquete kit: si ya está aprobado se repasa entero; si quedó a medias, se retoma en la primera tarjeta que falta */
+ /* AVISO DE REPASO (28/11, Luca: «sigo con 0 tarjetas hoy; si no suman porque ya están hechas, no deberían aparecer mientras hay pendientes»).
+    Sale un repaso solo cuando en los temas marcados no queda NINGUNA tarjeta nueva disponible: las nuevas que faltan están bloqueadas porque piden
+    acertar SIN errores una tarjeta anterior (regla de previas). Antes eso no se veía y parecía un error. Ahora la tarjeta lo dice, nombra qué
+    tarjetas desbloquean nuevas y cuántas nuevas hay en temas no marcados. */
+ SWNOTE="";if(SF=="all"&&blkTier(pk)>0&&TAB==3){const NW=SWC.filter(c=>c.s==pk.s&&!c.ln&&!c.hid&&!c.arch&&!blkTier(c)),lk=NW.filter(c=>swSel(tema(c))&&!avail(c)),
+   nm=t=>String(t).replace(/^m:/,"").replace(/:[^:]*$/,"").replace(/^(.*) · $/,"$1"),RQ={};lk.forEach(c=>(c.bqx?BQ.req(c.bqx):(c.req||[])).filter(t=>!tokOk(t)).forEach(t=>{RQ[nm(t)]=(RQ[nm(t)]||0)+1}));
+   const top=Object.entries(RQ).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>"«"+x[0]+"»"),otr=NW.filter(c=>!swSel(tema(c))&&avail(c)).length;
+   SWNOTE=`Repaso (no suma a «hoy»): en los temas marcados no queda ninguna tarjeta nueva disponible.`+(lk.length?` Hay ${lk.length} nuevas bloqueadas: se abren al terminar SIN errores ${top.join(", ")}${Object.keys(RQ).length>3?" y otras":""}.`:"")+(otr?` En temas que no marcaste hay ${otr} nuevas.`:"")}
  return swStartBlk(pk)}
+let SWNOTE="";
 /* CONCEPTOS AL PRINCIPIO DEL PAQUETE (26/11, pedido de Luca: «tenerlos como un paquete aparte no me está funcionando; mejor que aparezcan al
    principio de cada paquete que use el concepto»). Un bloque puede llevar pk.pre = [tarjetas de concepto]: al empezarlo se juegan primero las que
    todavía no se acertaron (S2.kok), y después el bloque. Las ya acertadas se saltean, así el mismo concepto no se repite en cada paquete.
@@ -244,7 +253,7 @@ function swPick(){const t=TD();if(S2.day!=t){S2.day=t;S2.today=0}
 let SPRE=null;
 function swStartBlk(pk){SPRE=null;{const PRE=(pk.pre||[]).filter(x=>!(S2.kok||{})[x.id]);if(PRE.length){SPRE=pk;SPACK=PRE.slice(1).concat([pk]);return{c:PRE[0],i:0,only:false,built:[],err:0}}}if(pk.kq&&pk.pack){const K=S2.kok=S2.kok||{},all=[pk].concat(pk.pack);if((pk.toks||[]).every(t=>(S2.bqok||{})[t]))all.forEach(x=>delete K[x.id]);else if(K[pk.id]){const pe=pk.pack.filter(x=>!K[x.id]);if(pe.length){SPACK=pe.slice(1);return{c:pe[0],i:0,only:false,built:[],err:0}}}}
  return{c:pk,i:0,only:false,built:[],err:0}}
-function swNew(){NLE=null;SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();(S2.tls=S2.tls||{})[tema(SW.c)]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
+function swNew(){NLE=null;SWNOTE="";SW=swPick();(S2.seen=S2.seen||{})[SW.c.id]=Date.now();(S2.tls=S2.tls||{})[tema(SW.c)]=Date.now();SAX="";SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 function swStep(){NLE=null;SW.ts=Date.now();SW.ans=null;SW.cl=Math.random()<.5;swDraw()}
 const HLN={dg:"el diagrama",Tengo:"«Tengo»","▶":"el objetivo ▶",Clases:"«Clases»",Dom:"el dominio",Esc:"el enunciado"};
 function ctxH(t,src,hl){const L=t.split("\n"),di=L.indexOf("Dominio:");return L.map((l,i)=>{if(hl){const on=hl=="ESC"?(di<0||i<di):(di>=0&&i>di&&new RegExp(hl).test(l));return on?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}const k=l.startsWith("Tengo:")?"Tengo":l.startsWith("Clases:")?"Clases":l.startsWith("▶")?"▶":"";return k&&src&&src.includes(k)?`<div class="hl">${esc(l)}</div>`:`<div>${esc(l)}</div>`}).join("")}
@@ -414,7 +423,7 @@ function mtBar(){const m=mtHoy();if(!m)return"";const bar=(x,n)=>`<div class="pb
 function swDraw(){const u=SW,c=u.c,lv=Math.floor(S2.ok/25)+1,pr=S2.ok%25;
  let h=`<div class="s-${c.s}">${TAB==7?`<div class="lbl" style="margin-bottom:6px"><b>Básico</b> · teoría en tarjetas binarias</div>`:""}<div class="row"><b class="sj">Nivel ${lv}</b><div class="pb"><i style="width:${pr/25*100}%"></i></div><span class="mut cnt">${pr}/25</span></div>`+
  (TAB==3?mtBar():"")+`<div class="row between mut" style="margin-top:6px"><span>Seguidas ${SCOMBO}</span><span>Mejor ${S2.best}</span><span>Hoy ${S2.today}</span></div>`+
- (TAB==7?"":swFiltHTML());
+ (TAB==7?"":swFiltHTML())+(SWNOTE&&!u.ans?`<div class="mut" style="margin-top:8px;font-size:13px;border-left:3px solid #c90;padding-left:8px">${esc(SWNOTE)}</div>`:"");
  if(u.recap){h+=`<div class="card"><h2>Serie completa</h2>${swDg(c,0,1)}<p style="margin:0">${u.err?u.err+(u.err==1?" error":" errores")+": esas decisiones vuelven en un rato.":"Sin errores: +"+u.bonus+" XP."}</p>${c.out?`<div class="lbl" style="margin-top:10px">Así queda armado</div><div class="sn">${esc(c.out)}</div>`:""}<button class="btn pri big" data-w="go">Siguiente</button></div></div>`;V.innerHTML=h;return}
 /* Tarjeta «Árbol · …»: arma un árbol corto de Bloques adentro de la tarjeta (bloques.js, bqEmbed) */
  if(c.bqx){if(!u.bqd){h+=`<div class="swc"><div class="lbl"><b class="sj">Lógica</b> · ${u.only?"repaso · ":""}armá el árbol</div><div id="bqemb"></div></div></div>`;V.innerHTML=h;
